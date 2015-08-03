@@ -62,8 +62,6 @@ namespace Util
 
     //! Functions to decode an integer
     //
-    //  To fix DE61220, follow C literal rules
-    //
     inline void ThrowUnsignedConversionError(const std::string& s)
     {
         throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE, "Could not parse '" + s + "' as unsigned integer");
@@ -87,16 +85,6 @@ namespace Util
         return static_cast<T>(result);
     }
 
-    //! ensure pointer argument not null 
-    template <class T>
-        inline void CheckNotNull(T* p)
-    {
-        if (p == 0)
-        {
-            throw RddiEx(RDDI_BADARG, "Bad argument to command. (Null pointer)");
-        }
-    }
-
     class CaseInsensitiveLess
     {
     public:
@@ -116,10 +104,6 @@ namespace Util
     {
         return !CaseInsensitiveLess()(s1, s2) && !CaseInsensitiveLess()(s2, s1); 
     }
-
-    // modify original in situ; return true if something changed
-    /*bool DoRegexReplace(std::string& original, const std::string& re, 
-                        const std::string& replacement);*/
 }
 
 #endif // ARM_SNAPSHOT_PARSER_UTIL_H_INCLUDED

@@ -39,6 +39,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <cstring>
 
 #include "rctdl.h"
 #include "trace_snapshots.h"

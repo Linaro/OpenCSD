@@ -34,7 +34,7 @@
 
 /* pull in the C++ decode library */
 #include "rctdl.h"
-#include "c_api\rctdl_c_api.h"
+#include "c_api/rctdl_c_api.h"
 #include "rctdl_c_api_obj.h"
 
 /*******************************************************************************/
