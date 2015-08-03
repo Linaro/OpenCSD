@@ -26,9 +26,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 # 
-#################################################################################
-# RCTDL - makefile for main trace decode library
+########################################################################
 #
+# Make file for snapshot parser library.
+#
+########################################################################
 
 CPP := $(MASTER_CPP)
 LINKER := $(MASTER_LINKER)
@@ -37,43 +39,33 @@ LIB := $(MASTER_LIB)
 CPP_FLAGS := $(MASTER_CPP_FLAGS) -fpic -Wno-switch
 LIB_FLAGS := $(MASTER_LIB_FLAGS)
 
-LIB_NAME = libref_trace_decoder
+LIB_NAME = libsnapshot_parser
 
 BUILD_DIR=./$(PLAT_DIR)
 
-VPATH=	$(RCTDL_SOURCE) \
-		$(RCTDL_SOURCE)/etmv3 \
-		$(RCTDL_SOURCE)/etmv4 \
-		$(RCTDL_SOURCE)/ptm
+PARSER_ROOT=$(RCTDL_TESTS)/snapshot_parser_lib
+PARSER_SOURCE=$(PARSER_ROOT)/source
+PARSER_INCLUDE=$(PARSER_ROOT)/include
+
+VPATH=	$(PARSER_SOURCE)
 
 
 CPP_INCLUDES= \
-				-I$(RCTDL_INCLUDE) \
-				-I$(RCTDL_SOURCE)
+				-I$(PARSER_INCLUDE) \
+				-I$(RCTDL_INCLUDE)
 
-OBJECTS=$(BUILD_DIR)/rctdl_dcd_tree.o \
-		$(BUILD_DIR)/rctdl_error.o \
-		$(BUILD_DIR)/rctdl_error_logger.o \
-		$(BUILD_DIR)/rctdl_msg_logger.o \
-		$(BUILD_DIR)/trc_cmp_cfg_etmv3.o \
-		$(BUILD_DIR)/trc_cmp_cfg_etmv4.o \
-		$(BUILD_DIR)/trc_cmp_cfg_ptm.o \
-		$(BUILD_DIR)/trc_component.o \
-		$(BUILD_DIR)/trc_core_arch_map.o \
-		$(BUILD_DIR)/trc_frame_deformatter.o \
-		$(BUILD_DIR)/trc_pkt_elem_etmv3.o \
-		$(BUILD_DIR)/trc_pkt_elem_etmv4i.o \
-		$(BUILD_DIR)/trc_pkt_elem_etmv4d.o \
-		$(BUILD_DIR)/trc_pkt_elem_ptm.o \
-		$(BUILD_DIR)/trc_pkt_proc_etmv3.o \
-		$(BUILD_DIR)/trc_pkt_proc_etmv4.o \
-		$(BUILD_DIR)/trc_pkt_proc_etmv4i_impl.o \
-		$(BUILD_DIR)/trc_pkt_proc_ptm.o
+OBJECTS=$(BUILD_DIR)/device_info.o \
+		$(BUILD_DIR)/device_parser.o \
+		$(BUILD_DIR)/snapshot_parser.o \
+		$(BUILD_DIR)/snapshot_parser_util.o \
+		$(BUILD_DIR)/snapshot_reader.o \
+		$(BUILD_DIR)/ss_to_dcdtree.o
 
+all: build_dir $(OBJECTS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a
 
-all: build_dir $(OBJECTS)
-	mkdir -p $(LIB_TARGET_DIR)
-	$(LIB) $(LIB_FLAGS) $(LIB_TARGET_DIR)/$(LIB_NAME).a $(OBJECTS)
+$(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a:
+	mkdir -p $(LIB_TEST_TARGET_DIR)
+	$(LIB) $(LIB_FLAGS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a $(OBJECTS)
 
 build_dir:
 	mkdir -p $(BUILD_DIR)
@@ -82,9 +74,8 @@ build_dir:
 $(BUILD_DIR)/%.o : %.cpp
 	$(CPP) $(CPP_FLAGS) $(CPP_INCLUDES) $< -o $@
 
-
-#### clean
+### clean
 .PHONY: clean
 clean:
 	rm -f $(OBJECTS)
-	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).a
+	rm -f $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a

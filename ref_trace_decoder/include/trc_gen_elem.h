@@ -49,18 +49,25 @@ class RctdlTraceElement : public trcPrintableElem, public rctdl_generic_trace_el
 {
 public:
     RctdlTraceElement(rctdl_gen_trc_elem_t type);
-    virtual ~RctdlTraceElement();
+    virtual ~RctdlTraceElement() {};
 
     const rctdl_gen_trc_elem_t getType() const { return elem_type; };
 
 };
+
+inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)
+{
+    elem_type = type;
+}
+
+
 
 // End of trace, not much more to be said - perhaps add in information on incomplete packets here?.
 class RctdlTE_EOT : public RctdlTraceElement
 {
 public:
     RctdlTE_EOT() : RctdlTraceElement(RCTDL_GEN_TRC_ELEM_EO_TRACE) {};
-    ~RctdlTE_EOT() {};    
+    virtual ~RctdlTE_EOT() {};    
 
     virtual void toString(std::string &outStr) const;
 };

@@ -30,6 +30,8 @@
 
 # Debug files
 *.dSYM/
+
+# Vc++ build files
 *tlog
 Debug/
 ipch/
@@ -41,3 +43,9 @@ ipch/
 *.pdb
 *.exp
 *.ilk
+
+# ignore emacs backup saves
+*~
+
+# ignore bin test directory
+bin/
