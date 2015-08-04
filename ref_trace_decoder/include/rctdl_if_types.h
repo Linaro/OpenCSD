@@ -218,11 +218,13 @@ typedef enum _rctdl_dcd_tree_src_t {
     RCTDL_TRC_SRC_SINGLE,           /**< input source is from a single protocol generator. */
 } rctdl_dcd_tree_src_t;
 
-#define RCTDL_DFRMTR_HAS_FSYNCS      0x1 /**< formatted data has fsyncs - input data 4 byte aligned */
-#define RCTDL_DFRMTR_HAS_HSYNCS      0x2 /**< formatted data has hsyncs - input data 2 byte aligned */
-#define RCTDL_DFRMTR_FRAME_MEM_ALIGN 0x4 /**< formatted frames are memory aligned, no syncs. Input data 16 byte frame aligned. */
-#define RCTDL_DFRMTR_VALID_MASK      0x7 /**< valid mask for deformatter configuration */
-#define RCTDL_DFRMTR_FRAME_SIZE      0x10 /**< CoreSight frame formatter frame size in bytes. */
+#define RCTDL_DFRMTR_HAS_FSYNCS         0x01 /**< formatted data has fsyncs - input data 4 byte aligned */
+#define RCTDL_DFRMTR_HAS_HSYNCS         0x02 /**< formatted data has hsyncs - input data 2 byte aligned */
+#define RCTDL_DFRMTR_FRAME_MEM_ALIGN    0x04 /**< formatted frames are memory aligned, no syncs. Input data 16 byte frame aligned. */
+#define RCTDL_DFRMTR_PACKED_RAW_OUT     0x08 /**< output raw packed frame data if raw monitor attached. */
+#define RCTDL_DFRMTR_UNPACKED_RAW_OUT   0x10 /**< output raw unpacked frame data if raw monitor attached. */
+#define RCTDL_DFRMTR_VALID_MASK         0x1F /**< valid mask for deformatter configuration */
+#define RCTDL_DFRMTR_FRAME_SIZE         0x10 /**< CoreSight frame formatter frame size in bytes. */
 
 /** @}*/
 

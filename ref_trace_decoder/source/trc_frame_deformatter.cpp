@@ -52,7 +52,10 @@ TraceFmtDcdImpl::TraceFmtDcdImpl() : TraceComponent(DEFORMATTER_NAME),
     m_cfgFlags(0),
     m_force_sync_idx(0),
     m_use_force_sync(false),
-    m_alignment(16) // assume frame aligned data as default.
+    m_alignment(16), // assume frame aligned data as default.
+    m_b_output_packed_raw(false),
+    m_b_output_unpacked_raw(false)
+
 {
     resetStateParams();
 }
@@ -79,6 +82,9 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::TraceDataIn(
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_FATAL_INVALID_OP;
     InitCollateDataPathResp();
+
+    m_b_output_packed_raw = m_RawTraceFrame.num_attached() && ((m_cfgFlags & RCTDL_DFRMTR_PACKED_RAW_OUT) != 0);
+    m_b_output_unpacked_raw = m_RawTraceFrame.num_attached() && ((m_cfgFlags & RCTDL_DFRMTR_UNPACKED_RAW_OUT) != 0);
 
     switch(op)
     {
@@ -173,9 +179,22 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::executeNoneDataOpAllIDs(rctdl_datapath_op
     if( m_RawTraceFrame.num_attached())
     {
         if(m_RawTraceFrame.first())
-            CollateDataPathResp(m_RawTraceFrame.first()->TraceRawFrameIn(op,0,RCTDL_FRM_NONE,0,0));
+            m_RawTraceFrame.first()->TraceRawFrameIn(op,0,RCTDL_FRM_NONE,0,0);
     }
     return highestDataPathResp();
+}
+
+void TraceFmtDcdImpl::outputRawMonBytes(const rctdl_datapath_op_t op, 
+                           const rctdl_trc_index_t index, 
+                           const rctdl_rawframe_elem_t frame_element, 
+                           const int dataBlockSize, 
+                           const uint8_t *pDataBlock)                           
+{
+    if( m_RawTraceFrame.num_attached())
+    {
+        if(m_RawTraceFrame.first())
+            m_RawTraceFrame.first()->TraceRawFrameIn(op,index,frame_element,dataBlockSize, pDataBlock);
+    }
 }
 
 void TraceFmtDcdImpl::CollateDataPathResp(const rctdl_datapath_resp_t resp)
@@ -381,7 +400,9 @@ void TraceFmtDcdImpl::outputUnsyncedBytes(uint32_t num_bytes)
 bool TraceFmtDcdImpl::extractFrame()
 {
     bool cont_process = true;   // continue processing after extraction.
-    uint32_t f_h_sync_bytes = 0;
+    uint32_t f_sync_bytes = 0; // skipped f sync bytes
+    uint32_t h_sync_bytes = 0; // skipped h sync bytes
+    uint32_t ex_bytes = 0;  // extracted bytes
 
     // memory aligned sources are always multiples of frames, aligned to start.
     if( m_cfgFlags & RCTDL_DFRMTR_FRAME_MEM_ALIGN)
@@ -397,8 +418,7 @@ bool TraceFmtDcdImpl::extractFrame()
             m_ex_frm_n_bytes = RCTDL_DFRMTR_FRAME_SIZE;
             memcpy(m_ex_frm_data, m_in_block_base+m_in_block_processed,m_ex_frm_n_bytes);
             m_trc_curr_idx_sof = m_trc_curr_idx;
-
-            // TBD  output raw data on raw frame channel.
+            ex_bytes = RCTDL_DFRMTR_FRAME_SIZE;
         }
     }
     else
@@ -419,13 +439,15 @@ bool TraceFmtDcdImpl::extractFrame()
         cont_process = (bool)(dataPtr < eodPtr);
         
         // can have FSYNCS at start of frame (in middle is an error).
-        if(hasFSyncs && cont_process)
+        if(hasFSyncs && cont_process && (m_ex_frm_n_bytes == 0))
         {
             while((*((uint32_t *)(dataPtr)) == (uint32_t)FSYNC_PATTERN) && cont_process)
             {
-                f_h_sync_bytes += 4;
+                f_sync_bytes += 4;
                 dataPtr += 4;
                 cont_process = (bool)(dataPtr < eodPtr);
+
+                // TBD:  output raw FSYNC data on raw frame channel.
             }
         }
 
@@ -441,12 +463,14 @@ bool TraceFmtDcdImpl::extractFrame()
                 }
             }
 
+            // mark start of frame after FSyncs 
             if(m_ex_frm_n_bytes == 0)
-                m_trc_curr_idx_sof = m_trc_curr_idx;
+                m_trc_curr_idx_sof = m_trc_curr_idx + f_sync_bytes;
 
             m_ex_frm_data[m_ex_frm_n_bytes] = dataPtr[0];
             m_ex_frm_data[m_ex_frm_n_bytes+1] = dataPtr[1];
             m_ex_frm_n_bytes+=2;
+            ex_bytes +=2;
 
             // check pair is not HSYNC
             if(*((uint16_t *)(dataPtr)) == (uint16_t)HSYNC_PATTERN)
@@ -454,7 +478,10 @@ bool TraceFmtDcdImpl::extractFrame()
                 if(hasHSyncs)
                 {
                     m_ex_frm_n_bytes-=2;
-                    f_h_sync_bytes+=2;
+                    ex_bytes -= 2;
+                    h_sync_bytes+=2;
+
+                    // TBD:  output raw HSYNC data on raw frame channel.
                 }
                 else
                 {
@@ -472,11 +499,21 @@ bool TraceFmtDcdImpl::extractFrame()
             cont_process = true;
     }
 
-    // update the processed count for the buffer
-    m_in_block_processed += m_ex_frm_n_bytes + f_h_sync_bytes;
+    // output raw data on raw frame channel - packed raw. 
+    if ((m_ex_frm_n_bytes == RCTDL_DFRMTR_FRAME_SIZE) && m_b_output_packed_raw)
+    {
+        outputRawMonBytes(  RCTDL_OP_DATA, 
+                            m_trc_curr_idx, 
+                            RCTDL_FRM_PACKED,
+                            ex_bytes + f_sync_bytes + h_sync_bytes,
+                            m_in_block_base+m_in_block_processed);
+    }
 
-    // init processing for the extracted frame...    
-    m_trc_curr_idx += m_ex_frm_n_bytes + f_h_sync_bytes;
+    // update the processed count for the buffer
+    m_in_block_processed += m_ex_frm_n_bytes + f_sync_bytes + h_sync_bytes;
+
+    // update index past the processed data   
+    m_trc_curr_idx += m_ex_frm_n_bytes + f_sync_bytes + h_sync_bytes;
 
     return cont_process;
 }
@@ -564,6 +601,7 @@ bool TraceFmtDcdImpl::outputFrame()
 
     while((m_out_processed < (m_out_data_idx + 1)) && cont_processing)
     {
+        
         // may have data prior to a valid ID appearing
         if(m_out_data[m_out_processed].id != RCTDL_BAD_CS_SRC_ID)
         {
@@ -579,17 +617,24 @@ bool TraceFmtDcdImpl::outputFrame()
                 {
                     cont_processing = false;
                     m_out_data[m_out_processed].used += bytes_used;
+                    // TBD: output as ID+unpacked RAW of used data
                 }
                 else
+                {
                      m_out_processed++; // we have sent this data;
+                     // TBD: output as ID+unpacked RAW of sent this time (all, or remainder)
+                }
             }
             else
+            {
                 m_out_processed++; // skip past this data.
+                // TBD: output as ID+unpacked RAW
+            }
         }
         else
         {
             m_out_processed++; // skip past this data.
-            /// TBD - output this on the RAW channel.
+            /// TBD - output this on the RAW  as unknown ID channel.
         }
     }
     return cont_processing;

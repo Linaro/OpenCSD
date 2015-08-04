@@ -106,6 +106,13 @@ private:
     uint32_t findfirstFSync();
     void outputUnsyncedBytes(uint32_t num_bytes);  // output bytes as unsynced from current buffer position.
 
+    // output bytes to raw frame monitor
+    void outputRawMonBytes(const rctdl_datapath_op_t op, 
+                           const rctdl_trc_index_t index, 
+                           const rctdl_rawframe_elem_t frame_element, 
+                           const int dataBlockSize, 
+                           const uint8_t *pDataBlock);
+
 
     friend class TraceFormatterFrameDecoder;
 
@@ -145,6 +152,10 @@ private:
     const uint8_t *m_in_block_base;
     uint32_t m_in_block_size;
     uint32_t m_in_block_processed;
+
+    /* raw output options */
+    bool m_b_output_packed_raw;
+    bool m_b_output_unpacked_raw;
 
 #if 0
     /* pattern match for fsyncs */

@@ -64,13 +64,13 @@ public:
      * @param dataBlockSize : size of frame element.
      * @param *pDataBlock : pointer to frame data.
      *
-     * @return rctdl_datapath_resp_t  : Standard data path response code.
+     * @return rctdl_err_t  : Standard library erroc code. Monitor only, not on data path.
      */
-    virtual rctdl_datapath_resp_t TraceRawFrameIn(  const rctdl_datapath_op_t op, 
+    virtual rctdl_err_t TraceRawFrameIn(  const rctdl_datapath_op_t op, 
                                                     const rctdl_trc_index_t index, 
                                                     const rctdl_rawframe_elem_t frame_element, 
                                                     const int dataBlockSize, 
-                                                    uint8_t *pDataBlock) = 0;
+                                                    const uint8_t *pDataBlock) = 0;
 };
 
 
