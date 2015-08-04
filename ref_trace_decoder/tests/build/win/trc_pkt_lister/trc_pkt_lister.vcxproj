@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\source\raw_frame_printer.cpp" />
     <ClCompile Include="..\..\..\source\trc_pkt_lister.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -156,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\source\item_printer.h" />
     <ClInclude Include="..\..\..\source\pkt_printer_t.h" />
+    <ClInclude Include="..\..\..\source\raw_frame_printer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,5 +1,5 @@
 /*
- * \file       item_printer.h
+ * \file       raw_frame_printer.h
  * \brief      Reference CoreSight Trace Decoder : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
@@ -32,42 +32,39 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_ITEM_PRINTER_H_INCLUDED
-#define ARM_ITEM_PRINTER_H_INCLUDED
+#ifndef ARM_RAW_FRAME_PRINTER_H_INCLUDED
+#define ARM_RAW_FRAME_PRINTER_H_INCLUDED
 
 #include "rctdl.h"
-#include <string>
+#include "item_printer.h"
 
-class ItemPrinter 
+#include <string>
+#include <sstream>
+
+class RawFramePrinter : public ITrcRawFrameIn, public ItemPrinter
 {
 public:
-    ItemPrinter();
-    virtual ~ItemPrinter();
+    RawFramePrinter() {};
+    RawFramePrinter(rctdlMsgLogger *pMsgLogger);
+    virtual ~RawFramePrinter() {};
 
-    void setMessageLogger(rctdlMsgLogger *pMsgLogger) { m_pMsgLogger = pMsgLogger; };
-    void itemPrintLine(const std::string &msg);
+    virtual rctdl_err_t TraceRawFrameIn(  const rctdl_datapath_op_t op, 
+                                                const rctdl_trc_index_t index, 
+                                                const rctdl_rawframe_elem_t frame_element, 
+                                                const int dataBlockSize, 
+                                                const uint8_t *pDataBlock);
 
-protected:
-    rctdlMsgLogger *m_pMsgLogger;
+private:
+    void createDataString(const int dataSize, const uint8_t *pData, int bytesPerLine, std::string &dataStr);
+
 };
 
-inline ItemPrinter::ItemPrinter() :
-   m_pMsgLogger(0)
+inline RawFramePrinter::RawFramePrinter(rctdlMsgLogger *pMsgLogger)
 {
-}
-
-inline ItemPrinter::~ItemPrinter()
-{
-    m_pMsgLogger = 0;
-}
-
-inline void ItemPrinter::itemPrintLine(const std::string &msg)
-{
-    if(m_pMsgLogger)
-        m_pMsgLogger->LogMsg(msg);
+    setMessageLogger(pMsgLogger);
 }
 
 
-#endif // ARM_ITEM_PRINTER_H_INCLUDED
+#endif // ARM_RAW_FRAME_PRINTER_H_INCLUDED
 
-/* End of File item_printer.h */
+/* End of File raw_frame_printer.h */

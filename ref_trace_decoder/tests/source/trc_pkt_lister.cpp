@@ -44,9 +44,10 @@
 #include "rctdl.h"
 #include "trace_snapshots.h"
 #include "pkt_printer_t.h"
+#include "raw_frame_printer.h"
 
-static bool process_cmd_line_opts(rctdlMsgLogger &logger, int argc, char* argv[]);
-static void ListTracePackets(rctdlMsgLogger &logger, rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name);
+static bool process_cmd_line_opts( int argc, char* argv[]);
+static void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name);
 
     // default path
 #ifdef WIN32
@@ -59,6 +60,7 @@ static std::string source_buffer_name = "";    // source name - used if more tha
 static bool all_source_ids = true;      // output all IDs in source.
 static std::vector<uint8_t> id_list;    // output specific IDs in source
 
+static rctdlMsgLogger logger;
 static int logOpts = rctdlMsgLogger::OUT_STDOUT | rctdlMsgLogger::OUT_FILE;
 static std::string logfileName = "trc_pkt_lister.log";
 
@@ -66,14 +68,13 @@ int main(int argc, char* argv[])
 {
     // TBD: get the logger cmd line options here.
 
-    rctdlMsgLogger logger;
     logger.setLogOpts(logOpts);
     logger.setLogFileName(logfileName.c_str());
 
     rctdlDefaultErrorLogger err_log;
     err_log.initErrorLogger(RCTDL_ERR_SEV_INFO,&logger);
 
-    if(!process_cmd_line_opts(logger, argc, argv))
+    if(!process_cmd_line_opts(argc, argv))
         return -1;
 
     SnapShotReader ss_reader;
@@ -103,7 +104,7 @@ int main(int argc, char* argv[])
                 std::ostringstream oss;
                 oss << "Using " << source_buffer_name << " as trace source\n";
                 logger.LogMsg(oss.str());
-                ListTracePackets(logger, err_log,ss_reader,source_buffer_name);
+                ListTracePackets(err_log,ss_reader,source_buffer_name);
 
             }
             else
@@ -124,7 +125,7 @@ int main(int argc, char* argv[])
 }
 
 
-bool process_cmd_line_opts(rctdlMsgLogger &logger, int argc, char* argv[])
+bool process_cmd_line_opts(int argc, char* argv[])
 {
     bool bOptsOK = true;
     if(argc > 1)
@@ -141,7 +142,7 @@ bool process_cmd_line_opts(rctdlMsgLogger &logger, int argc, char* argv[])
                     ss_path = argv[optIdx];
                 else
                 {
-                    logger.LogMsg("Error: Missing directory string on -ss_dir option\n");
+                    logger.LogMsg("Trace Packet Lister : Error: Missing directory string on -ss_dir option\n");
                     bOptsOK = false;
                 }
             }
@@ -155,7 +156,7 @@ bool process_cmd_line_opts(rctdlMsgLogger &logger, int argc, char* argv[])
                     if((Id == 0) || (Id >=70)) 
                     {                        
                         std::ostringstream iderrstr;
-                        iderrstr << "Error: invalid ID number " << Id << " on -id option" << std::endl;
+                        iderrstr << "Trace Packet Lister : Error: invalid ID number " << Id << " on -id option" << std::endl;
                         logger.LogMsg(iderrstr.str());
                         bOptsOK = false;
                     }
@@ -167,7 +168,7 @@ bool process_cmd_line_opts(rctdlMsgLogger &logger, int argc, char* argv[])
                 }
                 else
                 {
-                    logger.LogMsg("Error: No ID number on -id option\n");
+                    logger.LogMsg("Trace Packet Lister : Error: No ID number on -id option\n");
                     bOptsOK = false;
                 }
             }
@@ -179,14 +180,14 @@ bool process_cmd_line_opts(rctdlMsgLogger &logger, int argc, char* argv[])
                     source_buffer_name = argv[optIdx];
                 else
                 {
-                    logger.LogMsg("Error: Missing source name string on -src_name option\n");
+                    logger.LogMsg("Trace Packet Lister : Error: Missing source name string on -src_name option\n");
                     bOptsOK = false;
                 }
             }
             else
             {
                 std::ostringstream errstr;
-                errstr << "Warning: Ignored unknown option " << argv[optIdx] << "." << std::endl;
+                errstr << "Trace Packet Lister : Warning: Ignored unknown option " << argv[optIdx] << "." << std::endl;
                 logger.LogMsg(errstr.str());
             }
             options_to_process--;
@@ -197,10 +198,14 @@ bool process_cmd_line_opts(rctdlMsgLogger &logger, int argc, char* argv[])
     return bOptsOK;
 }
 
-void ListTracePackets(rctdlMsgLogger &logger, rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name)
+void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name)
 {
     CreateDcdTreeFromSnapShot tree_creator;
+    RawFramePrinter framePrinter;
+
+    framePrinter.setMessageLogger(&logger);
     tree_creator.initialise(&reader,&err_logger);
+
     if(tree_creator.createDecodeTree(trace_buffer_name, true))
     {
         std::vector<ItemPrinter *> printers;
@@ -215,11 +220,25 @@ void ListTracePackets(rctdlMsgLogger &logger, rctdlDefaultErrorLogger &err_logge
             switch(pElement->getProtocol())
             {
             case RCTDL_PROTOCOL_ETMV4I:
-                PacketPrinter<EtmV4ITrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV4ITrcPacket>(elemID,&logger);
-                if(pPrinter)
                 {
-                    pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
-                    printers.push_back(pPrinter); // save printer to destroy it later
+                    std::ostringstream oss;
+                    PacketPrinter<EtmV4ITrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV4ITrcPacket>(elemID,&logger);
+                    if(pPrinter)
+                    {
+                        pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                        printers.push_back(pPrinter); // save printer to destroy it later
+                    }
+                    
+                    oss << "Trace Packet Lister : ETMv4 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                    logger.LogMsg(oss.str());
+                }
+                break;
+
+            default:
+                {
+                    std::ostringstream oss;
+                    oss << "Trace Packet Lister : Unsupported Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                    logger.LogMsg(oss.str());
                 }
                 break;
 
@@ -227,6 +246,16 @@ void ListTracePackets(rctdlMsgLogger &logger, rctdlDefaultErrorLogger &err_logge
             }
             pElement = dcd_tree->getNextElement(elemID);
         }
+
+        // attached a frame printer to the frame deformatter
+        TraceFormatterFrameDecoder *pDeformatter = dcd_tree->getFrameDeformatter();
+        if(pDeformatter != 0)
+        {
+            // wwe want the raw frames.
+            pDeformatter->getTrcRawFrameAttachPt()->attach(&framePrinter);
+            pDeformatter->Configure(RCTDL_DFRMTR_FRAME_MEM_ALIGN | RCTDL_DFRMTR_UNPACKED_RAW_OUT | RCTDL_DFRMTR_PACKED_RAW_OUT);
+        }
+
 
         // check if we have attached at least one printer
         if(printers.size() > 0)
@@ -271,15 +300,45 @@ void ListTracePackets(rctdlMsgLogger &logger, rctdlDefaultErrorLogger &err_logge
                         }
                     }
                 }
-                // mark end of trace into the data path
-                dcd_tree->TraceDataIn(RCTDL_OP_EOT,0,0,0,0);
+
+                // fatal error - no futher processing
+                if(RCTDL_DATA_RESP_IS_FATAL(dataPathResp))
+                {
+                    std::ostringstream oss;
+                    oss << "Trace Packet Lister : Data Path fatal error\n";
+                    logger.LogMsg(oss.str());
+                    rctdlError *perr = err_logger.GetLastError();
+                    if(perr != 0)
+                        logger.LogMsg(rctdlError::getErrorString(perr));
+
+                }
+                else
+                {
+                    // mark end of trace into the data path
+                    dcd_tree->TraceDataIn(RCTDL_OP_EOT,0,0,0,0);
+                }
+
                 // close the input file.
                 in.close();
+
+                std::ostringstream oss;
+                oss << "Trace Packet Lister : Trace buffer done, processed " << trace_index << "bytes.\n";
+                logger.LogMsg(oss.str());
+
             }
             else
             {
+                std::ostringstream oss;
+                oss << "Trace Packet Lister : Error : Unable to open trace buffer.\n";
+                logger.LogMsg(oss.str());
             }
 
+        }
+        else
+        {
+                std::ostringstream oss;
+                oss << "Trace Packet Lister : No supported protocols found.\n";
+                logger.LogMsg(oss.str());
         }
 
         // clean up

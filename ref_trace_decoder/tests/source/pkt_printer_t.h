@@ -84,20 +84,20 @@ template<class P> rctdl_datapath_resp_t PacketPrinter<P>::PacketDataIn( const rc
     {
     case RCTDL_OP_DATA:
         p_packet_in->toString(pktstr);
-        oss << "Idx:" << index_sop << "; ID:"<< m_trcID << "\t" << pktstr << std::endl;
+        oss << "Idx:" << index_sop << "; ID:"<< std::hex << (uint32_t)m_trcID << "\t" << pktstr << std::endl;
         itemPrintLine(oss.str());
         break;
 
     case RCTDL_OP_EOT:
-        oss <<"ID:"<< m_trcID << "\tEND OF TRACE DATA\n";
+        oss <<"ID:"<< std::hex << (uint32_t)m_trcID << "\tEND OF TRACE DATA\n";
         break;
 
     case RCTDL_OP_FLUSH:
-        oss <<"ID:"<< m_trcID << "\tFLUSH operation on trace decode path\n";
+        oss <<"ID:"<< std::hex << (uint32_t)m_trcID << "\tFLUSH operation on trace decode path\n";
         break;
 
     case RCTDL_OP_RESET:
-        oss <<"ID:"<< m_trcID << "\tRESET operation on trace decode path\n";
+        oss <<"ID:"<< std::hex << (uint32_t)m_trcID << "\tRESET operation on trace decode path\n";
         break;
     }
 

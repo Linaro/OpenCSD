@@ -49,3 +49,4 @@ ipch/
 
 # ignore bin test directory
 bin/
+*.log
