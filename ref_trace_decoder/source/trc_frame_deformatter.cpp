@@ -523,7 +523,7 @@ bool TraceFmtDcdImpl::unpackFrame()
     // unpack cannot fail as never called on incomplete frame.
     uint8_t frameFlagBit = 0x1;
     uint8_t newSrcID = RCTDL_BAD_CS_SRC_ID;
-    bool PrevID = false;
+    bool PrevIDandIDChange = false;
 
     // init output processing
     m_out_data_idx = 0;   
@@ -538,7 +538,7 @@ bool TraceFmtDcdImpl::unpackFrame()
     // work on byte pairs - bytes 0 - 13.
     for(int i = 0; i < 14; i+=2)
     {
-        PrevID = false;
+        PrevIDandIDChange = false;
 
         // it's an ID + data
         if(m_ex_frm_data[i] & 0x1)
@@ -546,21 +546,30 @@ bool TraceFmtDcdImpl::unpackFrame()
             newSrcID = (m_ex_frm_data[i] >> 1) & 0x7f;
             if(newSrcID != m_curr_src_ID)   // ID change
             {
-                PrevID = ((frameFlagBit & m_ex_frm_data[15]) != 0);
+                PrevIDandIDChange = ((frameFlagBit & m_ex_frm_data[15]) != 0);
 
-                if(PrevID)
+                // following byte for old id? 
+                if(PrevIDandIDChange)
                     // 2nd byte always data
                     m_out_data[m_out_data_idx].data[m_out_data[m_out_data_idx].valid++] = m_ex_frm_data[i+1];
 
                 // change ID
                 m_curr_src_ID = newSrcID;
-                m_out_data_idx++;
+
+                // if we already have data in this buffer
+                if(m_out_data[m_out_data_idx].valid > 0)
+                {
+                    m_out_data_idx++; // move to next buffer
+                    m_out_data[m_out_data_idx].valid = 0;
+                    m_out_data[m_out_data_idx].used = 0;
+                    m_out_data[m_out_data_idx].index = m_trc_curr_idx_sof + i;
+                }
+
+                // set new ID on buffer
                 m_out_data[m_out_data_idx].id = m_curr_src_ID;
-                m_out_data[m_out_data_idx].valid = 0;
-                m_out_data[m_out_data_idx].used = 0;
-                m_out_data[m_out_data_idx].index = m_trc_curr_idx_sof + i;
+
+                /// TBD - ID indexing in here.
             }
-            /// TBD - ID indexing in here.
         }
         else
         // it's just data
@@ -569,7 +578,7 @@ bool TraceFmtDcdImpl::unpackFrame()
         }
 
         // 2nd byte always data
-        if(!PrevID) // output only if we didn't for an ID change + prev ID.
+        if(!PrevIDandIDChange) // output only if we didn't for an ID change + prev ID.
             m_out_data[m_out_data_idx].data[m_out_data[m_out_data_idx].valid++] = m_ex_frm_data[i+1];
 
         frameFlagBit <<= 1;
