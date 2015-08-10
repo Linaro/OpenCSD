@@ -43,6 +43,8 @@ static const char *s_errorCodeDescs[] = {
     "RCTDL_ERR_MEM","Internal memory allocation error.",
     "RCTDL_ERR_NOT_INIT","Component not initialised.",
     "RCTDL_ERR_INVALID_ID","Invalid CoreSight Trace Source ID.",
+    "RCTDL_ERR_BAD_HANDLE","Invalid handle passed to component.",
+    "RCTDL_ERR_INVALID_PARAM_VAL","Invalid value parameter passed to component.",
     /* attachment point errors */
     "RCTDL_ERR_ATTACH_TOO_MANY","Cannot attach - attach device limit reached.",
     "RCTDL_ERR_ATTACH_INVALID_PARAM"," Cannot attach - invalid parameter.",
@@ -60,6 +62,8 @@ static const char *s_errorCodeDescs[] = {
     /* test errors - errors generated only by the test code, not the library */
     "RCTDL_ERR_TEST_SNAPSHOT_PARSE", "Test snapshot file parse error",
     "RCTDL_ERR_TEST_SNAPSHOT_PARSE_INFO", "Test snapshot file parse information",
+    "RCTDL_ERR_TEST_SNAPSHOT_READ","test snapshot reader error",
+    "RCTDL_ERR_TEST_SS_TO_DECODER","test snapshot to decode tree conversion error",
     /* end marker*/
     "RCTDL_ERR_LAST", "No error - code end marker"
 };

@@ -87,7 +87,15 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
             // TBD: handle raw input with no formatted frame data.
             //      handle syncs / hsyncs data from TPIU
             m_pDecodeTree = DecodeTree::CreateDecodeTree(RCTDL_TRC_SRC_FRAME_FORMATTED,RCTDL_DFRMTR_FRAME_MEM_ALIGN); 
-            
+            if(m_pDecodeTree == 0)
+            {
+                LogError("Failed to create decode tree object\n");
+                return false;
+            }
+
+            // use our error logger - don't use the tree default.
+            m_pDecodeTree->setAlternateErrorLogger(m_pErrLogInterface);
+
             /* run through each protocol source to this buffer... */
             std::map<std::string, std::string>::iterator it = tree.source_core_assoc.begin();
             while(it != tree.source_core_assoc.end())

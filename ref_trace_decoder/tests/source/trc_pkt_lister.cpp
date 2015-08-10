@@ -120,7 +120,6 @@ int main(int argc, char* argv[])
         logger.LogMsg(oss.str());
     }
 
-    
     return 0;
 }
 

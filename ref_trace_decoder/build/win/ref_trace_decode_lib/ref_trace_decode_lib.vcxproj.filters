@@ -63,9 +63,6 @@
     <ClInclude Include="..\..\..\include\interfaces\trc_tgt_mem_access_i.h">
       <Filter>interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\interfaces\trc_src_reader_i.h">
-      <Filter>interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\interfaces\trc_pkt_raw_in_i.h">
       <Filter>interfaces</Filter>
     </ClInclude>
