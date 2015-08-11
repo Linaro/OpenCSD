@@ -84,11 +84,32 @@ protected:
     int m_currPktIdx;   // index into raw packet when expanding
     EtmV4ITrcPacket m_curr_packet;  // expanded packet
     rctdl_trc_index_t m_packet_index;   // index of the start of the current packet
+    uint32_t m_blockBytesProcessed;     // number of bytes processed in the current data block
+    rctdl_trc_index_t m_blockIndex;     // index at the start of the current data block being processed
 
     bool m_is_sync;             //!< seen first sync packet
     bool m_first_trace_info;    //!< seen first trace info packet after sync
 
+   
 private:
+    // current processing state data 
+
+    // TraceInfo Packet
+    // flags to indicate processing for these sections is complete.
+    bool ctrlSect;
+    bool infoSect;   
+    bool keySect;
+    bool specSect;
+    bool cyctSect;
+
+    // address and context packets 
+    int m_addrBytes;
+    uint8_t m_addrIS;
+    bool m_bAddr64bit;
+    int m_vmidBytes;
+    int m_ctxtidBytes;
+    bool m_bCtxtInfoDone;
+
     rctdl_datapath_resp_t outputPacket();
     void outputUnsyncedRawPacket(int nbytes); // unsynced packets will not cause data path stall.
 

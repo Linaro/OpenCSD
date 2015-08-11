@@ -178,12 +178,15 @@ template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt,
                                                 uint32_t *numBytesProcessed)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    
     switch(op)
     {
     case RCTDL_OP_DATA:
         if((dataBlockSize == 0) || (pDataBlock == 0) || (numBytesProcessed == 0))
         {
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PARAM_VAL));
+            if(numBytesProcessed)
+                *numBytesProcessed = 0; // ensure processed bytes value set to 0.
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PARAM_VAL,"Packet Processor: Zero length data block or NULL pointer error\n"));
             resp = RCTDL_RESP_FATAL_INVALID_PARAM;
         }
         else
@@ -203,7 +206,7 @@ template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt,
         break;
 
     default:
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PARAM_VAL));
+        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PARAM_VAL,"Packet Processor : Unknown Datapath operation\n"));
         resp = RCTDL_RESP_FATAL_INVALID_OP;
         break;
     }

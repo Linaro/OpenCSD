@@ -60,7 +60,10 @@ rctdl_err_t EtmV4IPktProcImpl::Configure(const EtmV4Config *p_config)
 {
     rctdl_err_t err = RCTDL_OK;
     if(p_config != 0)
+    {
         m_config = *p_config;
+        m_chanIDCopy = m_config.getTraceID();
+    }
     else
     {
         err = RCTDL_ERR_INVALID_PARAM_VAL;
@@ -76,17 +79,18 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
                                     uint32_t *numBytesProcessed)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    uint32_t bytesProcessed = 0;
+    m_blockBytesProcessed = 0;
+    m_blockIndex = index;
     uint8_t currByte;
-    while((bytesProcessed < dataBlockSize) && RCTDL_DATA_RESP_IS_CONT(resp))
+    while((m_blockBytesProcessed < dataBlockSize) && RCTDL_DATA_RESP_IS_CONT(resp))
     {
-        currByte = pDataBlock[bytesProcessed];
+        currByte = pDataBlock[m_blockBytesProcessed];
         try 
         {
             switch(m_process_state)
             {
             case PROC_HDR:
-                m_packet_index = index +  bytesProcessed;
+                m_packet_index = m_blockIndex +  m_blockBytesProcessed;
                 if(m_is_sync)
                 {
                     m_pIPktFn = m_i_table[currByte].pptkFn;
@@ -94,14 +98,15 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
                 }
                 else
                 {
+                    // unsynced - process data until we see a sync point
                     m_pIPktFn = &EtmV4IPktProcImpl::iNotSync;
                     m_curr_packet.type = ETM4_PKT_I_NOTSYNC;
                 }
-                m_currPacketData.push_back(pDataBlock[bytesProcessed]);
                 m_process_state = PROC_DATA;
 
             case PROC_DATA:
-                bytesProcessed++;
+                m_currPacketData.push_back(pDataBlock[m_blockBytesProcessed]);
+                m_blockBytesProcessed++;
                 (this->*m_pIPktFn)();                
                 break;
 
@@ -115,9 +120,16 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
         catch(rctdlError &err)
         {
             m_interface->LogError(err);
-            
-
-            /// TBD - determine what to do with the error - depends on error and opmode.
+            m_curr_packet.err_type = m_curr_packet.type;
+            m_curr_packet.type = ETM4_PKT_I_BAD_SEQUENCE;
+            if(err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ)
+            {
+                m_process_state = SEND_PKT;
+            }
+            else
+            {
+                resp = RCDTL_REST_FATAL_INVALID_DATA;
+            }
         }
         catch(...)
         {
@@ -128,7 +140,7 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
         }
     }
 
-    *numBytesProcessed = bytesProcessed;
+    *numBytesProcessed = m_blockBytesProcessed;
     return resp;
 }
 
@@ -173,15 +185,17 @@ void EtmV4IPktProcImpl::InitProcessorState()
 rctdl_datapath_resp_t EtmV4IPktProcImpl::outputPacket()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    //** TBD:
-
-    
+    resp = m_interface->outputOnAllInterfaces(m_packet_index,&m_curr_packet,&m_curr_packet.type,m_currPacketData);
     return resp;
 }
 
 void EtmV4IPktProcImpl::outputUnsyncedRawPacket(int nbytes)
 {
-    //** TBD:
+    m_interface->outputRawPacketToMonitor(m_packet_index,&m_curr_packet,nbytes,&m_currPacketData[0]);
+    if(m_currPacketData.size() <= nbytes)
+        m_currPacketData.clear();
+    else
+        m_currPacketData.erase(m_currPacketData.begin(),m_currPacketData.begin()+nbytes);
 }
 
 void EtmV4IPktProcImpl::iNotSync()
@@ -194,11 +208,11 @@ void EtmV4IPktProcImpl::iNotSync()
         if(m_currPacketData.size() > 1)
         {
             m_currPacketData.pop_back();
-            outputUnsyncedRawPacket(m_currPacketData.size());
-            m_currPacketData.push_back(lastByte);
+            outputUnsyncedRawPacket(m_currPacketData.size()); // dump unwanted pre-sync bytes
+            m_currPacketData.push_back(lastByte);            
         }
+        m_packet_index = m_blockIndex + m_blockBytesProcessed - 1;
         m_pIPktFn = m_i_table[lastByte].pptkFn; 
-        (this->*m_pIPktFn)();   // pass on to next analysis fn
     }
     else if(m_currPacketData.size() >= 8)
     {
@@ -246,6 +260,14 @@ void EtmV4IPktProcImpl::iPktExtension()
     uint8_t lastByte = m_currPacketData.back();
     if(m_currPacketData.size() == 2)
     {
+        // not sync and not next by 0x00 - not sync sequence
+        if(!m_is_sync && (lastByte != 0x00))
+        {
+            m_pIPktFn = &EtmV4IPktProcImpl::iNotSync;
+            m_curr_packet.type = ETM4_PKT_I_NOTSYNC;
+            return;
+        }
+
         switch(lastByte)
         {
         case 0x03: // discard packet.
@@ -277,6 +299,15 @@ void EtmV4IPktProcImpl::iPktASync()
     uint8_t lastByte = m_currPacketData.back();
     if(lastByte != 0x00)
     {
+        // not sync and not next by 0x00 - not sync sequence if < 12
+        if(!m_is_sync && m_currPacketData.size() != 12)
+        {
+            m_pIPktFn = &EtmV4IPktProcImpl::iNotSync;
+            m_curr_packet.type = ETM4_PKT_I_NOTSYNC;
+            return;
+        }
+
+        // 12 bytes and not valid sync sequence - not possible even if not synced
         m_process_state = SEND_PKT;
         if((m_currPacketData.size() != 12) || (lastByte != 0x80))
         {
@@ -305,14 +336,6 @@ void EtmV4IPktProcImpl::iPktASync()
 
 void EtmV4IPktProcImpl::iPktTraceInfo()
 {
-    // flags to indicate processing for these sections is complete.
-    // immediately true if section not present
-    static bool ctrlSect = false;
-    static bool infoSect = false;   
-    static bool keySect =  false;
-    static bool specSect = false;
-    static bool cyctSect = false;
-
     uint8_t lastByte = m_currPacketData.back();
     if(m_currPacketData.size() == 1)
     {
@@ -326,19 +349,21 @@ void EtmV4IPktProcImpl::iPktTraceInfo()
         keySect =  (bool)((lastByte & 0x2) == 0x0);
         specSect = (bool)((lastByte & 0x4) == 0x0);
         cyctSect = (bool)((lastByte & 0x8) == 0x0);
-        ctrlSect = (bool)((lastByte & 0x80) == 0x0);
+
+        // see if there is an extended control section, otherwise this byte is it.
+        ctrlSect = (bool)((lastByte & 0x80) == 0x0);  
     }
     else
     {
-        if(ctrlSect)
+        if(!ctrlSect)
             ctrlSect = (bool)((lastByte & 0x80) == 0x0);
-        else if(infoSect)
+        else if(!infoSect)
             infoSect = (bool)((lastByte & 0x80) == 0x0);
-        else if(keySect)
+        else if(!keySect)
             keySect = (bool)((lastByte & 0x80) == 0x0);
-        else if(specSect)
+        else if(!specSect)
             specSect = (bool)((lastByte & 0x80) == 0x0);
-        else if(cyctSect)
+        else if(!cyctSect)
             cyctSect = (bool)((lastByte & 0x80) == 0x0);        
     }
 
@@ -348,7 +373,8 @@ void EtmV4IPktProcImpl::iPktTraceInfo()
         int idx = 2;
         uint32_t fieldVal = 0;
 
-        // now need to know which sections to look for...
+        // now need to know which sections to look for, so re-examine the flags byte...
+        lastByte = m_currPacketData[1];
         infoSect = (bool)((lastByte & 0x1) == 0x1);
         keySect =  (bool)((lastByte & 0x2) == 0x2);
         specSect = (bool)((lastByte & 0x4) == 0x4);
@@ -771,8 +797,8 @@ void EtmV4IPktProcImpl::extractAndSetContextInfo(const std::vector<uint8_t> &buf
     m_curr_packet.setContextInfo((infoByte & 0x3) != 0, (infoByte >> 5) & 0x1, (infoByte >> 4) & 0x1);
     
     // see if there are VMID and CID bytes, and how many.
-    int nVMID_bytes = ((infoByte & 0x40) == 0x40) ? (m_config.vmidSize()/4) : 0;
-    int nCtxtID_bytes = ((infoByte & 0x80) == 0x80) ? (m_config.cidSize()/4) : 0;
+    int nVMID_bytes = ((infoByte & 0x40) == 0x40) ? (m_config.vmidSize()/8) : 0;
+    int nCtxtID_bytes = ((infoByte & 0x80) == 0x80) ? (m_config.cidSize()/8) : 0;
 
     // extract any VMID and CID
     int payload_idx = st_idx+1;
@@ -800,76 +826,68 @@ void EtmV4IPktProcImpl::extractAndSetContextInfo(const std::vector<uint8_t> &buf
 
 void EtmV4IPktProcImpl::iPktAddrCtxt()
 {
-    static int nVMID_bytes = 0;
-    static int nCtxtID_bytes = 0;
-    static int nAddr_bytes = 0;
-    static bool bCtxtInfo_done = false;
-    static uint8_t IS = 0;
-    static bool b64bit = false;
-
     uint8_t lastByte = m_currPacketData.back();
     bool bSend = false;
 
     if( m_currPacketData.size() == 1)    
     {        
-        IS = 0;
-        nAddr_bytes = 0;
-        b64bit = false;
+        m_addrIS = 0;
+        m_addrBytes = 4;
+        m_bAddr64bit = false;
+        m_vmidBytes = 0;
+        m_ctxtidBytes = 0;
+        m_bCtxtInfoDone = false;
 
         switch(m_curr_packet.type)
         {
         case ETM4_PKT_I_ADDR_CTXT_L_32IS1:
-            IS = 1;
+            m_addrIS = 1;
         case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
-            nAddr_bytes = 4;
             break;
 
         case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
-            IS = 1;
+            m_addrIS = 1;
         case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
-            nAddr_bytes = 8;
-            b64bit = true;
+            m_addrBytes = 8;
+            m_bAddr64bit = true;
             break;
         }
-        bCtxtInfo_done = false;
-        nCtxtID_bytes = 0;
-        nVMID_bytes = 0;
     }
     else
     {
-        if(nAddr_bytes == 0)
+        if(m_addrBytes == 0)
         {
-            if(bCtxtInfo_done == false)
+            if(m_bCtxtInfoDone == false)
             {
-                bCtxtInfo_done = true;
-                nVMID_bytes = ((lastByte & 0x40) == 0x40) ? (m_config.vmidSize()/4) : 0;
-                nCtxtID_bytes = ((lastByte & 0x80) == 0x80) ? (m_config.cidSize()/4) : 0;
+                m_bCtxtInfoDone = true;
+                m_vmidBytes = ((lastByte & 0x40) == 0x40) ? (m_config.vmidSize()/8) : 0;
+                m_ctxtidBytes = ((lastByte & 0x80) == 0x80) ? (m_config.cidSize()/8) : 0;
             }
             else
             {
-                if(nVMID_bytes > 0) 
-                    nVMID_bytes--;
-                else if(nCtxtID_bytes > 0)
-                    nCtxtID_bytes--;
+                if( m_vmidBytes > 0) 
+                     m_vmidBytes--;
+                else if(m_ctxtidBytes > 0)
+                    m_ctxtidBytes--;
             }
         }
         else
-            nAddr_bytes--;
+            m_addrBytes--;
 
-        if((nAddr_bytes == 0) && bCtxtInfo_done && (nVMID_bytes == 0) && (nCtxtID_bytes == 0))
+        if((m_addrBytes == 0) && m_bCtxtInfoDone && (m_vmidBytes == 0) && (m_ctxtidBytes == 0))
         {
             int st_idx = 1;
-            if(b64bit)
+            if(m_bAddr64bit)
             {
                 uint64_t val64;
-                st_idx+=extract64BitLongAddr(m_currPacketData,st_idx,IS,val64);
-                m_curr_packet.set64BitAddress(val64,IS,64);
+                st_idx+=extract64BitLongAddr(m_currPacketData,st_idx,m_addrIS,val64);
+                m_curr_packet.set64BitAddress(val64,m_addrIS,64);
             }
             else
             {
                 uint32_t val32;
-                st_idx+=extract32BitLongAddr(m_currPacketData,st_idx,IS,val32);
-                m_curr_packet.set32BitAddress(val32,IS,32);
+                st_idx+=extract32BitLongAddr(m_currPacketData,st_idx,m_addrIS,val32);
+                m_curr_packet.set32BitAddress(val32,m_addrIS,32);
             }
             extractAndSetContextInfo(m_currPacketData,st_idx);
             m_process_state = SEND_PKT;
@@ -879,7 +897,6 @@ void EtmV4IPktProcImpl::iPktAddrCtxt()
 
 void EtmV4IPktProcImpl::iPktShortAddr()
 {
-    static uint8_t header = 0;
     static bool addr_done = false;
     static uint8_t IS = 0;
 
@@ -927,43 +944,43 @@ int EtmV4IPktProcImpl::extractShortAddr(const std::vector<uint8_t> &buffer, cons
 
 void EtmV4IPktProcImpl::iPktLongAddr()    
 {
-    static int addrBytes = 4;
-    static uint8_t header = 0;
-    static uint8_t IS = 0;
-    static bool b64bit = false;
-
     if(m_currPacketData.size() == 1)    
     {
-        IS = 0;
-        b64bit = false;
+        // init the intra-byte data
+        m_addrIS = 0;
+        m_bAddr64bit = false;
+        m_addrBytes = 4;
+
         switch(m_curr_packet.type)
         {
         case ETM4_PKT_I_ADDR_L_32IS1:
-            IS = 1;
+            m_addrIS = 1;
         case ETM4_PKT_I_ADDR_L_32IS0:
-            addrBytes = 4;
+            m_addrBytes = 4;
             break;
 
         case ETM4_PKT_I_ADDR_L_64IS1:
-            IS = 1;
+            m_addrIS = 1;
         case ETM4_PKT_I_ADDR_L_64IS0:
-            addrBytes = 8;
-            b64bit = true;
+            m_addrBytes = 8;
+            m_bAddr64bit = true;
             break;
         }
     }
-    if(m_currPacketData.size() == (1+addrBytes))
+    if(m_currPacketData.size() == (1+m_addrBytes))
     {
         int st_idx = 1;
-        if(b64bit)
+        if(m_bAddr64bit)
         {
             uint64_t val64;
-            st_idx+=extract64BitLongAddr(m_currPacketData,st_idx,IS,val64);
+            st_idx+=extract64BitLongAddr(m_currPacketData,st_idx,m_addrIS,val64);
+            m_curr_packet.set64BitAddress(val64,m_addrIS,64);
         }
         else
         {
             uint32_t val32;
-            st_idx+=extract32BitLongAddr(m_currPacketData,st_idx,IS,val32);
+            st_idx+=extract32BitLongAddr(m_currPacketData,st_idx,m_addrIS,val32);
+            m_curr_packet.set32BitAddress(val32,m_addrIS,32);
         }
         m_process_state = SEND_PKT;
     }
@@ -1179,8 +1196,8 @@ void EtmV4IPktProcImpl::BuildIPacketTable()
     m_i_table[0x00].pptkFn   = &EtmV4IPktProcImpl::iPktExtension;
 
     // 0x01 - Trace info
-    m_i_table[0x00].pkt_type = ETM4_PKT_I_TRACE_INFO;
-    m_i_table[0x00].pptkFn   = &EtmV4IPktProcImpl::iPktTraceInfo;
+    m_i_table[0x01].pkt_type = ETM4_PKT_I_TRACE_INFO;
+    m_i_table[0x01].pptkFn   = &EtmV4IPktProcImpl::iPktTraceInfo;
 
     // b0000001x - timestamp
     m_i_table[0x02].pkt_type = ETM4_PKT_I_TIMESTAMP;
@@ -1376,7 +1393,7 @@ void EtmV4IPktProcImpl::BuildIPacketTable()
     }
     for(int i = 0; i < 2; i++)
     {
-        m_i_table[0x9D+i].pkt_type =  (i == 0) ? ETM4_PKT_I_ADDR_CTXT_L_64IS0 : ETM4_PKT_I_ADDR_CTXT_L_64IS1;
+        m_i_table[0x9D+i].pkt_type =  (i == 0) ? ETM4_PKT_I_ADDR_L_64IS0 : ETM4_PKT_I_ADDR_L_64IS1;
         m_i_table[0x9D+i].pptkFn   = &EtmV4IPktProcImpl::iPktLongAddr;
     }
 
@@ -1449,6 +1466,7 @@ int EtmV4IPktProcImpl::extractContField(const std::vector<uint8_t> &buffer, cons
         else
         {
             // TBD: error out here.
+            throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_BAD_PACKET_SEQ,"Invalid Continuation fields in packet");
         }
     }
     return idx;
@@ -1473,6 +1491,7 @@ int EtmV4IPktProcImpl::extractContField64(const std::vector<uint8_t> &buffer, co
         else
         {
             // TBD: error out here.
+            throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_BAD_PACKET_SEQ,"Invalid Continuation fields in packet");
         }
     }
     return idx;
@@ -1531,7 +1550,7 @@ int EtmV4IPktProcImpl::extract64BitLongAddr(const std::vector<uint8_t> &buffer, 
     value |= ((uint64_t)buffer[st_idx+5]) << 40;
     value |= ((uint64_t)buffer[st_idx+6]) << 48;
     value |= ((uint64_t)buffer[st_idx+7]) << 56;      
-    return 4;    
+    return 8;    
 }
 
 int EtmV4IPktProcImpl::extract32BitLongAddr(const std::vector<uint8_t> &buffer, const int st_idx, const uint8_t IS, uint32_t &value)

@@ -85,7 +85,6 @@ template<class P> rctdl_datapath_resp_t PacketPrinter<P>::PacketDataIn( const rc
     case RCTDL_OP_DATA:
         p_packet_in->toString(pktstr);
         oss << "Idx:" << index_sop << "; ID:"<< std::hex << (uint32_t)m_trcID << "\t" << pktstr << std::endl;
-        itemPrintLine(oss.str());
         break;
 
     case RCTDL_OP_EOT:

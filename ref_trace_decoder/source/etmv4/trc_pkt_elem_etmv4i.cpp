@@ -79,9 +79,41 @@ void EtmV4ITrcPacket::toString(std::string &str) const
 {
     const char *name;
     const char *desc;
+    std::string valStr;
 
     name = packetTypeName(type, &desc);
     str = name + (std::string)" : " + desc;
+
+    // extended descriptions
+    switch(type)
+    {
+    case ETM4_PKT_I_BAD_SEQUENCE:
+        name = packetTypeName(err_type,0);
+        str += "[" + (std::string)name + "]";
+        break;
+
+    case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
+    case ETM4_PKT_I_ADDR_CTXT_L_32IS1:       
+    case ETM4_PKT_I_ADDR_L_32IS0:
+    case ETM4_PKT_I_ADDR_L_32IS1:        
+        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,(v_addr.pkt_bits < 32) ? v_addr.pkt_bits : 0);
+        str += "; Addr=" + valStr;
+        break;
+
+    case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
+    case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
+    case ETM4_PKT_I_ADDR_L_64IS0:
+    case ETM4_PKT_I_ADDR_L_64IS1:
+        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,(v_addr.pkt_bits < 64) ? v_addr.pkt_bits : 0);
+        str += "; Addr=" + valStr;
+        break;
+
+    case ETM4_PKT_I_ADDR_S_IS0:
+    case ETM4_PKT_I_ADDR_S_IS1:
+        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,v_addr.pkt_bits);
+        str += "; Addr=" + valStr;
+        break;
+    }
 }
 
 void EtmV4ITrcPacket::toStringFmt(const uint32_t fmtFlags, std::string &str) const

@@ -58,6 +58,8 @@ static const char *s_errorCodeDescs[] = {
     /* frame deformatter errors */
     "RCTDL_ERR_DFMTR_NOTCONTTRACE", "Trace input to deformatter none-continuous",
     /* packet processor errors - protocol issues etc */
+    "RCTDL_ERR_BAD_PACKET_SEQ","Bad packet sequence",
+
     /* packet decoder errors */
     /* test errors - errors generated only by the test code, not the library */
     "RCTDL_ERR_TEST_SNAPSHOT_PARSE", "Test snapshot file parse error",

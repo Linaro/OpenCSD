@@ -99,6 +99,7 @@ typedef enum _rctdl_err_t {
     /* frame deformatter errors */
     RCTDL_ERR_DFMTR_NOTCONTTRACE,    /**< Trace input to deformatter none-continuous */
     /* packet processor errors - protocol issues etc */
+    RCTDL_ERR_BAD_PACKET_SEQ,        /**< Bad packet sequence */
     /* packet decoder errors */
     /* test errors - errors generated only by the test code, not the library */
     RCTDL_ERR_TEST_SNAPSHOT_PARSE,       /**< test snapshot file parse error */
@@ -206,7 +207,6 @@ typedef enum _rcdtl_rawframe_elem_t {
     RCTDL_FRM_HSYNC,    /**< HSYNC data */
     RCTDL_FRM_FSYNC,    /**< Frame Sync Data */
     RCTDL_FRM_ID_DATA,  /**< unpacked data for ID */
-    RCTDL_FRM_ID_CHANGE, /**< ID change data */
 } rctdl_rawframe_elem_t;
 
 
