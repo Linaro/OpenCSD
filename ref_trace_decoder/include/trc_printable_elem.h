@@ -49,6 +49,10 @@ public:
     virtual ~trcPrintableElem() {};
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
+
+    // print formatting utilities
+    static void getValStr(std::string &valStr, const int valTotalBitSize, const int valValidBits, const uint64_t value, const bool asHex = true, const int updateBits = 0);
+
 };
 
 inline void trcPrintableElem::toString(std::string &str) const
