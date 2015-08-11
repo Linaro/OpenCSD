@@ -43,7 +43,8 @@ rctdl_err_t RawFramePrinter::TraceRawFrameIn(  const rctdl_datapath_op_t op,
                                                 const rctdl_trc_index_t index, 
                                                 const rctdl_rawframe_elem_t frame_element, 
                                                 const int dataBlockSize, 
-                                                const uint8_t *pDataBlock)
+                                                const uint8_t *pDataBlock,
+                                                const uint8_t traceID)
 {
 
     if(op == RCTDL_OP_DATA) // only interested in actual frame data.
@@ -54,27 +55,18 @@ rctdl_err_t RawFramePrinter::TraceRawFrameIn(  const rctdl_datapath_op_t op,
         int printOffset = 0;
 
         oss << "Frame Data; Index" << std::setw(7) << index << "; ";
-        oss << std::setw(12);
         switch(frame_element) 
         {
-        case RCTDL_FRM_PACKED: oss << "RAW_PACKED; "; break;
-        case RCTDL_FRM_HSYNC:  oss << "HSYNC; "; break;
-        case RCTDL_FRM_FSYNC:  oss << "FSYNC; "; break;  
-        case RCTDL_FRM_ID_DATA: oss << "ID_DATA; "; break;
-        case RCTDL_FRM_ID_CHANGE: oss << "ID UPDATE; "; break;
-        default: oss << "UNKNOWN; "; break;
-        }
-
-        if((frame_element == RCTDL_FRM_ID_CHANGE) && (printDataSize > 0))
-        {
-            oss << "ID:0x" << std::hex << std::setw(2) << (uint32_t)pDataBlock[0]  << "; ";
-            printDataSize--;
-            printOffset++;
+        case RCTDL_FRM_PACKED: oss << std::setw(15) << "RAW_PACKED; "; break;
+        case RCTDL_FRM_HSYNC:  oss << std::setw(15) << "HSYNC; "; break;
+        case RCTDL_FRM_FSYNC:  oss << std::setw(15)  << "FSYNC; "; break;  
+        case RCTDL_FRM_ID_DATA: oss << std::setw(10) << "ID_DATA[0x" << std::hex << std::setw(2) << (uint16_t)traceID << "]; "; break;
+        default: oss << std::setw(15) << "UNKNOWN; "; break;
         }
 
         if(printDataSize)
         {
-            createDataString(printDataSize,pDataBlock+printOffset,16,strData);
+            createDataString(printDataSize,pDataBlock,16,strData);
             oss << strData;
         }
         itemPrintLine(oss.str());
@@ -89,10 +81,13 @@ void RawFramePrinter::createDataString(const int dataSize, const uint8_t *pData,
 
     for(int i = 0; i < dataSize; i++)
     {
+        if(lineBytes == bytesPerLine)
+        {
+            oss << std::endl;
+            lineBytes = 0;
+        }
         oss << std::hex << std::setw(2) <<std::setfill('0') << (uint32_t)pData[i] << " ";
         lineBytes ++;
-        if(lineBytes == bytesPerLine)
-            oss << std::endl;
     }
     dataStr = oss.str();
 }

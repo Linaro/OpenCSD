@@ -63,14 +63,16 @@ public:
      * @param frame_element : Type of frame element being output.
      * @param dataBlockSize : size of frame element.
      * @param *pDataBlock : pointer to frame data.
+     * @param traceID : Trace ID when element type ID data.
      *
      * @return rctdl_err_t  : Standard library erroc code. Monitor only, not on data path.
      */
     virtual rctdl_err_t TraceRawFrameIn(  const rctdl_datapath_op_t op, 
-                                                    const rctdl_trc_index_t index, 
-                                                    const rctdl_rawframe_elem_t frame_element, 
-                                                    const int dataBlockSize, 
-                                                    const uint8_t *pDataBlock) = 0;
+                                          const rctdl_trc_index_t index, 
+                                          const rctdl_rawframe_elem_t frame_element, 
+                                          const int dataBlockSize, 
+                                          const uint8_t *pDataBlock,
+                                          const uint8_t traceID) = 0;
 };
 
 
