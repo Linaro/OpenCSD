@@ -179,7 +179,7 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::executeNoneDataOpAllIDs(rctdl_datapath_op
     if( m_RawTraceFrame.num_attached())
     {
         if(m_RawTraceFrame.first())
-            m_RawTraceFrame.first()->TraceRawFrameIn(op,0,RCTDL_FRM_NONE,0,0);
+            m_RawTraceFrame.first()->TraceRawFrameIn(op,0,RCTDL_FRM_NONE,0,0,0);
     }
     return highestDataPathResp();
 }
@@ -188,12 +188,13 @@ void TraceFmtDcdImpl::outputRawMonBytes(const rctdl_datapath_op_t op,
                            const rctdl_trc_index_t index, 
                            const rctdl_rawframe_elem_t frame_element, 
                            const int dataBlockSize, 
-                           const uint8_t *pDataBlock)                           
+                           const uint8_t *pDataBlock,
+                           const uint8_t traceID)                           
 {
     if( m_RawTraceFrame.num_attached())
     {
         if(m_RawTraceFrame.first())
-            m_RawTraceFrame.first()->TraceRawFrameIn(op,index,frame_element,dataBlockSize, pDataBlock);
+            m_RawTraceFrame.first()->TraceRawFrameIn(op,index,frame_element,dataBlockSize, pDataBlock,traceID);
     }
 }
 
@@ -506,7 +507,8 @@ bool TraceFmtDcdImpl::extractFrame()
                             m_trc_curr_idx, 
                             RCTDL_FRM_PACKED,
                             ex_bytes + f_sync_bytes + h_sync_bytes,
-                            m_in_block_base+m_in_block_processed);
+                            m_in_block_base+m_in_block_processed,
+                            0);
     }
 
     // update the processed count for the buffer
@@ -574,7 +576,7 @@ bool TraceFmtDcdImpl::unpackFrame()
         else
         // it's just data
         {
-            m_out_data[m_out_data_idx].data[m_out_data[m_out_data_idx].valid++] = m_ex_frm_data[i] | (frameFlagBit & m_ex_frm_data[15]) ? 0x1 : 0x0;             
+            m_out_data[m_out_data_idx].data[m_out_data[m_out_data_idx].valid++] = m_ex_frm_data[i] | ((frameFlagBit & m_ex_frm_data[15]) ? 0x1 : 0x0);             
         }
 
         // 2nd byte always data
@@ -606,8 +608,9 @@ bool TraceFmtDcdImpl::outputFrame()
 {
     bool cont_processing = true;
     ITrcDataIn *pDataIn = 0;
-    uint32_t bytes_used;
+    uint32_t bytes_used, prev_used;
 
+    // output each valid ID within the frame - stopping if we get a wait or error
     while((m_out_processed < (m_out_data_idx + 1)) && cont_processing)
     {
         
@@ -625,25 +628,63 @@ bool TraceFmtDcdImpl::outputFrame()
                 if(!dataPathCont())
                 {
                     cont_processing = false;
+                    prev_used = m_out_data[m_out_processed].used;
                     m_out_data[m_out_processed].used += bytes_used;
-                    // TBD: output as ID+unpacked RAW of used data
+
+                    // optional raw output for debugging / monitor tools
+                    if(m_b_output_unpacked_raw)
+                    {
+                        outputRawMonBytes(  RCTDL_OP_DATA, 
+                            m_out_data[m_out_processed].index, 
+                            RCTDL_FRM_ID_DATA,
+                            bytes_used,
+                            m_out_data[m_out_processed].data + prev_used,
+                            m_out_data[m_out_processed].id);
+                    }
                 }
                 else
                 {
-                     m_out_processed++; // we have sent this data;
-                     // TBD: output as ID+unpacked RAW of sent this time (all, or remainder)
+                    // optional raw output for debugging / monitor tools
+                    if(m_b_output_unpacked_raw)
+                    {
+                        outputRawMonBytes(  RCTDL_OP_DATA, 
+                            m_out_data[m_out_processed].index, 
+                            RCTDL_FRM_ID_DATA,
+                            m_out_data[m_out_processed].valid - m_out_data[m_out_processed].used,
+                            m_out_data[m_out_processed].data + m_out_data[m_out_processed].used,
+                            m_out_data[m_out_processed].id);
+                    }
+                    m_out_processed++; // we have sent this data;
                 }
             }
             else
             {
+                // optional raw output for debugging / monitor tools
+                if(m_b_output_unpacked_raw)
+                {
+                    outputRawMonBytes(  RCTDL_OP_DATA, 
+                        m_out_data[m_out_processed].index, 
+                        RCTDL_FRM_ID_DATA,
+                        m_out_data[m_out_processed].valid,
+                        m_out_data[m_out_processed].data,
+                        m_out_data[m_out_processed].id);
+                }                
                 m_out_processed++; // skip past this data.
-                // TBD: output as ID+unpacked RAW
             }
         }
         else
         {
+            // optional raw output for debugging / monitor tools
+            if(m_b_output_unpacked_raw)
+            {
+                outputRawMonBytes(  RCTDL_OP_DATA, 
+                    m_out_data[m_out_processed].index, 
+                    RCTDL_FRM_ID_DATA,
+                    m_out_data[m_out_processed].valid,
+                    m_out_data[m_out_processed].data,
+                    m_out_data[m_out_processed].id);
+            }             
             m_out_processed++; // skip past this data.
-            /// TBD - output this on the RAW  as unknown ID channel.
         }
     }
     return cont_processing;

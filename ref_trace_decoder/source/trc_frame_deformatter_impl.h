@@ -111,7 +111,8 @@ private:
                            const rctdl_trc_index_t index, 
                            const rctdl_rawframe_elem_t frame_element, 
                            const int dataBlockSize, 
-                           const uint8_t *pDataBlock);
+                           const uint8_t *pDataBlock,
+                           const uint8_t traceID);
 
 
     friend class TraceFormatterFrameDecoder;
