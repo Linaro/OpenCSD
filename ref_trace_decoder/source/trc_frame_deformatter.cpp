@@ -619,41 +619,32 @@ bool TraceFmtDcdImpl::outputFrame()
         {
             if((pDataIn = m_IDStreams[m_out_data[m_out_processed].id].first()) != 0)
             {
+                // log the stuff we are about to put out early so as to make it visible before interpretation
+                // however, don't re-output if only part used first time round.
+                if(m_b_output_unpacked_raw && (m_out_data[m_out_processed].used == 0))
+                {
+                    outputRawMonBytes( RCTDL_OP_DATA, 
+                            m_out_data[m_out_processed].index, 
+                            RCTDL_FRM_ID_DATA,
+                            m_out_data[m_out_processed].valid,
+                            m_out_data[m_out_processed].data,
+                            m_out_data[m_out_processed].id);
+                }
+
+                // output to the connected packet process
                 CollateDataPathResp(pDataIn->TraceDataIn(RCTDL_OP_DATA,
                     m_out_data[m_out_processed].index,
                     m_out_data[m_out_processed].valid - m_out_data[m_out_processed].used,
                     m_out_data[m_out_processed].data + m_out_data[m_out_processed].used,
-                    &bytes_used));
+                    &bytes_used));               
                 
                 if(!dataPathCont())
                 {
                     cont_processing = false;
-                    prev_used = m_out_data[m_out_processed].used;
                     m_out_data[m_out_processed].used += bytes_used;
-
-                    // optional raw output for debugging / monitor tools
-                    if(m_b_output_unpacked_raw)
-                    {
-                        outputRawMonBytes(  RCTDL_OP_DATA, 
-                            m_out_data[m_out_processed].index, 
-                            RCTDL_FRM_ID_DATA,
-                            bytes_used,
-                            m_out_data[m_out_processed].data + prev_used,
-                            m_out_data[m_out_processed].id);
-                    }
                 }
                 else
                 {
-                    // optional raw output for debugging / monitor tools
-                    if(m_b_output_unpacked_raw)
-                    {
-                        outputRawMonBytes(  RCTDL_OP_DATA, 
-                            m_out_data[m_out_processed].index, 
-                            RCTDL_FRM_ID_DATA,
-                            m_out_data[m_out_processed].valid - m_out_data[m_out_processed].used,
-                            m_out_data[m_out_processed].data + m_out_data[m_out_processed].used,
-                            m_out_data[m_out_processed].id);
-                    }
                     m_out_processed++; // we have sent this data;
                 }
             }
