@@ -88,6 +88,7 @@ void EtmV4ITrcPacket::toString(std::string &str) const
     switch(type)
     {
     case ETM4_PKT_I_BAD_SEQUENCE:
+    case ETM4_PKT_I_INCOMPLETE_EOT:
         name = packetTypeName(err_type,0);
         str += "[" + (std::string)name + "]";
         break;
@@ -251,7 +252,7 @@ const char *EtmV4ITrcPacket::packetTypeName(const rctdl_etmv4_i_pkt_type type, c
         break;
 
     case ETM4_PKT_I_ATOM_F6:
-        pName = "";
+        pName = "I_ATOM_F6";
         pDesc = "Atom format 6.";
         break;
 

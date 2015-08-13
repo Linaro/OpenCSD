@@ -100,6 +100,7 @@ typedef enum _rctdl_err_t {
     RCTDL_ERR_DFMTR_NOTCONTTRACE,    /**< Trace input to deformatter none-continuous */
     /* packet processor errors - protocol issues etc */
     RCTDL_ERR_BAD_PACKET_SEQ,        /**< Bad packet sequence */
+    RCTDL_ERR_INVALID_PCKT_HDR,      /**< Invalid packet header */
     /* packet decoder errors */
     /* test errors - errors generated only by the test code, not the library */
     RCTDL_ERR_TEST_SNAPSHOT_PARSE,       /**< test snapshot file parse error */
@@ -163,7 +164,7 @@ typedef enum _rctdl_datapath_resp_t {
     RCTDL_RESP_FATAL_NOT_INIT,      /**< Processing Fatal Error :  component unintialised. */
     RCTDL_RESP_FATAL_INVALID_OP,    /**< Processing Fatal Error :  invalid data path operation. */
     RCTDL_RESP_FATAL_INVALID_PARAM, /**< Processing Fatal Error :  invalid parameter in datapath call. */
-    RCDTL_REST_FATAL_INVALID_DATA,  /**< Processing Fatal Error :  invalid trace data */
+    RCDTL_RESP_FATAL_INVALID_DATA,  /**< Processing Fatal Error :  invalid trace data */
     RCTDL_RESP_FATAL_SYS_ERR,       /**< Processing Fatal Error :  internal system error. */
 } rctdl_datapath_resp_t;
 

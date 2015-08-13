@@ -62,7 +62,8 @@ protected:
     typedef enum _process_state {
         PROC_HDR,
         PROC_DATA,
-        SEND_PKT, 
+        SEND_PKT,
+        SEND_UNSYNCED,
         PROC_ERR,
     } process_state;
     
@@ -71,13 +72,12 @@ protected:
     void InitPacketState();      // clear current packet state.
     void InitProcessorState();   // clear all previous process state
 
-    /** configuration **/
+    /** packet processor configuration **/
     bool m_isInit;
     TrcPktProcEtmV4I *m_interface;       /**< The interface to the other decode components */
-    
-    EtmV4Config m_config;
-    uint8_t m_chanIDCopy;
 
+    // etmv4 hardware configuration
+    EtmV4Config m_config;
 
     /** packet data **/
     std::vector<uint8_t> m_currPacketData;  // raw data
@@ -87,31 +87,61 @@ protected:
     uint32_t m_blockBytesProcessed;     // number of bytes processed in the current data block
     rctdl_trc_index_t m_blockIndex;     // index at the start of the current data block being processed
 
+    // searching for sync
     bool m_is_sync;             //!< seen first sync packet
     bool m_first_trace_info;    //!< seen first trace info packet after sync
+    bool m_sent_notsync_packet; //!< send one not sync packet if we see any unsynced data on the channel 
+    int m_dump_unsynced_bytes;  //!< number of unsynced bytes to send
+    rctdl_trc_index_t m_update_on_unsync_packet_index;
 
-   
+
 private:
-    // current processing state data 
+    // current processing state data - counts and flags to determine if a packet is complete.
 
     // TraceInfo Packet
     // flags to indicate processing for these sections is complete.
-    bool ctrlSect;
-    bool infoSect;   
-    bool keySect;
-    bool specSect;
-    bool cyctSect;
+    bool m_ctrlSect;
+    bool m_infoSect;   
+    bool m_keySect;
+    bool m_specSect;
+    bool m_cyctSect;
 
     // address and context packets 
     int m_addrBytes;
     uint8_t m_addrIS;
     bool m_bAddr64bit;
-    int m_vmidBytes;
-    int m_ctxtidBytes;
+    int m_vmidBytes;    // bytes still to find
+    int m_ctxtidBytes;  // bytes still to find
     bool m_bCtxtInfoDone;
+    bool m_addr_done;
+
+    // timestamp
+    bool m_ccount_done; // done or not needed 
+    bool m_ts_done;
+    int m_ts_bytes;
+
+    // exception
+    int m_excep_size;
+
+    // cycle count
+    bool m_has_count;
+    bool m_count_done;
+    bool m_commit_done;
+
+    // cond result
+    bool m_F1P1_done;  // F1 payload 1 done
+    bool m_F1P2_done;  // F1 payload 2 done
+    bool m_F1has_P2;   // F1 has a payload 2
+
+    // Q packets (use some from above too)
+    bool m_has_addr;
+    bool m_addr_short;
+    bool m_addr_match;
+    uint8_t m_Q_type;
+    uint8_t m_QE;
 
     rctdl_datapath_resp_t outputPacket();
-    void outputUnsyncedRawPacket(int nbytes); // unsynced packets will not cause data path stall.
+    rctdl_datapath_resp_t outputUnsyncedRawPacket(); 
 
     void iNotSync();      // not synced yet
     void iPktNoPayload(); // process a single byte packet
@@ -150,6 +180,8 @@ private:
     } m_i_table[256];
 
     void BuildIPacketTable();
+
+    void throwBadSequenceError(const char *pszExtMsg);
 };
 
 #endif // ARM_TRC_PKT_PROC_ETMV4I_IMPL_H_INCLUDED

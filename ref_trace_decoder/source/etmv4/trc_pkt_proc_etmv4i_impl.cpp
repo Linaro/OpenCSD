@@ -62,7 +62,6 @@ rctdl_err_t EtmV4IPktProcImpl::Configure(const EtmV4Config *p_config)
     if(p_config != 0)
     {
         m_config = *p_config;
-        m_chanIDCopy = m_config.getTraceID();
     }
     else
     {
@@ -115,27 +114,38 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
                 InitPacketState();
                 m_process_state = PROC_HDR;
                 break;
+
+            case SEND_UNSYNCED:
+                resp = outputUnsyncedRawPacket();
+                if(m_update_on_unsync_packet_index != 0)
+                {
+                    m_packet_index = m_update_on_unsync_packet_index;
+                    m_update_on_unsync_packet_index = 0;
+                }
+                m_process_state = PROC_DATA;        // after dumping unsynced data, still in data mode.
+                break;
             }
         }
         catch(rctdlError &err)
         {
             m_interface->LogError(err);
-            m_curr_packet.err_type = m_curr_packet.type;
-            m_curr_packet.type = ETM4_PKT_I_BAD_SEQUENCE;
-            if(err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ)
+            if( (err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ) ||
+                (err.getErrorCode() == RCTDL_ERR_INVALID_PCKT_HDR))
             {
-                m_process_state = SEND_PKT;
+                // send invalid packets up the pipe to let the next stage decide what to do.
+                m_process_state = SEND_PKT; 
             }
             else
             {
-                resp = RCDTL_REST_FATAL_INVALID_DATA;
+                // bail out on any other error.
+                resp = RCDTL_RESP_FATAL_INVALID_DATA;
             }
         }
         catch(...)
         {
             /// vv bad at this point.
             resp = RCTDL_RESP_FATAL_SYS_ERR;
-            const rctdlError &fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_chanIDCopy,"Unknown System Error decoding trace.");
+            const rctdlError &fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_config.getTraceID(),"Unknown System Error decoding trace.");
             m_interface->LogError(fatal);
         }
     }
@@ -147,28 +157,35 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
 rctdl_datapath_resp_t EtmV4IPktProcImpl::onEOT()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    //** TBD:
+    // if we have a partial packet then send to attached sinks
+    if(m_currPacketData.size() != 0)
+    {
+        m_curr_packet.updateErrType(ETM4_PKT_I_INCOMPLETE_EOT);
+        resp = outputPacket();
+        InitPacketState();
+    }
     return resp;
 }
 
 rctdl_datapath_resp_t EtmV4IPktProcImpl::onReset()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    // prepare for new decoding session
     InitProcessorState();
-    return resp;
+    return RCTDL_RESP_CONT;
 }
 
 rctdl_datapath_resp_t EtmV4IPktProcImpl::onFlush()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    //** TBD:
-    return resp;
+    // packet processor never holds on to flushable data (may have partial packet, 
+    // but any full packets are immediately sent)
+    return RCTDL_RESP_CONT;
 }
 
 void EtmV4IPktProcImpl::InitPacketState()
 {
     m_currPacketData.clear();
     m_curr_packet.initNextPacket(); // clear for next packet.
+    m_update_on_unsync_packet_index = 0;
 }
 
 void EtmV4IPktProcImpl::InitProcessorState()
@@ -178,6 +195,7 @@ void EtmV4IPktProcImpl::InitProcessorState()
     m_packet_index = 0;
     m_is_sync = false;
     m_first_trace_info = false;
+    m_sent_notsync_packet = false;
     m_process_state = PROC_HDR;
     m_curr_packet.initStartState();
 }
@@ -189,13 +207,24 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::outputPacket()
     return resp;
 }
 
-void EtmV4IPktProcImpl::outputUnsyncedRawPacket(int nbytes)
+rctdl_datapath_resp_t EtmV4IPktProcImpl::outputUnsyncedRawPacket()
 {
-    m_interface->outputRawPacketToMonitor(m_packet_index,&m_curr_packet,nbytes,&m_currPacketData[0]);
-    if(m_currPacketData.size() <= nbytes)
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+
+    m_interface->outputRawPacketToMonitor(m_packet_index,&m_curr_packet,m_dump_unsynced_bytes,&m_currPacketData[0]);
+    
+    if(!m_sent_notsync_packet)
+    {
+        m_sent_notsync_packet = true;
+        resp = m_interface->outputDecodedPacket(m_packet_index,&m_curr_packet);
+    }
+    
+    if(m_currPacketData.size() <= m_dump_unsynced_bytes)
         m_currPacketData.clear();
     else
-        m_currPacketData.erase(m_currPacketData.begin(),m_currPacketData.begin()+nbytes);
+        m_currPacketData.erase(m_currPacketData.begin(),m_currPacketData.begin()+m_dump_unsynced_bytes);
+
+    return resp;
 }
 
 void EtmV4IPktProcImpl::iNotSync()
@@ -207,16 +236,20 @@ void EtmV4IPktProcImpl::iNotSync()
     {
         if(m_currPacketData.size() > 1)
         {
-            m_currPacketData.pop_back();
-            outputUnsyncedRawPacket(m_currPacketData.size()); // dump unwanted pre-sync bytes
-            m_currPacketData.push_back(lastByte);            
+            m_dump_unsynced_bytes = m_currPacketData.size() - 1;
+            m_process_state = SEND_UNSYNCED;
+            // outputting some data then update packet index after so output indexes accurate
+            m_update_on_unsync_packet_index = m_blockIndex + m_blockBytesProcessed - 1;
         }
-        m_packet_index = m_blockIndex + m_blockBytesProcessed - 1;
+        else
+            m_packet_index = m_blockIndex + m_blockBytesProcessed - 1;  // set it up now otherwise.
+
         m_pIPktFn = m_i_table[lastByte].pptkFn; 
     }
     else if(m_currPacketData.size() >= 8)
     {
-        outputUnsyncedRawPacket(m_currPacketData.size());
+        m_dump_unsynced_bytes = m_currPacketData.size();
+        m_process_state = SEND_UNSYNCED;
     }
 }
 
@@ -250,9 +283,8 @@ void EtmV4IPktProcImpl::iPktNoPayload()
 
 void EtmV4IPktProcImpl::iPktReserved()
 {
-    m_process_state = SEND_PKT;
-    //** TBD: log error for reserved packet
-
+    m_curr_packet.updateErrType(ETM4_PKT_I_RESERVED);   // swap type for err type
+    throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_INVALID_PCKT_HDR,m_packet_index,m_config.getTraceID());
 }
 
 void EtmV4IPktProcImpl::iPktExtension()
@@ -322,7 +354,8 @@ void EtmV4IPktProcImpl::iPktASync()
         if(!m_is_sync)
         {
             // if we are not yet synced then ignore extra leading 0x00.
-            outputUnsyncedRawPacket(1); // get rid of extra 0x00
+            m_dump_unsynced_bytes = 1;
+            m_process_state = SEND_UNSYNCED;
         }
         else
         {
@@ -340,64 +373,64 @@ void EtmV4IPktProcImpl::iPktTraceInfo()
     if(m_currPacketData.size() == 1)
     {
         //clear flags
-        ctrlSect = infoSect = keySect = specSect = cyctSect = false;
+        m_ctrlSect = m_infoSect = m_keySect = m_specSect = m_cyctSect = false;
     }
     else if(m_currPacketData.size() == 2)
     {
         // figure out which sections are absent and set to true;
-        infoSect = (bool)((lastByte & 0x1) == 0x0);
-        keySect =  (bool)((lastByte & 0x2) == 0x0);
-        specSect = (bool)((lastByte & 0x4) == 0x0);
-        cyctSect = (bool)((lastByte & 0x8) == 0x0);
+        m_infoSect = (bool)((lastByte & 0x1) == 0x0);
+        m_keySect =  (bool)((lastByte & 0x2) == 0x0);
+        m_specSect = (bool)((lastByte & 0x4) == 0x0);
+        m_cyctSect = (bool)((lastByte & 0x8) == 0x0);
 
         // see if there is an extended control section, otherwise this byte is it.
-        ctrlSect = (bool)((lastByte & 0x80) == 0x0);  
+        m_ctrlSect = (bool)((lastByte & 0x80) == 0x0);  
     }
     else
     {
-        if(!ctrlSect)
-            ctrlSect = (bool)((lastByte & 0x80) == 0x0);
-        else if(!infoSect)
-            infoSect = (bool)((lastByte & 0x80) == 0x0);
-        else if(!keySect)
-            keySect = (bool)((lastByte & 0x80) == 0x0);
-        else if(!specSect)
-            specSect = (bool)((lastByte & 0x80) == 0x0);
-        else if(!cyctSect)
-            cyctSect = (bool)((lastByte & 0x80) == 0x0);        
+        if(!m_ctrlSect)
+            m_ctrlSect = (bool)((lastByte & 0x80) == 0x0);
+        else if(!m_infoSect)
+            m_infoSect = (bool)((lastByte & 0x80) == 0x0);
+        else if(!m_keySect)
+            m_keySect = (bool)((lastByte & 0x80) == 0x0);
+        else if(!m_specSect)
+            m_specSect = (bool)((lastByte & 0x80) == 0x0);
+        else if(!m_cyctSect)
+            m_cyctSect = (bool)((lastByte & 0x80) == 0x0);        
     }
 
     // all sections accounted for?
-    if(ctrlSect && infoSect && keySect && specSect && cyctSect)
+    if(m_ctrlSect && m_infoSect && m_keySect && m_specSect && m_cyctSect)
     {
         int idx = 2;
         uint32_t fieldVal = 0;
 
         // now need to know which sections to look for, so re-examine the flags byte...
         lastByte = m_currPacketData[1];
-        infoSect = (bool)((lastByte & 0x1) == 0x1);
-        keySect =  (bool)((lastByte & 0x2) == 0x2);
-        specSect = (bool)((lastByte & 0x4) == 0x4);
-        cyctSect = (bool)((lastByte & 0x8) == 0x8);
+        m_infoSect = (bool)((lastByte & 0x1) == 0x1);
+        m_keySect =  (bool)((lastByte & 0x2) == 0x2);
+        m_specSect = (bool)((lastByte & 0x4) == 0x4);
+        m_cyctSect = (bool)((lastByte & 0x8) == 0x8);
 
         m_curr_packet.clearTraceInfo();
 
-        if(infoSect && (idx < m_currPacketData.size()))
+        if(m_infoSect && (idx < m_currPacketData.size()))
         {
             m_curr_packet.setTraceInfo((uint32_t)m_currPacketData[idx]);
             idx++;
         }
-        if(keySect && (idx < m_currPacketData.size()))
+        if(m_keySect && (idx < m_currPacketData.size()))
         {
             idx += extractContField(m_currPacketData,idx,fieldVal);
             m_curr_packet.setTraceInfoKey(fieldVal);
         }
-        if(specSect && (idx < m_currPacketData.size()))
+        if(m_specSect && (idx < m_currPacketData.size()))
         {
             idx += extractContField(m_currPacketData,idx,fieldVal);
             m_curr_packet.setTraceInfoSpec(fieldVal);
         }
-        if(cyctSect && (idx < m_currPacketData.size()))
+        if(m_cyctSect && (idx < m_currPacketData.size()))
         {
             idx += extractContField(m_currPacketData,idx,fieldVal);
             m_curr_packet.setTraceInfoCyct(fieldVal);
@@ -409,35 +442,31 @@ void EtmV4IPktProcImpl::iPktTraceInfo()
 
 void EtmV4IPktProcImpl::iPktTimestamp()
 {
-    static bool ccount_done = false; // done or not needed 
-    static bool ts_done = false;
-    static int ts_bytes = 0;
-
     // save the latest byte
     uint8_t lastByte = m_currPacketData.back();
 
     // process the header byte
     if(m_currPacketData.size() == 1)
     {
-        ccount_done = (bool)((lastByte & 0x1) == 0); // 0 = not present
-        ts_done = false;
-        ts_bytes = 0;
+        m_ccount_done = (bool)((lastByte & 0x1) == 0); // 0 = not present
+        m_ts_done = false;
+        m_ts_bytes = 0;
     }
     else
     {        
-        if(!ts_done)
+        if(!m_ts_done)
         {
-            ts_bytes++;
-            ts_done = (ts_bytes == 9) || ((lastByte & 0x80) == 0);
+            m_ts_bytes++;
+            m_ts_done = (m_ts_bytes == 9) || ((lastByte & 0x80) == 0);
         }
-        else if(!ccount_done)
+        else if(!m_ccount_done)
         {
-            ccount_done = (bool)((lastByte & 0x80) == 0);
+            m_ccount_done = (bool)((lastByte & 0x80) == 0);
             // TBD: check for oorange ccount - bad packet.
         }
     }
 
-    if(ts_done && ccount_done)
+    if(m_ts_done && m_ccount_done)
     {        
         int idx = 1;
         uint64_t tsVal;
@@ -468,17 +497,16 @@ void EtmV4IPktProcImpl::iPktTimestamp()
 void EtmV4IPktProcImpl::iPktException()
 {
     uint8_t lastByte = m_currPacketData.back();
-    static int expExcepSize = 3;
 
     switch(m_currPacketData.size())
     {
-    case 1: expExcepSize = 3; break;
+    case 1: m_excep_size = 3; break;
     case 2: if((lastByte & 0x80) == 0x00)
-                expExcepSize = 2; 
+                m_excep_size = 2; 
             break;
     }
 
-    if(m_currPacketData.size() == expExcepSize)
+    if(m_currPacketData.size() ==  m_excep_size)
     {
         uint16_t excep_type =  (m_currPacketData[1] >> 1) & 0x1F;
         uint8_t addr_interp = (m_currPacketData[1] & 0x40) >> 5 | (m_currPacketData[1] & 0x1);
@@ -500,15 +528,13 @@ void EtmV4IPktProcImpl::iPktException()
 void EtmV4IPktProcImpl::iPktCycleCntF123()
 {
     static  rctdl_etmv4_i_pkt_type format = ETM4_PKT_I_CCNT_F1;
-    static bool bCCount_done = false; 
-    static bool bHasCount = true;
-    static bool bCommit_done = false;
+
 
     uint8_t lastByte = m_currPacketData.back();
     if( m_currPacketData.size() == 1)
     {
-        bCommit_done = bCCount_done = false; 
-        bHasCount = true;
+        m_count_done = m_commit_done = false; 
+        m_has_count = true;
         format = m_curr_packet.type;
 
         if(format == ETM4_PKT_I_CCNT_F3)
@@ -526,13 +552,13 @@ void EtmV4IPktProcImpl::iPktCycleCntF123()
         {
             if((lastByte & 0x1) == 0x1)
             {
-                bHasCount = false;
-                bCCount_done = true;
+                m_has_count = false;
+                m_count_done = true;
             }
 
             // no commit section for TRCIDR0.COMMOPT == 1
             if(m_config.commitOpt1())
-                bCommit_done = true;
+                m_commit_done = true;
         }
     }
     else if((format == ETM4_PKT_I_CCNT_F2) && ( m_currPacketData.size() == 2))
@@ -550,13 +576,13 @@ void EtmV4IPktProcImpl::iPktCycleCntF123()
     else
     {
         // F1 and size 2 or more
-        if(!bCommit_done)
-            bCommit_done = ((lastByte & 0x80) == 0x00);
-        else if(!bCCount_done)
-            bCCount_done = ((lastByte & 0x80) == 0x00);
+        if(!m_commit_done)
+            m_commit_done = ((lastByte & 0x80) == 0x00);
+        else if(!m_count_done)
+            m_count_done = ((lastByte & 0x80) == 0x00);
     }
 
-    if((format == ETM4_PKT_I_CCNT_F1) && bCommit_done && bCCount_done)
+    if((format == ETM4_PKT_I_CCNT_F1) && m_commit_done && m_count_done)
     {        
         int idx = 1; // index into buffer for payload data.
         uint32_t field_value = 0;
@@ -566,7 +592,7 @@ void EtmV4IPktProcImpl::iPktCycleCntF123()
             idx += extractContField(m_currPacketData,idx,field_value);
             m_curr_packet.setCommitElements(field_value);
         }
-        if(bHasCount)
+        if(m_has_count)
         {
             extractContField(m_currPacketData,idx,field_value, 3);
             m_curr_packet.setCycleCount(field_value);
@@ -577,13 +603,10 @@ void EtmV4IPktProcImpl::iPktCycleCntF123()
 
 void EtmV4IPktProcImpl::iPktSpeclRes()
 {
-    static  rctdl_etmv4_i_pkt_type format = ETM4_PKT_I_COMMIT;
-
     uint8_t lastByte = m_currPacketData.back();
     if(m_currPacketData.size() == 1)
     {
-        format = m_curr_packet.type;
-        switch(format)
+        switch(m_curr_packet.getType())
         {
         case ETM4_PKT_I_MISPREDICT:
         case ETM4_PKT_I_CANCEL_F2:
@@ -593,7 +616,7 @@ void EtmV4IPktProcImpl::iPktSpeclRes()
             case 0x2: m_curr_packet.setAtomPacket(ATOM_PATTERN, 0x3, 2); break; // EE
             case 0x3: m_curr_packet.setAtomPacket(ATOM_PATTERN, 0x0, 1); break; // N
             }
-            if(format == ETM4_PKT_I_CANCEL_F2)
+            if(m_curr_packet.getType() == ETM4_PKT_I_CANCEL_F2)
                 m_curr_packet.setCancelElements(1);
             m_process_state = SEND_PKT;
             break;
@@ -612,7 +635,7 @@ void EtmV4IPktProcImpl::iPktSpeclRes()
         {
             uint32_t field_val = 0;
             extractContField(m_currPacketData,1,field_val);
-            if(format == ETM4_PKT_I_COMMIT)
+            if(m_curr_packet.getType() == ETM4_PKT_I_COMMIT)
                 m_curr_packet.setCommitElements(field_val);
             else
                 m_curr_packet.setCancelElements(field_val);
@@ -624,15 +647,12 @@ void EtmV4IPktProcImpl::iPktSpeclRes()
 
 void EtmV4IPktProcImpl::iPktCondInstr()   
 {
-    static rctdl_etmv4_i_pkt_type format = ETM4_PKT_I_COND_I_F1;
-
     uint8_t lastByte = m_currPacketData.back();
     bool bF1Done = false;
 
     if(m_currPacketData.size() == 1)    
     {
-        format = m_curr_packet.type;
-        if(format == ETM4_PKT_I_COND_I_F2)
+        if(m_curr_packet.getType() == ETM4_PKT_I_COND_I_F2)
         {
             m_curr_packet.setCondIF2(lastByte & 0x3);
             m_process_state = SEND_PKT;
@@ -641,7 +661,7 @@ void EtmV4IPktProcImpl::iPktCondInstr()
     }
     else if(m_currPacketData.size() == 2)  
     {
-        if(format == ETM4_PKT_I_COND_I_F3)   // f3 two bytes long
+        if(m_curr_packet.getType() == ETM4_PKT_I_COND_I_F3)   // f3 two bytes long
         {
             uint8_t num_c_elem = ((lastByte >> 1) & 0x3F) + lastByte & 0x1;
             m_curr_packet.setCondIF3(num_c_elem,(bool)((lastByte & 0x1) == 0x1));
@@ -668,26 +688,23 @@ void EtmV4IPktProcImpl::iPktCondInstr()
 
 void EtmV4IPktProcImpl::iPktCondResult()
 {
-    static rctdl_etmv4_i_pkt_type format = ETM4_PKT_I_COND_RES_F1; // conditional result formats F1-F4
-
-    static bool bF1P1Done = false;  // F1 payload 1 done
-    static bool bF1P2Done = false;  // F1 payload 2 done
-    static bool bF1HasP2 = false;   // F1 has a payload 2
-
+    //static rctdl_etmv4_i_pkt_type format = ETM4_PKT_I_COND_RES_F1; // conditional result formats F1-F4
     uint8_t lastByte = m_currPacketData.back();
     if(m_currPacketData.size() == 1)    
     {
-        format = m_curr_packet.type;
-        
-        switch(format)
+        m_F1P1_done = false;  // F1 payload 1 done
+        m_F1P2_done = false;  // F1 payload 2 done
+        m_F1has_P2 = false;   // F1 has a payload 2
+                
+        switch(m_curr_packet.getType())
         {
         case ETM4_PKT_I_COND_RES_F1:            
-            bF1P1Done = bF1P2Done = false;
-            bF1HasP2 = true;
+
+            m_F1has_P2 = true;
             if((lastByte & 0xFC) == 0x6C)// only one payload set
             {
-                bF1P2Done = true;
-                bF1HasP2 = false;
+                m_F1P2_done = true;
+                m_F1has_P2 = false;
             }
             break;
 
@@ -705,7 +722,7 @@ void EtmV4IPktProcImpl::iPktCondResult()
             break;
         }        
     }
-    else if((format == ETM4_PKT_I_COND_RES_F3) && (m_currPacketData.size() == 2)) 
+    else if((m_curr_packet.getType() == ETM4_PKT_I_COND_RES_F3) && (m_currPacketData.size() == 2)) 
     {
         // 2nd F3 packet
         uint16_t f3_tokens = 0;
@@ -716,14 +733,13 @@ void EtmV4IPktProcImpl::iPktCondResult()
     }
     else  // !first packet  - F1
     {
-        if(!bF1P1Done)
-            bF1P1Done = ((lastByte & 0x80) == 0x00);
-        else if(!bF1P2Done)
-            bF1P2Done = ((lastByte & 0x80) == 0x00);
+        if(!m_F1P1_done)
+            m_F1P1_done = ((lastByte & 0x80) == 0x00);
+        else if(!m_F1P2_done)
+            m_F1P2_done = ((lastByte & 0x80) == 0x00);
 
-        if(bF1P1Done && bF1P2Done)
+        if(m_F1P1_done && m_F1P2_done)
         {
-            // TBD: populate packet and send it
             int st_idx = 1;
             uint32_t key[2];
             uint8_t result[2];
@@ -731,12 +747,12 @@ void EtmV4IPktProcImpl::iPktCondResult()
 
             st_idx+= extractCondResult(m_currPacketData,st_idx,key[0],result[0]);
             CI[0] = m_currPacketData[0] & 0x1;
-            if(bF1HasP2) // 2nd payload?
+            if(m_F1has_P2) // 2nd payload?
             {
                 extractCondResult(m_currPacketData,st_idx,key[1],result[1]);
                 CI[1] = (m_currPacketData[0] >> 1) & 0x1;
             }
-            m_curr_packet.setCondRF1(key,result,CI,bF1HasP2);
+            m_curr_packet.setCondRF1(key,result,CI,m_F1has_P2);
             m_process_state = SEND_PKT;
         }
     }
@@ -744,12 +760,6 @@ void EtmV4IPktProcImpl::iPktCondResult()
 
 void EtmV4IPktProcImpl::iPktContext()
 {
-    // count of expected VMID bytes in this packet.
-    static int nVMID_bytes = 0;  
-
-    // count of expected CID bytes in this packet.
-    static int nCtxtID_bytes = 0; 
-
     bool bSendPacket = false;
     uint8_t lastByte = m_currPacketData.back();
     if(m_currPacketData.size() == 1) 
@@ -768,18 +778,18 @@ void EtmV4IPktProcImpl::iPktContext()
         }
         else
         {
-            nVMID_bytes = ((lastByte & 0x40) == 0x40) ? (m_config.vmidSize()/4) : 0;
-            nCtxtID_bytes = ((lastByte & 0x80) == 0x80) ? (m_config.cidSize()/4) : 0;
+            m_vmidBytes = ((lastByte & 0x40) == 0x40) ? (m_config.vmidSize()/4) : 0;
+            m_ctxtidBytes = ((lastByte & 0x80) == 0x80) ? (m_config.cidSize()/4) : 0;
         }
     }
     else    // 3rd byte onwards
     {
-        if(nVMID_bytes > 0)
-            nVMID_bytes--;
-        else if(nCtxtID_bytes > 0)
-            nCtxtID_bytes--;
+        if(m_vmidBytes > 0)
+            m_vmidBytes--;
+        else if(m_ctxtidBytes > 0)
+            m_ctxtidBytes--;
 
-        if((nCtxtID_bytes == 0) && (nVMID_bytes == 0))
+        if((m_ctxtidBytes == 0) && (m_vmidBytes == 0))
             bSendPacket = true;        
     }
 
@@ -897,27 +907,24 @@ void EtmV4IPktProcImpl::iPktAddrCtxt()
 
 void EtmV4IPktProcImpl::iPktShortAddr()
 {
-    static bool addr_done = false;
-    static uint8_t IS = 0;
-
     uint8_t lastByte = m_currPacketData.back();
     if(m_currPacketData.size() == 1)    
     {
-        addr_done = false;
-        IS = (lastByte == ETM4_PKT_I_ADDR_S_IS0) ? 0 : 1;
+        m_addr_done = false;
+        m_addrIS = (lastByte == ETM4_PKT_I_ADDR_S_IS0) ? 0 : 1;
     }
-    else if(!addr_done)
+    else if(!m_addr_done)
     {
-        addr_done = (m_currPacketData.size() == 3) || ((lastByte & 0x80) == 0x00);
+        m_addr_done = (m_currPacketData.size() == 3) || ((lastByte & 0x80) == 0x00);
     }
 
-    if(addr_done)
+    if(m_addr_done)
     {
         uint32_t addr_val = 0;
         int bits = 0;
 
-        extractShortAddr(m_currPacketData,1,IS,addr_val,bits);
-        m_curr_packet.updateShortAddress(addr_val,IS,bits);
+        extractShortAddr(m_currPacketData,1,m_addrIS,addr_val,bits);
+        m_curr_packet.updateShortAddress(addr_val,m_addrIS,bits);
         m_process_state = SEND_PKT;
     }
 }
@@ -988,61 +995,52 @@ void EtmV4IPktProcImpl::iPktLongAddr()
 
 void EtmV4IPktProcImpl::iPktQ()
 {
-    static int addrBytes = 0;
-    static bool has_addr = false;
-    static bool count_done = false;
-    static bool addr_short = false;
-    static bool addr_match = false;
-    static uint8_t q_type = 0;
-    static uint8_t IS = 0;
-    static uint8_t QE = 0;
-
     uint8_t lastByte = m_currPacketData.back();
     bool bSendBad = false;
     if(m_currPacketData.size() == 1)
     {
-        q_type = lastByte & 0xF;
+        m_Q_type = lastByte & 0xF;
 
-        addrBytes = 0;
-        count_done = false;
-        has_addr = false;
-        addr_short = true;
-        addr_match = false;
-        IS = 1;
-        QE = 0;
+        m_addrBytes = 0;
+        m_count_done = false;
+        m_has_addr = false;
+        m_addr_short = true;
+        m_addr_match = false;
+        m_addrIS = 1;
+        m_QE = 0;
 
-        switch(q_type)
+        switch(m_Q_type)
         {
             // count only - implied address.
         case 0x0:
         case 0x1:
         case 0x2:
-            addr_match = true;
-            has_addr = true;
-            QE = q_type & 0x3;
+            m_addr_match = true;
+            m_has_addr = true;
+            m_QE = m_Q_type & 0x3;
         case 0xC:
             break;
 
             // count + short address 
         case 0x5:
-            IS = 0;
+            m_addrIS = 0;
         case 0x6:
-            has_addr = true;            
-            addrBytes = 2;  // short IS0/1
+            m_has_addr = true;            
+            m_addrBytes = 2;  // short IS0/1
             break;
 
             // count + long address
         case 0xA:
-            IS = 0;
+            m_addrIS = 0;
         case 0xB:
-            has_addr = true;
-            addr_short = false;
-            addrBytes = 4; // long IS0/1
+            m_has_addr = true;
+            m_addr_short = false;
+            m_addrBytes = 4; // long IS0/1
             break;
 
             // no count, no address
         case 0xF:
-            count_done = true;
+            m_count_done = true;
             break;
 
             // reserved values 0x3, 0x4, 0x7, 0x8, 0x9, 0xD, 0xE
@@ -1055,50 +1053,50 @@ void EtmV4IPktProcImpl::iPktQ()
     }
     else
     {
-        if(addrBytes > 0)
+        if(m_addrBytes > 0)
         {
-            if(addr_short && addrBytes == 2)  // short
+            if(m_addr_short && m_addrBytes == 2)  // short
             {
                 if((lastByte & 0x80) == 0x00)
-                    addrBytes--;        // short version can have just single byte.
+                    m_addrBytes--;        // short version can have just single byte.
             }
-            addrBytes--;
+            m_addrBytes--;
         }
-        else if(!count_done)
+        else if(!m_count_done)
         {
-            count_done = ((lastByte & 0x80) == 0x00);
+            m_count_done = ((lastByte & 0x80) == 0x00);
         }
     }
 
-    if(((addrBytes == 0) && count_done))
+    if(((m_addrBytes == 0) && m_count_done))
     {
         int idx = 1; // move past the header
         int bits = 0;
         uint32_t q_addr;
         uint32_t q_count;
 
-        if(has_addr)
+        if(m_has_addr)
         {
-            if(addr_match)
+            if(m_addr_match)
             {
-                m_curr_packet.setAddressExactMatch(QE);
+                m_curr_packet.setAddressExactMatch(m_QE);
             }
-            else if(addr_short)
+            else if(m_addr_short)
             {
-                idx+=extractShortAddr(m_currPacketData,idx,IS,q_addr,bits);
-                m_curr_packet.updateShortAddress(q_addr,IS,bits);
+                idx+=extractShortAddr(m_currPacketData,idx,m_addrIS,q_addr,bits);
+                m_curr_packet.updateShortAddress(q_addr,m_addrIS,bits);
             }
             else
             {
-                idx+=extract32BitLongAddr(m_currPacketData,idx,IS,q_addr);
-                m_curr_packet.set32BitAddress(q_addr,IS,32);
+                idx+=extract32BitLongAddr(m_currPacketData,idx,m_addrIS,q_addr);
+                m_curr_packet.set32BitAddress(q_addr,m_addrIS,32);
             }
         }
 
-        if(q_type != 0xF)
+        if(m_Q_type != 0xF)
         {
             extractContField(m_currPacketData,idx,q_count);
-            m_curr_packet.setQType(true,q_count,has_addr,addr_match,q_type);
+            m_curr_packet.setQType(true,q_count,m_has_addr,m_addr_match,m_Q_type);
         }
         else
         {
@@ -1135,7 +1133,7 @@ void EtmV4IPktProcImpl::iAtom()
         break;
 
     case ETM4_PKT_I_ATOM_F3:
-        m_curr_packet.setAtomPacket(ATOM_PATTERN,(lastByte & 0x7), 3); // 2x (E or N)
+        m_curr_packet.setAtomPacket(ATOM_PATTERN,(lastByte & 0x7), 3); // 3x (E or N)
         break;
 
     case ETM4_PKT_I_ATOM_F4:
@@ -1465,8 +1463,7 @@ int EtmV4IPktProcImpl::extractContField(const std::vector<uint8_t> &buffer, cons
         }
         else
         {
-            // TBD: error out here.
-            throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_BAD_PACKET_SEQ,"Invalid Continuation fields in packet");
+            throwBadSequenceError("Invalid 32 bit continuation fields in packet");
         }
     }
     return idx;
@@ -1490,8 +1487,7 @@ int EtmV4IPktProcImpl::extractContField64(const std::vector<uint8_t> &buffer, co
         }
         else
         {
-            // TBD: error out here.
-            throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_BAD_PACKET_SEQ,"Invalid Continuation fields in packet");
+            throwBadSequenceError("Invalid 64 bit continuation fields in packet");
         }
     }
     return idx;
@@ -1569,6 +1565,12 @@ int EtmV4IPktProcImpl::extract32BitLongAddr(const std::vector<uint8_t> &buffer, 
     value |= ((uint32_t)buffer[st_idx+2]) << 16;
     value |= ((uint32_t)buffer[st_idx+3]) << 24;
     return 4;
+}
+
+void EtmV4IPktProcImpl::throwBadSequenceError(const char *pszExtMsg)
+{
+    m_curr_packet.updateErrType(ETM4_PKT_I_BAD_SEQUENCE);   // swap type for err type
+    throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_BAD_PACKET_SEQ,m_packet_index,m_config.getTraceID(),pszExtMsg);
 }
 
 

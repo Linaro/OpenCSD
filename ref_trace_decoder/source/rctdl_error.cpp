@@ -36,38 +36,38 @@
 #include "rctdl_error.h"
 
 
-static const char *s_errorCodeDescs[] = {
+static const char *s_errorCodeDescs[][2] = {
     /* general return errors */
-    "RCTDL_OK", "No Error.",
-    "RCTDL_ERR_FAIL","General failure.",
-    "RCTDL_ERR_MEM","Internal memory allocation error.",
-    "RCTDL_ERR_NOT_INIT","Component not initialised.",
-    "RCTDL_ERR_INVALID_ID","Invalid CoreSight Trace Source ID.",
-    "RCTDL_ERR_BAD_HANDLE","Invalid handle passed to component.",
-    "RCTDL_ERR_INVALID_PARAM_VAL","Invalid value parameter passed to component.",
+    {"RCTDL_OK", "No Error."},
+    {"RCTDL_ERR_FAIL","General failure."},
+    {"RCTDL_ERR_MEM","Internal memory allocation error."},
+    {"RCTDL_ERR_NOT_INIT","Component not initialised."},
+    {"RCTDL_ERR_INVALID_ID","Invalid CoreSight Trace Source ID."},
+    {"RCTDL_ERR_BAD_HANDLE","Invalid handle passed to component."},
+    {"RCTDL_ERR_INVALID_PARAM_VAL","Invalid value parameter passed to component."},
     /* attachment point errors */
-    "RCTDL_ERR_ATTACH_TOO_MANY","Cannot attach - attach device limit reached.",
-    "RCTDL_ERR_ATTACH_INVALID_PARAM"," Cannot attach - invalid parameter.",
-    "RCTDL_ERR_ATTACH_COMP_NOT_FOUND","Cannot detach - component not found.",
+    {"RCTDL_ERR_ATTACH_TOO_MANY","Cannot attach - attach device limit reached."},
+    {"RCTDL_ERR_ATTACH_INVALID_PARAM"," Cannot attach - invalid parameter."},
+    {"RCTDL_ERR_ATTACH_COMP_NOT_FOUND","Cannot detach - component not found."},
     /* source reader errors */
-    "RCTDL_ERR_RDR_FILE_NOT_FOUND","source reader - file not found.",
-    "RCTDL_ERR_RDR_INVALID_INIT",  "source reader - invalid initialisation parameter.",
-    "RCTDL_ERR_RDR_NO_DECODER", "source reader - not trace decoder set.",
+    {"RCTDL_ERR_RDR_FILE_NOT_FOUND","source reader - file not found."},
+    {"RCTDL_ERR_RDR_INVALID_INIT",  "source reader - invalid initialisation parameter."},
+    {"RCTDL_ERR_RDR_NO_DECODER", "source reader - not trace decoder set."},
     /* data path errors */
-    "RCTDL_ERR_DATA_DECODE_FATAL", "A decoder in the data path has returned a fatal error."
+    {"RCTDL_ERR_DATA_DECODE_FATAL", "A decoder in the data path has returned a fatal error."},
     /* frame deformatter errors */
-    "RCTDL_ERR_DFMTR_NOTCONTTRACE", "Trace input to deformatter none-continuous",
+    {"RCTDL_ERR_DFMTR_NOTCONTTRACE", "Trace input to deformatter none-continuous"},
     /* packet processor errors - protocol issues etc */
-    "RCTDL_ERR_BAD_PACKET_SEQ","Bad packet sequence",
-
+    {"RCTDL_ERR_BAD_PACKET_SEQ","Bad packet sequence"},
+    {"RCTDL_ERR_INVALID_PCKT_HDR","Invalid packet header"},
     /* packet decoder errors */
     /* test errors - errors generated only by the test code, not the library */
-    "RCTDL_ERR_TEST_SNAPSHOT_PARSE", "Test snapshot file parse error",
-    "RCTDL_ERR_TEST_SNAPSHOT_PARSE_INFO", "Test snapshot file parse information",
-    "RCTDL_ERR_TEST_SNAPSHOT_READ","test snapshot reader error",
-    "RCTDL_ERR_TEST_SS_TO_DECODER","test snapshot to decode tree conversion error",
+    {"RCTDL_ERR_TEST_SNAPSHOT_PARSE", "Test snapshot file parse error"},
+    {"RCTDL_ERR_TEST_SNAPSHOT_PARSE_INFO", "Test snapshot file parse information"},
+    {"RCTDL_ERR_TEST_SNAPSHOT_READ","test snapshot reader error"},
+    {"RCTDL_ERR_TEST_SS_TO_DECODER","test snapshot to decode tree conversion error"},
     /* end marker*/
-    "RCTDL_ERR_LAST", "No error - code end marker"
+    {"RCTDL_ERR_LAST", "No error - code end marker"}
 };
 
 rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t code) :
@@ -181,7 +181,7 @@ const std::string rctdlError::getErrorString(const rctdlError &error)
 void rctdlError::appendErrorDetails(std::string &errStr, const rctdlError &error)
 {
     char sz_buff[64];
-    int numerrstr = ((sizeof(s_errorCodeDescs) / sizeof(const char *)) / 2) - 1;
+    int numerrstr = ((sizeof(s_errorCodeDescs) / sizeof(const char *)) / 2);
     int code = (int)error.getErrorCode();
     rctdl_trc_index_t idx = error.getErrorIndex();
     uint8_t chan_ID = error.getErrorChanID();
@@ -189,7 +189,7 @@ void rctdlError::appendErrorDetails(std::string &errStr, const rctdlError &error
     if(code < numerrstr)
     {
         sprintf(sz_buff, "0x%04X (",code);
-        errStr += sz_buff + (std::string)s_errorCodeDescs[code*2] + (std::string)") [" + (std::string)s_errorCodeDescs[(code*2) + 1] + (std::string)"]; ";
+        errStr += sz_buff + (std::string)s_errorCodeDescs[code][0] + (std::string)") [" + (std::string)s_errorCodeDescs[code][1] + (std::string)"]; ";
     }
     else
     {
@@ -200,15 +200,15 @@ void rctdlError::appendErrorDetails(std::string &errStr, const rctdlError &error
     {
         errStr += "TrcIdx=";
         if(sizeof(idx) > 4)
-            sprintf(sz_buff,"0x%16llX; ",idx);
+            sprintf(sz_buff,"%lld; ",idx);
         else
-            sprintf(sz_buff,"0x%08lX; ",idx);
+            sprintf(sz_buff,"%ld; ",idx);
         errStr += sz_buff;
     }
     if(chan_ID != RCTDL_BAD_CS_SRC_ID)
     {
         errStr += "CS ID=";
-        sprintf(sz_buff,"0x02X; ",chan_ID);
+        sprintf(sz_buff,"0x%02X; ",chan_ID);
         errStr += sz_buff;
     }
     errStr += error.getMessage();

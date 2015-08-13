@@ -253,7 +253,7 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::processTraceData(
     }
     catch(const rctdlError &err) {
         LogError(err);
-        CollateDataPathResp(RCDTL_REST_FATAL_INVALID_DATA);
+        CollateDataPathResp(RCDTL_RESP_FATAL_INVALID_DATA);
     }
     catch(...) {
         LogError(rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_FAIL));
@@ -597,7 +597,7 @@ bool TraceFmtDcdImpl::unpackFrame()
     // it's data
     else
     {
-        m_out_data[m_out_data_idx].data[m_out_data[m_out_data_idx].valid++] = m_ex_frm_data[14] | (frameFlagBit & m_ex_frm_data[15]) ? 0x1 : 0x0;             
+        m_out_data[m_out_data_idx].data[m_out_data[m_out_data_idx].valid++] = m_ex_frm_data[14] | ((frameFlagBit & m_ex_frm_data[15]) ? 0x1 : 0x0); 
     }
     m_ex_frm_n_bytes = 0;   // mark frame as empty;
     return true;

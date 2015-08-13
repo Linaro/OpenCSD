@@ -332,7 +332,7 @@ inline void EtmV4ITrcPacket::set32BitAddress(const uint32_t addr, const uint8_t 
     rctdl_vaddr_t update_mask = RCTDL_BIT_MASK(update_bits);
     v_addr.pkt_bits = update_bits;
     v_addr.size = VA_32BIT;
-    if(v_addr.valid_bits < update_bits)
+    if((v_addr.valid_bits < update_bits) || (update_bits == 32) )  // account for dropping into AArch32
         v_addr.valid_bits = update_bits;
 
     v_addr.val = (v_addr.val & ~update_mask) | (addr & update_mask);
