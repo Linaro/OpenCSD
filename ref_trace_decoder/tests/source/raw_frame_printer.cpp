@@ -69,6 +69,7 @@ rctdl_err_t RawFramePrinter::TraceRawFrameIn(  const rctdl_datapath_op_t op,
             createDataString(printDataSize,pDataBlock,16,strData);
             oss << strData;
         }
+        oss << std::endl;
         itemPrintLine(oss.str());
     }
     return RCTDL_OK;

@@ -65,13 +65,13 @@ void rctdlMsgLogger::LogMsg(const std::string &msg)
 {
     if(m_outFlags & OUT_STDOUT)
     {
-        std::cout << msg << std::endl;
+        std::cout << msg;
         std::cout.flush();
     }
 
     if(m_outFlags & OUT_STDERR)
     {
-        std::cerr << msg << std::endl;
+        std::cerr << msg;
         std::cerr.flush();
     }
 
@@ -81,7 +81,7 @@ void rctdlMsgLogger::LogMsg(const std::string &msg)
         {
             m_out_file.open(m_logFileName.c_str(),std::fstream::out | std::fstream::app);
         }
-        m_out_file << msg << std::endl;
+        m_out_file << msg;
         m_out_file.flush();
     }
 }

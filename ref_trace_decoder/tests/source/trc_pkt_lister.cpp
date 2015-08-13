@@ -63,6 +63,9 @@ static std::vector<uint8_t> id_list;    // output specific IDs in source
 static rctdlMsgLogger logger;
 static int logOpts = rctdlMsgLogger::OUT_STDOUT | rctdlMsgLogger::OUT_FILE;
 static std::string logfileName = "trc_pkt_lister.log";
+static bool outRawPacked = false;
+static bool outRawUnpacked = false;
+
 
 int main(int argc, char* argv[])
 {
@@ -121,6 +124,18 @@ int main(int argc, char* argv[])
     }
 
     return 0;
+}
+
+void print_help()
+{
+    std::ostringstream oss;
+    oss << "Trace Packet Lister - commands\n\n";
+    oss << "-ss_dir <dir>       Set the directory path to a trace snapshot\n";
+    oss << "-id <n>             Set an ID to list (may be used mutiple times) - default if no id set is for all IDs to be printed\n";
+    oss << "-src_name <name>    List packets from a given snapshot source name (defaults to first source found)\n";
+    oss << "-o_raw_packed       Output raw packed trace frames\n";
+    oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
+    logger.LogMsg(oss.str());
 }
 
 
@@ -182,6 +197,19 @@ bool process_cmd_line_opts(int argc, char* argv[])
                     logger.LogMsg("Trace Packet Lister : Error: Missing source name string on -src_name option\n");
                     bOptsOK = false;
                 }
+            }
+            else if(strcmp(argv[optIdx], "-o_raw_packed") == 0)
+            {
+                outRawPacked = true;
+            }
+            else if(strcmp(argv[optIdx], "-o_raw_unpacked") == 0)
+            {
+                outRawUnpacked = true;
+            }
+            else if(strcmp(argv[optIdx], "-help") == 0)
+            {
+                print_help();
+                bOptsOK = false;
             }
             else
             {
@@ -250,13 +278,19 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
         TraceFormatterFrameDecoder *pDeformatter = dcd_tree->getFrameDeformatter();
         if(pDeformatter != 0)
         {
-            // wwe want the raw frames.
-            pDeformatter->getTrcRawFrameAttachPt()->attach(&framePrinter);
-            pDeformatter->Configure(RCTDL_DFRMTR_FRAME_MEM_ALIGN | RCTDL_DFRMTR_UNPACKED_RAW_OUT | RCTDL_DFRMTR_PACKED_RAW_OUT);
+            uint32_t configFlags = RCTDL_DFRMTR_FRAME_MEM_ALIGN;
+
+            // we want the raw frames.
+            if(outRawPacked || outRawUnpacked)
+            {
+                pDeformatter->getTrcRawFrameAttachPt()->attach(&framePrinter);
+                if(outRawPacked) configFlags |= RCTDL_DFRMTR_PACKED_RAW_OUT;
+                if(outRawUnpacked) configFlags |= RCTDL_DFRMTR_UNPACKED_RAW_OUT;
+            }
+            pDeformatter->Configure(configFlags);
         }
 
-
-        // check if we have attached at least one printer
+         // check if we have attached at least one printer
         if(printers.size() > 0)
         {
             // need to push the data through the decode tree.

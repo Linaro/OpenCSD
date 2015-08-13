@@ -341,7 +341,7 @@ namespace ParserPrivate
     //! Instantiate the appropriate handler for the section name
     auto_ptr<Section> NewSection( const string& sectionName, Parsed& result)
     {
-        LogInfoStr( "Start of " + sectionName + " section");
+        LogInfoStr( "Start of " + sectionName + " section\n");
 
         if (sectionName == GlobalSectionName)
         {
@@ -365,7 +365,7 @@ namespace ParserPrivate
         }
         else
         {   
-            LogInfoStr("Unknown section ignored: " + sectionName);
+            LogInfoStr("Unknown section ignored: " + sectionName + "\n");
             return auto_ptr<Section>(new IgnoredSection);
         }
     }
@@ -396,7 +396,7 @@ namespace ParserPrivate
     //! Instantiate the appropriate handler for the section name
     auto_ptr<Section> NewDeviceList(const string& sectionName, ParsedDevices& result)
     {
-        LogInfoStr("Start of " + sectionName + " section");
+        LogInfoStr("Start of " + sectionName + " section\n");
 
         if (sectionName == DeviceListSectionName)
         {
@@ -623,7 +623,7 @@ namespace ParserPrivate
 
     auto_ptr<Section> NewTraceSection(const string& sectionName, ParsedTrace& result)
     {
-        LogInfoStr((std::string)"Start of " + sectionName + (std::string)" section");
+        LogInfoStr((std::string)"Start of " + sectionName + (std::string)" section\n");
 
         if (sectionName == TraceBuffersSectionName)
         {

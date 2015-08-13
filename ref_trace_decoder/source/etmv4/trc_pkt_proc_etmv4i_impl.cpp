@@ -81,7 +81,9 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
     m_blockBytesProcessed = 0;
     m_blockIndex = index;
     uint8_t currByte;
-    while((m_blockBytesProcessed < dataBlockSize) && RCTDL_DATA_RESP_IS_CONT(resp))
+    while(  ((m_blockBytesProcessed < dataBlockSize) || 
+             (m_blockBytesProcessed == dataBlockSize) && (m_process_state == SEND_PKT)) && 
+            RCTDL_DATA_RESP_IS_CONT(resp))
     {
         currByte = pDataBlock[m_blockBytesProcessed];
         try 
