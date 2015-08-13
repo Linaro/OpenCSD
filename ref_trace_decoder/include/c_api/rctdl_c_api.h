@@ -68,6 +68,8 @@ RCTDL_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t s
 /*!
  * Destroy a decode tree.
  *
+ * Also destroys all the associated processors and decoders for the tree.
+ *
  * @param handle : Handle for decode tree to destroy.
  */
 RCTDL_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle);
@@ -107,9 +109,12 @@ RCTDL_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t 
 RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn);
 
 
-/** TBD : more C API functions to be added here */
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *rctdl_etmv4_cfg, FnEtmv4IPacketDataIn pPktFn);
 
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *rctdl_etmv4_cfg);
 
+/** TBD : more C API functions to be added here */    
+    
 /** @}*/
 
 /** @}*/

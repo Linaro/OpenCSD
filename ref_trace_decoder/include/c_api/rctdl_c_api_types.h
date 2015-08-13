@@ -55,8 +55,11 @@
 /** Handle to decode tree */
 typedef void * dcd_tree_handle_t;
 
-
+/** function pointer type for decoder output, generic data element input */
 typedef rctdl_datapath_resp_t (* FnTraceElemIn)(const rctdl_trc_index_t index_sop, const uint8_t trc_chan_id, const rctdl_generic_trace_elem *elem); 
+
+/** function pointer type for ETMv4 packet processor output, packet analyser/decoder input */
+typedef rctdl_datapath_resp_t (* FnEtmv4IPacketDataIn)(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv4_i_pkt *p_packet_in) = 0;
 
 /** @}*/
 
