@@ -48,7 +48,8 @@ CPP_INCLUDES	=	\
 			-I$(RCTDL_INCLUDE) \
 			-I$(RCTDL_TESTS)/snapshot_parser_lib/include
 
-OBJECTS		=	$(BUILD_DIR)/trc_pkt_lister.o
+OBJECTS		=	$(BUILD_DIR)/trc_pkt_lister.o \
+				$(BUILD_DIR)/raw_frame_printer.o
 
 LIBS		=	-L$(LIB_TEST_TARGET_DIR) -lsnapshot_parser \
 				-L$(LIB_TARGET_DIR) -lref_trace_decoder

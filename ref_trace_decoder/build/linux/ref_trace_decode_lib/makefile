@@ -68,7 +68,8 @@ OBJECTS=$(BUILD_DIR)/rctdl_dcd_tree.o \
 		$(BUILD_DIR)/trc_pkt_proc_etmv3.o \
 		$(BUILD_DIR)/trc_pkt_proc_etmv4.o \
 		$(BUILD_DIR)/trc_pkt_proc_etmv4i_impl.o \
-		$(BUILD_DIR)/trc_pkt_proc_ptm.o
+		$(BUILD_DIR)/trc_pkt_proc_ptm.o \
+		$(BUILD_DIR)/trc_printable_elem.o
 
 
 all: build_dir $(OBJECTS)

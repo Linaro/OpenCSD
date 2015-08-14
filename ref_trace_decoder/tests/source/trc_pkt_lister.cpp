@@ -386,7 +386,7 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                 in.close();
 
                 std::ostringstream oss;
-                oss << "Trace Packet Lister : Trace buffer done, processed " << trace_index << "bytes.\n";
+                oss << "Trace Packet Lister : Trace buffer done, processed " << trace_index << " bytes.\n";
                 logger.LogMsg(oss.str());
 
             }
