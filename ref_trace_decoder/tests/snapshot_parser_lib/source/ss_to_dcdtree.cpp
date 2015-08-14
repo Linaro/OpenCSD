@@ -113,32 +113,43 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
                         {
                             if(createPEDecoder(core_dev->deviceTypeName,etm_dev))
                             {
-                                it++;
+                                
                                 numDecodersCreated++;
                             }
                             else
                             {
-                                // TBD: failed to create decoder for the device
-                                // may be unsupported so just create ones we know about.
+                                std::ostringstream oss;
+                                oss << "Failed to create decoder for source " << it->first << ".\n";
+                                LogError(oss.str());
                             }
                         }
                         else
                         {
-                            // TBD: could not find the device data for the core.
+                            // Could not find the device data for the core.
                             // unexpected - since we created the associations.
+                            std::ostringstream oss;
+                            oss << "Failed to get device data for source " << it->first << ".\n";
+                            LogError(oss.str());
                         }
                     }
                     else
                     {
-                        // TBD: none-core source 
+                        // none-core source 
                         // not supported in the library at present.
+                        std::ostringstream oss;
+                        oss << "No core device name data for source " << it->first << ".\n";
+                        LogError(oss.str());
                     }
                 }
                 else
                 {
                     // TBD: could not find the device data for the source.
                     // again unexpected - suggests ss format error.
+                    std::ostringstream oss;
+                    oss << "Failed to find device data for source " << it->first << ".\n";
+                    LogError(oss.str());
                 }
+                it++;
             }
 
             if(numDecodersCreated == 0)

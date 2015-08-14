@@ -69,16 +69,27 @@ static bool ss_verbose = false;
 
 int main(int argc, char* argv[])
 {
+    std::ostringstream moss;
+    
     // TBD: get the logger cmd line options here.
 
     logger.setLogOpts(logOpts);
     logger.setLogFileName(logfileName.c_str());
+
+    moss << "Trace Packet Lister: CS Decode library testing\n";
+    moss << "-----------------------------------------------\n\n";
+    logger.LogMsg(moss.str());
+
 
     rctdlDefaultErrorLogger err_log;
     err_log.initErrorLogger(RCTDL_ERR_SEV_INFO,&logger);
 
     if(!process_cmd_line_opts(argc, argv))
         return -1;
+
+    moss.str("");
+    moss << "Trace Packet Lister : reading snapshot from path " << ss_path << "\n";
+    logger.LogMsg(moss.str());
 
     SnapShotReader ss_reader;
     ss_reader.setSnapshotDir(ss_path);
@@ -92,22 +103,46 @@ int main(int argc, char* argv[])
             std::vector<std::string> sourceBuffList;
             if(ss_reader.getSourceBufferNameList(sourceBuffList))
             {
+                bool bValidSourceName = false;
+                // check source name list
                 if(source_buffer_name.size() == 0)
                 {
-                    if(sourceBuffList.size() > 1)
+                    // default to first in the list
+                    source_buffer_name = sourceBuffList[0];
+                    bValidSourceName = true;
+                }
+                else
+                {
+                    for(int i = 0; i < sourceBuffList.size(); i++)
                     {
-                        // TBD : choose buffer - for now use first found
-                        source_buffer_name = sourceBuffList[0];
-
+                        if(sourceBuffList[i] == source_buffer_name)
+                        {
+                            bValidSourceName = true;
+                            break;
+                        }
                     }
-                    else 
-                        source_buffer_name = sourceBuffList[0];
                 }
 
-                std::ostringstream oss;
-                oss << "Using " << source_buffer_name << " as trace source\n";
-                logger.LogMsg(oss.str());
-                ListTracePackets(err_log,ss_reader,source_buffer_name);
+                if(bValidSourceName)
+                {
+                    std::ostringstream oss;
+                    oss << "Using " << source_buffer_name << " as trace source\n";
+                    logger.LogMsg(oss.str());
+                    ListTracePackets(err_log,ss_reader,source_buffer_name);
+                }
+                else
+                {
+                    std::ostringstream oss;
+                    oss << "Trace Packet Lister : Trace source name " << source_buffer_name << " not found\n";
+                    logger.LogMsg(oss.str());
+                    oss.str("");
+                    oss << "Valid source names are:-\n";
+                    for(int i = 0; i < sourceBuffList.size(); i++)
+                    {
+                        oss << sourceBuffList[i] << "\n";
+                    }
+                    logger.LogMsg(oss.str());
+                }
 
             }
             else
