@@ -446,7 +446,7 @@ namespace ParserPrivate
     //! Instantiate the appropriate handler for the section name
     auto_ptr<Section> NewSnapshotInfo(const string& sectionName, ParsedDevices& result)
     {
-        LogInfoStr((std::string)"Start of " + sectionName + (std::string)" section");
+        LogInfoStr((std::string)"Start of " + sectionName + (std::string)" section\n");
 
         if (sectionName == SnapshotSectionName)
         {
@@ -485,7 +485,7 @@ namespace ParserPrivate
     //! Instantiate the appropriate handler for the section name
     auto_ptr<Section> NewTraceMetaData(const string& sectionName, ParsedDevices& result)
     {
-        LogInfoStr((std::string)"Start of " + sectionName + (std::string)" section");
+        LogInfoStr((std::string)"Start of " + sectionName + (std::string)" section\n");
 
         if (sectionName == TraceSectionName)
         {

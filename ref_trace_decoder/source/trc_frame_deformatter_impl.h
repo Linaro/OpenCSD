@@ -71,7 +71,7 @@ private:
                                                 uint32_t *numBytesProcessed);
 
     /* enable / disable ID streams - default as all enabled */
-    rctdl_err_t OutputFilterIDs(std::vector<uint8_t> id_list, bool bEnable);
+    rctdl_err_t OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable);
     rctdl_err_t OutputFilterAllIDs(bool bEnable);
 
     /* decode control */
@@ -113,6 +113,10 @@ private:
                            const int dataBlockSize, 
                            const uint8_t *pDataBlock,
                            const uint8_t traceID);
+
+
+    void setRawChanFilterAll(bool bEnable);
+    const bool rawChanEnabled(const uint8_t id) const;
 
 
     friend class TraceFormatterFrameDecoder;
@@ -157,6 +161,8 @@ private:
     /* raw output options */
     bool m_b_output_packed_raw;
     bool m_b_output_unpacked_raw;
+
+    bool m_raw_chan_enable[128];
 
 #if 0
     /* pattern match for fsyncs */

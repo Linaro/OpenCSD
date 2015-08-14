@@ -48,6 +48,8 @@ class rctdlError;
  * 
  *  This class provides a standard interface to the decoder error logger for all trace decode and 
  *  reader components.
+ *
+ * Implementation will determine if and how the errors and messages are logged.
  * 
  */
 class ITraceErrorLog
@@ -77,7 +79,9 @@ public:
     /*!
      * Log an error. 
      * Pass an error object and the component or generic handle to associate with the error.
-     * Error will be saved for access by GetLastError().
+     * Error will be saved for access by GetLastError(). 
+     *
+     * If logger implementation has output print logging enabled then this may be printed to file or screen.
      *
      * @param handle : Component handle or standard generic handle
      * @param *Error : Pointer to an error object.
@@ -86,7 +90,7 @@ public:
 
     /*!
      * Log a general message. Associated with component or use generic handle.
-     * Message logged to same output as errors, but not saved for GetLastError()
+     * Message logged to same output as errors if output enabled, but not saved for GetLastError()
      *
      * @param handle : Component handle or standard generic handle.
      * @param filter_level : Verbosity filter.

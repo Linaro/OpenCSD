@@ -58,6 +58,7 @@ TraceFmtDcdImpl::TraceFmtDcdImpl() : TraceComponent(DEFORMATTER_NAME),
 
 {
     resetStateParams();
+    setRawChanFilterAll(true);
 }
 
 TraceFmtDcdImpl::TraceFmtDcdImpl(int instNum) : TraceComponent(DEFORMATTER_NAME, instNum),
@@ -67,6 +68,7 @@ TraceFmtDcdImpl::TraceFmtDcdImpl(int instNum) : TraceComponent(DEFORMATTER_NAME,
     m_alignment(16)
 {
     resetStateParams();
+    setRawChanFilterAll(true);
 }
 
 TraceFmtDcdImpl::~TraceFmtDcdImpl()
@@ -117,7 +119,7 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::TraceDataIn(
 }
 
 /* enable / disable ID streams - default as all enabled */
-rctdl_err_t TraceFmtDcdImpl::OutputFilterIDs(std::vector<uint8_t> id_list, bool bEnable)
+rctdl_err_t TraceFmtDcdImpl::OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable)
 {
     rctdl_err_t err =  RCTDL_OK;
     std::vector<uint8_t>::iterator iter = id_list.begin();
@@ -129,7 +131,10 @@ rctdl_err_t TraceFmtDcdImpl::OutputFilterIDs(std::vector<uint8_t> id_list, bool 
         if(id > 128)
             err = RCTDL_ERR_INVALID_ID;
         else
+        {
             m_IDStreams[id].set_enabled(bEnable);
+            m_raw_chan_enable[id] = bEnable;
+        }
         iter++;
     }
     return err;
@@ -141,7 +146,23 @@ rctdl_err_t TraceFmtDcdImpl::OutputFilterAllIDs(bool bEnable)
     {
         m_IDStreams[id].set_enabled(bEnable);
     }
+    setRawChanFilterAll(bEnable);
     return RCTDL_OK;
+}
+
+void TraceFmtDcdImpl::setRawChanFilterAll(bool bEnable)
+{
+    for(int i=0; i<128; i++) 
+    {
+        m_raw_chan_enable[i] = bEnable;
+    }
+}
+
+const bool TraceFmtDcdImpl::rawChanEnabled(const uint8_t id) const
+{
+    if(id < 128)
+        return m_raw_chan_enable[id];
+    return false;
 }
 
 /* decode control */
@@ -621,7 +642,7 @@ bool TraceFmtDcdImpl::outputFrame()
             {
                 // log the stuff we are about to put out early so as to make it visible before interpretation
                 // however, don't re-output if only part used first time round.
-                if(m_b_output_unpacked_raw && (m_out_data[m_out_processed].used == 0))
+                if(m_b_output_unpacked_raw && (m_out_data[m_out_processed].used == 0) && rawChanEnabled( m_out_data[m_out_processed].id))
                 {
                     outputRawMonBytes( RCTDL_OP_DATA, 
                             m_out_data[m_out_processed].index, 
@@ -651,7 +672,7 @@ bool TraceFmtDcdImpl::outputFrame()
             else
             {
                 // optional raw output for debugging / monitor tools
-                if(m_b_output_unpacked_raw)
+                if(m_b_output_unpacked_raw && rawChanEnabled( m_out_data[m_out_processed].id))
                 {
                     outputRawMonBytes(  RCTDL_OP_DATA, 
                         m_out_data[m_out_processed].index, 
@@ -666,7 +687,7 @@ bool TraceFmtDcdImpl::outputFrame()
         else
         {
             // optional raw output for debugging / monitor tools
-            if(m_b_output_unpacked_raw)
+            if(m_b_output_unpacked_raw && rawChanEnabled( m_out_data[m_out_processed].id))
             {
                 outputRawMonBytes(  RCTDL_OP_DATA, 
                     m_out_data[m_out_processed].index, 
@@ -755,7 +776,7 @@ rctdl_err_t TraceFormatterFrameDecoder::Configure(uint32_t cfg_flags)
 }
 
 /* enable / disable ID streams - default as all enabled */
-rctdl_err_t TraceFormatterFrameDecoder::OutputFilterIDs(std::vector<uint8_t> id_list, bool bEnable)
+rctdl_err_t TraceFormatterFrameDecoder::OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable)
 {
     return (m_pDecoder == 0) ? RCTDL_ERR_NOT_INIT : m_pDecoder->OutputFilterIDs(id_list,bEnable);
 }

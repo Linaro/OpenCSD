@@ -104,6 +104,10 @@ public:
     TraceFormatterFrameDecoder *getFrameDeformatter() const { return m_frame_deformatter_root; };
     ITrcGenElemIn *getGenTraceElemOutI() const { return m_i_gen_elem_out; };
 
+    /* ID filtering - sets the output filter on the trace deformatter. No effect if no decoder attached for the ID */
+    rctdl_err_t setIDFilter(std::vector<uint8_t> &ids);  // only supplied IDs will be decoded
+    rctdl_err_t clearIDFilter(); // remove filter, all IDs will be decoded
+
 private:
     bool initialise(const rctdl_dcd_tree_src_t type, uint32_t formatterCfgFlags);
     const bool usingFormatter() const { return (bool)(m_dcd_tree_type ==  RCTDL_TRC_SRC_FRAME_FORMATTED); };

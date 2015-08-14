@@ -77,7 +77,7 @@ public:
     rctdl_err_t Configure(uint32_t cfg_flags);
 
     /* enable / disable ID streams - default as all enabled */
-    rctdl_err_t OutputFilterIDs(std::vector<uint8_t> id_list, bool bEnable);
+    rctdl_err_t OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable);
     rctdl_err_t OutputFilterAllIDs(bool bEnable);
 
     /* decode control */

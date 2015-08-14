@@ -61,6 +61,8 @@ static const char *s_errorCodeDescs[][2] = {
     {"RCTDL_ERR_BAD_PACKET_SEQ","Bad packet sequence"},
     {"RCTDL_ERR_INVALID_PCKT_HDR","Invalid packet header"},
     /* packet decoder errors */
+    /* decode tree errors */
+    {"RCTDL_ERR_DCDT_NO_FORMATTER","No formatter in use - operation not valid."},
     /* test errors - errors generated only by the test code, not the library */
     {"RCTDL_ERR_TEST_SNAPSHOT_PARSE", "Test snapshot file parse error"},
     {"RCTDL_ERR_TEST_SNAPSHOT_PARSE_INFO", "Test snapshot file parse information"},

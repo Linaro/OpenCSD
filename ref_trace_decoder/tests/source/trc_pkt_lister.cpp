@@ -65,7 +65,7 @@ static int logOpts = rctdlMsgLogger::OUT_STDOUT | rctdlMsgLogger::OUT_FILE;
 static std::string logfileName = "trc_pkt_lister.log";
 static bool outRawPacked = false;
 static bool outRawUnpacked = false;
-
+static bool ss_verbose = false;
 
 int main(int argc, char* argv[])
 {
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     SnapShotReader ss_reader;
     ss_reader.setSnapshotDir(ss_path);
     ss_reader.setErrorLogger(&err_log);
-
+    ss_reader.setVerboseOutput(ss_verbose);
 
     if(ss_reader.snapshotFound())
     {
@@ -130,7 +130,10 @@ void print_help()
 {
     std::ostringstream oss;
     oss << "Trace Packet Lister - commands\n\n";
+    oss << "Snapshot:\n";
     oss << "-ss_dir <dir>       Set the directory path to a trace snapshot\n";
+    oss << "-ss_verbose         Verbose output when reading the snapshot\n";
+    oss << "Decode:\n";
     oss << "-id <n>             Set an ID to list (may be used mutiple times) - default if no id set is for all IDs to be printed\n";
     oss << "-src_name <name>    List packets from a given snapshot source name (defaults to first source found)\n";
     oss << "-o_raw_packed       Output raw packed trace frames\n";
@@ -138,6 +141,24 @@ void print_help()
     logger.LogMsg(oss.str());
 }
 
+// true if element ID filtered out
+bool element_filtered(uint8_t elemID)
+{
+    bool filtered = false;
+    if(!all_source_ids)
+    {
+        filtered = true;
+        std::vector<uint8_t>::const_iterator it;
+        it = id_list.begin();
+        while((it != id_list.end()) && filtered)
+        {
+            if(*it == elemID)
+                filtered = false;
+            it++;
+        }
+    }
+    return filtered;
+}
 
 bool process_cmd_line_opts(int argc, char* argv[])
 {
@@ -206,6 +227,10 @@ bool process_cmd_line_opts(int argc, char* argv[])
             {
                 outRawUnpacked = true;
             }
+            else if(strcmp(argv[optIdx], "-ss_verbose") == 0)
+            {
+                ss_verbose = true;
+            }
             else if(strcmp(argv[optIdx], "-help") == 0)
             {
                 print_help();
@@ -244,32 +269,35 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
         pElement = dcd_tree->getFirstElement(elemID);
         while(pElement)
         {
-            switch(pElement->getProtocol())
+            if(!element_filtered(elemID))
             {
-            case RCTDL_PROTOCOL_ETMV4I:
+                switch(pElement->getProtocol())
                 {
-                    std::ostringstream oss;
-                    PacketPrinter<EtmV4ITrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV4ITrcPacket>(elemID,&logger);
-                    if(pPrinter)
+                case RCTDL_PROTOCOL_ETMV4I:
                     {
-                        pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
-                        printers.push_back(pPrinter); // save printer to destroy it later
-                    }
+                        std::ostringstream oss;
+                        PacketPrinter<EtmV4ITrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV4ITrcPacket>(elemID,&logger);
+                        if(pPrinter)
+                        {
+                            pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            printers.push_back(pPrinter); // save printer to destroy it later
+                        }
                     
-                    oss << "Trace Packet Lister : ETMv4 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
-                    logger.LogMsg(oss.str());
-                }
-                break;
+                        oss << "Trace Packet Lister : ETMv4 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                        logger.LogMsg(oss.str());
+                    }
+                    break;
 
-            default:
-                {
-                    std::ostringstream oss;
-                    oss << "Trace Packet Lister : Unsupported Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
-                    logger.LogMsg(oss.str());
-                }
-                break;
+                default:
+                    {
+                        std::ostringstream oss;
+                        oss << "Trace Packet Lister : Unsupported Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                        logger.LogMsg(oss.str());
+                    }
+                    break;
 
-                // TBD : handle other protocol types.
+                    // TBD : handle other protocol types.
+                }                
             }
             pElement = dcd_tree->getNextElement(elemID);
         }
@@ -293,6 +321,9 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
          // check if we have attached at least one printer
         if(printers.size() > 0)
         {
+            // set up the filtering at the tree level (avoid pushing to processors with no attached printers)
+            dcd_tree->setIDFilter(id_list);
+
             // need to push the data through the decode tree.
             std::ifstream in;
             in.open(tree_creator.getBufferFileName(),std::ifstream::in | std::ifstream::binary);

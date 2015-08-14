@@ -424,4 +424,26 @@ void DecodeTree::destroyDecodeElement(const uint8_t CSID)
     }
 }
 
+rctdl_err_t DecodeTree::setIDFilter(std::vector<uint8_t> &ids)
+{
+    rctdl_err_t err = RCTDL_ERR_DCDT_NO_FORMATTER;
+    if(usingFormatter())
+    {
+        err = m_frame_deformatter_root->OutputFilterAllIDs(false);
+        if(err == RCTDL_OK)
+            err = m_frame_deformatter_root->OutputFilterIDs(ids,true);
+    }
+    return err;
+}
+
+rctdl_err_t DecodeTree::clearIDFilter()
+{
+    rctdl_err_t err = RCTDL_ERR_DCDT_NO_FORMATTER;
+    if(usingFormatter())
+    {
+        err = m_frame_deformatter_root->OutputFilterAllIDs(true);
+    }
+    return err;
+}
+
 /* End of File rctdl_dcd_tree.cpp */
