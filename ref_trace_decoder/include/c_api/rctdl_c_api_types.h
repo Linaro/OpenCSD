@@ -55,6 +55,17 @@
 /** Handle to decode tree */
 typedef void * dcd_tree_handle_t;
 
+/** define invalid handle value for decode tree handle */
+#define C_API_INVALID_TREE_HANDLE (dcd_tree_handle_t)0
+
+
+
+#define C_API_MSGLOGOUT_FLG_NONE   0x0
+#define C_API_MSGLOGOUT_FLG_FILE   0x1
+#define C_API_MSGLOGOUT_FLG_STDERR 0x2
+#define C_API_MSGLOGOUT_FLG_STDOUT 0x4
+#define C_API_MSGLOGOUT_MASK       0xF
+
 /** function pointer type for decoder output, generic data element input */
 typedef rctdl_datapath_resp_t (* FnTraceElemIn)(const rctdl_trc_index_t index_sop, const uint8_t trc_chan_id, const rctdl_generic_trace_elem *elem); 
 

@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snapshot_parser_lib", "..\.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trc_pkt_lister", "..\..\..\tests\build\win\trc_pkt_lister\trc_pkt_lister.vcxproj", "{18ABC652-AB11-4993-9491-1A7FB7117339}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple_pkt_print_c_api", "..\..\..\tests\build\win\simple_pkt_print_c_api\simple_pkt_print_c_api.vcxproj", "{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -49,6 +51,12 @@ Global
 		{18ABC652-AB11-4993-9491-1A7FB7117339}.Release|Win32.Build.0 = Release|Win32
 		{18ABC652-AB11-4993-9491-1A7FB7117339}.Release|x64.ActiveCfg = Release|x64
 		{18ABC652-AB11-4993-9491-1A7FB7117339}.Release|x64.Build.0 = Release|x64
+		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug|Win32.Build.0 = Debug|Win32
+		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug|x64.ActiveCfg = Debug|Win32
+		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release|Win32.ActiveCfg = Release|Win32
+		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release|Win32.Build.0 = Release|Win32
+		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

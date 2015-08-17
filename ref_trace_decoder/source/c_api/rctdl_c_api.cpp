@@ -44,14 +44,14 @@
 
 RCTDL_C_API dcd_tree_handle_t rcdtl_create_dcd_tree(const rctdl_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags)
 {
-    dcd_tree_handle_t handle = 0;
+    dcd_tree_handle_t handle = C_API_INVALID_TREE_HANDLE;
     handle = (dcd_tree_handle_t)DecodeTree::CreateDecodeTree(src_type,deformatterCfgFlags); 
     return handle;
 }
 
 RCTDL_C_API void rcdtl_destroy_dcd_tree(const dcd_tree_handle_t handle)
 {
-    if(handle != 0)
+    if(handle != C_API_INVALID_TREE_HANDLE)
     {
         GenTraceElemCBObj * pIf = (GenTraceElemCBObj *)(((DecodeTree *)handle)->getGenTraceElemOutI());
         if(pIf != 0)
@@ -68,11 +68,10 @@ RCTDL_C_API rctdl_datapath_resp_t rcdtl_dt_process_data(const dcd_tree_handle_t 
                                             uint32_t *numBytesProcessed)
 {
     rctdl_datapath_resp_t resp =  RCTDL_RESP_FATAL_NOT_INIT;
-    if(handle != 0)
+    if(handle != C_API_INVALID_TREE_HANDLE)
         resp = ((DecodeTree *)handle)->TraceDataIn(op,index,dataBlockSize,pDataBlock,numBytesProcessed);
     return resp;
 }
-
 
 RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn)
 {
@@ -85,6 +84,34 @@ RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t hand
     return RCTDL_ERR_MEM;
 }
 
+RCTDL_C_API rctdl_err_t rctdl_def_errlog_init(const rctdl_err_severity_t verbosity, const int create_output_logger)
+{
+    if(DecodeTree::getDefaultErrorLogger()->initErrorLogger(verbosity,(bool)(create_output_logger != 0)))
+        return RCTDL_OK;
+    return RCTDL_ERR_NOT_INIT;
+}
+
+RCTDL_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, const char *log_file_name)
+{
+    rctdlMsgLogger *pLogger = DecodeTree::getDefaultErrorLogger()->getOutputLogger();
+    if(pLogger)
+    {
+        pLogger->setLogOpts(output_flags & C_API_MSGLOGOUT_MASK);
+        if(log_file_name != NULL)
+        {
+            pLogger->setLogFileName(log_file_name);
+        }
+        return RCTDL_OK;
+    }
+    return RCTDL_ERR_NOT_INIT;    
+}
+
+RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg)
+{
+    rctdlMsgLogger *pLogger = DecodeTree::getDefaultErrorLogger()->getOutputLogger();
+    if(pLogger)
+        pLogger->LogMsg(msg);
+}
 
 /*******************************************************************************/
 /* C API Helper objects                                                        */
