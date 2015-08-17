@@ -37,6 +37,7 @@
 #define ARM_RCTDL_DCD_TREE_H_INCLUDED
 
 #include <vector>
+#include <list>
 
 #include "rctdl.h"
 
@@ -60,7 +61,10 @@ public:
     static DecodeTree *CreateDecodeTree(const rctdl_dcd_tree_src_t src_type, const uint32_t formatterCfgFlags);
     static void DestroyDecodeTree(DecodeTree *p_dcd_tree);
 
-    static rctdlDefaultErrorLogger& getDefaultErrorLogger() { return s_error_logger; };
+    /** The library default error logger */
+    static rctdlDefaultErrorLogger* getDefaultErrorLogger() { return &s_error_logger; };
+
+    /** error logging interface in use */
     static ITraceErrorLog *getCurrentErrorLogI() { return s_i_error_logger; };
     static void setAlternateErrorLogger(ITraceErrorLog *p_error_logger);
 
@@ -131,7 +135,7 @@ private:
 
     /* global error logger  - all sources */ 
     static ITraceErrorLog *s_i_error_logger;
-    static std::vector<DecodeTree *> s_trace_dcd_trees;
+    static std::list<DecodeTree *> s_trace_dcd_trees;
     static rctdlDefaultErrorLogger s_error_logger;
 };
 

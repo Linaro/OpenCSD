@@ -90,9 +90,9 @@ void DecodeTreeElement::DestroyElem()
 
 
 /***************************************************************/
-ITraceErrorLog *DecodeTree::s_i_error_logger = &DecodeTree::s_error_logger;
-std::vector<DecodeTree *> DecodeTree::s_trace_dcd_trees;
-rctdlDefaultErrorLogger DecodeTree::s_error_logger;
+ITraceErrorLog *DecodeTree::s_i_error_logger = &DecodeTree::s_error_logger; 
+std::list<DecodeTree *> DecodeTree::s_trace_dcd_trees; /**< list of pointers to decode tree objects */
+rctdlDefaultErrorLogger DecodeTree::s_error_logger; /**< The library default error logger */
 
 DecodeTree *DecodeTree::CreateDecodeTree(const rctdl_dcd_tree_src_t src_type, uint32_t formatterCfgFlags)
 {
@@ -114,6 +114,19 @@ DecodeTree *DecodeTree::CreateDecodeTree(const rctdl_dcd_tree_src_t src_type, ui
 
 void DecodeTree::DestroyDecodeTree(DecodeTree *p_dcd_tree)
 {
+    std::list<DecodeTree *>::iterator it;
+    bool bDestroyed = false;
+    it = s_trace_dcd_trees.begin();
+    while(!bDestroyed && (it != s_trace_dcd_trees.end()))
+    {
+        if(*it == p_dcd_tree)
+        {
+            s_trace_dcd_trees.erase(it);
+            delete p_dcd_tree;
+            bDestroyed = true;
+        }
+        it++;
+    }
 }
 
 void DecodeTree::setAlternateErrorLogger(ITraceErrorLog *p_error_logger)
