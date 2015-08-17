@@ -48,6 +48,7 @@
 
 static bool process_cmd_line_opts( int argc, char* argv[]);
 static void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name);
+static bool process_cmd_line_logger_opts(int argc, char* argv[]);
 
     // default path
 #ifdef WIN32
@@ -71,7 +72,11 @@ int main(int argc, char* argv[])
 {
     std::ostringstream moss;
     
-    // TBD: get the logger cmd line options here.
+    if(process_cmd_line_logger_opts(argc,argv))
+    {
+        printf("Bad logger command line options\nProgram Exiting\n");
+        return -2;
+    }
 
     logger.setLogOpts(logOpts);
     logger.setLogFileName(logfileName.c_str());
@@ -82,7 +87,8 @@ int main(int argc, char* argv[])
 
 
     rctdlDefaultErrorLogger err_log;
-    err_log.initErrorLogger(RCTDL_ERR_SEV_INFO,&logger);
+    err_log.initErrorLogger(RCTDL_ERR_SEV_INFO);
+    err_log.setOutputLogger(&logger);
 
     if(!process_cmd_line_opts(argc, argv))
         return -1;
@@ -195,16 +201,68 @@ bool element_filtered(uint8_t elemID)
     return filtered;
 }
 
+bool process_cmd_line_logger_opts(int argc, char* argv[])
+{
+    bool badLoggerOpts = false;
+    bool bChangingOptFlags = false;
+    int newlogOpts = rctdlMsgLogger::OUT_NONE;
+    std::string opt;
+    if(argc > 1)
+    {
+        int options_to_process = argc - 1;
+        int optIdx = 1;
+        while(options_to_process > 0)
+        {
+            opt = argv[optIdx];
+            if(opt == "-logstdout")
+            {
+                newlogOpts |= rctdlMsgLogger::OUT_STDOUT;
+                bChangingOptFlags = true;
+            }
+            else if(opt == "-logstderr")
+            {
+                newlogOpts |= rctdlMsgLogger::OUT_STDERR;
+                bChangingOptFlags = true;
+            }
+            else if(opt == "-logfile")
+            {
+                newlogOpts |= rctdlMsgLogger::OUT_FILE;
+                bChangingOptFlags = true;
+            }
+            else if(opt == "-logfilename")
+            {
+                options_to_process--;
+                optIdx++;
+                if(options_to_process)
+                {
+                    logfileName = argv[optIdx];
+                }
+                else
+                {
+                    badLoggerOpts = true;
+                }
+            }
+            options_to_process--;
+            optIdx++;
+        }
+    }
+    if(bChangingOptFlags)
+        logOpts = newlogOpts;
+    return badLoggerOpts;
+}
+
 bool process_cmd_line_opts(int argc, char* argv[])
 {
     bool bOptsOK = true;
+    std::string opt;
     if(argc > 1)
     {
         int options_to_process = argc - 1;
         int optIdx = 1;
         while((options_to_process > 0) && bOptsOK)
         {
-            if(strcmp(argv[optIdx], "-ss_dir") == 0)
+            opt = argv[optIdx];
+            if(opt == "-ss_dir")
             {
                 options_to_process--;
                 optIdx++;
@@ -216,7 +274,7 @@ bool process_cmd_line_opts(int argc, char* argv[])
                     bOptsOK = false;
                 }
             }
-            else if(strcmp(argv[optIdx], "-id") == 0)
+            else if(opt == "-id")
             {
                 options_to_process--;
                 optIdx++;
@@ -270,6 +328,18 @@ bool process_cmd_line_opts(int argc, char* argv[])
             {
                 print_help();
                 bOptsOK = false;
+            }
+            else if((opt == "-logstdout") || (opt == "-logstderr") || 
+                (opt == "-logfile") || (opt == "-logfilename"))
+            {
+                // skip all these as processed earlier
+
+                // also additionally skip any filename parameter
+                if(opt == "-logfilename")
+                {
+                    options_to_process--;
+                    optIdx++;
+                }
             }
             else
             {

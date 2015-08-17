@@ -49,10 +49,11 @@ public:
     rctdlDefaultErrorLogger();
     virtual ~rctdlDefaultErrorLogger();
 
-    bool initErrorLogger(const rctdl_err_severity_t verbosity, int opflags);
-    bool initErrorLogger(const rctdl_err_severity_t verbosity, rctdlMsgLogger *p_msg_logger);
-    void setLogFilename(const char *name);           
-
+    bool initErrorLogger(const rctdl_err_severity_t verbosity, bool bCreateOutputLogger = false);
+    
+    rctdlMsgLogger *getOutputLogger() { return m_output_logger; };
+    void setOutputLogger(rctdlMsgLogger *pLogger);
+    
     virtual const rctdl_hndl_err_log_t RegisterErrorSource(const std::string &component_name);
 
     virtual void LogError(const rctdl_hndl_err_log_t handle, const rctdlError *Error);
@@ -76,8 +77,8 @@ private:
 
     rctdl_err_severity_t m_Verbosity;
 
-    rctdlMsgLogger *m_logger;   // pointer to a standard message logger;
-    bool m_created_logger;      // true if this class created it's own logger;
+    rctdlMsgLogger *m_output_logger;   // pointer to a standard message output logger;
+    bool m_created_output_logger;      // true if this class created it's own logger;
 
     std::vector<std::string> m_error_sources;
 };

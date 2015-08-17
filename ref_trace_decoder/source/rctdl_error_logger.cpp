@@ -40,8 +40,8 @@
 
 rctdlDefaultErrorLogger::rctdlDefaultErrorLogger() :
     m_Verbosity(RCTDL_ERR_SEV_INFO),
-    m_logger(0),
-    m_created_logger(false)
+    m_output_logger(0),
+    m_created_output_logger(false)
 {
     m_lastErr = 0;
     for(int i = 0; i < 0x80; i++)
@@ -49,13 +49,12 @@ rctdlDefaultErrorLogger::rctdlDefaultErrorLogger() :
     m_error_sources.push_back("Gen_Err");    // handle 0
     m_error_sources.push_back("Gen_Warn");   // handle 1
     m_error_sources.push_back("Gen_Info");   // handle 2
-
 }
 
 rctdlDefaultErrorLogger::~rctdlDefaultErrorLogger()
 {
-    if(m_created_logger)
-        delete m_logger;
+    if(m_created_output_logger)
+        delete m_output_logger;
 
     if(m_lastErr)
         delete m_lastErr;
@@ -64,34 +63,31 @@ rctdlDefaultErrorLogger::~rctdlDefaultErrorLogger()
         if(m_lastErrID[i] != 0) delete m_lastErrID[i];
 }
 
-bool rctdlDefaultErrorLogger::initErrorLogger(const rctdl_err_severity_t verbosity, int opflags)
+bool rctdlDefaultErrorLogger::initErrorLogger(const rctdl_err_severity_t verbosity, bool bCreateOutputLogger /*= false*/)
 {
     bool bInit = true;
-    rctdlMsgLogger *p_logger = new (std::nothrow) rctdlMsgLogger();
-    if(p_logger)
-    {
-        m_created_logger = true;
-        p_logger->setLogOpts(opflags);
-        bInit = initErrorLogger(verbosity,p_logger);
-    }
-    else
-    {
-        bInit = false;
-    }
-   return bInit;
-}
-
-bool rctdlDefaultErrorLogger::initErrorLogger(const rctdl_err_severity_t verbosity, rctdlMsgLogger *p_msg_logger)
-{
     m_Verbosity = verbosity;
-    m_logger = p_msg_logger;
-    return true;
+    if(bCreateOutputLogger)
+    {
+        m_output_logger = new (std::nothrow) rctdlMsgLogger();
+        if(m_output_logger)
+        {
+            m_created_output_logger = true;
+            m_output_logger->setLogOpts(rctdlMsgLogger::OUT_STDERR);
+        }
+        else
+            bInit = false;
+    }
+    return bInit;
 }
 
-void rctdlDefaultErrorLogger::setLogFilename(const char *name)
+void rctdlDefaultErrorLogger::setOutputLogger(rctdlMsgLogger *pLogger)
 {
-    if(m_logger)
-        m_logger->setLogFileName(name);
+    // if we created the current logger, delete it.
+    if(m_output_logger && m_created_output_logger)
+        delete m_output_logger;
+    m_created_output_logger = false;
+    m_output_logger = pLogger;
 }
 
 const rctdl_hndl_err_log_t rctdlDefaultErrorLogger::RegisterErrorSource(const std::string &component_name)
@@ -107,15 +103,15 @@ void rctdlDefaultErrorLogger::LogError(const rctdl_hndl_err_log_t handle, const 
     if(m_Verbosity >= Error->getErrorSeverity())
     {
         // print out only if required
-        if(m_logger)
+        if(m_output_logger)
         {
-            if(m_logger->isLogging())
+            if(m_output_logger->isLogging())
             {
                 std::string errStr = "unknown";
                 if(handle < m_error_sources.size())
                     errStr = m_error_sources[handle];
                 errStr += " : " + rctdlError::getErrorString(Error);
-                m_logger->LogMsg(errStr);
+                m_output_logger->LogMsg(errStr);
             }
         }
 
@@ -141,15 +137,15 @@ void rctdlDefaultErrorLogger::LogMessage(const rctdl_hndl_err_log_t handle, cons
     // only log errors that match or exceed the current verbosity
     if((m_Verbosity >= filter_level))
     {
-        if(m_logger)
+        if(m_output_logger)
         {
-            if(m_logger->isLogging())
+            if(m_output_logger->isLogging())
             {
                 std::string errStr = "unknown";
                 if(handle < m_error_sources.size())
                     errStr = m_error_sources[handle];
                 errStr += " : " + msg;
-                m_logger->LogMsg(errStr);
+                m_output_logger->LogMsg(errStr);
             }
         }
     }
