@@ -11,7 +11,14 @@
 #include "c_api/rctdl_c_api_types.h"
 #include "interfaces/trc_gen_elem_in_i.h"
 
-class GenTraceElemCBObj : public ITrcGenElemIn
+class TraceElemCBBase
+{
+public:
+    TraceElemCBBase() {};
+    virtual ~TraceElemCBBase() {};
+};
+
+class GenTraceElemCBObj : public ITrcGenElemIn, public TraceElemCBBase
 {
 public:
     GenTraceElemCBObj(FnTraceElemIn pCBFn);
@@ -26,6 +33,20 @@ private:
 };
 
 
+class EtmV4ICBObj : public IPktDataIn<EtmV4ITrcPacket>, public TraceElemCBBase
+{
+public:
+    EtmV4ICBObj(FnEtmv4IPacketDataIn pCBFn);
+    virtual ~EtmV4ICBObj() {};
+    
+    virtual rctdl_datapath_resp_t PacketDataIn( const rctdl_datapath_op_t op,
+                                                const rctdl_trc_index_t index_sop,
+                                                const EtmV4ITrcPacket *p_packet_in);
+
+private:
+
+    FnEtmv4IPacketDataIn m_c_api_cb_fn;
+};
 
 
 #endif // ARM_RCTDL_C_API_OBJ_H_INCLUDED

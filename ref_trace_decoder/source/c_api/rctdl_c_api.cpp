@@ -34,33 +34,75 @@
 
 /* pull in the C++ decode library */
 #include "rctdl.h"
+
+/* C-API and wrapper objects */
 #include "c_api/rctdl_c_api.h"
 #include "rctdl_c_api_obj.h"
+
+/*******************************************************************************/
+/* C library data - additional data on top of the C++ library objects                                                             */
+/*******************************************************************************/
+
+/* keep a list of interface objects for a decode tree for later disposal */
+typedef struct _lib_dt_data_list {
+    std::vector<TraceElemCBBase *> cb_objs;
+} lib_dt_data_list;
+
+/* map lists to handles */
+static std::map<dcd_tree_handle_t, lib_dt_data_list *> s_data_map;
 
 /*******************************************************************************/
 /* C API functions                                                             */
 /*******************************************************************************/
 
-
-RCTDL_C_API dcd_tree_handle_t rcdtl_create_dcd_tree(const rctdl_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags)
+RCTDL_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags)
 {
     dcd_tree_handle_t handle = C_API_INVALID_TREE_HANDLE;
     handle = (dcd_tree_handle_t)DecodeTree::CreateDecodeTree(src_type,deformatterCfgFlags); 
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        lib_dt_data_list *pList = new (std::nothrow) lib_dt_data_list;
+        if(pList != 0)
+        {
+            s_data_map.insert(std::pair<dcd_tree_handle_t, lib_dt_data_list *>(handle,pList));
+        }
+        else
+        {
+            rctdl_destroy_dcd_tree(handle);
+            handle = C_API_INVALID_TREE_HANDLE;
+        }
+    }
     return handle;
 }
 
-RCTDL_C_API void rcdtl_destroy_dcd_tree(const dcd_tree_handle_t handle)
+RCTDL_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle)
 {
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
         GenTraceElemCBObj * pIf = (GenTraceElemCBObj *)(((DecodeTree *)handle)->getGenTraceElemOutI());
         if(pIf != 0)
             delete pIf;
+
+        /* need to clear any associated callback data. */
+        std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
+        it = s_data_map.find(handle);
+        if(it != s_data_map.end())
+        {
+            std::vector<TraceElemCBBase *>::iterator itcb;
+            itcb = it->second->cb_objs.begin();
+            while(itcb != it->second->cb_objs.end())
+            {
+                delete *itcb;
+                itcb++;
+            }
+            it->second->cb_objs.clear();
+            delete it->second;
+        }
         DecodeTree::DestroyDecodeTree((DecodeTree *)handle);
     }
 }
 
-RCTDL_C_API rctdl_datapath_resp_t rcdtl_dt_process_data(const dcd_tree_handle_t handle,
+RCTDL_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t handle,
                                             const rctdl_datapath_op_t op,
                                             const rctdl_trc_index_t index,
                                             const uint32_t dataBlockSize,
@@ -73,8 +115,40 @@ RCTDL_C_API rctdl_datapath_resp_t rcdtl_dt_process_data(const dcd_tree_handle_t 
     return resp;
 }
 
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn)
+{
+    rctdl_err_t err = RCTDL_OK;
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        EtmV4Config cfg;
+        cfg = static_cast<const rctdl_etmv4_cfg *>(etmv4_cfg);
+        EtmV4ICBObj *p_CBObj = new (std::nothrow) EtmV4ICBObj(pPktFn);
+
+        if(p_CBObj == 0)
+            err =  RCTDL_ERR_MEM;
+
+        if(err == RCTDL_OK)
+            err = ((DecodeTree *)handle)->createETMv4IPktProcessor(&cfg,p_CBObj);
+
+        if(err == RCTDL_OK)
+        {
+            std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
+            it = s_data_map.find(handle);
+            if(it != s_data_map.end())
+                it->second->cb_objs.push_back(p_CBObj);
+
+        }
+        else
+            delete p_CBObj;
+    }
+    else
+        err = RCTDL_ERR_INVALID_PARAM_VAL;
+    return err;
+}
+
 RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn)
 {
+
     GenTraceElemCBObj * pCBObj = new (std::nothrow)GenTraceElemCBObj(pFn);
     if(pCBObj)
     {
@@ -113,6 +187,36 @@ RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg)
         pLogger->LogMsg(msg);
 }
 
+
+RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, void *p_pkt, char *buffer, const int buffer_size)
+{
+    rctdl_err_t err = RCTDL_OK;
+    if((buffer == NULL) || (buffer_size < 2))
+        return RCTDL_ERR_INVALID_PARAM_VAL;
+
+    std::string pktStr = "";
+    buffer[0] = 0;
+
+    switch(pkt_protocol)
+    {
+    case RCTDL_PROTOCOL_ETMV4I:
+        EtmV4ITrcPacket::toString(static_cast<rctdl_etmv4_i_pkt *>(p_pkt), pktStr);
+        break;
+
+    default:
+        err = RCTDL_ERR_NO_PROTOCOL;
+        break;
+    }
+
+    if(pktStr.size() > 0)
+    {
+        strncpy(buffer,pktStr.c_str(),buffer_size-1);
+        buffer[buffer_size-1] = 0;
+    }
+    return err;
+}
+
+
 /*******************************************************************************/
 /* C API Helper objects                                                        */
 /*******************************************************************************/
@@ -128,4 +232,18 @@ rctdl_datapath_resp_t GenTraceElemCBObj::TraceElemIn(const rctdl_trc_index_t ind
 {
     return m_c_api_cb_fn(index_sop, trc_chan_id, &elem);
 }
+
+
+EtmV4ICBObj::EtmV4ICBObj(FnEtmv4IPacketDataIn pCBFn) :
+    m_c_api_cb_fn(pCBFn)
+{
+}
+
+rctdl_datapath_resp_t EtmV4ICBObj::PacketDataIn( const rctdl_datapath_op_t op,
+                                                const rctdl_trc_index_t index_sop,
+                                                const EtmV4ITrcPacket *p_packet_in)
+{
+    return m_c_api_cb_fn(op,index_sop,p_packet_in);
+}
+
 /* End of File rctdl_c_api.cpp */

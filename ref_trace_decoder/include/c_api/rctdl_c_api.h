@@ -120,7 +120,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t hand
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *rctdl_etmv4_cfg, FnEtmv4IPacketDataIn pPktFn);
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn);
 
 /* TBD: full decoder -> packet processor attached to a packet decoder -> output via common generic elements interface 
 RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *rctdl_etmv4_cfg);
@@ -151,6 +151,11 @@ RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg);
 
 /** @}*/
 
+/** @name Packet to string interface
+
+@{*/
+
+RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, void *p_pkt, char *buffer, const int buffer_size);
 
 /** @}*/
 
