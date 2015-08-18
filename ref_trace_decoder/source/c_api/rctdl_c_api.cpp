@@ -32,6 +32,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
+#include <cstring>
+
 /* pull in the C++ decode library */
 #include "rctdl.h"
 

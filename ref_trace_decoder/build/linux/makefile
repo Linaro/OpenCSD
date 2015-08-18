@@ -128,7 +128,7 @@ $(LIB_TARGET_DIR)/librctdl_c_api.a:
 tests: libs
 	cd $(RCTDL_ROOT)/tests/build/linux/snapshot_parser_lib && make
 	cd $(RCTDL_ROOT)/tests/build/linux/trc_pkt_lister && make
-
+	cd $(RCTDL_ROOT)/tests/build/linux/simple_pkt_print_c_api && make
 
 #############################################################
 # clean targets
