@@ -50,3 +50,12 @@ ipch/
 # ignore bin test directory
 bin/
 *.log
+ref_trace_decoder/build/win/rctdl_c_api_lib/Release/*
+ref_trace_decoder/build/win/rctdl_c_api_lib/x64/Release/*
+ref_trace_decoder/build/win/ref_trace_decode_lib/Release/*
+ref_trace_decoder/build/win/ref_trace_decode_lib/x64/Release/*
+ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/Release/*
+ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/x64/Release/*
+*.lastbuildstate
+*.manifest
+*.cache

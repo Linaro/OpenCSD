@@ -261,9 +261,16 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
     if(!configError)
     {
         if(m_bPacketProcOnly)
-            m_pDecodeTree->createETMv4PktProcessor(&config,bDataChannel);
+        {
+            if(bDataChannel)
+                m_pDecodeTree->createETMv4DPktProcessor(&config);
+            else
+                m_pDecodeTree->createETMv4IPktProcessor(&config);
+        }
         else
+        {
             m_pDecodeTree->createETMv4Decoder(&config,bDataChannel);
+        }
         createdDecoder = true;
     }
 

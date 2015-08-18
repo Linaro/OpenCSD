@@ -44,8 +44,8 @@
 #include <string.h>
 #include <stdint.h>
 
+/* include the C-API library header */
 #include "c_api/rctdl_c_api.h"
-#include "etmv4/trc_pkt_types_etmv4.h"
 
 /* path to juno snapshot, relative to tests/bin/<plat>/<dbg|rel> build output dir */
 #ifdef _WIN32
@@ -58,9 +58,12 @@ const char *default_path_to_snapshot = "../../../snapshots/juno_r1_1/cstrace.bin
 static rctdl_etmv4_cfg trace_config;
 
 /* buffer to handle a packet string */
-static char packet_str[1024];
+#define PACKET_STR_LEN 1024
+static char packet_str[PACKET_STR_LEN];
 
-/* Callback fuction to process the packets in the stream - simply print them out in this case */
+/* Callback fuction to process the packets in the stream - 
+   simply print them out in this case 
+ */
 rctdl_datapath_resp_t etm_v4i_packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv4_i_pkt *p_packet_in)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
@@ -69,8 +72,25 @@ rctdl_datapath_resp_t etm_v4i_packet_handler(const rctdl_datapath_op_t op, const
     {
     default: break;
     case RCTDL_OP_DATA:
+        /* got a packet - convert to string and use the libraries' message output to print to file and stdoout */
+        if(rctdl_pkt_str(RCTDL_PROTOCOL_ETMV4I,(void *)p_packet_in,packet_str,PACKET_STR_LEN) == RCTDL_OK)
+        {
+            /* add in <CR> */
+            if(strlen(packet_str) == PACKET_STR_LEN - 1) /* maximum length */
+                packet_str[PACKET_STR_LEN-2] = '\n';
+            else
+                strcat(packet_str,"\n");
+
+            /* print it using the library output logger. */
+            rctdl_def_errlog_msgout(packet_str);
+        }
+        else
+            resp = RCTDL_RESP_FATAL_INVALID_PARAM;  /* mark fatal error */
+        break;
     case RCTDL_OP_EOT:
-        printf("**** END OF TRACE ****\n");
+        sprintf(packet_str,"**** END OF TRACE ****\n");
+        rctdl_def_errlog_msgout(packet_str);
+        break;
     }
 
     return resp;
@@ -103,7 +123,7 @@ rctdl_err_t process_data_block(dcd_tree_handle_t dcd_tree_h, int block_index, ui
 {
     rctdl_err_t ret = RCTDL_OK;
     uint32_t bytes_done = 0;
-    rctdl_datapath_resp_t dp_ret;
+    rctdl_datapath_resp_t dp_ret = RCTDL_RESP_CONT;
     uint32_t bytes_this_time = 0;
 
     while((bytes_done < block_size) && (ret == RCTDL_OK))
@@ -137,14 +157,19 @@ int process_trace_data(FILE *pf)
     rctdl_trc_index_t index = 0;
     size_t data_read;
 
-    /*  source data is frame formatted, memory aligned from an ETR (no frame syncs) so create tree accordingly */
+    /*  Create a decode tree for this source data.
+        source data is frame formatted, memory aligned from an ETR (no frame syncs) so create tree accordingly 
+    */
     dcdtree_handle = rctdl_create_dcd_tree(RCTDL_TRC_SRC_FRAME_FORMATTED, RCTDL_DFRMTR_FRAME_MEM_ALIGN);
+
     if(dcdtree_handle != C_API_INVALID_TREE_HANDLE)
     {
         /* populate the ETMv4 configuration structure */
         set_config_struct();
 
-        /* create a packet processor for the ETM v4 configuration we have. */
+        /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
+           We need to supply the configuration, and a pakcet handling callback.
+         */
         ret = rctdl_dt_create_etmv4i_pkt_proc(dcdtree_handle,&trace_config,&etm_v4i_packet_handler);
 
         /* now push the trace data through the packet processor */
@@ -154,6 +179,9 @@ int process_trace_data(FILE *pf)
             data_read = fread(data_buffer,1,INPUT_BLOCK_SIZE,pf);
             if(data_read > 0)
             {
+                /* process a block of data - any packets from the trace stream 
+                   we have configured will appear at the callback 
+                */
                 ret = process_data_block(dcdtree_handle, 
                                 index,
                                 data_buffer,
@@ -168,6 +196,8 @@ int process_trace_data(FILE *pf)
         if(ret == RCTDL_OK)
             rctdl_dt_process_data(dcdtree_handle, RCTDL_OP_EOT, 0,0,NULL,NULL);
 
+        /* dispose of the decode tree - which will dispose of any packet processors we created 
+        */
         rctdl_destroy_dcd_tree(dcdtree_handle);
     }
     else
@@ -177,8 +207,6 @@ int process_trace_data(FILE *pf)
     }
     return (int)ret;
 }
-
-
 
 int main(int argc, char *argv[])
 {
@@ -190,7 +218,18 @@ int main(int argc, char *argv[])
     trace_data = fopen(trace_file_path,"rb");
     if(trace_data != NULL)
     {
-        ret = process_trace_data(trace_data);
+        /* set up the logging in the library - enable the error logger, with an output printer*/
+        ret = rctdl_def_errlog_init(RCTDL_ERR_SEV_INFO,1);
+        
+        /* set up the output - to file and stdout, set custom logfile name */
+        if(ret == 0)
+            ret = rctdl_def_errlog_config_output(C_API_MSGLOGOUT_FLG_FILE | C_API_MSGLOGOUT_FLG_STDOUT, "c_api_test.log");
+
+        /* process the trace data */
+        if(ret == 0)
+            ret = process_trace_data(trace_data);
+
+        /* close the data file */
         fclose(trace_data);
     }
     else
