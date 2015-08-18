@@ -87,6 +87,7 @@ typedef enum _rctdl_err_t {
     RCTDL_ERR_BAD_HANDLE,           /**< Invalid handle passed to component. */
     RCTDL_ERR_INVALID_PARAM_VAL,    /**< Invalid value parameter passed to component. */
     RCTDL_ERR_FILE_ERROR,           /**< File access error */
+    RCTDL_ERR_NO_PROTOCOL,          /**< Trace protocol unsupported */
     /* attachment point errors */
     RCTDL_ERR_ATTACH_TOO_MANY,      /**< Cannot attach - attach device limit reached. */
     RCTDL_ERR_ATTACH_INVALID_PARAM, /**< Cannot attach - invalid parameter. */

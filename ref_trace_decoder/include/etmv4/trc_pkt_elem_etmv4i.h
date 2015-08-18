@@ -56,6 +56,8 @@ public:
     EtmV4ITrcPacket();
     ~EtmV4ITrcPacket();
 
+    EtmV4ITrcPacket &operator =(const rctdl_etmv4_i_pkt* p_pkt);
+
     // update interface - set packet values
     void initStartState();   //!< Set to initial state - no intra packet state valid. Use on start of trace / discontinuities.
     void initNextPacket();  //!< clear any single packet only flags / state.
@@ -110,6 +112,8 @@ public:
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
+
+    static void toString(const rctdl_etmv4_i_pkt *p_pkt, std::string &str);
 
 private:
     const char *packetTypeName(const rctdl_etmv4_i_pkt_type type, const char **pDesc) const;

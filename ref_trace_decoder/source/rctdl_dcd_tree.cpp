@@ -125,7 +125,8 @@ void DecodeTree::DestroyDecodeTree(DecodeTree *p_dcd_tree)
             delete p_dcd_tree;
             bDestroyed = true;
         }
-        it++;
+        else
+            it++;
     }
 }
 
@@ -190,7 +191,7 @@ void DecodeTree::setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem)
 
 
 /* create packet processing element only - attach to CSID in config */
-rctdl_err_t DecodeTree::createETMv3PktProcessor(const EtmV3Config *p_config)
+rctdl_err_t DecodeTree::createETMv3PktProcessor(const EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout /*= 0*/)
 {
     rctdl_err_t err = RCTDL_OK;
 #if 0
@@ -234,7 +235,7 @@ rctdl_err_t DecodeTree::createETMv3PktProcessor(const EtmV3Config *p_config)
     return err;
 }
 
-rctdl_err_t DecodeTree::createETMv4PktProcessor(const EtmV4Config *p_config, bool bDataChannel /*= false*/)
+rctdl_err_t DecodeTree::createETMv4IPktProcessor(const EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout/* = 0*/)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
     uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
@@ -244,51 +245,79 @@ rctdl_err_t DecodeTree::createETMv4PktProcessor(const EtmV4Config *p_config, boo
     // see if we can attach to the desired CSID point
     if((err = createDecodeElement(CSID)) == RCTDL_OK)
     {
-        TrcPktProcI *pProc = 0;
-        if(!bDataChannel)
+        TrcPktProcEtmV4I *pProc = 0;
+        pProc = new (std::nothrow) TrcPktProcEtmV4I(CSID);
+        if(!pProc)
+            return RCTDL_ERR_MEM;
+
+        err = pProc->setProtocolConfig(p_config);
+
+        if((err == RCTDL_OK) && p_Iout)
+            err = pProc->getPacketOutAttachPt()->attach(p_Iout);       
+
+        if(err == RCTDL_OK)
+            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
+
+        if(usingFormatter() && (err == RCTDL_OK))
+            err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
+
+        if(err != RCTDL_OK)
         {
-            pProc = new (std::nothrow) TrcPktProcEtmV4I(CSID);
-            if(pProc)
-                err = static_cast<TrcPktProcEtmV4I *>(pProc)->setProtocolConfig(p_config);
-            else
-                err = RCTDL_ERR_MEM;
+            // error - delete the processor and return
+            delete pProc;
+            destroyDecodeElement(CSID);
         }
         else
         {
-#if 0
-            pProc = new (std::nothrow) TrcPktProcEtmV4D(CSID);
-            if(pProc)
-                err = static_cast<TrcPktProcEtmV4D *>(pProc)->setProtocolConfig(p_config);
-            else
-                err = RCTDL_ERR_MEM;
-#endif
-        }
-
-        if(pProc)
-        {
-            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-            if(usingFormatter() && (err == RCTDL_OK))
-                err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
-
-            if(err != RCTDL_OK)
-            {
-                // unable to attach as in use
-                delete pProc;
-                destroyDecodeElement(CSID);
-            }
-            else
-            {
-                if(!usingFormatter())
-                    setSingleRoot(pProc);
-                m_decode_elements[CSID]->SetProcElement( bDataChannel ? RCTDL_PROTOCOL_ETMV4D : RCTDL_PROTOCOL_ETMV4I,pProc,true);
-            }
+            // register with decode element list
+            if(!usingFormatter())
+                setSingleRoot(pProc);
+            m_decode_elements[CSID]->SetProcElement(RCTDL_PROTOCOL_ETMV4I,pProc,true);
         }
     }    
-   return err;
+    return err;
 }
 
-rctdl_err_t DecodeTree::createPTMPktProcessor(const PtmConfig *p_config)
+rctdl_err_t DecodeTree::createETMv4DPktProcessor(const EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout/* = 0*/)
+{
+    rctdl_err_t err = RCTDL_ERR_NOT_INIT;
+    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
+    if(usingFormatter())
+        CSID = p_config->getTraceID();
+
+    // see if we can attach to the desired CSID point
+    if((err = createDecodeElement(CSID)) == RCTDL_OK)
+    {
+        TrcPktProcEtmV4D *pProc = 0;
+        err = pProc->setProtocolConfig(p_config);
+
+        if((err == RCTDL_OK) && p_Iout)
+            err = pProc->getPacketOutAttachPt()->attach(p_Iout);       
+
+        if(err == RCTDL_OK)
+            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
+
+        if(usingFormatter() && (err == RCTDL_OK))
+            err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
+
+        if(err != RCTDL_OK)
+        {
+            // error - delete the processor and return
+            delete pProc;
+            destroyDecodeElement(CSID);
+        }
+        else
+        {
+            // register with decode element list
+            if(!usingFormatter())
+                setSingleRoot(pProc);
+            m_decode_elements[CSID]->SetProcElement(RCTDL_PROTOCOL_ETMV4D,pProc,true);
+        }
+    }
+    return err;
+}
+
+rctdl_err_t DecodeTree::createPTMPktProcessor(const PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout /*= 0*/)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
         //** TBD
