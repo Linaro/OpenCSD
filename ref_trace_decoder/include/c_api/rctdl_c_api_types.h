@@ -59,12 +59,16 @@ typedef void * dcd_tree_handle_t;
 #define C_API_INVALID_TREE_HANDLE (dcd_tree_handle_t)0
 
 
-
+/** Logger output printer - no output. */
 #define C_API_MSGLOGOUT_FLG_NONE   0x0
+/** Logger output printer - output to file. */
 #define C_API_MSGLOGOUT_FLG_FILE   0x1
+/** Logger output printer - output to stderr. */
 #define C_API_MSGLOGOUT_FLG_STDERR 0x2
+/** Logger output printer - output to stdout. */
 #define C_API_MSGLOGOUT_FLG_STDOUT 0x4
-#define C_API_MSGLOGOUT_MASK       0xF
+/** Logger output printer - mask of valid flags. */
+#define C_API_MSGLOGOUT_MASK       0x7
 
 /** function pointer type for decoder output, generic data element input */
 typedef rctdl_datapath_resp_t (* FnTraceElemIn)(const rctdl_trc_index_t index_sop, const uint8_t trc_chan_id, const rctdl_generic_trace_elem *elem); 

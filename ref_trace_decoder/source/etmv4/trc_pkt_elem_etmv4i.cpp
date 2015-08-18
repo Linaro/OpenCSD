@@ -398,20 +398,6 @@ const char *EtmV4ITrcPacket::packetTypeName(const rctdl_etmv4_i_pkt_type type, c
 EtmV4ITrcPacket &EtmV4ITrcPacket::operator =(const rctdl_etmv4_i_pkt* p_pkt)
 {
     *dynamic_cast<rctdl_etmv4_i_pkt *>(this) = *p_pkt;
-    /*this->addr_exact_match_idx = p_pkt->addr_exact_match_idx;
-    this->atom = p_pkt->atom;
-    this->cancel_elements = p_pkt->cancel_elements;
-    this->cc_threshold = p_pkt->cc_threshold;
-    this->commit_elements = p_pkt->commit_elements;
-    this->cond_instr = p_pkt->cond_instr;
-    this->cond_result = p_pkt->cond_result;
-    this->context = p_pkt->context;
-    this->curr_spec_depth = p_pkt->curr_spec_depth;
-    this->cycle_count = p_pkt->cycle_count;
-    this->dsm_val = p_pkt->dsm_val;
-    this->err_type = p_pkt->err_type;
-    this->event_val = p_pkt->event_val;
-    this->*/
     return *this;        
 }
 

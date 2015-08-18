@@ -59,3 +59,4 @@ ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/x64/Release/*
 *.lastbuildstate
 *.manifest
 *.cache
+ref_trace_decoder/docs/html/*

@@ -39,7 +39,7 @@
 #include <sstream>
 
 rctdlDefaultErrorLogger::rctdlDefaultErrorLogger() :
-    m_Verbosity(RCTDL_ERR_SEV_INFO),
+    m_Verbosity(RCTDL_ERR_SEV_ERROR),
     m_output_logger(0),
     m_created_output_logger(false)
 {

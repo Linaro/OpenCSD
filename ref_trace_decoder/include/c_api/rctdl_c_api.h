@@ -115,7 +115,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t hand
  * Must supply an output callback function which handles tehe etmv4 packet types, to attach to the packet processor.
  *
  * @param handle : handle a decode tree to create the packet processsor.
- * @param *rctdl_etmv4_cfg : 
+ * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.
  * @param pPktFn : pointer to a packet handling callback function.
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
@@ -132,8 +132,6 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t h
     
 /** @}*/
 
-
-
 /** @name Library Default Error Log Object API
     @brief Configure the default error logging object in the library.
 
@@ -142,10 +140,35 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t h
 
 @{*/
 
+/*!
+ * Initialise the library error logger. 
+ *
+ * Choose severity of errors logger, and if the errors will be logged to screen and / or logfile.
+ *
+ * @param verbosity : Severity of errors that will be logged.
+ * @param create_output_logger : Set to none-zero to create an output printer.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
+ */
 RCTDL_C_API rctdl_err_t rctdl_def_errlog_init(const rctdl_err_severity_t verbosity, const int create_output_logger);
 
+/*!
+ * Configure the output logger. Choose STDOUT, STDERR and/or log to file.
+ * Optionally provide a log file name.
+ *
+ * @param output_flags : OR combination of required  C_API_MSGLOGOUT_FLG_* flags.
+ * @param *log_file_name : optional filename if logging to file. Set to NULL if not needed.
+ *
+ * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
+ */
 RCTDL_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, const char *log_file_name);
 
+/*!
+ * Print a message via the library output printer - if enabled.
+ *
+ * @param *msg : Message to output.
+ *
+ */
 RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg);
 
 
@@ -155,7 +178,21 @@ RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg);
 
 @{*/
 
+/*!
+ * Take a packet structure and render a string representation of the packet data.
+ * 
+ * Returns a '0' terminated string of (buffer_size - 1) length or less.
+ *
+ * @param pkt_protocol : Packet protocol type - used to interpret the packet pointer
+ * @param *p_pkt : pointer to a valid packet structure of protocol type. cast to void *.
+ * @param *buffer : character buffer for string.
+ * @param buffer_size : size of character buffer.
+ *
+ * @return  rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
+ */
 RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, void *p_pkt, char *buffer, const int buffer_size);
+
+/** @}*/
 
 /** @}*/
 

@@ -45,7 +45,7 @@
 /** @defgroup dcd_tree Reference CoreSight Trace Decoder Library : Trace Decode Tree.
     @brief Create a multi source decode tree for a single trace capture buffer.
 
-    Use to creates a connected set of decoder objects to decode a trace buffer.
+    Use to create a connected set of decoder objects to decode a trace buffer.
     There may be multiple trace sources within the capture buffer.
 
 @{*/
@@ -143,6 +143,8 @@ private:
     static std::list<DecodeTree *> s_trace_dcd_trees;
     static rctdlDefaultErrorLogger s_error_logger;
 };
+
+/** @}*/
 
 #endif // ARM_RCTDL_DCD_TREE_H_INCLUDED
 
