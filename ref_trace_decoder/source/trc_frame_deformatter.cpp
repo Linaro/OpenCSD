@@ -415,8 +415,9 @@ uint32_t TraceFmtDcdImpl::findfirstFSync()
     return unsynced;
 }
 
-void TraceFmtDcdImpl::outputUnsyncedBytes(uint32_t num_bytes)
+void TraceFmtDcdImpl::outputUnsyncedBytes(uint32_t /*num_bytes*/)
 {
+    //**TBD:
 }
 
 bool TraceFmtDcdImpl::extractFrame()
@@ -629,7 +630,7 @@ bool TraceFmtDcdImpl::outputFrame()
 {
     bool cont_processing = true;
     ITrcDataIn *pDataIn = 0;
-    uint32_t bytes_used, prev_used;
+    uint32_t bytes_used;
 
     // output each valid ID within the frame - stopping if we get a wait or error
     while((m_out_processed < (m_out_data_idx + 1)) && cont_processing)

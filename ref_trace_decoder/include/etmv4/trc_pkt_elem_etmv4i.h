@@ -92,9 +92,9 @@ public:
 
     void setExceptionInfo(const uint16_t excep_type, const uint8_t addr_interp, const uint8_t m_fault_pending, const uint8_t m_type);
     
-    void set64BitAddress(const uint64_t addr, const uint8_t IS, const int update_bits);
-    void set32BitAddress(const uint32_t addr, const uint8_t IS, const int update_bits);
-    void updateShortAddress(const uint32_t addr, const uint8_t IS, const int update_bits);
+    void set64BitAddress(const uint64_t addr, const uint8_t IS, const uint8_t update_bits);
+    void set32BitAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits);
+    void updateShortAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits);
     void setAddressExactMatch(const uint8_t idx);
 
     void setDataSyncMarker(const uint8_t dsm_val);
@@ -320,7 +320,7 @@ inline void EtmV4ITrcPacket::setExceptionInfo(const uint16_t excep_type, const u
     exception_info.m_type = m_type;
 }
 
-inline void EtmV4ITrcPacket::set64BitAddress(const uint64_t addr, const uint8_t IS, const int update_bits)
+inline void EtmV4ITrcPacket::set64BitAddress(const uint64_t addr, const uint8_t IS, const uint8_t update_bits)
 {
     uint64_t update_mask = (uint64_t)-1;
     v_addr.pkt_bits = update_bits;
@@ -336,7 +336,7 @@ inline void EtmV4ITrcPacket::set64BitAddress(const uint64_t addr, const uint8_t 
     v_addr_ISA = IS;
 }
 
-inline void EtmV4ITrcPacket::set32BitAddress(const uint32_t addr, const uint8_t IS, const int update_bits)
+inline void EtmV4ITrcPacket::set32BitAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits)
 {
     rctdl_vaddr_t update_mask = RCTDL_BIT_MASK(update_bits);
     v_addr.pkt_bits = update_bits;
@@ -348,7 +348,7 @@ inline void EtmV4ITrcPacket::set32BitAddress(const uint32_t addr, const uint8_t 
     v_addr_ISA = IS;
 }
 
-inline void EtmV4ITrcPacket::updateShortAddress(const uint32_t addr, const uint8_t IS, const int update_bits)
+inline void EtmV4ITrcPacket::updateShortAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits)
 {
     rctdl_vaddr_t update_mask = RCTDL_BIT_MASK(update_bits);
     v_addr.pkt_bits = update_bits;

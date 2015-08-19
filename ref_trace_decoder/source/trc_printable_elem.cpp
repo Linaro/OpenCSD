@@ -43,7 +43,7 @@ void trcPrintableElem::getValStr(std::string &valStr, const int valTotalBitSize,
 
     assert((valTotalBitSize >= 4) && (valTotalBitSize <= 64));
 
-    uint64_t LimitMask = ~0LL;
+    uint64_t LimitMask = ~0ULL;
     LimitMask >>= 64-valTotalBitSize;
     valStr = "0x";
 
@@ -79,7 +79,7 @@ void trcPrintableElem::getValStr(std::string &valStr, const int valTotalBitSize,
         
         if(updateBits)
         {
-            uint64_t updateMask = ~0LL;
+            uint64_t updateMask = ~0ULL;
             updateMask >>= 64-updateBits;
             sprintf(szStrBuffer," ~[0x%llX]",value & updateMask);
             valStr+=szStrBuffer;

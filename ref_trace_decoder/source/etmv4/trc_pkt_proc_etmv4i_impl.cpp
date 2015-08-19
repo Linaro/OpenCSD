@@ -478,7 +478,7 @@ void EtmV4IPktProcImpl::iPktTimestamp()
         if(!m_curr_packet.pkt_valid.bits.ts_valid && m_first_trace_info)
             ts_bits = 64;   // after trace info, missing bits are all 0.
 
-        m_curr_packet.setTS(tsVal,ts_bits);
+        m_curr_packet.setTS(tsVal,(uint8_t)ts_bits);
 
        
         if((m_currPacketData[0] & 0x1) == 0x1)
@@ -840,7 +840,6 @@ void EtmV4IPktProcImpl::extractAndSetContextInfo(const std::vector<uint8_t> &buf
 void EtmV4IPktProcImpl::iPktAddrCtxt()
 {
     uint8_t lastByte = m_currPacketData.back();
-    bool bSend = false;
 
     if( m_currPacketData.size() == 1)    
     {        
@@ -927,7 +926,7 @@ void EtmV4IPktProcImpl::iPktShortAddr()
         int bits = 0;
 
         extractShortAddr(m_currPacketData,1,m_addrIS,addr_val,bits);
-        m_curr_packet.updateShortAddress(addr_val,m_addrIS,bits);
+        m_curr_packet.updateShortAddress(addr_val,m_addrIS,(uint8_t)bits);
         m_process_state = SEND_PKT;
     }
 }
@@ -999,7 +998,7 @@ void EtmV4IPktProcImpl::iPktLongAddr()
 void EtmV4IPktProcImpl::iPktQ()
 {
     uint8_t lastByte = m_currPacketData.back();
-    bool bSendBad = false;
+
     if(m_currPacketData.size() == 1)
     {
         m_Q_type = lastByte & 0xF;
@@ -1087,7 +1086,7 @@ void EtmV4IPktProcImpl::iPktQ()
             else if(m_addr_short)
             {
                 idx+=extractShortAddr(m_currPacketData,idx,m_addrIS,q_addr,bits);
-                m_curr_packet.updateShortAddress(q_addr,m_addrIS,bits);
+                m_curr_packet.updateShortAddress(q_addr,m_addrIS,(uint8_t)bits);
             }
             else
             {

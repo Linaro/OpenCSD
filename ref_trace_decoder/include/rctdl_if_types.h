@@ -116,11 +116,11 @@ typedef enum _rctdl_err_t {
 } rctdl_err_t;
 
 /* component handle types */
-typedef int rctdl_hndl_rdr_t;               /**< reader control handle */
+typedef unsigned int rctdl_hndl_rdr_t;               /**< reader control handle */
 typedef unsigned int rctdl_hndl_err_log_t;  /**< error logger connection handle */
 
 /* common invalid handle type */
-#define RCTDL_INVALID_HANDLE -1     /**< Global invalid handle value */
+#define RCTDL_INVALID_HANDLE (unsigned int)-1     /**< Global invalid handle value */
 
 /*!  Error Severity Type
  * 

@@ -185,38 +185,26 @@ const std::string rctdlError::getErrorString(const rctdlError &error)
 
 void rctdlError::appendErrorDetails(std::string &errStr, const rctdlError &error)
 {
-    char sz_buff[64];
     int numerrstr = ((sizeof(s_errorCodeDescs) / sizeof(const char *)) / 2);
     int code = (int)error.getErrorCode();
     rctdl_trc_index_t idx = error.getErrorIndex();
     uint8_t chan_ID = error.getErrorChanID();
+    std::ostringstream oss;
 
+    oss << "0x" << std::hex << std::setfill('0') << std::setw(4) << code;
     if(code < numerrstr)
-    {
-        sprintf(sz_buff, "0x%04X (",code);
-        errStr += sz_buff + (std::string)s_errorCodeDescs[code][0] + (std::string)") [" + (std::string)s_errorCodeDescs[code][1] + (std::string)"]; ";
-    }
+        oss << " (" << s_errorCodeDescs[code][0] << ") [" << s_errorCodeDescs[code][1] << "]; ";
     else
-    {
-        sprintf(sz_buff, "0x%04X (unknown); ",code);
-        errStr += sz_buff;
-    }
+        oss << " (unknown); ";
+
     if(idx != RCTDL_BAD_TRC_INDEX)
-    {
-        errStr += "TrcIdx=";
-        if(sizeof(idx) > 4)
-            sprintf(sz_buff,"%lld; ",idx);
-        else
-            sprintf(sz_buff,"%ld; ",idx);
-        errStr += sz_buff;
-    }
+        oss << "TrcIdx=" << std::dec << idx << "; ";
+
     if(chan_ID != RCTDL_BAD_CS_SRC_ID)
-    {
-        errStr += "CS ID=";
-        sprintf(sz_buff,"0x%02X; ",chan_ID);
-        errStr += sz_buff;
-    }
-    errStr += error.getMessage();
+        oss << "CS ID=" << std::hex << std::setfill('0') << std::setw(2) << (uint16_t)chan_ID << "; ";
+
+    oss << error.getMessage();
+    errStr = oss.str();
 }
 
 /* End of File rctdl_error.cpp */

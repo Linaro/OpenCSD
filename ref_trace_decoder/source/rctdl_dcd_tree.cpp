@@ -155,7 +155,7 @@ DecodeTree::DecodeTree() :
 
 DecodeTree::~DecodeTree()
 {
-    for(int i = 0; i < 0x80; i++)
+    for(uint8_t i = 0; i < 0x80; i++)
     {
         destroyDecodeElement(i);
     }
