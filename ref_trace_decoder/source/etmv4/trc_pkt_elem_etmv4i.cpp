@@ -31,6 +31,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
+#include <sstream>
+#include <iomanip>
 
 #include "etmv4/trc_pkt_elem_etmv4i.h"
 
@@ -79,7 +81,7 @@ void EtmV4ITrcPacket::toString(std::string &str) const
 {
     const char *name;
     const char *desc;
-    std::string valStr;
+    std::string valStr, ctxtStr = "";
 
     name = packetTypeName(type, &desc);
     str = name + (std::string)" : " + desc;
@@ -95,24 +97,46 @@ void EtmV4ITrcPacket::toString(std::string &str) const
 
     case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_32IS1:       
+        contextStr(ctxtStr);
     case ETM4_PKT_I_ADDR_L_32IS0:
     case ETM4_PKT_I_ADDR_L_32IS1:        
         trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,(v_addr.pkt_bits < 32) ? v_addr.pkt_bits : 0);
-        str += "; Addr=" + valStr;
+        str += "; Addr=" + valStr + "; " + ctxtStr;
         break;
 
     case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
+        contextStr(ctxtStr);
     case ETM4_PKT_I_ADDR_L_64IS0:
     case ETM4_PKT_I_ADDR_L_64IS1:
         trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,(v_addr.pkt_bits < 64) ? v_addr.pkt_bits : 0);
-        str += "; Addr=" + valStr;
+        str += "; Addr=" + valStr + "; " + ctxtStr;
         break;
 
     case ETM4_PKT_I_ADDR_S_IS0:
     case ETM4_PKT_I_ADDR_S_IS1:
         trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,v_addr.pkt_bits);
         str += "; Addr=" + valStr;
+        break;
+
+    case ETM4_PKT_I_ADDR_MATCH:
+        addrMatchIdx(valStr);
+        str += ", " + valStr;
+        break;
+
+    case ETM4_PKT_I_ATOM_F1:
+    case ETM4_PKT_I_ATOM_F2:
+    case ETM4_PKT_I_ATOM_F3:
+    case ETM4_PKT_I_ATOM_F4:
+    case ETM4_PKT_I_ATOM_F5:
+    case ETM4_PKT_I_ATOM_F6:
+        atomSeq(valStr);
+        str += "; " + valStr;
+        break;
+
+    case ETM4_PKT_I_EXCEPT:
+        exceptionInfo(valStr);
+        str += "; " + valStr;
         break;
     }
 }
@@ -393,6 +417,110 @@ const char *EtmV4ITrcPacket::packetTypeName(const rctdl_etmv4_i_pkt_type type, c
 
     if(ppDesc) *ppDesc = pDesc;
     return pName;
+}
+
+void EtmV4ITrcPacket::contextStr(std::string &ctxtStr) const
+{
+    ctxtStr = "";
+    if(pkt_valid.bits.context_valid)
+    {
+        std::ostringstream oss;
+        if(context.updated)
+        {           
+            oss << "Ctxt: " << (context.SF ? "AArch64," : "AArch32, ") << "EL" << context.EL << ", " << (context.NS ? "NS; " : "S; ");
+            if(context.updated_c)
+            {
+                oss << "CID=0x" << std::hex << std::setfill('0') << std::setw(8) << context.ctxtID << "; ";
+            }
+            if(context.updated_v)
+            {
+                oss << "VMID=0x" << std::hex << std::setfill('0') << std::setw(4) << context.VMID << "; ";
+            }
+        }
+        else
+        {
+            oss << "Ctxt: Same";
+        }
+        ctxtStr = oss.str();
+    }
+}
+
+void EtmV4ITrcPacket::atomSeq(std::string &valStr) const
+{
+    std::ostringstream oss;
+    if(atom.type == ATOM_PATTERN)
+    {
+        uint32_t bitpattern = atom.En_bits;
+        for(int i = 0; i < atom.num; i++)
+        {
+            oss << ((bitpattern & 0x1) ? "E" : "N");
+            bitpattern >>= 1;
+        }
+    }
+    else
+    {
+        char atom_chr = ((atom.En_bits & 0x1) ? 'E' : 'N');
+        for(int i = 0; i < atom.num; i++)
+            oss << atom_chr;
+    }
+    valStr = oss.str();
+}
+
+void EtmV4ITrcPacket::addrMatchIdx(std::string &valStr) const
+{
+    std::ostringstream oss;
+    oss << "[" << (uint16_t)addr_exact_match_idx << "]";
+    valStr = oss.str();
+}
+
+void EtmV4ITrcPacket::exceptionInfo(std::string &valStr) const
+{
+    std::ostringstream oss;
+
+    static const char *ARv8Excep[] = {
+        "PE Reset", "Debug Halt", "Call", "Trap", 
+        "System Error", "Reserved", "Inst Debug", "Data Debug",
+        "Reserved", "Reserved", "Alignment", "Inst Fault", 
+        "Data Fault", "Reserved", "IRQ", "FIQ"
+    };
+
+    static const char *MExcep[] = {
+        "Reserved", "PE Reset", "NMI", "HardFault",
+        "MemManage", "BusFault", "UsageFault", "Reserved",
+        "Reserved","Reserved","Reserved","SVC",
+        "DebugMonitor", "Reserved","PendSV","SysTick",
+        "IRQ0","IRQ1","IRQ2","IRQ3",
+        "IRQ4","IRQ5","IRQ6","IRQ7",
+        "DebugHalt", "LazyFP Push", "Lockup", "Reserved",
+        "Reserved","Reserved","Reserved","Reserved"
+    };
+
+    if(exception_info.m_type == 0)
+    {
+        if(exception_info.exceptionType < 0x10)
+            oss << " " << ARv8Excep[exception_info.exceptionType] << ";";
+        else
+            oss << " Reserved;";
+
+    }
+    else
+    {
+        if(exception_info.exceptionType < 0x20)
+            oss << " " << MExcep[exception_info.exceptionType] << ";";
+        else if((exception_info.exceptionType >= 0x208) && (exception_info.exceptionType <= 0x3EF))
+            oss << " IRQ" << (int)(exception_info.exceptionType - 0x200) << ";";
+        else
+            oss << " Reserved;";
+        if(exception_info.m_fault_pending)
+            oss << " Fault Pending;";
+    }
+
+    if(exception_info.addr_interp == 0x1)
+        oss << " Ret Addr Follows;";
+    else if(exception_info.addr_interp == 0x2)
+        oss << " Ret Addr Follows, Match Prev;";            
+    
+    valStr = oss.str();
 }
 
 EtmV4ITrcPacket &EtmV4ITrcPacket::operator =(const rctdl_etmv4_i_pkt* p_pkt)

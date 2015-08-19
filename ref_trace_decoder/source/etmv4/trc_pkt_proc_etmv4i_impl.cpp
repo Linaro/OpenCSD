@@ -512,7 +512,8 @@ void EtmV4IPktProcImpl::iPktException()
     {
         uint16_t excep_type =  (m_currPacketData[1] >> 1) & 0x1F;
         uint8_t addr_interp = (m_currPacketData[1] & 0x40) >> 5 | (m_currPacketData[1] & 0x1);
-        uint8_t m_fault_pending = 0;
+        uint8_t m_fault_pending = 0;        
+        uint8_t m_type = (m_config.core_prof == profile_CortexM) ? 1 : 0;
 
         // extended exception packet (probably M class);
         if(m_currPacketData[1] & 0x80)
@@ -520,7 +521,7 @@ void EtmV4IPktProcImpl::iPktException()
             excep_type |= ((uint16_t)m_currPacketData[2] & 0x1F) << 5;
             m_fault_pending = (m_currPacketData[2] >> 5)  & 0x1;
         }
-        m_curr_packet.setExceptionInfo(excep_type,addr_interp,m_fault_pending);
+        m_curr_packet.setExceptionInfo(excep_type,addr_interp,m_fault_pending, m_type);
         m_process_state = SEND_PKT;
 
         // allow the standard address packet handlers to process the address packet field for the exception.

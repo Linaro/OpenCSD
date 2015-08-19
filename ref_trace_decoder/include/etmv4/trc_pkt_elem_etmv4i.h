@@ -90,7 +90,7 @@ public:
     void setContextVMID(const uint32_t VMID);
     void setContextCID(const uint32_t CID);
 
-    void setExceptionInfo(const uint16_t excep_type, const uint8_t addr_interp, const uint8_t m_fault_pending);
+    void setExceptionInfo(const uint16_t excep_type, const uint8_t addr_interp, const uint8_t m_fault_pending, const uint8_t m_type);
     
     void set64BitAddress(const uint64_t addr, const uint8_t IS, const int update_bits);
     void set32BitAddress(const uint32_t addr, const uint8_t IS, const int update_bits);
@@ -117,6 +117,10 @@ public:
 
 private:
     const char *packetTypeName(const rctdl_etmv4_i_pkt_type type, const char **pDesc) const;
+    void contextStr(std::string &ctxtStr) const;
+    void atomSeq(std::string &valStr) const;
+    void addrMatchIdx(std::string &valStr) const;
+    void exceptionInfo(std::string &valStr) const;
 };
 
 inline void  EtmV4ITrcPacket::updateErrType(const rctdl_etmv4_i_pkt_type err_pkt_type)
@@ -308,11 +312,12 @@ inline void EtmV4ITrcPacket::setContextCID(const uint32_t CID)
     context.updated_c = 1;
 }
 
-inline void EtmV4ITrcPacket::setExceptionInfo(const uint16_t excep_type, const uint8_t addr_interp, const uint8_t m_fault_pending)
+inline void EtmV4ITrcPacket::setExceptionInfo(const uint16_t excep_type, const uint8_t addr_interp, const uint8_t m_fault_pending, const uint8_t m_type)
 {
     exception_info.exceptionType = excep_type;
     exception_info.addr_interp = addr_interp;
     exception_info.m_fault_pending = m_fault_pending;
+    exception_info.m_type = m_type;
 }
 
 inline void EtmV4ITrcPacket::set64BitAddress(const uint64_t addr, const uint8_t IS, const int update_bits)
