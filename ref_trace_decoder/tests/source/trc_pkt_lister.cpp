@@ -427,7 +427,10 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
         if(printers.size() > 0)
         {
             // set up the filtering at the tree level (avoid pushing to processors with no attached printers)
-            dcd_tree->setIDFilter(id_list);
+            if(!all_source_ids)
+                dcd_tree->setIDFilter(id_list);
+            else
+                dcd_tree->clearIDFilter();
 
             // need to push the data through the decode tree.
             std::ifstream in;
