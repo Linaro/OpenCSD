@@ -25,6 +25,9 @@
     <Filter Include="Header Files\ptm">
       <UniqueIdentifier>{9ec501e2-9ba4-4bad-a3d3-cdb604cc38b4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\mem_acc">
+      <UniqueIdentifier>{23a35c62-e38f-43f6-a03b-6f1287478a69}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -177,6 +180,12 @@
     <ClInclude Include="..\..\..\include\trc_core_arch_map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_base.h">
+      <Filter>Header Files\mem_acc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_file.h">
+      <Filter>Header Files\mem_acc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -234,6 +243,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\trc_printable_elem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

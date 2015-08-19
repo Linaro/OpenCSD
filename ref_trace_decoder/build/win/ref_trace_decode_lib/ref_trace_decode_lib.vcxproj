@@ -169,6 +169,8 @@
     <ClInclude Include="..\..\..\include\interfaces\trc_pkt_in_i.h" />
     <ClInclude Include="..\..\..\include\interfaces\trc_pkt_raw_in_i.h" />
     <ClInclude Include="..\..\..\include\interfaces\trc_tgt_mem_access_i.h" />
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_base.h" />
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_file.h" />
     <ClInclude Include="..\..\..\include\ptm\ptm_decoder.h" />
     <ClInclude Include="..\..\..\include\ptm\trc_cmp_cfg_ptm.h" />
     <ClInclude Include="..\..\..\include\ptm\trc_pkt_elem_ptm.h" />
@@ -205,6 +207,7 @@
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4i.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.cpp" />
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_file.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_elem_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_proc_ptm.cpp" />
