@@ -34,7 +34,8 @@
  */ 
 
 #include "rctdl_error.h"
-
+#include <sstream>
+#include <iomanip>
 
 static const char *s_errorCodeDescs[][2] = {
     /* general return errors */
@@ -159,7 +160,7 @@ rctdlError::~rctdlError()
 const std::string rctdlError::getErrorString(const rctdlError &error)
 {
     std::string szErrStr = "LIBRARY INTERNAL ERROR: Invalid Error Object";
-    char *sev_type_sz[] = {
+    const char *sev_type_sz[] = {
         "NONE ",
         "ERROR:",
         "WARN :", 
@@ -189,7 +190,7 @@ void rctdlError::appendErrorDetails(std::string &errStr, const rctdlError &error
     int code = (int)error.getErrorCode();
     rctdl_trc_index_t idx = error.getErrorIndex();
     uint8_t chan_ID = error.getErrorChanID();
-    
+
     if(code < numerrstr)
     {
         sprintf(sz_buff, "0x%04X (",code);

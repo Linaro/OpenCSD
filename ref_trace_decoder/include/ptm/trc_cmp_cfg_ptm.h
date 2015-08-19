@@ -109,11 +109,9 @@ public:
 
 inline PtmConfig & PtmConfig::operator=(const rctdl_ptm_cfg *p_cfg)
 {
-    this->arch_ver = p_cfg->arch_ver;
-    this->core_prof = p_cfg->core_prof;
-    this->reg_ccer = p_cfg->reg_ccer;
-    this->reg_ctrl = p_cfg->reg_ctrl;
-    this->reg_idr = p_cfg->reg_idr;
+    // object of base class rctdl_ptm_cfg 
+    *dynamic_cast<rctdl_ptm_cfg *>(this) = *p_cfg;
+    return *this;
 }
 
 inline const bool PtmConfig::enaBranchBCast() const

@@ -60,7 +60,7 @@ void DecodeTreeElement::DestroyElem()
         case RCTDL_PROTOCOL_ETMV3:
             delete decoder.etmv3.proc;
             decoder.etmv3.proc = 0;
-            delete decoder.etmv3.dcd;
+            //TBD:            delete decoder.etmv3.dcd;
             decoder.etmv3.dcd = 0;
             break;
 
@@ -74,14 +74,14 @@ void DecodeTreeElement::DestroyElem()
         case RCTDL_PROTOCOL_ETMV4D:
             delete decoder.etmv4d.proc;
             decoder.etmv4d.proc = 0;
-            delete decoder.etmv4d.dcd;
+            //TBD: delete decoder.etmv4d.dcd;
             decoder.etmv4d.dcd = 0;
             break;
 
         case RCTDL_PROTOCOL_PTM:
             delete decoder.ptm.proc;
             decoder.ptm.proc = 0;
-            delete decoder.ptm.dcd;
+            // TBD: delete decoder.ptm.dcd;
             decoder.ptm.dcd  = 0;
             break;
         }
@@ -328,6 +328,7 @@ rctdl_err_t DecodeTree::createPTMPktProcessor(const PtmConfig *p_config, IPktDat
 rctdl_err_t DecodeTree::createETMv3Decoder(const EtmV3Config *p_config)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
+#if 0 //TBD:
     uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
     if(usingFormatter())
         CSID = p_config->getTraceID();
@@ -336,6 +337,7 @@ rctdl_err_t DecodeTree::createETMv3Decoder(const EtmV3Config *p_config)
     {
             //** TBD
     }
+#endif
     return err;
 }
 

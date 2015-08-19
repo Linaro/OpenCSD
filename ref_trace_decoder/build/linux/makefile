@@ -144,3 +144,4 @@ clean_libs:
 clean_tests:
 	cd $(RCTDL_ROOT)/tests/build/linux/snapshot_parser_lib && make clean
 	cd $(RCTDL_ROOT)/tests/build/linux/trc_pkt_lister && make clean
+	cd $(RCTDL_ROOT)/tests/build/linux/simple_pkt_print_c_api && make clean
