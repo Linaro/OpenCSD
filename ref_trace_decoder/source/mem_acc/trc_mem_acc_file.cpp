@@ -33,6 +33,10 @@
 
 #include "mem_acc/trc_mem_acc_file.h"
 
+/***************************************************/
+/* protected construction and reference counting   */
+/***************************************************/
+
 TrcMemAccessorFile::TrcMemAccessorFile()
 {
     m_ref_count = 0;
@@ -59,6 +63,12 @@ bool TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctdl_vaddr
     }
     return init;
 }
+
+/***************************************************/
+/* static object creation                          */
+/***************************************************/
+
+std::map<std::string, TrcMemAccessorFile *> TrcMemAccessorFile::s_FileAccessorMap;
 
 // return existing or create new accessor
 TrcMemAccessorFile *TrcMemAccessorFile::createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr)
@@ -104,13 +114,31 @@ void TrcMemAccessorFile::destroyFileAccessor(TrcMemAccessorFile *p_accessor)
     }
 }
 
-std::map<std::string, TrcMemAccessorFile *> TrcMemAccessorFile::s_FileAccessorMap;
-
-
-const uint32_t TrcMemAccessorFile::readBytes(const rctdl_vaddr_t s_address, const uint32_t reqBytes, uint8_t *byteBuffer)
+const bool TrcMemAccessorFile::isExistingFileAccessor(const std::string &pathToFile)
 {
-    uint32_t bytesRead = 0;
+    bool bExists = false;
+    std::map<std::string, TrcMemAccessorFile *>::const_iterator it = s_FileAccessorMap.find(pathToFile);
+    if(it != s_FileAccessorMap.end())
+        bExists = true;
+    return bExists;
+}
 
+/***************************************************/
+/* accessor instance functions                     */
+/***************************************************/
+const uint32_t TrcMemAccessorFile::readBytes(const rctdl_vaddr_t address, const uint32_t reqBytes, uint8_t *byteBuffer)
+{
+    if(!m_mem_file.is_open())
+        return 0;
+
+    uint32_t bytesRead = bytesInRange(address,reqBytes);    // get avialable bytes in range.
+    if(bytesRead)
+    {
+        rctdl_vaddr_t addr_pos = (rctdl_vaddr_t)m_mem_file.tellg();
+        if((address - m_startAddress) != addr_pos)
+            m_mem_file.seekg(address - m_startAddress);
+        m_mem_file.read((char *)byteBuffer,bytesRead);
+    }
     return bytesRead;
 }
 

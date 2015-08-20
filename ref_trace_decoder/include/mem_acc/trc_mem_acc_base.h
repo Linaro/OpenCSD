@@ -83,12 +83,12 @@ inline const bool TrcMemAccessorBase::addrInRange(const rctdl_vaddr_t s_address)
 inline const uint32_t TrcMemAccessorBase::bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const
 {
     uint32_t bytesInRange = 0;
-    if(addrInRange(s_address))
+    if(addrInRange(s_address))  // start not in range, return 0.
     {
-        if(addrInRange(s_address+reqBytes-1))
+        // bytes available till end address.
+        bytesInRange = m_endAddress - s_address + 1;
+        if(bytesInRange > reqBytes)
             bytesInRange = reqBytes;
-        else
-            bytesInRange = reqBytes - (s_address + reqBytes - m_endAddress);
     }
     return bytesInRange;
 }

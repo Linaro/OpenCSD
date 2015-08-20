@@ -1,6 +1,6 @@
 /*
- * \file       trc_mem_acc_file.h
- * \brief      Reference CoreSight Trace Decoder :  Access binary target memory file
+ * \file       trc_mem_acc_bufptr.h
+ * \brief      Reference CoreSight Trace Decoder : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -32,46 +32,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_TRC_MEM_ACC_FILE_H_INCLUDED
-#define ARM_TRC_MEM_ACC_FILE_H_INCLUDED
-
-#include <map>
-#include <string>
-#include <fstream>
+#ifndef ARM_TRC_MEM_ACC_BUFPTR_H_INCLUDED
+#define ARM_TRC_MEM_ACC_BUFPTR_H_INCLUDED
 
 #include "mem_acc/trc_mem_acc_base.h"
 
-class TrcMemAccessorFile : public TrcMemAccessorBase 
+class TrcMemAccBufPtr: public TrcMemAccessorBase
 {
 public:
+    TrcMemAccBufPtr(const rctdl_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size);
+    virtual ~TrcMemAccBufPtr() {};
     virtual const uint32_t readBytes(const rctdl_vaddr_t address, const uint32_t reqBytes, uint8_t *byteBuffer);
 
-protected:
-    TrcMemAccessorFile();
-    virtual ~ TrcMemAccessorFile();
-
-    void IncRefCount() { m_ref_count++; };
-    void DecRefCount() { m_ref_count--; };
-    const int getRefCount() const { return  m_ref_count; };
-
-    bool initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr);
-
-    const std::string &getFilePath() const { return m_file_path; };
-
-public:
-    static TrcMemAccessorFile *createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr);
-    static void destroyFileAccessor(TrcMemAccessorFile *p_accessor);
-    static const bool isExistingFileAccessor(const std::string &pathToFile);
-
 private:
-    static std::map<std::string, TrcMemAccessorFile *> s_FileAccessorMap;
-
-private:
-    std::ifstream m_mem_file;
-    int m_ref_count;
-    std::string m_file_path;
+    const uint8_t *m_p_buffer;
+    const uint32_t m_size;
 };
 
-#endif // ARM_TRC_MEM_ACC_FILE_H_INCLUDED
+#endif // ARM_TRC_MEM_ACC_BUFPTR_H_INCLUDED
 
-/* End of File trc_mem_acc_file.h */
+/* End of File trc_mem_acc_bufptr.h */
