@@ -106,6 +106,8 @@ typedef enum _rctdl_err_t {
     /* packet decoder errors */
     /* decode tree errors */
     RCTDL_ERR_DCDT_NO_FORMATTER,         /**< No formatter in use - operation not valid. */
+    /* target memory access errors */
+    RCTDL_ERR_MEM_ACC_OVERLAP,           /**< Attempted to set an overlapping range in memory access map */
     /* test errors - errors generated only by the test code, not the library */
     RCTDL_ERR_TEST_SNAPSHOT_PARSE,       /**< test snapshot file parse error */
     RCTDL_ERR_TEST_SNAPSHOT_PARSE_INFO,  /**< test snapshot file parse information */

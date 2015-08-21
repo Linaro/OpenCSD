@@ -192,6 +192,9 @@
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_bufptr.h">
       <Filter>Header Files\mem_acc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_mapper.h">
+      <Filter>Header Files\mem_acc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -255,6 +258,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_bufptr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_mapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

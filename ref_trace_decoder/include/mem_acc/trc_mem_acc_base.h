@@ -38,23 +38,89 @@
 
 #include "rctdl_if_types.h"
 
+/*!
+ * @class TrcMemAccessorBase
+ * @brief Memory range to access by trace decoder.
+ * 
+ * Represents a memory access range for the trace decoder.
+ * Range inclusive from m_startAddress to m_endAddress. 
+ * e.g. a 1k range from 0x1000 has start of 0x1000 and end of 0x13FF
+ *
+ * Derived classes provide specific access types such as binary files and memory buffers.
+ * 
+ */
 class TrcMemAccessorBase
 {
 public:
+    /** default constructor */
     TrcMemAccessorBase();
+    
+    /** costruct with address range values */
     TrcMemAccessorBase(rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr);
+    
+    /** default desctructor */
     virtual ~TrcMemAccessorBase() {};
 
+    
+    /*!
+     * Set the inclusive address range of this accessor.
+     *
+     * @param startAddr : start address of the range.
+     * @param endAddr : end address of the range.
+     */
     void setRange(rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr);
 
-    const bool addrInRange(const rctdl_vaddr_t s_address) const;
-    const uint32_t bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const;
 
+    /*!
+     * test if an address is in the inclusive range for this accessor
+     *
+     * @param s_address : Address to test.
+     *
+     * @return const bool  : true if the address is in range.
+     */
+    const bool addrInRange(const rctdl_vaddr_t s_address) const;
+
+    /*!
+     * Test number of bytes available from the start address, up to the number of requested bytes.
+     * Tests if all the requested bytes are available from the supplied start address.
+     * Returns the number available up to full requested amount.
+     *
+     * @param s_address : Start address within the range.
+     * @param reqBytes : Number of bytes needed from the start address.
+     *
+     * @return const uint32_t  : Bytes available, up to reqBytes. 0 is s_address not in range.
+     */
+    const uint32_t bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const;
+    
+    /*!
+     * test is supplied range accessor overlaps this range.
+     *
+     * @param *p_test_acc : Accessor to test for overlap.
+     *
+     * @return bool  : true if overlap, false if not.
+     */
+    const bool overLapRange(const TrcMemAccessorBase *p_test_acc) const;
+
+    /** return range start address */
+    const rctdl_vaddr_t startAddress() const { return m_startAddress; };
+    /** return range end address */
+    const rctdl_vaddr_t endAddress() const { return m_endAddress; };
+
+
+    /*!
+     * Read bytes from via the accessor from the memory range. 
+     *
+     * @param s_address : Start address of the read.
+     * @param reqBytes : Number of bytes required.
+     * @param *byteBuffer : Buffer to copy the bytes into.
+     *
+     * @return uint32_t : Number of bytes read, 0 if s_address out of range.
+     */
     virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const uint32_t reqBytes, uint8_t *byteBuffer) = 0;
 
 protected:
-    rctdl_vaddr_t m_startAddress;
-    rctdl_vaddr_t m_endAddress;
+    rctdl_vaddr_t m_startAddress;   /**< Start address */
+    rctdl_vaddr_t m_endAddress;     /**< End address */
 };
 
 inline TrcMemAccessorBase::TrcMemAccessorBase(rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr) :
@@ -92,6 +158,16 @@ inline const uint32_t TrcMemAccessorBase::bytesInRange(const rctdl_vaddr_t s_add
     }
     return bytesInRange;
 }
+
+inline const bool TrcMemAccessorBase::overLapRange(const TrcMemAccessorBase *p_test_acc) const
+{
+    if( addrInRange(p_test_acc->startAddress()) || 
+        addrInRange(p_test_acc->endAddress())
+        )
+        return true;
+    return false;
+}
+
 
 #endif // ARM_TRC_MEM_ACC_BASE_H_INCLUDED
 

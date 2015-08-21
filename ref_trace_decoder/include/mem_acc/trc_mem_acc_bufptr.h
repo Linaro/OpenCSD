@@ -37,16 +37,38 @@
 
 #include "mem_acc/trc_mem_acc_base.h"
 
+/*!
+ * @class TrcMemAccBufPtr:   
+ * @brief Trace memory accessor for a memory buffer.
+ *  
+ * Wraps a memory buffer in an memory range accessor object.
+ * Takes a copy of the buffer pointer which must remain valid 
+ * for the lifetime of the object.
+ * 
+ */
 class TrcMemAccBufPtr: public TrcMemAccessorBase
 {
 public:
+    /*!
+     * Construct the accessor.
+     * uses the start address as the start of range and calculates the end address
+     * according to the buffer size
+     *
+     * @param s_address : Start address in memory map represented by the data in the buffer.
+     * @param *p_buffer : pointer to a buffer of binary data.
+     * @param size : size of the buffer.
+     *
+     */
     TrcMemAccBufPtr(const rctdl_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size);
-    virtual ~TrcMemAccBufPtr() {};
+
+    virtual ~TrcMemAccBufPtr() {};  /**< default destructor */
+
+    /** Memory access override - allow decoder to read bytes from the buffer. */
     virtual const uint32_t readBytes(const rctdl_vaddr_t address, const uint32_t reqBytes, uint8_t *byteBuffer);
 
 private:
-    const uint8_t *m_p_buffer;
-    const uint32_t m_size;
+    const uint8_t *m_p_buffer;  /**< pointer to the memory buffer  */
+    const uint32_t m_size;  /**< size of the memory buffer. */
 };
 
 #endif // ARM_TRC_MEM_ACC_BUFPTR_H_INCLUDED
