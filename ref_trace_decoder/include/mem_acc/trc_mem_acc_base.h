@@ -52,14 +52,22 @@
 class TrcMemAccessorBase
 {
 public:
+
+    enum MemAccTypes {
+        MEMACC_UNKNOWN,
+        MEMACC_FILE,
+        MEMACC_BUFPTR
+    };
+
     /** default constructor */
-    TrcMemAccessorBase();
+    TrcMemAccessorBase(MemAccTypes type);
     
     /** costruct with address range values */
-    TrcMemAccessorBase(rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr);
+    TrcMemAccessorBase(MemAccTypes type, rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr);
     
     /** default desctructor */
     virtual ~TrcMemAccessorBase() {};
+
 
     
     /*!
@@ -118,20 +126,25 @@ public:
      */
     virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const uint32_t reqBytes, uint8_t *byteBuffer) = 0;
 
+    const enum MemAccTypes getType() const { return m_type; };
+
 protected:
     rctdl_vaddr_t m_startAddress;   /**< Start address */
     rctdl_vaddr_t m_endAddress;     /**< End address */
+    const MemAccTypes m_type;
 };
 
-inline TrcMemAccessorBase::TrcMemAccessorBase(rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr) :
+inline TrcMemAccessorBase::TrcMemAccessorBase(MemAccTypes accType, rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr) :
      m_startAddress(startAddr),
-     m_endAddress(endAddr)
+     m_endAddress(endAddr),
+     m_type(accType)
 {
 }
 
-inline TrcMemAccessorBase::TrcMemAccessorBase() :
+inline TrcMemAccessorBase::TrcMemAccessorBase(MemAccTypes accType) :
      m_startAddress(0),
-     m_endAddress(0)
+     m_endAddress(0),
+     m_type(accType)
 {
 }
 

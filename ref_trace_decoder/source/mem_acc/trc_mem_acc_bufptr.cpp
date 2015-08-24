@@ -36,7 +36,7 @@
 #include "mem_acc/trc_mem_acc_bufptr.h"
 
 TrcMemAccBufPtr::TrcMemAccBufPtr(const rctdl_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size) : 
-    TrcMemAccessorBase(s_address, s_address+size-1),
+    TrcMemAccessorBase(MEMACC_BUFPTR, s_address, s_address+size-1),
     m_p_buffer(p_buffer),
     m_size(size)
 {

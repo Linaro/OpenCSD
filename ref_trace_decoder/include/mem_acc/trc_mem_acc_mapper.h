@@ -54,10 +54,16 @@ public:
     // mapper configuration interface
     virtual rctdl_err_t AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id) = 0;
 
+    // destroy all attached accessors
+    void DestroyAllAccessors();
+
 protected:
     virtual bool findAccessor(const rctdl_vaddr_t address, const uint8_t cs_trace_id) = 0;     // set m_acc_curr if found valid range, leave unchanged if not.
     virtual bool readFromCurrent(const rctdl_vaddr_t address, const uint8_t cs_trace_id) = 0;
-    
+    virtual TrcMemAccessorBase *getFirstAccessor() = 0;
+    virtual TrcMemAccessorBase *getNextAccessor() = 0;
+    virtual void clearAccessorList() = 0;
+
     TrcMemAccessorBase *m_acc_curr;     // most recently used - try this first.
     uint8_t m_trace_id_curr;            // trace ID for the current accessor
     const bool m_using_trace_id;        // true if we are using separate memory spaces.
@@ -78,8 +84,12 @@ public:
 protected:
     virtual bool findAccessor(const rctdl_vaddr_t address, const uint8_t cs_trace_id); 
     virtual bool readFromCurrent(const rctdl_vaddr_t address, const uint8_t cs_trace_id);    
+    virtual TrcMemAccessorBase *getFirstAccessor();
+    virtual TrcMemAccessorBase *getNextAccessor();
+    virtual void clearAccessorList();
 
     std::vector<TrcMemAccessorBase *> m_acc_global;
+    std::vector<TrcMemAccessorBase *>::iterator m_acc_it;
 };
 
 #endif // ARM_TRC_MEM_ACC_MAPPER_H_INCLUDED

@@ -37,7 +37,7 @@
 /* protected construction and reference counting   */
 /***************************************************/
 
-TrcMemAccessorFile::TrcMemAccessorFile()
+TrcMemAccessorFile::TrcMemAccessorFile() : TrcMemAccessorBase(MEMACC_FILE)
 {
     m_ref_count = 0;
 }
@@ -102,15 +102,18 @@ TrcMemAccessorFile *TrcMemAccessorFile::createFileAccessor(const std::string &pa
 
 void TrcMemAccessorFile::destroyFileAccessor(TrcMemAccessorFile *p_accessor)
 {
-    p_accessor->DecRefCount();
-    if(p_accessor->getRefCount() == 0)
+    if(p_accessor != 0)
     {
-        std::map<std::string, TrcMemAccessorFile *>::iterator it = s_FileAccessorMap.find(p_accessor->getFilePath());
-        if(it != s_FileAccessorMap.end())
+        p_accessor->DecRefCount();
+        if(p_accessor->getRefCount() == 0)
         {
-            s_FileAccessorMap.erase(it);
+            std::map<std::string, TrcMemAccessorFile *>::iterator it = s_FileAccessorMap.find(p_accessor->getFilePath());
+            if(it != s_FileAccessorMap.end())
+            {
+                s_FileAccessorMap.erase(it);
+            }
+            delete p_accessor;
         }
-        delete p_accessor;
     }
 }
 

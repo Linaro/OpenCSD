@@ -33,6 +33,7 @@
  */ 
 
 #include "mem_acc/trc_mem_acc_mapper.h"
+#include "mem_acc/trc_mem_acc_file.h"
 
 /************************************************************************************/
 /* mappers base class */
@@ -71,6 +72,30 @@ rctdl_err_t TrcMemAccMapper::ReadTargetMemory(const rctdl_vaddr_t address, const
     else
         *num_bytes = 0;
     return RCTDL_OK;
+}
+
+void TrcMemAccMapper::DestroyAllAccessors()
+{
+    TrcMemAccessorBase *pAcc = 0;
+    pAcc = getFirstAccessor();
+    while(pAcc != 0)
+    {
+        switch(pAcc->getType())
+        {
+        case TrcMemAccessorBase::MEMACC_FILE:
+            TrcMemAccessorFile::destroyFileAccessor(dynamic_cast<TrcMemAccessorFile *>(pAcc));
+            break;
+
+        case TrcMemAccessorBase::MEMACC_BUFPTR:
+            delete pAcc;
+            break;
+
+        default:
+            break;
+
+        }
+    }
+    clearAccessorList();
 }
 
 /************************************************************************************/
@@ -129,5 +154,29 @@ bool TrcMemAccMapGlobalSpace::readFromCurrent(const rctdl_vaddr_t address, const
         readFromCurr = m_acc_curr->addrInRange(address);
     return readFromCurr;
 }
+
+
+TrcMemAccessorBase * TrcMemAccMapGlobalSpace::getFirstAccessor()
+{
+    m_acc_it = m_acc_global.begin();
+    return getNextAccessor();
+}
+
+TrcMemAccessorBase *TrcMemAccMapGlobalSpace::getNextAccessor()
+{
+    TrcMemAccessorBase *p_acc = 0;
+    if(m_acc_it != m_acc_global.end())
+    {
+        p_acc = *m_acc_it;
+        m_acc_it++;
+    }
+    return p_acc;
+}
+
+void TrcMemAccMapGlobalSpace::clearAccessorList()
+{
+    m_acc_global.clear();
+}
+
 
 /* End of File trc_mem_acc_mapper.cpp */
