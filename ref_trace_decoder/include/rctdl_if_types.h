@@ -104,6 +104,7 @@ typedef enum _rctdl_err_t {
     RCTDL_ERR_BAD_PACKET_SEQ,        /**< Bad packet sequence */
     RCTDL_ERR_INVALID_PCKT_HDR,      /**< Invalid packet header */
     /* packet decoder errors */
+    RCTDL_ERR_UNSUPPORTED_ISA,          /**< ISA not supported in decoder */
     /* decode tree errors */
     RCTDL_ERR_DCDT_NO_FORMATTER,         /**< No formatter in use - operation not valid. */
     /* target memory access errors */
@@ -301,13 +302,11 @@ typedef uint64_t rctdl_vaddr_t;
  */
 typedef enum _rctdl_isa
 {    
-    rctdl_isa_arm,          /**< V7 ARM */  
-    rctdl_isa_t16,          /**< Thumb 16 */  
-    rctdl_isa_tee,          /**< Thumb EE */  
-    rctdl_isa_jazelle,      /**< Jazelle */  
-    rctdl_isa_aarch32,      /**< V8 AArch32 */
-    rctdl_isa_aarch32t,     /**< V8 AArch32 Thumb */
+    rctdl_isa_arm,          /**< V7 ARM 32, V8 AArch32 */  
+    rctdl_isa_thumb2,       /**< Thumb2 -> 16/32 bit instructions */  
     rctdl_isa_aarch64,      /**< V8 AArch64 */
+    rctdl_isa_tee,          /**< Thumb EE - unsupported */  
+    rctdl_isa_jazelle,      /**< Jazelle - unsupported */  
     rctdl_isa_unknown       /**< ISA not yet known */
 } rctdl_isa;
 
@@ -330,13 +329,12 @@ typedef enum _rctdl_ex_level
 } rctdl_ex_level;
 
 
-/** instruction type - TBC */
+/** instruction types */
 typedef enum _rctdl_instr_type {
     RCTDL_INSTR_OTHER,          /**< Other instruction - not significant for waypoints. */
-    RCTDL_INSTR_BR,             /**< Branch instruction */
+    RCTDL_INSTR_BR,             /**< Immediate Branch instruction */
     RCTDL_INSTR_BR_INDIRECT,    /**< Indirect Branch instruction */
-    RCTDL_INSTR_DSB_ISB,        /**< DSB or ISB instruction */
-    RCTDL_INSTR_ERET            /**< Exception return */
+    RCTDL_INSTR_BARRIER,        /**< Barrier - DSB or ISB instruction */
 } rctdl_instr_type;
 
 /** Instruction decode request structure. 
@@ -351,13 +349,14 @@ typedef struct _rctdl_instr_info {
     rctdl_core_profile_t profile;   /**< Input: Core profile. */
     rctdl_isa isa;                  /**< Input: Current ISA. */
     rctdl_vaddr_t instr_addr;       /**< Input: Instruction address. */
-    uint32_t opcode;                /**< Input: Opcode at address. 16 bit opcodes will use LS 16bits of parameter. */
+    uint32_t opcode;                /**< Input: Opcode at address. 16 bit opcodes will use MS 16bits of parameter. */
 
     /* instruction decode info */
     rctdl_instr_type type;          /**< Decoder: Current instruction type. */
-    rctdl_vaddr_t next_addr;        /**< Decoder: Instruction address for next instruction. */
+    rctdl_vaddr_t next_addr;        /**< Decoder: Instruction address for next instruction. (if calculable) */
     rctdl_isa next_isa;             /**< Decoder: ISA for next intruction. */
-
+    int is_conditional;             /**< Decoder : set to 1 if this instruction is conditional */
+    int thumb_it_conditions;        /**< Decoder : return number of following instructions set with conditions by this Thumb IT instruction */
 } rctdl_instr_info;
 
 
