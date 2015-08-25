@@ -119,6 +119,41 @@ public:
     /* trace idr */
     const uint8_t getTraceID() const;
 
+    /* config R */
+    const bool enabledDVTrace() const;
+    const bool enabledDATrace() const; 
+    const bool enabledDataTrace() const;
+
+    typedef enum {
+        LSP0_NONE,
+        LSP0_L,
+        LSP0_S,
+        LSP0_LS
+    } LSP0_t;
+
+    const bool enabledLSP0Trace() const;
+    const LSP0_t LSP0Type() const;
+    
+    const bool enabledBrBroad() const;
+    const bool enabledCCI() const;
+    const bool enabledCID() const;
+    const bool enabledVMID() const;
+
+    typedef enum {
+        COND_TR_DIS,
+        COND_TR_LD,
+        COND_TR_ST,
+        COND_TR_LDST,
+        COND_TR_ALL
+    } CondITrace_t;
+
+    const CondITrace_t enabledCondITrace();
+
+    const bool enabledTS() const;
+    const bool enabledRetStack() const;
+
+    const bool enabledQE() const;
+
 private:
     void PrivateInit();
     void CalcQSupp();   
@@ -130,6 +165,9 @@ private:
 
     bool m_VMIDSzCalc;
     uint32_t m_VMIDSize;
+
+    bool m_condTraceCalc;
+    CondITrace_t m_CondTrace;
 };
 
 /* idr 0 */
@@ -309,6 +347,85 @@ inline const uint32_t EtmV4Config::CondKeyMaxIncr() const
 inline const uint8_t EtmV4Config::getTraceID() const
 {
     return (uint8_t)(reg_traceidr & 0x7F);
+}
+
+    /* config R */
+inline const bool EtmV4Config::enabledDVTrace() const
+{
+    return hasDataTrace() && enabledLSP0Trace() && ((reg_configr & (0x1 << 17)) != 0);
+}
+
+inline const bool EtmV4Config::enabledDATrace() const
+{
+    return hasDataTrace() && enabledLSP0Trace() && ((reg_configr & (0x1 << 16)) != 0);
+}
+
+inline const bool EtmV4Config::enabledDataTrace() const
+{
+    return enabledDATrace() || enabledDVTrace();
+}
+
+inline const bool EtmV4Config::enabledLSP0Trace() const
+{
+    return ((reg_configr & 0x6) != 0);
+}
+
+inline const EtmV4Config::LSP0_t EtmV4Config::LSP0Type() const
+{
+    return (LSP0_t)((reg_configr & 0x6) >> 1);
+}
+    
+inline const bool EtmV4Config::enabledBrBroad() const
+{
+    return ((reg_configr & (0x1 << 3)) != 0);
+}
+
+inline const bool EtmV4Config::enabledCCI() const
+{
+    return ((reg_configr & (0x1 << 4)) != 0);
+}
+
+inline const bool EtmV4Config::enabledCID() const
+{
+    return ((reg_configr & (0x1 << 6)) != 0);
+}
+
+inline const bool EtmV4Config::enabledVMID() const
+{
+    return ((reg_configr & (0x1 << 7)) != 0);
+}
+
+inline const EtmV4Config::CondITrace_t EtmV4Config::enabledCondITrace()
+{
+    if(!m_condTraceCalc)
+    {
+        switch((reg_configr >> 8) & 0x7)
+        {
+        default:
+        case 0: m_CondTrace = COND_TR_DIS; break;
+        case 1: m_CondTrace = COND_TR_LD; break;
+        case 2: m_CondTrace = COND_TR_ST; break;
+        case 3: m_CondTrace = COND_TR_LDST; break;
+        case 7: m_CondTrace = COND_TR_ALL; break;
+        }
+        m_condTraceCalc = true;
+    }
+    return m_CondTrace;
+}
+
+inline const bool EtmV4Config::enabledTS() const
+{
+    return ((reg_configr & (0x1 << 11)) != 0);
+}
+
+inline const bool EtmV4Config::enabledRetStack() const
+{
+    return ((reg_configr & (0x1 << 12)) != 0);
+}
+
+inline const bool EtmV4Config::enabledQE() const
+{
+       return ((reg_configr & (0x3 << 13)) != 0);
 }
 
 /** @}*/

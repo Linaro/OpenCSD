@@ -81,7 +81,8 @@ void EtmV4Config::PrivateInit()
     m_QSuppType = Q_NONE;
     m_VMIDSzCalc = false;
     m_VMIDSize = 0;
-
+    m_condTraceCalc = false;
+    m_CondTrace = COND_TR_DIS;
 }
 
 void EtmV4Config::CalcQSupp()

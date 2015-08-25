@@ -357,7 +357,9 @@ typedef struct _rctdl_instr_info {
     rctdl_vaddr_t next_addr;        /**< Decoder: Instruction address for next instruction. (if calculable) */
     rctdl_isa next_isa;             /**< Decoder: ISA for next intruction. */
     int is_conditional;             /**< Decoder : set to 1 if this instruction is conditional */
+    int is_link;                    /**< Decoder : is a branch with link instruction */
     int thumb_it_conditions;        /**< Decoder : return number of following instructions set with conditions by this Thumb IT instruction */
+    int thumb_size;                 /**< Decoder : return size of the thumb instruction */
 } rctdl_instr_info;
 
 

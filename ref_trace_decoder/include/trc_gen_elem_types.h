@@ -46,18 +46,21 @@
 /**  Enum for generic element types : TBC */
 typedef enum _rctdl_gen_trc_elem_t 
 {   
+    RCTDL_GEN_TRC_ELEM_NO_SYNC,         /*!< Waiting for sync - either at start of decode, or after overflow / bad packet */
     RCTDL_GEN_TRC_ELEM_TRACE_ON,        /*!< Start of trace - beginning of elements or restart after discontinuity. */
     RCTDL_GEN_TRC_ELEM_EO_TRACE,        /*!< end of the available trace in the buffer.  */
     RCTDL_GEN_TRC_ELEM_PE_STATUS,       /*!< PE status update / change (arch, ctxtid, vmid etc).  */
     RCTDL_GEN_TRC_ELEM_INSTR_RANGE,     /*!< traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key  */
     RCTDL_GEN_TRC_ELEM_ADDR_NACC,       /*!< tracing in inaccessible memory area  */ 
-    RCTDL_GEN_TRC_ELEM_DATA_VAL,        /*!< Data value - associated with prev instr (if same stream) + daddr, or data assoc key if supplied.  */
-    RCTDL_GEN_TRC_ELEM_DATA_ADDR,       /*!< Data address - associated with prev instr (if same stream), or data assoc key if supplied.  */
     RCTDL_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp  */
     RCTDL_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count  */
-    RCTDL_GEN_TRC_ELEM_EVENT,           /*!< Event - trace on, reti, trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */
+    RCTDL_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */
+#if 0
+    RCTDL_GEN_TRC_ELEM_DATA_VAL,        /*!< Data value - associated with prev instr (if same stream) + daddr, or data assoc key if supplied.  */
+    RCTDL_GEN_TRC_ELEM_DATA_ADDR,       /*!< Data address - associated with prev instr (if same stream), or data assoc key if supplied.  */
     RCTDL_GEN_TRC_ELEM_SWCHAN_DATA,     /*!< data out on a SW channel (master, ID, data, type etc).  */
     RCTDL_GEN_TRC_ELEM_BUS_TRANSFER,    /*!< Bus transfer event from a bus trace module (HTM)  */
+#endif
     /* TBC - data / instruction stream sync flags. */
     
 } rctdl_gen_trc_elem_t;

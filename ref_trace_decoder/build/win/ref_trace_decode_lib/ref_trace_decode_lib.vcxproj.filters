@@ -201,6 +201,9 @@
     <ClInclude Include="..\..\..\include\i_dec\trc_i_decode.h">
       <Filter>Header Files\i_dec</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_decode_etmv4i.h">
+      <Filter>Header Files\etmv4</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -273,6 +276,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\i_dec\trc_i_decode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_decode_etmv4i.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

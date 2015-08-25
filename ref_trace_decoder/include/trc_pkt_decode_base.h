@@ -149,13 +149,13 @@ public:
     
 
     /* protocol configuration */
-    rctdl_err_t setProtocolConfig(const Pc *config); 
+    rctdl_err_t setProtocolConfig(Pc *config); 
     const Pc *  getProtocolConfig() const { return  m_config; };
     
 protected:
 
     /* the protocol configuration */
-    const Pc *          m_config;
+    Pc *          m_config;
     /* the current input packet */
     const P *           m_curr_packet_in;
     

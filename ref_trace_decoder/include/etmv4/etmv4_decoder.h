@@ -41,6 +41,7 @@
 #include "trc_pkt_elem_etmv4d.h"
 #include "trc_pkt_proc_etmv4.h"
 #include "trc_pkt_types_etmv4.h"
+#include "trc_pkt_decode_etmv4i.h"
 
 #endif // ARM_ETMV4_DECODER_H_INCLUDED
 
