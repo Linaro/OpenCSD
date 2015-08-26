@@ -346,8 +346,7 @@ typedef enum _rctdl_instr_type {
  */
 typedef struct _rctdl_instr_info {
     /* input information */
-    rctdl_arch_version_t arch;      /**< Input: Core architecture. */
-    rctdl_core_profile_t profile;   /**< Input: Core profile. */
+    rctdl_arch_profile_t pe_type;   /**< input: Core Arch and profile */
     rctdl_isa isa;                  /**< Input: Current ISA. */
     rctdl_vaddr_t instr_addr;       /**< Input: Instruction address. */
     uint32_t opcode;                /**< Input: Opcode at address. 16 bit opcodes will use MS 16bits of parameter. */
@@ -362,6 +361,19 @@ typedef struct _rctdl_instr_info {
     int thumb_size;                 /**< Decoder : return size of the thumb instruction */
 } rctdl_instr_info;
 
+
+typedef struct _rctdl_pe_context {
+    rctdl_isa       instruction_set;    /**< Instruction set */
+    rctdl_sec_level security_level;     /**< security state */
+    rctdl_ex_level  exception_level;    /**< exception level */
+    uint32_t        context_id;         /**< context ID */
+    uint32_t        vmid;               /**< VMID */
+    struct {
+        uint32_t bits64:1;              /**< 1 if 64 bit operation */
+        uint32_t ctxt_id_valid:1;       /**< 1 if context ID value valid */
+        uint32_t vmid_valud:1;          /**< 1 if VMID value is valid */
+    };
+} rctdl_pe_context;
 
 /** @}*/
 

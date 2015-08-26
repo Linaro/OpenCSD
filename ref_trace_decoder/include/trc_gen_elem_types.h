@@ -43,13 +43,13 @@
 
 #include "rctdl_if_types.h"
 
-/**  Enum for generic element types : TBC */
+/**  Enum for generic element types */
 typedef enum _rctdl_gen_trc_elem_t 
 {   
     RCTDL_GEN_TRC_ELEM_NO_SYNC,         /*!< Waiting for sync - either at start of decode, or after overflow / bad packet */
     RCTDL_GEN_TRC_ELEM_TRACE_ON,        /*!< Start of trace - beginning of elements or restart after discontinuity. */
     RCTDL_GEN_TRC_ELEM_EO_TRACE,        /*!< end of the available trace in the buffer.  */
-    RCTDL_GEN_TRC_ELEM_PE_STATUS,       /*!< PE status update / change (arch, ctxtid, vmid etc).  */
+    RCTDL_GEN_TRC_ELEM_PE_CONTEXT,      /*!< PE status update / change (arch, ctxtid, vmid etc).  */
     RCTDL_GEN_TRC_ELEM_INSTR_RANGE,     /*!< traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key  */
     RCTDL_GEN_TRC_ELEM_ADDR_NACC,       /*!< tracing in inaccessible memory area  */ 
     RCTDL_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp  */
@@ -61,14 +61,19 @@ typedef enum _rctdl_gen_trc_elem_t
     RCTDL_GEN_TRC_ELEM_SWCHAN_DATA,     /*!< data out on a SW channel (master, ID, data, type etc).  */
     RCTDL_GEN_TRC_ELEM_BUS_TRANSFER,    /*!< Bus transfer event from a bus trace module (HTM)  */
 #endif
-    /* TBC - data / instruction stream sync flags. */
     
 } rctdl_gen_trc_elem_t;
 
 
 typedef struct _rctdl_generic_trace_elem {
-    rctdl_gen_trc_elem_t elem_type;  
-    /* TBD : expand for trace element data. */
+    rctdl_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
+    rctdl_isa           isa;          /**< instruction set for executed instructions */
+    rctdl_vaddr_t       st_addr;      /**< start address for instruction execution range / inaccessible code address / data address */
+    rctdl_vaddr_t       en_addr;      /**< end address (inclusive) for instruction execution range. */
+    rctdl_pe_context    context;      /**< PE Context */
+    uint64_t            timestamp;    /**< timestamp value for TS element type */
+    uint32_t            cycle_count;  /**< cycle count for cycle count element (if none 0 with TS, cycle count for this element also). */
+    
 } rctdl_generic_trace_elem;
 
 /** @}*/

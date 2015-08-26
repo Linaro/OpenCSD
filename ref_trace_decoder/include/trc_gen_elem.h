@@ -42,7 +42,7 @@
 
 /*!
  * @class RctdlTraceElement
- * @brief Base class for all trace elements output.
+ * @brief Generic trace element class
  * 
  */
 class RctdlTraceElement : public trcPrintableElem, public rctdl_generic_trace_elem
@@ -62,20 +62,6 @@ inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)
 
 
 
-// End of trace, not much more to be said - perhaps add in information on incomplete packets here?.
-class RctdlTE_EOT : public RctdlTraceElement
-{
-public:
-    RctdlTE_EOT() : RctdlTraceElement(RCTDL_GEN_TRC_ELEM_EO_TRACE) {};
-    virtual ~RctdlTE_EOT() {};    
-
-    virtual void toString(std::string &outStr) const;
-};
-
-inline void RctdlTE_EOT::toString(std::string &outStr) const
-{
-    outStr = "End Of Trace";
-}
 
 /** @}*/
 

@@ -80,6 +80,7 @@ protected:
     virtual rctdl_err_t onProtocolConfig() = 0;
     virtual const uint8_t getCoreSightTraceID() = 0;
 
+    const bool checkInit();
 
     /* data output */
     rctdl_datapath_resp_t outputTraceElement(const RctdlTraceElement &elem);
@@ -96,40 +97,50 @@ protected:
 
     rctdl_trc_index_t   m_index_curr_pkt;
 
+    bool m_decode_init_ok;  //!< set true if all attachments in place for decode. (remove checks in main throughput paths)
+    bool m_config_init_ok;  //!< set true if config set.
+
 };
 
 inline TrcPktDecodeI::TrcPktDecodeI(const char *component_name) : 
-    TraceComponent(component_name)
+    TraceComponent(component_name),
+    m_decode_init_ok(false),
+    m_config_init_ok(false)
 {
 }
 
 inline TrcPktDecodeI::TrcPktDecodeI(const char *component_name, int instIDNum) :
-    TraceComponent(component_name, instIDNum)
+    TraceComponent(component_name, instIDNum),
+    m_decode_init_ok(false),
+    m_config_init_ok(false)
 {
+}
+
+inline const bool TrcPktDecodeI::checkInit()
+{
+    if(!m_decode_init_ok)
+    {
+        m_decode_init_ok =  m_config_init_ok &&
+                            m_trace_elem_out.hasAttachedAndEnabled() &&
+                            m_mem_access.hasAttachedAndEnabled() &&
+                            m_instr_decode.hasAttachedAndEnabled();
+    }
+    return m_decode_init_ok;
 }
 
 inline rctdl_datapath_resp_t TrcPktDecodeI::outputTraceElement(const RctdlTraceElement &elem)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    if(getTraceElemOutAttachPt()->hasAttachedAndEnabled())
-        resp = getTraceElemOutAttachPt()->first()->TraceElemIn(m_index_curr_pkt,getCoreSightTraceID(), elem);
-    return resp;
+    return m_trace_elem_out.first()->TraceElemIn(m_index_curr_pkt,getCoreSightTraceID(), elem);
 }
 
 inline rctdl_err_t TrcPktDecodeI::instrDecode(rctdl_instr_info *instr_info)
 {
-    rctdl_err_t err = RCTDL_OK; //TBD  : need proper error here
-    if(getInstrDecodeAttachPt()->hasAttachedAndEnabled())
-        err = getInstrDecodeAttachPt()->first()->DecodeInstruction(instr_info);
-    return err;
+    return m_instr_decode.first()->DecodeInstruction(instr_info);
 }
 
 inline rctdl_err_t TrcPktDecodeI::accessMemory(const rctdl_vaddr_t address, uint32_t *num_bytes, uint8_t *p_buffer)
 {
-    rctdl_err_t err = RCTDL_OK;
-    if(getMemoryAccessAttachPt()->hasAttachedAndEnabled())
-        err = getMemoryAccessAttachPt()->first()->ReadTargetMemory(address,getCoreSightTraceID(),num_bytes,p_buffer);
-    return err;
+    return m_mem_access.first()->ReadTargetMemory(address,getCoreSightTraceID(),num_bytes,p_buffer);
 }
 
 
@@ -157,7 +168,7 @@ protected:
     /* the protocol configuration */
     Pc *          m_config;
     /* the current input packet */
-    const P *           m_curr_packet_in;
+    const P *     m_curr_packet_in;
     
 };
 
@@ -179,6 +190,12 @@ template <class P, class Pc> rctdl_datapath_resp_t TrcPktDecodeBase<P, Pc>::Pack
                                                 const P *p_packet_in)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    if(!checkInit())
+    {
+        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_NOT_INIT));
+        return RCTDL_RESP_FATAL_NOT_INIT;
+    }
+
     switch(op)
     {
     case RCTDL_OP_DATA:
@@ -223,6 +240,8 @@ template <class P, class Pc>  rctdl_err_t TrcPktDecodeBase<P, Pc>::setProtocolCo
     {
         m_config = config;
         err = onProtocolConfig();
+        if(err == RCTDL_OK)
+            m_config_init_ok = true;
     }
     return err;
 }

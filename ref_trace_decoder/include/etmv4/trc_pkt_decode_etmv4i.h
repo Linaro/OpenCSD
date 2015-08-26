@@ -61,6 +61,8 @@ protected:
     void initDecoder();      // initial state on creation (zeros all config)
     void resetDecoder();     // reset state to start of decode. (moves state, retains config)
 
+    rctdl_err_t findCodeWaypoint();
+
 private:
 //** intra packet state (see ETMv4 spec 6.2.1);
 
@@ -70,7 +72,7 @@ private:
     // address values
     typedef struct {
         uint64_t address;   // address
-        uint8_t IS;         // instruction set.
+        uint8_t IS;         // instruction set bits.
     } address_regs_t;
     
     address_regs_t m_address_regs[3];   // most recently broadcast address packets.
@@ -113,7 +115,7 @@ private:
 
     uint8_t m_CSID;
     
-
+    rctdl_instr_info m_instr_info;  //!< instruction info for code follower.
 };
 
 #endif // ARM_TRC_PKT_DECODE_ETMV4I_H_INCLUDED
