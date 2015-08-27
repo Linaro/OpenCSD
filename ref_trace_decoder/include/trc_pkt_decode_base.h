@@ -86,7 +86,7 @@ protected:
     rctdl_datapath_resp_t outputTraceElement(const RctdlTraceElement &elem);
 
     /* target access */
-    rctdl_err_t accessMemory(const rctdl_vaddr_t address, uint32_t *num_bytes, uint8_t *p_buffer);
+    rctdl_err_t accessMemory(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer);
 
     /* instruction decode */
     rctdl_err_t instrDecode(rctdl_instr_info *instr_info);
@@ -138,9 +138,9 @@ inline rctdl_err_t TrcPktDecodeI::instrDecode(rctdl_instr_info *instr_info)
     return m_instr_decode.first()->DecodeInstruction(instr_info);
 }
 
-inline rctdl_err_t TrcPktDecodeI::accessMemory(const rctdl_vaddr_t address, uint32_t *num_bytes, uint8_t *p_buffer)
+inline rctdl_err_t TrcPktDecodeI::accessMemory(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer)
 {
-    return m_mem_access.first()->ReadTargetMemory(address,getCoreSightTraceID(),num_bytes,p_buffer);
+    return m_mem_access.first()->ReadTargetMemory(address,getCoreSightTraceID(),mem_space, num_bytes,p_buffer);
 }
 
 
@@ -233,7 +233,7 @@ template <class P, class Pc> rctdl_datapath_resp_t TrcPktDecodeBase<P, Pc>::Pack
 }
 
     /* protocol configuration */
-template <class P, class Pc>  rctdl_err_t TrcPktDecodeBase<P, Pc>::setProtocolConfig(const Pc *config)
+template <class P, class Pc>  rctdl_err_t TrcPktDecodeBase<P, Pc>::setProtocolConfig(Pc *config)
 {
     rctdl_err_t err = RCTDL_ERR_INVALID_PARAM_VAL;
     if(config != 0)

@@ -377,6 +377,22 @@ typedef struct _rctdl_pe_context {
     };
 } rctdl_pe_context;
 
+
+/** @}*/
+
+/** @name Opcode Memory Access Memory Spaces.
+@{*/
+
+typedef enum _rctdl_mem_space_acc_t {
+    RCTDL_MEM_SPACE_EL1S = 0x1, /**<  S EL1/0 */
+    RCTDL_MEM_SPACE_EL1N = 0x2, /**< NS EL1/0 */
+    RCTDL_MEM_SPACE_EL2 =  0x4, /**< NS EL2   */
+    RCTDL_MEM_SPACE_EL3 =  0x8, /**<  S EL3   */
+    RCTDL_MEM_SPACE_S =    0x9, /**< Any  S   */
+    RCTDL_MEM_SPACE_N =    0x6, /**< Any NS   */
+    RCTDL_MEM_SPACE_ANY =  0xF, /**< Any sec level / EL - live system use current EL + sec state */
+} rctdl_mem_space_acc_t;
+
 /** @}*/
 
 /** @name Packet Processor Operation Control Flags

@@ -48,16 +48,21 @@ TrcMemAccessorFile::~TrcMemAccessorFile()
         m_mem_file.close();
 }
 
-bool TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr)
+bool TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset)
 {
     bool init = false;
 
     m_mem_file.open(pathToFile.c_str(), std::ifstream::binary | std::ifstream::ate);
     if(m_mem_file.is_open())
     {
-        rctdl_vaddr_t size = (rctdl_vaddr_t)m_mem_file.tellg();
+        m_file_size = (rctdl_vaddr_t)m_mem_file.tellg();
         m_mem_file.seekg(0, m_mem_file.beg);
-        setRange(startAddr,startAddr+size-1);
+        if(offset == 0)
+            setRange(startAddr,startAddr+m_file_size-1);
+        else
+        {
+            
+        }
         m_file_path = pathToFile;
         init = true;
     }
@@ -71,7 +76,7 @@ bool TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctdl_vaddr
 std::map<std::string, TrcMemAccessorFile *> TrcMemAccessorFile::s_FileAccessorMap;
 
 // return existing or create new accessor
-TrcMemAccessorFile *TrcMemAccessorFile::createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr)
+TrcMemAccessorFile *TrcMemAccessorFile::createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset)
 {
     TrcMemAccessorFile *p_acc = 0;
     std::map<std::string, TrcMemAccessorFile *>::iterator it = s_FileAccessorMap.find(pathToFile);
@@ -85,7 +90,7 @@ TrcMemAccessorFile *TrcMemAccessorFile::createFileAccessor(const std::string &pa
         p_acc = new (std::nothrow) TrcMemAccessorFile();
         if(p_acc != 0)
         {
-            if(p_acc->initAccessor(pathToFile,startAddr))
+            if(p_acc->initAccessor(pathToFile,startAddr, offset))
             {
                 p_acc->IncRefCount();
                 s_FileAccessorMap.insert(std::pair<std::string, TrcMemAccessorFile *>(pathToFile,p_acc));

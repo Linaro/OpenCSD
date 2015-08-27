@@ -67,9 +67,7 @@ public:
     
     /** default desctructor */
     virtual ~TrcMemAccessorBase() {};
-
-
-    
+       
     /*!
      * Set the inclusive address range of this accessor.
      *
@@ -78,7 +76,6 @@ public:
      */
     void setRange(rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr);
 
-
     /*!
      * test if an address is in the inclusive range for this accessor
      *
@@ -86,7 +83,7 @@ public:
      *
      * @return const bool  : true if the address is in range.
      */
-    const bool addrInRange(const rctdl_vaddr_t s_address) const;
+    virtual const bool addrInRange(const rctdl_vaddr_t s_address) const;
 
     /*!
      * Test number of bytes available from the start address, up to the number of requested bytes.
@@ -98,7 +95,7 @@ public:
      *
      * @return const uint32_t  : Bytes available, up to reqBytes. 0 is s_address not in range.
      */
-    const uint32_t bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const;
+    virtual const uint32_t bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const;
     
     /*!
      * test is supplied range accessor overlaps this range.
@@ -107,13 +104,7 @@ public:
      *
      * @return bool  : true if overlap, false if not.
      */
-    const bool overLapRange(const TrcMemAccessorBase *p_test_acc) const;
-
-    /** return range start address */
-    const rctdl_vaddr_t startAddress() const { return m_startAddress; };
-    /** return range end address */
-    const rctdl_vaddr_t endAddress() const { return m_endAddress; };
-
+    virtual const bool overLapRange(const TrcMemAccessorBase *p_test_acc) const;
 
     /*!
      * Read bytes from via the accessor from the memory range. 
@@ -128,23 +119,32 @@ public:
 
     const enum MemAccTypes getType() const { return m_type; };
 
+    /* handle memory spaces */
+    void setMemSpace(rctdl_mem_space_acc_t memSpace) { m_mem_space = memSpace; };
+    const rctdl_mem_space_acc_t getMemSpace() const { return m_mem_space; };
+    const bool inMemSpace(const rctdl_mem_space_acc_t mem_space) const { return (bool)((uint8_t)m_mem_space & (uint8_t)mem_space); }; 
+    
+
 protected:
     rctdl_vaddr_t m_startAddress;   /**< Start address */
     rctdl_vaddr_t m_endAddress;     /**< End address */
     const MemAccTypes m_type;
+    rctdl_mem_space_acc_t m_mem_space;
 };
 
 inline TrcMemAccessorBase::TrcMemAccessorBase(MemAccTypes accType, rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr) :
      m_startAddress(startAddr),
      m_endAddress(endAddr),
-     m_type(accType)
+     m_type(accType),
+     m_mem_space(RCTDL_MEM_SPACE_ANY)
 {
 }
 
 inline TrcMemAccessorBase::TrcMemAccessorBase(MemAccTypes accType) :
      m_startAddress(0),
      m_endAddress(0),
-     m_type(accType)
+     m_type(accType),
+     m_mem_space(RCTDL_MEM_SPACE_ANY)
 {
 }
 
@@ -174,13 +174,12 @@ inline const uint32_t TrcMemAccessorBase::bytesInRange(const rctdl_vaddr_t s_add
 
 inline const bool TrcMemAccessorBase::overLapRange(const TrcMemAccessorBase *p_test_acc) const
 {
-    if( addrInRange(p_test_acc->startAddress()) || 
-        addrInRange(p_test_acc->endAddress())
+    if( addrInRange(p_test_acc->m_startAddress) || 
+        addrInRange(p_test_acc->m_endAddress)
         )
         return true;
     return false;
 }
-
 
 #endif // ARM_TRC_MEM_ACC_BASE_H_INCLUDED
 

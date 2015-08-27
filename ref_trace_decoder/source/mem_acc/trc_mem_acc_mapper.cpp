@@ -99,7 +99,7 @@ void TrcMemAccMapper::DestroyAllAccessors()
 }
 
 /************************************************************************************/
-/* mappers global address space class */
+/* mappers global address space class - no differentiation in core trace IDs */
 /************************************************************************************/
 TrcMemAccMapGlobalSpace::TrcMemAccMapGlobalSpace() : TrcMemAccMapper()
 {
@@ -116,7 +116,10 @@ rctdl_err_t TrcMemAccMapGlobalSpace::AddAccessor(TrcMemAccessorBase *p_accessor,
     std::vector<TrcMemAccessorBase *>::const_iterator it =  m_acc_global.begin();
     while((it != m_acc_global.end()) && !bOverLap)
     {
-        if((*it)->overLapRange(p_accessor))
+        // if overlap and memory space match
+        if( ((*it)->overLapRange(p_accessor)) &&
+            ((*it)->inMemSpace(p_accessor->getMemSpace()))
+            )
         {
             bOverLap = true;
             err = RCTDL_ERR_MEM_ACC_OVERLAP;

@@ -38,8 +38,24 @@
 #include <map>
 #include <string>
 #include <fstream>
+#include <list>
 
 #include "mem_acc/trc_mem_acc_base.h"
+
+class FileRegionMemAccessor : public TrcMemAccessorBase
+{
+public:
+    FileRegionMemAccessor() : TrcMemAccessorBase(MEMACC_FILE) {};
+    virtual ~FileRegionMemAccessor() {};
+
+    void setOffset(const size_t offset) { m_file_offset = offset; };
+    const size_t getOffset() const { return m_file_offset; };
+
+    bool operator<(const FileRegionMemAccessor& rhs) { return this->m_startAddress < rhs.m_startAddress; };
+
+private:
+    size_t m_file_offset;
+};
 
 /*!
  * @class TrcMemAccessorFile   
@@ -78,12 +94,60 @@ protected:
      *
      * @return bool  : true if set up successfully, false if file could not be opened.
      */
-    bool initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr);
+    bool initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset);
 
     /** get the file path */
     const std::string &getFilePath() const { return m_file_path; };
 
+    /** get an offset region if extant for the address */
+    FileRegionMemAccessor *getRegionForAddress(const rctdl_vaddr_t startAddr);
+
+    FileRegionMemAccessor *getRegionForAddress(const rctdl_vaddr_t startAddr);
+
 public:
+
+    /*!
+     * File may contain multiple none-overlapping ranges in a single file.
+     *
+     * @param startAddr : Address for beginning of byte data.
+     * @param size   : size of range in bytes.
+     * @param offset : offset into file for that data.
+     *
+     * @return bool  : true if set successfully.
+     */
+    bool AddOffsetRange(const rctdl_vaddr_t startAddr, const size_t size, const size_t offset);
+
+    /*!
+     * Override in case we have multiple regions in the file.
+     *
+     * @param s_address : Address to test.
+     *
+     * @return const bool  : true if the address is in range.
+     */
+    virtual const bool addrInRange(const rctdl_vaddr_t s_address) const;
+
+    /*!
+     * Test number of bytes available from the start address, up to the number of requested bytes.
+     * Tests if all the requested bytes are available from the supplied start address.
+     * Returns the number available up to full requested amount.
+     *
+     * @param s_address : Start address within the range.
+     * @param reqBytes : Number of bytes needed from the start address.
+     *
+     * @return const uint32_t  : Bytes available, up to reqBytes. 0 is s_address not in range.
+     */
+    virtual const uint32_t bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const;
+    
+    /*!
+     * test is supplied range accessor overlaps this range.
+     *
+     * @param *p_test_acc : Accessor to test for overlap.
+     *
+     * @return bool  : true if overlap, false if not.
+     */
+    virtual const bool overLapRange(const TrcMemAccessorBase *p_test_acc) const;
+
+
 
     /*!
      * Create a file accessor based on the supplied path and address.
@@ -99,7 +163,7 @@ public:
      *
      * @return TrcMemAccessorFile * : pointer to accessor if successful, 0 if it could not be created.
      */
-    static TrcMemAccessorFile *createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr);
+    static TrcMemAccessorFile *createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset);
 
     /*!
      * Destroy supplied accessor. 
@@ -124,8 +188,10 @@ private:
 
 private:
     std::ifstream m_mem_file;   /**< input binary file stream */
+    rctdl_vaddr_t m_file_size;
     int m_ref_count;            /**< accessor reference count */
     std::string m_file_path;    /**< path to input file */
+    std::list<FileRegionMemAccessor *> m_access_regions;    /**< additional regions in the file at non-zero offsets */
 };
 
 #endif // ARM_TRC_MEM_ACC_FILE_H_INCLUDED

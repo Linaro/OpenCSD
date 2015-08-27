@@ -72,12 +72,17 @@ public:
      *
      * @param address : Address to access.
      * @param cs_trace_id : protocol source trace ID.
+     * @param mem_space : Memory space to access, (secure, non-secure, optionally with EL, or any).
      * @param num_bytes : [in] Number of bytes required. [out] Number of bytes actually read.
      * @param *p_buffer : Buffer to fill with the bytes.
      *
      * @return rctdl_err_t : RCTDL_OK on successful access (including memory not available)
      */
-    virtual rctdl_err_t ReadTargetMemory(const rctdl_vaddr_t address, const uint8_t cs_trace_id, uint32_t *num_bytes, uint8_t *p_buffer) = 0;
+    virtual rctdl_err_t ReadTargetMemory(   const rctdl_vaddr_t address, 
+                                            const uint8_t cs_trace_id, 
+                                            const rctdl_mem_space_acc_t mem_space, 
+                                            uint32_t *num_bytes, 
+                                            uint8_t *p_buffer) = 0;
 };
 
 
