@@ -335,7 +335,8 @@ typedef enum _rctdl_instr_type {
     RCTDL_INSTR_OTHER,          /**< Other instruction - not significant for waypoints. */
     RCTDL_INSTR_BR,             /**< Immediate Branch instruction */
     RCTDL_INSTR_BR_INDIRECT,    /**< Indirect Branch instruction */
-    RCTDL_INSTR_BARRIER,        /**< Barrier - DSB or ISB instruction */
+    RCTDL_INSTR_ISB,            /**< Barrier : ISB instruction */
+    RCTDL_INSTR_DSB_DMB         /**< Barrier : DSB or DMB instruction */
 } rctdl_instr_type;
 
 /** Instruction decode request structure. 
@@ -350,15 +351,16 @@ typedef struct _rctdl_instr_info {
     rctdl_isa isa;                  /**< Input: Current ISA. */
     rctdl_vaddr_t instr_addr;       /**< Input: Instruction address. */
     uint32_t opcode;                /**< Input: Opcode at address. 16 bit opcodes will use MS 16bits of parameter. */
+    uint8_t dsb_dmb_waypoints;      /**< Input: DMB and DSB are waypoints */
 
     /* instruction decode info */
     rctdl_instr_type type;          /**< Decoder: Current instruction type. */
     rctdl_vaddr_t next_addr;        /**< Decoder: Instruction address for next instruction. (if calculable) */
     rctdl_isa next_isa;             /**< Decoder: ISA for next intruction. */
-    int is_conditional;             /**< Decoder : set to 1 if this instruction is conditional */
-    int is_link;                    /**< Decoder : is a branch with link instruction */
-    int thumb_it_conditions;        /**< Decoder : return number of following instructions set with conditions by this Thumb IT instruction */
-    int thumb_size;                 /**< Decoder : return size of the thumb instruction */
+    uint8_t is_conditional;             /**< Decoder : set to 1 if this instruction is conditional */
+    uint8_t is_link;                    /**< Decoder : is a branch with link instruction */
+    uint8_t thumb_it_conditions;        /**< Decoder : return number of following instructions set with conditions by this Thumb IT instruction */
+    uint8_t thumb_size;                 /**< Decoder : return size of the thumb instruction */
 } rctdl_instr_info;
 
 

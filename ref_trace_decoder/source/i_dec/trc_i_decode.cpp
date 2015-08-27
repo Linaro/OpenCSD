@@ -66,6 +66,7 @@ rctdl_err_t TrcIDecode::DecodeInstruction(rctdl_instr_info *instr_info)
 rctdl_err_t TrcIDecode::DecodeA32(rctdl_instr_info *instr_info)
 {
     uint32_t branchAddr = 0;
+    arm_barrier_t barrier;
 
     instr_info->next_addr = instr_info->instr_addr + 4; // default address update
     instr_info->type =  RCTDL_INSTR_OTHER;  // default type
@@ -86,9 +87,20 @@ rctdl_err_t TrcIDecode::DecodeA32(rctdl_instr_info *instr_info)
             instr_info->next_isa = rctdl_isa_thumb2;
         instr_info->is_link = inst_ARM_is_branch_and_link(instr_info->opcode);
     }
-    else if(inst_ARM_barrier(instr_info->opcode) == ARM_BARRIER_ISB)
+    else if((barrier = inst_ARM_barrier(instr_info->opcode)) != ARM_BARRIER_NONE)
     {
-        instr_info->type = RCTDL_INSTR_BARRIER;
+        switch(barrier)
+        {
+        case ARM_BARRIER_ISB: 
+            instr_info->type = RCTDL_INSTR_ISB;             
+            break;
+
+        case ARM_BARRIER_DSB:
+        case ARM_BARRIER_DMB:
+            if(instr_info->dsb_dmb_waypoints)
+                instr_info->type = RCTDL_INSTR_DSB_DMB;             
+            break;
+        }
     }
 
     instr_info->is_conditional = inst_ARM_is_conditional(instr_info->opcode);
@@ -99,6 +111,7 @@ rctdl_err_t TrcIDecode::DecodeA32(rctdl_instr_info *instr_info)
 rctdl_err_t TrcIDecode::DecodeA64(rctdl_instr_info *instr_info)
 {
     uint64_t branchAddr = 0;
+    arm_barrier_t barrier;
 
     instr_info->next_addr = instr_info->instr_addr + 4; // default address update
     instr_info->type =  RCTDL_INSTR_OTHER;  // default type
@@ -117,9 +130,20 @@ rctdl_err_t TrcIDecode::DecodeA64(rctdl_instr_info *instr_info)
         instr_info->next_addr = (rctdl_vaddr_t)branchAddr;
         instr_info->is_link = inst_A64_is_branch_and_link(instr_info->opcode);
     }
-    else if(inst_A64_barrier(instr_info->opcode) == ARM_BARRIER_ISB)
+    else if((barrier = inst_A64_barrier(instr_info->opcode)) != ARM_BARRIER_NONE)
     {
-        instr_info->type = RCTDL_INSTR_BARRIER;
+        switch(barrier)
+        {
+        case ARM_BARRIER_ISB: 
+            instr_info->type = RCTDL_INSTR_ISB;             
+            break;
+
+        case ARM_BARRIER_DSB:
+        case ARM_BARRIER_DMB:
+            if(instr_info->dsb_dmb_waypoints)
+                instr_info->type = RCTDL_INSTR_DSB_DMB;             
+            break;
+        }
     }
 
     instr_info->is_conditional = inst_A64_is_conditional(instr_info->opcode);
@@ -130,6 +154,7 @@ rctdl_err_t TrcIDecode::DecodeA64(rctdl_instr_info *instr_info)
 rctdl_err_t TrcIDecode::DecodeT32(rctdl_instr_info *instr_info)
 {
     uint32_t branchAddr = 0;
+    arm_barrier_t barrier;
 
     instr_info->thumb_size = is_wide_thumb((uint16_t)(instr_info->opcode >> 16)) ? 4 : 2;
     instr_info->next_addr = instr_info->instr_addr + instr_info->thumb_size; // default address update
@@ -151,9 +176,20 @@ rctdl_err_t TrcIDecode::DecodeT32(rctdl_instr_info *instr_info)
             instr_info->next_isa = rctdl_isa_arm;
         instr_info->is_link = inst_Thumb_is_branch_and_link(instr_info->opcode);
     }
-    else if(inst_Thumb_barrier(instr_info->opcode) == ARM_BARRIER_ISB)
+    else if((barrier = inst_Thumb_barrier(instr_info->opcode)) != ARM_BARRIER_NONE)
     {
-        instr_info->type = RCTDL_INSTR_BARRIER;
+        switch(barrier)
+        {
+        case ARM_BARRIER_ISB: 
+            instr_info->type = RCTDL_INSTR_ISB;             
+            break;
+
+        case ARM_BARRIER_DSB:
+        case ARM_BARRIER_DMB:
+            if(instr_info->dsb_dmb_waypoints)
+                instr_info->type = RCTDL_INSTR_DSB_DMB;             
+            break;
+        }
     }
 
     instr_info->is_conditional = inst_Thumb_is_conditional(instr_info->opcode);
