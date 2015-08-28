@@ -44,8 +44,9 @@ BUILD_DIR=./$(PLAT_DIR)
 VPATH=	$(RCTDL_SOURCE) \
 		$(RCTDL_SOURCE)/etmv3 \
 		$(RCTDL_SOURCE)/etmv4 \
-		$(RCTDL_SOURCE)/ptm
-
+		$(RCTDL_SOURCE)/ptm \
+		$(RCTDL_SOURCE)/i_dec \
+		$(RCTDL_SOURCE)/mem_acc
 
 CPP_INCLUDES= \
 				-I$(RCTDL_INCLUDE) \
@@ -69,8 +70,13 @@ OBJECTS=$(BUILD_DIR)/rctdl_dcd_tree.o \
 		$(BUILD_DIR)/trc_pkt_proc_etmv4.o \
 		$(BUILD_DIR)/trc_pkt_proc_etmv4i_impl.o \
 		$(BUILD_DIR)/trc_pkt_proc_ptm.o \
-		$(BUILD_DIR)/trc_printable_elem.o
-
+		$(BUILD_DIR)/trc_printable_elem.o \
+		$(BUILD_DIR)/trc_pkt_decode_etmv4i.o \
+		$(BUILD_DIR)/trc_i_decode.o \
+		$(BUILD_DIR)/trc_idec_arminst.o \
+		$(BUILD_DIR)/trc_mem_acc_mapper.o \
+		$(BUILD_DIR)/trc_mem_acc_bufptr.o \
+		$(BUILD_DIR)/trc_mem_acc_file.o
 
 all: build_dir $(OBJECTS)
 	mkdir -p $(LIB_TARGET_DIR)
