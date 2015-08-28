@@ -53,6 +53,11 @@ public:
 
     bool operator<(const FileRegionMemAccessor& rhs) { return this->m_startAddress < rhs.m_startAddress; };
 
+    // not going to use these objects to read bytes - defer to the file class for that.
+    virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const uint32_t reqBytes, uint8_t *byteBuffer) { return 0; };
+
+    const rctdl_vaddr_t regionStartAddress() const { return m_startAddress; };
+
 private:
     size_t m_file_offset;
 };
@@ -94,15 +99,14 @@ protected:
      *
      * @return bool  : true if set up successfully, false if file could not be opened.
      */
-    bool initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset);
+    bool initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset, size_t size);
 
     /** get the file path */
     const std::string &getFilePath() const { return m_file_path; };
 
     /** get an offset region if extant for the address */
-    FileRegionMemAccessor *getRegionForAddress(const rctdl_vaddr_t startAddr);
+    FileRegionMemAccessor *getRegionForAddress(const rctdl_vaddr_t startAddr) const;
 
-    FileRegionMemAccessor *getRegionForAddress(const rctdl_vaddr_t startAddr);
 
 public:
 
@@ -163,7 +167,7 @@ public:
      *
      * @return TrcMemAccessorFile * : pointer to accessor if successful, 0 if it could not be created.
      */
-    static TrcMemAccessorFile *createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset);
+    static TrcMemAccessorFile *createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset = 0, size_t size = 0);
 
     /*!
      * Destroy supplied accessor. 
@@ -183,15 +187,29 @@ public:
      */
     static const bool isExistingFileAccessor(const std::string &pathToFile);
 
+    /*!
+     * Get the accessor using the supplied file path
+     * Use after createFileAccessor if additional memory ranges need
+     * adding to an exiting file accessor.
+     *
+     * @param &pathToFile : Path to test.
+     *
+     * @return TrcMemAccessorFile * : none 0 if an accessor exists with this file path.
+     */
+    static TrcMemAccessorFile * getExistingFileAccessor(const std::string &pathToFile);
+
+
 private:
     static std::map<std::string, TrcMemAccessorFile *> s_FileAccessorMap;   /**< map of file accessors in use. */
 
 private:
     std::ifstream m_mem_file;   /**< input binary file stream */
-    rctdl_vaddr_t m_file_size;
+    rctdl_vaddr_t m_file_size;  /**< size of the file */
     int m_ref_count;            /**< accessor reference count */
     std::string m_file_path;    /**< path to input file */
     std::list<FileRegionMemAccessor *> m_access_regions;    /**< additional regions in the file at non-zero offsets */
+    bool m_base_range_set;      /**< true when offset 0 set */
+    bool m_has_access_regions;
 };
 
 #endif // ARM_TRC_MEM_ACC_FILE_H_INCLUDED
