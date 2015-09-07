@@ -448,20 +448,11 @@ void EtmV4ITrcPacket::contextStr(std::string &ctxtStr) const
 void EtmV4ITrcPacket::atomSeq(std::string &valStr) const
 {
     std::ostringstream oss;
-    if(atom.type == ATOM_PATTERN)
+    uint32_t bitpattern = atom.En_bits;
+    for(int i = 0; i < atom.num; i++)
     {
-        uint32_t bitpattern = atom.En_bits;
-        for(int i = 0; i < atom.num; i++)
-        {
-            oss << ((bitpattern & 0x1) ? "E" : "N");
-            bitpattern >>= 1;
-        }
-    }
-    else
-    {
-        char atom_chr = ((atom.En_bits & 0x1) ? 'E' : 'N');
-        for(int i = 0; i < atom.num; i++)
-            oss << atom_chr;
+        oss << ((bitpattern & 0x1) ? "E" : "N");
+        bitpattern >>= 1;
     }
     valStr = oss.str();
 }

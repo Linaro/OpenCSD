@@ -72,17 +72,24 @@ typedef struct _rctdl_pkt_byte_sz_val
 
 typedef enum _rctdl_pkt_atm_type
 {
-    ATOM_PATTERN,
-    ATOM_REPEAT
+    ATOM_PATTERN,   /**< set atom packet using pattern supplied */
+    ATOM_REPEAT     /**< set atom packet using repeat value (convert to pattern) */
 } rctdl_pkt_atm_type;
+
+typedef enum _rctdl_atm_val {
+    ATOM_N,
+    ATOM_E
+} rctdl_atm_val;
 
 typedef struct _rctdl_pkt_atom
 {
-    rctdl_pkt_atm_type type;    /**< Type of atom format - pattern or repeat */
-    uint32_t En_bits;           /**< pattern across num bits, or repeat of single atom in bit 0 */
+    /** pattern across num bits.
+        Bit sequence:- ls bit = oldest atom, ms bit = newest, 
+        Bit values  :-  1'b1 = E atom, 1'b0 = N atom.
+      */
+    uint32_t En_bits;
     uint8_t num;                /**< number of atoms represented */
 } rctdl_pkt_atom;
-
 
 typedef enum _rctdl_iSync_reason {
     iSync_Periodic,

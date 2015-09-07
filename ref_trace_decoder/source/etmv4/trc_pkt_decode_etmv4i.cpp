@@ -36,6 +36,10 @@
 
 #include "etmv4/trc_pkt_decode_etmv4i.h"
 
+#include "trc_etmv4_stack_elem.h"
+#include "trc_gen_elem.h"
+
+
 #define DCD_NAME "DCD_ETMV4"
 
 TrcPktDecodeEtmV4I::TrcPktDecodeEtmV4I()
@@ -52,6 +56,7 @@ TrcPktDecodeEtmV4I::TrcPktDecodeEtmV4I(int instIDNum)
 
 TrcPktDecodeEtmV4I::~TrcPktDecodeEtmV4I()   
 {
+    delete m_pAddrRegs;
 }
 
 /*********************** implementation packet decoding interface */
@@ -59,7 +64,49 @@ TrcPktDecodeEtmV4I::~TrcPktDecodeEtmV4I()
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    bool bPktDone = false;
 
+    while(!bPktDone)
+    {
+        switch (m_curr_state)
+        {
+        case NO_SYNC:
+            {
+                RctdlTraceElement elem(RCTDL_GEN_TRC_ELEM_NO_SYNC);
+                resp = outputTraceElement(elem);
+                m_curr_state = WAIT_SYNC;
+                if(!RCTDL_DATA_RESP_IS_CONT(resp))
+                    bPktDone = true;
+            }
+            break;
+
+        case WAIT_SYNC:
+            if(m_curr_packet_in->getType() == ETM4_PKT_I_ASYNC)
+                m_curr_state = WAIT_TINFO;
+            bPktDone = true;
+            break;
+
+        case WAIT_TINFO:
+            m_need_ctxt = true;
+            m_need_addr = true;
+            if(m_curr_packet_in->getType() == ETM4_PKT_I_TRACE_INFO)
+            {
+                doTraceInfoPacket();
+                m_curr_state = DECODE_PKTS;
+                bPktDone = true;
+            }
+            break;
+
+        case DECODE_PKTS:
+            resp = decodePacket(bPktDone);  // this may change the state to commit elem;
+            break;
+
+        case COMMIT_ELEM:
+            resp = commitElements(bPktDone);
+            break;
+
+        }
+    }
     return resp;
 }
 
@@ -80,7 +127,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onReset()
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onFlush()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-
+    if((m_curr_state == NO_SYNC) || (m_curr_state == COMMIT_ELEM))
+        resp = processPacket(); // continue ongoing operation
     return resp;
 }
 
@@ -140,6 +188,9 @@ void TrcPktDecodeEtmV4I::initDecoder()
      m_CSID = 0;
      m_cond_key_max_incr = 0;
 
+     // set up the broadcast address stack
+     m_pAddrRegs = new (std::nothrow) AddrValStack();
+
      // reset decoder state to unsynced
      resetDecoder();
 }
@@ -148,7 +199,6 @@ void TrcPktDecodeEtmV4I::resetDecoder()
 {
     m_curr_state = NO_SYNC;
     m_timestamp = 0;
-    m_valid_addresses = 0;
     m_context_id = 0;              
     m_vmid_id = 0;                 
     m_is_secure = true;
@@ -158,7 +208,72 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_p0_key = 0;
     m_cond_c_key = 0;
     m_cond_r_key = 0;
+    m_need_ctxt = true;
+    m_need_addr = true;
+
 }
 
+
+// this function can output an immediate generic element if this covers the complete packet decode, or stack P0 and other elements for later 
+// processing on commit or cancel.
+rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    Complete = true;
+
+    switch(m_curr_packet_in->getType())
+    {
+    case ETM4_PKT_I_TRACE_INFO:
+        // skip subsequent TInfo packets.
+        break;
+
+    case ETM4_PKT_I_ATOM_F1:
+    case ETM4_PKT_I_ATOM_F2:
+    case ETM4_PKT_I_ATOM_F3:
+    case ETM4_PKT_I_ATOM_F4:
+    case ETM4_PKT_I_ATOM_F5:
+    case ETM4_PKT_I_ATOM_F6:
+        {
+            TrcStackElemAtom *pElem = new (std::nothrow) TrcStackElemAtom(m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+            {
+                pElem->setAtom(m_curr_packet_in->getAtom());
+                m_P0_stack.push_front(pElem);
+                m_curr_spec_depth += m_curr_packet_in->getAtom().num;
+            }
+        }
+        break;
+
+
+
+
+
+    }
+
+    // auto commit anything above max spec depth 
+    // (this will auto commit anything if spec depth not supported!)
+    if(m_curr_spec_depth > m_max_spec_depth)
+    {
+        m_P0_commit = m_curr_spec_depth - m_max_spec_depth;
+        m_curr_state = COMMIT_ELEM;
+        Complete = false;   // force the processing of the commit elements.
+    }
+    return resp;
+}
+
+void TrcPktDecodeEtmV4I::doTraceInfoPacket()
+{
+    m_trace_info = m_curr_packet_in->getTraceInfo();
+    m_cc_threshold = m_curr_packet_in->getCCThreshold();
+    m_p0_key = m_curr_packet_in->getP0Key();
+    m_curr_spec_depth = m_curr_packet_in->getCurrSpecDepth();
+}
+
+rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+
+    return resp;
+}
 
 /* End of File trc_pkt_decode_etmv4i.cpp */

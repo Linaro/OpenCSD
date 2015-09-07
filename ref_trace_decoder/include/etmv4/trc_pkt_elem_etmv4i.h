@@ -107,7 +107,15 @@ public:
     const rctdl_etmv4_i_pkt_type getErrType() const { return err_type; };
 
     const bool hasCommitElementsCount() const;    //!< return true if this packet has set the commit packet count.
+    
+    // trace info
+    const etmv4_trace_info_t &getTraceInfo() const { return trace_info; };    
     const uint32_t getCCThreshold() const;
+    const uint32_t getP0Key() const;
+    const uint32_t getCurrSpecDepth() const;
+
+    // atom
+    const rctdl_pkt_atom &getAtom() const { return atom; };
 
     // printing
     virtual void toString(std::string &str) const;
@@ -193,6 +201,20 @@ inline const uint32_t EtmV4ITrcPacket::getCCThreshold() const
     return 0;
 }
 
+inline const uint32_t EtmV4ITrcPacket::getP0Key() const
+{
+    if(pkt_valid.bits.p0_key_valid)
+        return p0_key;
+    return 0;
+}
+
+inline const uint32_t EtmV4ITrcPacket::getCurrSpecDepth() const
+{
+    if(pkt_valid.bits.spec_depth_valid)
+        return curr_spec_depth;
+    return 0;
+}
+
 inline void EtmV4ITrcPacket::setCancelElements(const uint32_t cancel_elem)
 {
     cancel_elements = cancel_elem;
@@ -200,9 +222,19 @@ inline void EtmV4ITrcPacket::setCancelElements(const uint32_t cancel_elem)
 
 inline void EtmV4ITrcPacket::setAtomPacket(const rctdl_pkt_atm_type type, const uint32_t En_bits, const uint8_t num)
 {
-    atom.type = type;
-    atom.num = num;
-    atom.En_bits = En_bits;
+    if(type == ATOM_REPEAT)
+    {
+        uint32_t bit_patt = En_bits & 0x1;
+        if(bit_patt)
+        {   
+            // none zero - all 1s
+            bit_patt = (bit_patt << num) - 1;
+        }
+        atom.En_bits = bit_patt;
+    }
+    else
+        atom.En_bits = En_bits;
+    atom.num = num;    
 }
 
 inline void EtmV4ITrcPacket::setCondIF1(const uint32_t cond_key)

@@ -198,6 +198,7 @@
     <ClInclude Include="..\..\..\include\trc_pkt_types.h" />
     <ClInclude Include="..\..\..\include\trc_printable_elem.h" />
     <ClInclude Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.h" />
+    <ClInclude Include="..\..\..\source\etmv4\trc_etmv4_stack_elem.h" />
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4d_impl.h" />
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.h" />
     <ClInclude Include="..\..\..\source\ptm\trc_pkt_proc_ptm_impl.h" />

@@ -131,6 +131,16 @@ typedef enum _rctdl_etmv4_i_pkt_type
 
 } rctdl_etmv4_i_pkt_type;
 
+typedef union _etmv4_trace_info_t {
+    uint32_t val;
+    struct {
+        uint32_t cc_enabled:1;
+        uint32_t cond_enabled:3;
+        uint32_t p0_load:1;
+        uint32_t p0_store:1;
+    } bits;
+} etmv4_trace_info_t;
+
 typedef struct _rctdl_etmv4_i_pkt
 {
     rctdl_etmv4_i_pkt_type type;    /**< Trace packet type derived from header byte */
@@ -170,15 +180,7 @@ typedef struct _rctdl_etmv4_i_pkt
     uint32_t commit_elements;  // valid dependent on the packet type.
     uint32_t cancel_elements;   // valid dependent on the packet type.
 
-    union {
-        uint32_t val;
-        struct {
-            uint32_t cc_enabled:1;
-            uint32_t cond_enabled:3;
-            uint32_t p0_load:1;
-            uint32_t p0_store:1;
-        } bits;
-    } trace_info;
+    etmv4_trace_info_t trace_info;
 
     struct {
         uint32_t exceptionType:10;

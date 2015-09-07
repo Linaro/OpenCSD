@@ -39,7 +39,10 @@
 #include "etmv4/trc_pkt_elem_etmv4i.h"
 #include "etmv4/trc_cmp_cfg_etmv4.h"
 
+#include <deque>
 
+class AddrValStack;
+class TrcStackElem;
 
 class TrcPktDecodeEtmV4I : public TrcPktDecodeBase<EtmV4ITrcPacket, EtmV4Config>
 {
@@ -61,7 +64,12 @@ protected:
     void initDecoder();      // initial state on creation (zeros all config)
     void resetDecoder();     // reset state to start of decode. (moves state, retains config)
 
-    rctdl_err_t findCodeWaypoint();
+    rctdl_err_t findCodeWaypoint(); // search for next waypoint in the code.
+
+    rctdl_datapath_resp_t decodePacket(bool &Complete);    // return true to indicate decode complete - can change FSM to commit state - return is false.
+    rctdl_datapath_resp_t commitElements(bool &Complete);   // commit elements - may get wait response, or flag completion.
+
+    void doTraceInfoPacket();
 
 private:
 //** intra packet state (see ETMv4 spec 6.2.1);
@@ -69,14 +77,8 @@ private:
     // timestamping
     uint64_t m_timestamp;   // last broadcast global Timestamp.
 
-    // address values
-    typedef struct {
-        uint64_t address;   // address
-        uint8_t IS;         // instruction set bits.
-    } address_regs_t;
-    
-    address_regs_t m_address_regs[3];   // most recently broadcast address packets.
-    int m_valid_addresses;              // number of valid addresses.
+    // address values stack   
+    AddrValStack *m_pAddrRegs;
 
     // state and context 
     uint32_t m_context_id;              // most recent context ID
@@ -107,15 +109,24 @@ private:
         NO_SYNC,        //!< pre start trace - init state or after reset or overflow, loss of sync.
         WAIT_SYNC,      //!< waiting for sync packet.
         WAIT_TINFO,     //!< waiting for trace info packet.
-        PROC_PKTS,      //!< processing packets - creating decode elements
+        DECODE_PKTS,    //!< processing packets - creating decode elements
         COMMIT_ELEM,    //!< commit elements for execution - create generic trace elements and pass on.
     } processor_state_t;
 
     processor_state_t m_curr_state;
+    bool m_need_ctxt;
+    bool m_need_addr;
 
     uint8_t m_CSID;
     
     rctdl_instr_info m_instr_info;  //!< instruction info for code follower.
+
+    etmv4_trace_info_t m_trace_info;
+
+//** P0 element stack
+    std::deque<TrcStackElem *> m_P0_stack;
+
+    int m_P0_commit;
 };
 
 #endif // ARM_TRC_PKT_DECODE_ETMV4I_H_INCLUDED

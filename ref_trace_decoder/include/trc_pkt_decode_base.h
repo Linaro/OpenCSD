@@ -83,7 +83,8 @@ protected:
     const bool checkInit();
 
     /* data output */
-    rctdl_datapath_resp_t outputTraceElement(const RctdlTraceElement &elem);
+    rctdl_datapath_resp_t outputTraceElement(const RctdlTraceElement &elem);    // use current index
+    rctdl_datapath_resp_t outputTraceElementIdx(rctdl_trc_index_t idx, const RctdlTraceElement &elem); // use supplied index (where decoder caches elements) 
 
     /* target access */
     rctdl_err_t accessMemory(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer);
@@ -131,6 +132,11 @@ inline const bool TrcPktDecodeI::checkInit()
 inline rctdl_datapath_resp_t TrcPktDecodeI::outputTraceElement(const RctdlTraceElement &elem)
 {
     return m_trace_elem_out.first()->TraceElemIn(m_index_curr_pkt,getCoreSightTraceID(), elem);
+}
+
+inline rctdl_datapath_resp_t TrcPktDecodeI::outputTraceElementIdx(rctdl_trc_index_t idx, const RctdlTraceElement &elem)
+{
+    return m_trace_elem_out.first()->TraceElemIn(idx, getCoreSightTraceID(), elem);
 }
 
 inline rctdl_err_t TrcPktDecodeI::instrDecode(rctdl_instr_info *instr_info)
