@@ -244,8 +244,56 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         }
         break;
 
+    case ETM4_PKT_I_CTXT:
+        {
+            TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+            {
+                pElem->setContext(m_curr_packet_in->getContext());
+                m_P0_stack.push_front(pElem);
+            }
+        }
+    case ETM4_PKT_I_ADDR_MATCH:
+        {
+            TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+            {
+                pElem->setAddr(m_pAddrRegs->get(m_curr_packet_in->getAddrMatch()));
+                m_P0_stack.push_front(pElem);
+            }
+        }
+        break;
 
-
+    case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
+    case ETM4_PKT_I_ADDR_CTXT_L_32IS1:       
+    case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
+    case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
+        {
+            TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+            {
+                pElem->setContext(m_curr_packet_in->getContext());
+                m_P0_stack.push_front(pElem);
+            }
+        }
+    case ETM4_PKT_I_ADDR_L_32IS0:
+    case ETM4_PKT_I_ADDR_L_32IS1:         
+    case ETM4_PKT_I_ADDR_L_64IS0:
+    case ETM4_PKT_I_ADDR_L_64IS1:   
+    case ETM4_PKT_I_ADDR_S_IS0:
+    case ETM4_PKT_I_ADDR_S_IS1:
+        {
+            TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+            {
+                etmv4_addr_val_t addr;
+                addr.val = m_curr_packet_in->getAddrVal();
+                addr.isa = m_curr_packet_in->getAddrIS();
+                pElem->setAddr(addr);
+                m_P0_stack.push_front(pElem);
+            }
+        }
+        break;
 
 
     }

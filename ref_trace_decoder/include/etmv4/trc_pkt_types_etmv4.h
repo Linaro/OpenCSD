@@ -141,6 +141,20 @@ typedef union _etmv4_trace_info_t {
     } bits;
 } etmv4_trace_info_t;
 
+typedef struct _etmv4_context_t {
+    struct {
+        uint32_t EL:2;
+        uint32_t SF:1;
+        uint32_t NS:1;
+        uint32_t updated:1;     //!< updated this context packet (otherwise same as last time)
+        uint32_t updated_c:1;   //!< updated CtxtID
+        uint32_t updated_v:1;   //!< updated VMID
+    };
+    uint32_t ctxtID;   //!< Current ctxtID
+    uint32_t VMID;     //!< current VMID
+} etmv4_context_t;
+
+
 typedef struct _rctdl_etmv4_i_pkt
 {
     rctdl_etmv4_i_pkt_type type;    /**< Trace packet type derived from header byte */
@@ -150,18 +164,7 @@ typedef struct _rctdl_etmv4_i_pkt
     rctdl_pkt_vaddr v_addr;         //!< most recently broadcast address packet
     uint8_t         v_addr_ISA;     //!< ISA for the address packet. (0 = IS0 / 1 = IS1)
 
-    struct {
-        struct {
-            uint32_t EL:2;
-            uint32_t SF:1;
-            uint32_t NS:1;
-            uint32_t updated:1;     //!< updated this context packet (otherwise same as last time)
-            uint32_t updated_c:1;   //!< updated CtxtID
-            uint32_t updated_v:1;   //!< updated VMID
-        };
-        uint32_t ctxtID;   //!< Current ctxtID
-        uint32_t VMID;     //!< current VMID
-    } context;
+    etmv4_context_t context;
 
     struct {
         uint64_t timestamp;         //!< current timestamp value

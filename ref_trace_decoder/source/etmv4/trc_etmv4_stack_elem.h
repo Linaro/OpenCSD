@@ -67,7 +67,7 @@ inline void AddrValStack::push(const etmv4_addr_val_t &val)
 
 /* ETMv4 I trace stack elements  
     Speculation requires that we stack certain elements till they are committed or 
-    cancelled. (P0 elements)
+    cancelled. (P0 elements + other associated parts.)
 */
 
 typedef enum _p0_elem_t 
@@ -141,6 +141,12 @@ class TrcStackElemCtxt : public TrcStackElem
 public:
     TrcStackElemCtxt(rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index);
     virtual ~TrcStackElemCtxt() {};
+
+    void setContext(const etmv4_context_t &ctxt) { m_context = ctxt; };
+    const etmv4_context_t getContext() const  { return m_context; }; 
+
+private:
+    etmv4_context_t m_context;
 };
 
 inline TrcStackElemCtxt::TrcStackElemCtxt(rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index) :

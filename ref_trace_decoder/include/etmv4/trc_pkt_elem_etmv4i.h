@@ -117,6 +117,14 @@ public:
     // atom
     const rctdl_pkt_atom &getAtom() const { return atom; };
 
+    // context
+    const etmv4_context_t &getContext() const { return context; };
+
+    // address
+    const uint8_t &getAddrMatch() const  { return addr_exact_match_idx; };
+    const rctdl_vaddr_t &getAddrVal() const { return v_addr.val; };
+    const uint8_t &getAddrIS() const { return v_addr_ISA; };
+
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
