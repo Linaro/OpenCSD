@@ -62,6 +62,9 @@ public:
     //! copy assignment operator for base structure into class.
     EtmV4Config & operator=(const rctdl_etmv4_cfg *p_cfg);
 
+    const rctdl_core_profile_t &coreProfile() const { return core_prof; };
+    const rctdl_arch_version_t &archVersion() const { return arch_ver; };
+
     /* idr 0 */
     const bool LSasInstP0() const;
     const bool hasDataTrace() const;

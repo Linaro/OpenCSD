@@ -125,6 +125,12 @@ public:
     const rctdl_vaddr_t &getAddrVal() const { return v_addr.val; };
     const uint8_t &getAddrIS() const { return v_addr_ISA; };
 
+    // ts
+    const uint64_t getTS() const { return pkt_valid.bits.ts_valid ? ts.timestamp : 0; };
+
+    // cc
+    const uint32_t getCC() const { return pkt_valid.bits.cc_valid ? cycle_count : 0; };
+
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;

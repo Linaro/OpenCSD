@@ -532,7 +532,6 @@ void EtmV4IPktProcImpl::iPktCycleCntF123()
 {
     static  rctdl_etmv4_i_pkt_type format = ETM4_PKT_I_CCNT_F1;
 
-
     uint8_t lastByte = m_currPacketData.back();
     if( m_currPacketData.size() == 1)
     {

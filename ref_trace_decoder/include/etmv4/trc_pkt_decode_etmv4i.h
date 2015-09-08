@@ -116,7 +116,7 @@ private:
     processor_state_t m_curr_state;
     bool m_need_ctxt;
     bool m_need_addr;
-
+    bool m_except_pending_addr_ctxt; 
     uint8_t m_CSID;
     
     rctdl_instr_info m_instr_info;  //!< instruction info for code follower.

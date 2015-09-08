@@ -76,6 +76,14 @@ typedef enum _p0_elem_t
     P0_ATOM,
     P0_ADDR,
     P0_CTXT,
+    P0_TRC_ON,
+    P0_EXCEP,
+    P0_EXCEP_RET,
+    P0_EVENT,
+    P0_TS,
+    P0_CC,
+    P0_TS_CC,
+    P0_OVERFLOW
 } p0_elem_t;
 
 
@@ -85,7 +93,7 @@ typedef enum _p0_elem_t
 
 class TrcStackElem {
 public:
-     TrcStackElem(p0_elem_t p0_type, rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index);
+     TrcStackElem(const p0_elem_t p0_type, const bool isP0, const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
      virtual ~TrcStackElem() {};
 
      const p0_elem_t getP0Type() const { return m_P0_type; };
@@ -103,11 +111,11 @@ protected:
 
 };
 
-inline TrcStackElem::TrcStackElem(p0_elem_t p0_type, rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index) :
+inline TrcStackElem::TrcStackElem(p0_elem_t p0_type, const bool isP0, rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index) :
     m_P0_type(p0_type),
     m_root_pkt(root_pkt),
     m_root_idx(root_index),
-    m_is_P0(false)
+    m_is_P0(isP0)
 {
 }
 
@@ -117,10 +125,10 @@ inline TrcStackElem::TrcStackElem(p0_elem_t p0_type, rctdl_etmv4_i_pkt_type root
 class TrcStackElemAddr : public TrcStackElem
 {
 public:
-    TrcStackElemAddr(rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index);
+    TrcStackElemAddr(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
     virtual ~TrcStackElemAddr() {};
 
-    void setAddr(etmv4_addr_val_t addr_val) { m_addr_val = addr_val; };
+    void setAddr(const etmv4_addr_val_t addr_val) { m_addr_val = addr_val; };
 
     const etmv4_addr_val_t &getAddr() const { return m_addr_val; };
 
@@ -128,8 +136,8 @@ private:
     etmv4_addr_val_t m_addr_val;
 };
 
-inline TrcStackElemAddr::TrcStackElemAddr(rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index) :
-    TrcStackElem(P0_ADDR, root_pkt,root_index)
+inline TrcStackElemAddr::TrcStackElemAddr(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+    TrcStackElem(P0_ADDR, false, root_pkt,root_index)
 {
 }
 
@@ -139,7 +147,7 @@ inline TrcStackElemAddr::TrcStackElemAddr(rctdl_etmv4_i_pkt_type root_pkt, rctdl
 class TrcStackElemCtxt : public TrcStackElem
 {
 public:
-    TrcStackElemCtxt(rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index);
+    TrcStackElemCtxt(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
     virtual ~TrcStackElemCtxt() {};
 
     void setContext(const etmv4_context_t &ctxt) { m_context = ctxt; };
@@ -149,8 +157,36 @@ private:
     etmv4_context_t m_context;
 };
 
-inline TrcStackElemCtxt::TrcStackElemCtxt(rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index) :
-    TrcStackElem(P0_CTXT, root_pkt,root_index)
+inline TrcStackElemCtxt::TrcStackElemCtxt(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+    TrcStackElem(P0_CTXT, false, root_pkt,root_index)
+{
+}
+
+/************************************************************/
+/** Exception element */
+
+class TrcStackElemExcept : public TrcStackElem
+{
+public:
+    TrcStackElemExcept(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
+    virtual ~TrcStackElemExcept() {};
+
+    void setAddr(const etmv4_addr_val_t addr_val) { m_addr_val = addr_val; };
+    const etmv4_addr_val_t &getAddr() const { return m_addr_val; };
+
+    void setContext(const etmv4_context_t &ctxt) { m_context = ctxt; m_has_ctxt = true; };
+    const etmv4_context_t getContext() const  { return m_context; }; 
+    const bool hasContext() const { return m_has_ctxt; };
+
+private:
+    etmv4_addr_val_t m_addr_val;
+    etmv4_context_t m_context;
+    bool m_has_ctxt;
+};
+
+inline TrcStackElemExcept::TrcStackElemExcept(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+    TrcStackElem(P0_CTXT, true, root_pkt,root_index),
+        m_has_ctxt(false)
 {
 }
 
@@ -160,7 +196,7 @@ inline TrcStackElemCtxt::TrcStackElemCtxt(rctdl_etmv4_i_pkt_type root_pkt, rctdl
 class TrcStackElemAtom : public TrcStackElem
 {
 public:
-    TrcStackElemAtom(rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index);
+    TrcStackElemAtom(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
     virtual ~TrcStackElemAtom() {};
 
     void setAtom(const rctdl_pkt_atom &atom) { m_atom = atom; };
@@ -173,11 +209,10 @@ private:
     rctdl_pkt_atom m_atom;
 };
 
-inline TrcStackElemAtom::TrcStackElemAtom(rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index) :
-    TrcStackElem(P0_ATOM, root_pkt,root_index)
+inline TrcStackElemAtom::TrcStackElemAtom(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+    TrcStackElem(P0_ATOM, true, root_pkt,root_index)
 {
     m_atom.num = 0;
-    m_is_P0 = true;
 }
 
 // commit oldest - get value and remove it from pattern
@@ -195,6 +230,27 @@ inline int TrcStackElemAtom::cancelNewest(const int nCancel)
     int nRemove = (nCancel <= m_atom.num) ? nCancel : m_atom.num;
     m_atom.num -= nRemove;
     return nRemove;
+}
+
+/************************************************************/
+/** Generic param element */
+
+class TrcStackElemParam : public TrcStackElem
+{
+public:
+    TrcStackElemParam(const p0_elem_t p0_type, const bool isP0, const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
+    virtual ~TrcStackElemParam() {};
+
+    void setParam(const uint32_t param, const int nParamNum) { m_param[(nParamNum & 0x3)] = param; };
+    const uint32_t &getParam(const int nParamNum) const { return m_param[(nParamNum & 0x3)]; };
+
+private:
+    uint32_t m_param[4];    
+};
+
+inline TrcStackElemParam::TrcStackElemParam(const p0_elem_t p0_type, const bool isP0, const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+    TrcStackElem(p0_type, isP0, root_pkt,root_index)
+{
 }
 
 #endif // ARM_TRC_ETMV4_STACK_ELEM_H_INCLUDED

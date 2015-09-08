@@ -210,21 +210,45 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_cond_r_key = 0;
     m_need_ctxt = true;
     m_need_addr = true;
-
+    m_except_pending_addr_ctxt = false;
 }
 
 
-// this function can output an immediate generic element if this covers the complete packet decode, or stack P0 and other elements for later 
-// processing on commit or cancel.
+// this function can output an immediate generic element if this covers the complete packet decode, 
+// or stack P0 and other elements for later processing on commit or cancel.
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
 {
+    bool bAllocErr = false;
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     Complete = true;
+    
 
     switch(m_curr_packet_in->getType())
     {
     case ETM4_PKT_I_TRACE_INFO:
         // skip subsequent TInfo packets.
+        break;
+
+    case ETM4_PKT_I_TRACE_ON:
+        {
+            TrcStackElemParam *pElem = 
+                new (std::nothrow) TrcStackElemParam( P0_TRC_ON, false, m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+                m_P0_stack.push_front(pElem);
+            else
+                bAllocErr = true;
+        }
+        break;
+
+    case ETM4_PKT_I_OVERFLOW:
+        {
+            TrcStackElemParam *pElem = 
+                new (std::nothrow) TrcStackElemParam( P0_OVERFLOW, false, m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+                m_P0_stack.push_front(pElem);
+            else
+                bAllocErr = true;
+        }
         break;
 
     case ETM4_PKT_I_ATOM_F1:
@@ -241,10 +265,24 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
                 m_P0_stack.push_front(pElem);
                 m_curr_spec_depth += m_curr_packet_in->getAtom().num;
             }
+            else
+                bAllocErr = true;
+
         }
         break;
 
     case ETM4_PKT_I_CTXT:
+        if(m_except_pending_addr_ctxt)
+        {
+            TrcStackElemExcept *pElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack[0]);
+            if(pElem)
+            {
+                m_except_pending_addr_ctxt = false;
+                m_curr_spec_depth++;
+                pElem->setContext(m_curr_packet_in->getContext());
+            }
+        }
+        else
         {
             TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
             if(pElem)
@@ -252,8 +290,22 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
                 pElem->setContext(m_curr_packet_in->getContext());
                 m_P0_stack.push_front(pElem);
             }
+            else
+                bAllocErr = true;
+
         }
     case ETM4_PKT_I_ADDR_MATCH:
+        if(m_except_pending_addr_ctxt)
+        {
+            TrcStackElemExcept *pElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack[0]);
+            if(pElem)
+            {
+                m_except_pending_addr_ctxt = false;
+                m_curr_spec_depth++;
+                pElem->setAddr(m_pAddrRegs->get(m_curr_packet_in->getAddrMatch()));
+            }
+        }
+        else
         {
             TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
             if(pElem)
@@ -261,6 +313,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
                 pElem->setAddr(m_pAddrRegs->get(m_curr_packet_in->getAddrMatch()));
                 m_P0_stack.push_front(pElem);
             }
+            else
+                bAllocErr = true;
         }
         break;
 
@@ -268,6 +322,15 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_CTXT_L_32IS1:       
     case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
+        if(m_except_pending_addr_ctxt)
+        {
+            TrcStackElemExcept *pElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack[0]);
+            if(pElem)
+            {
+                pElem->setContext(m_curr_packet_in->getContext());
+            }
+        }
+        else
         {
             TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
             if(pElem)
@@ -275,6 +338,9 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
                 pElem->setContext(m_curr_packet_in->getContext());
                 m_P0_stack.push_front(pElem);
             }
+            else
+                bAllocErr = true;
+
         }
     case ETM4_PKT_I_ADDR_L_32IS0:
     case ETM4_PKT_I_ADDR_L_32IS1:         
@@ -282,6 +348,20 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_L_64IS1:   
     case ETM4_PKT_I_ADDR_S_IS0:
     case ETM4_PKT_I_ADDR_S_IS1:
+        if(m_except_pending_addr_ctxt)
+        {
+            TrcStackElemExcept *pElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack[0]);
+            if(pElem)
+            {
+                m_except_pending_addr_ctxt = false;
+                m_curr_spec_depth++;
+                etmv4_addr_val_t addr;
+                addr.val = m_curr_packet_in->getAddrVal();
+                addr.isa = m_curr_packet_in->getAddrIS();
+                pElem->setAddr(addr);
+            }
+        }
+        else
         {
             TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
             if(pElem)
@@ -292,16 +372,139 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
                 pElem->setAddr(addr);
                 m_P0_stack.push_front(pElem);
             }
+            else
+                bAllocErr = true;
+
         }
         break;
 
+    // Exceptions
+    case ETM4_PKT_I_EXCEPT:
+         {
+            TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+            {
+                m_P0_stack.push_front(pElem);
+                m_except_pending_addr_ctxt = true;  // wait for following packets
+            }
+            else
+                bAllocErr = true;
+
+         }
+         break;
+
+    case ETM4_PKT_I_EXCEPT_RTN:
+        {
+            // P0 element if V7M profile.
+            bool bV7MProfile = (m_config->archVersion() == ARCH_V7) && (m_config->coreProfile() == profile_CortexM);
+            TrcStackElemParam *pElem = 
+                new (std::nothrow) TrcStackElemParam(P0_EXCEP_RET, bV7MProfile, m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+                m_P0_stack.push_front(pElem);
+            else
+                bAllocErr = true;
+
+        }
+        break;
+
+    // event trace
+    case ETM4_PKT_I_EVENT:
+        {
+            TrcStackElemParam *pElem = 
+                new (std::nothrow) TrcStackElemParam( P0_EVENT, false, m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+            {
+                pElem->setParam(m_curr_packet_in->event_val,0);
+                m_P0_stack.push_front(pElem);
+            }
+            else
+                bAllocErr = true;
+
+        }
+        break;
+
+    /* cycle count packets */
+    case ETM4_PKT_I_CCNT_F1:
+    case ETM4_PKT_I_CCNT_F2:
+    case ETM4_PKT_I_CCNT_F3:
+        {
+            TrcStackElemParam *pElem = 
+                new (std::nothrow) TrcStackElemParam( P0_CC, false, m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+            {
+                pElem->setParam(m_curr_packet_in->getCC(),0);
+                m_P0_stack.push_front(pElem);
+            }
+            else
+                bAllocErr = true;
+
+        }
+        break;
+
+    // timestamp
+    case ETM4_PKT_I_TIMESTAMP:
+        {
+            bool bTSwithCC = m_config->enabledCCI();
+            TrcStackElemParam *pElem = 
+                new (std::nothrow) TrcStackElemParam( bTSwithCC ? P0_TS_CC : P0_TS, false, m_curr_packet_in->getType(), m_index_curr_pkt);
+            if(pElem)
+            {
+                uint64_t ts = m_curr_packet_in->getTS();
+                pElem->setParam((uint32_t)(ts & 0xFFFFFFFF),0);
+                pElem->setParam((uint32_t)((ts>>32) & 0xFFFFFFFF),1);
+                if(bTSwithCC)
+                    pElem->setParam(m_curr_packet_in->getCC(),2);
+                m_P0_stack.push_front(pElem);
+            }
+            else
+                bAllocErr = true;
+
+        }
+        break;
+
+    /*** presently unsupported packets ***/
+    /* conditional instruction tracing */
+    case ETM4_PKT_I_COND_FLUSH:
+    case ETM4_PKT_I_COND_I_F1:
+    case ETM4_PKT_I_COND_I_F2:
+    case ETM4_PKT_I_COND_I_F3:
+    case ETM4_PKT_I_COND_RES_F1:
+    case ETM4_PKT_I_COND_RES_F2:
+    case ETM4_PKT_I_COND_RES_F3:
+    case ETM4_PKT_I_COND_RES_F4:
+    // speculation 
+    case ETM4_PKT_I_CANCEL_F1:
+    case ETM4_PKT_I_CANCEL_F2:
+    case ETM4_PKT_I_CANCEL_F3:
+    case ETM4_PKT_I_COMMIT:
+    case ETM4_PKT_I_MISPREDICT:
+    case ETM4_PKT_I_DISCARD:
+    // data synchronisation markers
+    case ETM4_PKT_I_NUM_DS_MKR:
+    case ETM4_PKT_I_UNNUM_DS_MKR:
+    /* Q packets */
+    case ETM4_PKT_I_Q:
+        resp = RCDTL_RESP_FATAL_INVALID_DATA;
+        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_DECODE_PKT,"Unsupported packet type."));
+        break;
+
+    default:
+        // any other packet - bad packet error
+        resp = RCDTL_RESP_FATAL_INVALID_DATA;
+        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_DECODE_PKT,"Unknown packet type."));
+        break;
 
     }
 
-    // auto commit anything above max spec depth 
-    // (this will auto commit anything if spec depth not supported!)
-    if(m_curr_spec_depth > m_max_spec_depth)
+    if(bAllocErr)
     {
+        resp = RCTDL_RESP_FATAL_SYS_ERR;
+        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_MEM,"Memory allocation error."));       
+    }
+    else if(m_curr_spec_depth > m_max_spec_depth)
+    {
+        // auto commit anything above max spec depth 
+        // (this will auto commit anything if spec depth not supported!)
         m_P0_commit = m_curr_spec_depth - m_max_spec_depth;
         m_curr_state = COMMIT_ELEM;
         Complete = false;   // force the processing of the commit elements.
