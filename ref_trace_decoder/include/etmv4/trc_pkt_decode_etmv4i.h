@@ -65,12 +65,15 @@ protected:
     void initDecoder();      // initial state on creation (zeros all config)
     void resetDecoder();     // reset state to start of decode. (moves state, retains config)
 
-    rctdl_err_t findCodeWaypoint(); // search for next waypoint in the code.
-
     rctdl_datapath_resp_t decodePacket(bool &Complete);    // return true to indicate decode complete - can change FSM to commit state - return is false.
     rctdl_datapath_resp_t commitElements(bool &Complete);   // commit elements - may get wait response, or flag completion.
 
     void doTraceInfoPacket();
+
+
+    // process atom will output instruction trace, or no memory access trace elements. 
+    rctdl_datapath_resp_t processAtom(const rctdl_atm_val, bool &bCont);
+
 
 private:
 //** intra packet state (see ETMv4 spec 6.2.1);

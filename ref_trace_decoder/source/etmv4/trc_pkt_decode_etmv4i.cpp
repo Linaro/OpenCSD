@@ -383,11 +383,13 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     // Exceptions
     case ETM4_PKT_I_EXCEPT:
          {
-            TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
+            TrcStackElemExcept *pElem = new (std::nothrow) TrcStackElemExcept(m_curr_packet_in->getType(), m_index_curr_pkt);
             if(pElem)
             {
+                pElem->setPrevSame(m_curr_packet_in->exception_info.addr_interp == 0x1);
                 m_P0_stack.push_front(pElem);
                 m_except_pending_addr_ctxt = true;  // wait for following packets
+
             }
             else
                 bAllocErr = true;
@@ -532,6 +534,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
     bool bPause = false;    // pause commit operation 
     bool bDecodeFatalErr = false;   // bad sequencing or other issue.
     bool bPopElem = true;       // do we remove the element from the stack (multi atom elements may need to stay!)
+    
+    Complete = true; // assume we exit due to completion of commit operation
 
     TrcStackElem *pElem;    // stacked element pointer
 
@@ -647,6 +651,38 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                 break;
 
+            case P0_ATOM:
+                {
+                TrcStackElemAtom *pAtomElem = dynamic_cast<TrcStackElemAtom *>(pElem);
+                if(pAtomElem)
+                {
+                    bool bContProcess = true;
+                    while(!pAtomElem->isEmpty() && m_P0_commit && bContProcess)
+                    {
+                        rctdl_atm_val atom = pAtomElem->commitOldest();
+                        // if address and context do instruction trace follower.
+                        // otherwise skip atom and reduce committed elements
+                        if(!m_need_ctxt && !m_need_addr)
+                        {
+                            resp = processAtom(atom,bContProcess);
+                        }
+                        m_P0_commit--; // mark committed 
+                    }
+                    if(!pAtomElem->isEmpty())   
+                        bPopElem = false;   // don't remove if still atoms to process.
+                }
+                }
+                break;
+
+            case P0_EXCEP:
+                break;
+
+            case P0_EXCEP_RET:
+                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION_RET);
+                resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                if(pElem->isP0())
+                    m_P0_commit--;
+                break;
             }
 
             if(bPopElem)
@@ -656,7 +692,6 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
             if(!RCTDL_DATA_RESP_IS_CONT(resp))
             {
                 bPause = true;
-                Complete = true;
             }
         }
         else
@@ -664,7 +699,11 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
             // too few elements for commit operation - decode error.
         }
     }
-    
+
+    // done all elements - need more packets.
+    if(m_P0_commit == 0)    
+        m_curr_state = DECODE_PKTS;
+
     return resp;
 }
 

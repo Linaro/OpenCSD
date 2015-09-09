@@ -54,6 +54,8 @@ typedef enum _rctdl_gen_trc_elem_t
     RCTDL_GEN_TRC_ELEM_PE_CONTEXT,      /*!< PE status update / change (arch, ctxtid, vmid etc).  */
     RCTDL_GEN_TRC_ELEM_INSTR_RANGE,     /*!< traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key  */
     RCTDL_GEN_TRC_ELEM_ADDR_NACC,       /*!< tracing in inaccessible memory area  */ 
+    RCTDL_GEN_TRC_ELEM_EXCEPTION,       /*!< exception */
+    RCTDL_GEN_TRC_ELEM_EXCEPTION_RET,   /*!< expection return */
     RCTDL_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
     RCTDL_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count -associated with a preceding instruction range. */
     RCTDL_GEN_TRC_ELEM_TS_WITH_CC,      /*!< Timestamp with Cycle count - preceding elements happened before timestamp, cycle count associated with the timestamp. */
