@@ -38,6 +38,7 @@
 #include "trc_pkt_decode_base.h"
 #include "etmv4/trc_pkt_elem_etmv4i.h"
 #include "etmv4/trc_cmp_cfg_etmv4.h"
+#include "trc_gen_elem.h"
 
 #include <deque>
 
@@ -102,6 +103,8 @@ private:
     int m_cond_r_key;
     int m_cond_key_max_incr;
 
+    uint8_t m_CSID; //!< Coresight trace ID for this decoder.
+
 //** Other processor state;
 
     // trace decode FSM
@@ -109,24 +112,32 @@ private:
         NO_SYNC,        //!< pre start trace - init state or after reset or overflow, loss of sync.
         WAIT_SYNC,      //!< waiting for sync packet.
         WAIT_TINFO,     //!< waiting for trace info packet.
-        DECODE_PKTS,    //!< processing packets - creating decode elements
+        DECODE_PKTS,    //!< processing packets - creating decode elements on stack
         COMMIT_ELEM,    //!< commit elements for execution - create generic trace elements and pass on.
     } processor_state_t;
 
     processor_state_t m_curr_state;
-    bool m_need_ctxt;
-    bool m_need_addr;
-    bool m_except_pending_addr_ctxt; 
-    uint8_t m_CSID;
+
+//** P0 element stack
+    std::deque<TrcStackElem *> m_P0_stack;  //!< P0 decode element stack
+
+    int m_P0_commit;    //!< number of elements to commit
+
+    // packet decode state
+    bool m_need_ctxt;   //!< need context to continue
+    bool m_need_addr;   //!< need an address to continue
+    bool m_except_pending_addr_ctxt;    //!< next address/context packet is part of exception.
+
     
     rctdl_instr_info m_instr_info;  //!< instruction info for code follower.
 
+    rctdl_pe_context m_pe_context;
     etmv4_trace_info_t m_trace_info;
 
-//** P0 element stack
-    std::deque<TrcStackElem *> m_P0_stack;
 
-    int m_P0_commit;
+//** output element
+    RctdlTraceElement m_output_elem;
+
 };
 
 #endif // ARM_TRC_PKT_DECODE_ETMV4I_H_INCLUDED

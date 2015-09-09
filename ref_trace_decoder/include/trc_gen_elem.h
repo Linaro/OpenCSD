@@ -48,18 +48,25 @@
 class RctdlTraceElement : public trcPrintableElem, public rctdl_generic_trace_elem
 {
 public:
+    RctdlTraceElement();
     RctdlTraceElement(rctdl_gen_trc_elem_t type);
     virtual ~RctdlTraceElement() {};
 
     const rctdl_gen_trc_elem_t getType() const { return elem_type; };
+    void setType(const rctdl_gen_trc_elem_t type) { elem_type = type; };
 
+    void setContext(const rctdl_pe_context &new_context) { context = new_context; };
 };
 
-inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)
+inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)    
 {
     elem_type = type;
 }
 
+inline RctdlTraceElement::RctdlTraceElement()    
+{
+    elem_type = RCTDL_GEN_TRC_ELEM_UNKNOWN;
+}
 
 
 

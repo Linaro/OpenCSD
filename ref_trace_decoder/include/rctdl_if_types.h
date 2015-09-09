@@ -325,7 +325,7 @@ typedef enum _rctdl_sec_level
 */
 typedef enum _rctdl_ex_level
 {
-    rctdl_EL0,
+    rctdl_EL0 = 0,
     rctdl_EL1,
     rctdl_EL2,
     rctdl_EL3,
@@ -366,8 +366,7 @@ typedef struct _rctdl_instr_info {
 } rctdl_instr_info;
 
 
-typedef struct _rctdl_pe_context {
-    rctdl_isa       instruction_set;    /**< Instruction set */
+typedef struct _rctdl_pe_context {    
     rctdl_sec_level security_level;     /**< security state */
     rctdl_ex_level  exception_level;    /**< exception level */
     uint32_t        context_id;         /**< context ID */
@@ -375,7 +374,7 @@ typedef struct _rctdl_pe_context {
     struct {
         uint32_t bits64:1;              /**< 1 if 64 bit operation */
         uint32_t ctxt_id_valid:1;       /**< 1 if context ID value valid */
-        uint32_t vmid_valud:1;          /**< 1 if VMID value is valid */
+        uint32_t vmid_valid:1;          /**< 1 if VMID value is valid */
     };
 } rctdl_pe_context;
 

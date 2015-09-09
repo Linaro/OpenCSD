@@ -72,8 +72,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
         {
         case NO_SYNC:
             {
-                RctdlTraceElement elem(RCTDL_GEN_TRC_ELEM_NO_SYNC);
-                resp = outputTraceElement(elem);
+                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_NO_SYNC);
+                resp = outputTraceElement(m_output_elem);
                 m_curr_state = WAIT_SYNC;
                 if(!RCTDL_DATA_RESP_IS_CONT(resp))
                     bPktDone = true;
@@ -113,7 +113,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onEOT()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-
+    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EO_TRACE);
+    resp = outputTraceElement(m_output_elem);
     return resp;
 }
 
@@ -322,6 +323,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_CTXT_L_32IS1:       
     case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
+
         if(m_except_pending_addr_ctxt)
         {
             TrcStackElemExcept *pElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack[0]);
@@ -520,10 +522,149 @@ void TrcPktDecodeEtmV4I::doTraceInfoPacket()
     m_curr_spec_depth = m_curr_packet_in->getCurrSpecDepth();
 }
 
+/*
+ * Walks through the element stack, processing from oldest element to the newest, 
+   according to the number of P0 elements that need committing.
+ */
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    bool bPause = false;    // pause commit operation 
+    bool bDecodeFatalErr = false;   // bad sequencing or other issue.
+    bool bPopElem = true;       // do we remove the element from the stack (multi atom elements may need to stay!)
 
+    TrcStackElem *pElem;    // stacked element pointer
+
+    while(m_P0_commit && !bPause)
+    {
+        if(m_P0_stack.size() > 0)
+        {
+            pElem = m_P0_stack.back();  // get oldest element
+            
+            switch(pElem->getP0Type())
+            {
+            // indicates a trace restart - beginning of trace or discontinuiuty
+            case P0_TRC_ON:
+                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_ON);
+                resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                break;
+
+            case P0_ADDR:
+                {
+                TrcStackElemAddr *pAddrElem = dynamic_cast<TrcStackElemAddr *>(pElem);
+                if(pAddrElem)
+                {
+                    m_pAddrRegs->push(pAddrElem->getAddr());
+                    m_need_addr = false;
+                }
+                }
+                break;
+
+            case P0_CTXT:
+                {
+                TrcStackElemCtxt *pCtxtElem = dynamic_cast<TrcStackElemCtxt *>(pElem);
+                if(pCtxtElem)
+                {
+                    etmv4_context_t ctxt = pCtxtElem->getContext();
+                    // check this is an updated context
+                    if(ctxt.updated)
+                    {
+                        // map to output element  and local saved state.
+                        m_is_64bit = (ctxt.SF != 0);
+                        m_output_elem.context.bits64 = ctxt.SF;
+                        m_is_secure = (ctxt.NS == 0);
+                        m_output_elem.context.security_level = ctxt.NS ? rctdl_sec_nonsecure : rctdl_sec_secure;
+                        m_output_elem.context.exception_level = (rctdl_ex_level)ctxt.EL;
+                        if(ctxt.updated_c)
+                        {
+                            m_output_elem.context.ctxt_id_valid = 1;
+                            m_context_id = m_output_elem.context.context_id = ctxt.ctxtID;
+                        }
+                        if(ctxt.updated_v)
+                        {
+                            m_output_elem.context.vmid_valid = 1;
+                            m_vmid_id = m_output_elem.context.vmid = ctxt.VMID;
+                        }
+                        m_need_ctxt = false;
+                        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_PE_CONTEXT);
+                        resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                    }
+                }
+                }
+                break;
+
+            case P0_EVENT:
+                {
+                TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
+                if(pParamElem)
+                {
+                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EVENT);
+                    m_output_elem.gen_value = pParamElem->getParam(0);
+                    resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                }
+                }
+                break;
+
+            case P0_TS:
+                {
+                TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
+                if(pParamElem)
+                {
+                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TIMESTAMP);
+                    m_output_elem.timestamp = (uint64_t)(pParamElem->getParam(0)) | (((uint64_t)pParamElem->getParam(1)) << 32);
+                    resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                }
+                }
+                break;
+
+            case P0_CC:
+                {
+                TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
+                if(pParamElem)
+                {
+                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_CYCLE_COUNT);
+                    m_output_elem.cycle_count = pParamElem->getParam(0);
+                    resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                }
+                }
+                break;
+
+            case P0_TS_CC:
+                {
+                TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
+                if(pParamElem)
+                {
+                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TS_WITH_CC);
+                    m_output_elem.timestamp = (uint64_t)(pParamElem->getParam(0)) | (((uint64_t)pParamElem->getParam(1)) << 32);
+                    m_output_elem.cycle_count = pParamElem->getParam(2);
+                    resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                }
+                }
+                break;
+
+            case P0_OVERFLOW:
+                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_OVERFLOW);
+                resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                break;
+
+            }
+
+            if(bPopElem)
+                m_P0_stack.pop_back();  // remove element from stack;
+
+            // if response not continue, then break out of the loop.
+            if(!RCTDL_DATA_RESP_IS_CONT(resp))
+            {
+                bPause = true;
+                Complete = true;
+            }
+        }
+        else
+        {
+            // too few elements for commit operation - decode error.
+        }
+    }
+    
     return resp;
 }
 

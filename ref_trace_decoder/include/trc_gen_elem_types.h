@@ -45,15 +45,18 @@
 
 /**  Enum for generic element types */
 typedef enum _rctdl_gen_trc_elem_t 
-{   
+{  
+    RCTDL_GEN_TRC_ELEM_UNKNOWN,         /*!< Unknown trace element - default value or indicate error in stream to client */
     RCTDL_GEN_TRC_ELEM_NO_SYNC,         /*!< Waiting for sync - either at start of decode, or after overflow / bad packet */
-    RCTDL_GEN_TRC_ELEM_TRACE_ON,        /*!< Start of trace - beginning of elements or restart after discontinuity. */
+    RCTDL_GEN_TRC_ELEM_TRACE_ON,        /*!< Start of trace - beginning of elements or restart after discontinuity (overflow, trace filtering). */
+    RCTDL_GEN_TRC_ELEM_TRACE_OVERFLOW,  /*!< trace overflow - indicates discontinuity - normally followed by trace on */
     RCTDL_GEN_TRC_ELEM_EO_TRACE,        /*!< end of the available trace in the buffer.  */
     RCTDL_GEN_TRC_ELEM_PE_CONTEXT,      /*!< PE status update / change (arch, ctxtid, vmid etc).  */
     RCTDL_GEN_TRC_ELEM_INSTR_RANGE,     /*!< traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key  */
     RCTDL_GEN_TRC_ELEM_ADDR_NACC,       /*!< tracing in inaccessible memory area  */ 
-    RCTDL_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp  */
-    RCTDL_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count  */
+    RCTDL_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
+    RCTDL_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count -associated with a preceding instruction range. */
+    RCTDL_GEN_TRC_ELEM_TS_WITH_CC,      /*!< Timestamp with Cycle count - preceding elements happened before timestamp, cycle count associated with the timestamp. */
     RCTDL_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */
 #if 0
     RCTDL_GEN_TRC_ELEM_DATA_VAL,        /*!< Data value - associated with prev instr (if same stream) + daddr, or data assoc key if supplied.  */
@@ -73,7 +76,8 @@ typedef struct _rctdl_generic_trace_elem {
     rctdl_pe_context    context;      /**< PE Context */
     uint64_t            timestamp;    /**< timestamp value for TS element type */
     uint32_t            cycle_count;  /**< cycle count for cycle count element (if none 0 with TS, cycle count for this element also). */
-    
+    uint32_t            gen_value;    /**< general value for simpler types of element. */
+
 } rctdl_generic_trace_elem;
 
 /** @}*/

@@ -143,9 +143,9 @@ typedef union _etmv4_trace_info_t {
 
 typedef struct _etmv4_context_t {
     struct {
-        uint32_t EL:2;
-        uint32_t SF:1;
-        uint32_t NS:1;
+        uint32_t EL:2;          //!< exception level.
+        uint32_t SF:1;          //!< sixty four bit
+        uint32_t NS:1;          //!< none secure
         uint32_t updated:1;     //!< updated this context packet (otherwise same as last time)
         uint32_t updated_c:1;   //!< updated CtxtID
         uint32_t updated_v:1;   //!< updated VMID

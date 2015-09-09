@@ -150,11 +150,11 @@ public:
     TrcStackElemCtxt(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
     virtual ~TrcStackElemCtxt() {};
 
-    void setContext(const etmv4_context_t &ctxt) { m_context = ctxt; };
-    const etmv4_context_t getContext() const  { return m_context; }; 
+    void setContext(const  etmv4_context_t &ctxt) { m_context = ctxt; };
+    const  etmv4_context_t &getContext() const  { return m_context; }; 
 
 private:
-    etmv4_context_t m_context;
+     etmv4_context_t m_context;
 };
 
 inline TrcStackElemCtxt::TrcStackElemCtxt(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
@@ -175,18 +175,23 @@ public:
     const etmv4_addr_val_t &getAddr() const { return m_addr_val; };
 
     void setContext(const etmv4_context_t &ctxt) { m_context = ctxt; m_has_ctxt = true; };
-    const etmv4_context_t getContext() const  { return m_context; }; 
+    const etmv4_context_t &getContext() const  { return m_context; }; 
     const bool hasContext() const { return m_has_ctxt; };
+
+    void setPrevSame(bool bSame) { m_prev_addr_same = bSame; };
+    const bool getPrevSame() const { return m_prev_addr_same; };
 
 private:
     etmv4_addr_val_t m_addr_val;
     etmv4_context_t m_context;
     bool m_has_ctxt;
+    bool m_prev_addr_same;
 };
 
 inline TrcStackElemExcept::TrcStackElemExcept(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
     TrcStackElem(P0_CTXT, true, root_pkt,root_index),
-        m_has_ctxt(false)
+        m_has_ctxt(false),
+        m_prev_addr_same(false)
 {
 }
 
