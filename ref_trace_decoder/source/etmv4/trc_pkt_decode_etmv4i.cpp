@@ -675,12 +675,14 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 break;
 
             case P0_EXCEP:
+                resp = processException();  // output trace + exception elements.
+                m_P0_commit--;
                 break;
 
             case P0_EXCEP_RET:
                 m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION_RET);
                 resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
-                if(pElem->isP0())
+                if(pElem->isP0()) // are we on a core that counts ERET as P0?
                     m_P0_commit--;
                 break;
             }

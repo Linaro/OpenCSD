@@ -57,8 +57,8 @@ typedef enum _rctdl_gen_trc_elem_t
     RCTDL_GEN_TRC_ELEM_EXCEPTION,       /*!< exception */
     RCTDL_GEN_TRC_ELEM_EXCEPTION_RET,   /*!< expection return */
     RCTDL_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
-    RCTDL_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count -associated with a preceding instruction range. */
-    RCTDL_GEN_TRC_ELEM_TS_WITH_CC,      /*!< Timestamp with Cycle count - preceding elements happened before timestamp, cycle count associated with the timestamp. */
+    RCTDL_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count - cycles since last cycle count value - associated with a preceding instruction range. */
+    RCTDL_GEN_TRC_ELEM_TS_WITH_CC,      /*!< Timestamp with Cycle count - preceding elements happened before timestamp, cycle count associated with the timestamp, cycle count is associated with TS and since last cycle count value */
     RCTDL_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */
 #if 0
     RCTDL_GEN_TRC_ELEM_DATA_VAL,        /*!< Data value - associated with prev instr (if same stream) + daddr, or data assoc key if supplied.  */

@@ -74,6 +74,8 @@ protected:
     // process atom will output instruction trace, or no memory access trace elements. 
     rctdl_datapath_resp_t processAtom(const rctdl_atm_val, bool &bCont);
 
+    // process an exception element - output instruction trace + exception generic type.
+    rctdl_datapath_resp_t processException(); 
 
 private:
 //** intra packet state (see ETMv4 spec 6.2.1);
