@@ -78,6 +78,9 @@ protected:
     rctdl_datapath_resp_t processException(); 
 
 private:
+    void SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, const uint8_t isa); 
+
+
 //** intra packet state (see ETMv4 spec 6.2.1);
 
     // timestamping

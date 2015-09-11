@@ -560,6 +560,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 {
                     m_pAddrRegs->push(pAddrElem->getAddr());
                     m_need_addr = false;
+                    SetInstrInfoInAddrISA(pAddrElem->getAddr().val,pAddrElem->getAddr().isa);
                 }
                 }
                 break;
@@ -709,4 +710,34 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
     return resp;
 }
 
+rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val, bool &bCont)
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    rctdl_err_t mem_err;
+    TrcStackElem *pElem = m_P0_stack.back();  // get the atom element
+
+    uint32_t opcode, num_bytes = 4; // always get 4 bytes - in case of 32 bit thumb instruction
+    // TBD: update mem space to allow for EL as well.
+    mem_err = accessMemory(m_instr_info.instr_addr,m_is_secure ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N,&num_bytes,(uint8_t *)&opcode);
+    if((mem_err != RCTDL_OK) || (num_bytes != 4))
+    {
+        // unable to access memory - output teh NACC element 
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
+        //m_output_elem.
+        resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);        
+        m_need_addr = true;   // need an address before we can continue - set to skip any atoms before that. 
+    }
+    else
+    {
+    }
+}
+
+void TrcPktDecodeEtmV4I::SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, const uint8_t isa)
+{
+    m_instr_info.instr_addr = addr_val;
+    if(m_is_64bit)
+        m_instr_info.isa = rctdl_isa_aarch64;
+    else
+        m_instr_info.isa = (isa == 0) ? rctdl_isa_arm : rctdl_isa_thumb2;
+}
 /* End of File trc_pkt_decode_etmv4i.cpp */

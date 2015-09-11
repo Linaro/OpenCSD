@@ -309,7 +309,7 @@ typedef enum _rctdl_isa
     rctdl_isa_thumb2,       /**< Thumb2 -> 16/32 bit instructions */  
     rctdl_isa_aarch64,      /**< V8 AArch64 */
     rctdl_isa_tee,          /**< Thumb EE - unsupported */  
-    rctdl_isa_jazelle,      /**< Jazelle - unsupported */  
+    rctdl_isa_jazelle,      /**< Jazelle - unsupported in trace */  
     rctdl_isa_unknown       /**< ISA not yet known */
 } rctdl_isa;
 
