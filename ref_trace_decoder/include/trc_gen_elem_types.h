@@ -74,7 +74,7 @@ typedef struct _rctdl_generic_trace_elem {
     rctdl_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
     rctdl_isa           isa;          /**< instruction set for executed instructions */
     rctdl_vaddr_t       st_addr;      /**< start address for instruction execution range / inaccessible code address / data address */
-    rctdl_vaddr_t       en_addr;      /**< end address (inclusive) for instruction execution range. */
+    rctdl_vaddr_t       en_addr;      /**< end address (exclusive) for instruction execution range. */
     rctdl_pe_context    context;      /**< PE Context */
     uint64_t            timestamp;    /**< timestamp value for TS element type */
     uint32_t            cycle_count;  /**< cycle count for cycle count element (if none 0 with TS, cycle count for this element also). */

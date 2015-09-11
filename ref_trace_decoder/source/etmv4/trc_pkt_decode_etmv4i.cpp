@@ -102,7 +102,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
             break;
 
         case COMMIT_ELEM:
-            resp = commitElements(bPktDone);
+            resp = commitElements(bPktDone); // this will change the state to DECODE_PKTS once all elem committed.
             break;
 
         }
@@ -713,23 +713,56 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val, bool &bCont)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    rctdl_err_t mem_err;
     TrcStackElem *pElem = m_P0_stack.back();  // get the atom element
+    bool bWPFound = false;
+    rctdl_err_t err;
+    bCont = true;
 
-    uint32_t opcode, num_bytes = 4; // always get 4 bytes - in case of 32 bit thumb instruction
-    // TBD: update mem space to allow for EL as well.
-    mem_err = accessMemory(m_instr_info.instr_addr,m_is_secure ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N,&num_bytes,(uint8_t *)&opcode);
-    if((mem_err != RCTDL_OK) || (num_bytes != 4))
+    err = traceInstrToWP(bWPFound);
+    if(err != RCTDL_OK)
     {
-        // unable to access memory - output teh NACC element 
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
-        //m_output_elem.
-        resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);        
-        m_need_addr = true;   // need an address before we can continue - set to skip any atoms before that. 
+        // TBD: set up error handling
+        if(err == RCTDL_ERR_UNSUPPORTED_ISA)
+        {
+            
+        }
+        else
+        {
+
+        }
+    }
+
+    if(bWPFound)
+    {
+        // action according to waypoint type and atom value
+
     }
     else
     {
+        // no waypoint - likely inaccessible memory range.
+        m_need_addr = true; // need an address update 
+
+        if(m_output_elem.st_addr != m_output_elem.en_addr)
+        {
+            // some trace before we were out of memory access range
+            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+            resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+        }
+
+        if(m_mem_nacc_pending)
+        {
+            if(RCTDL_DATA_RESP_IS_CONT(resp))
+            {
+                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+                m_output_elem.st_addr = m_nacc_addr;
+                resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                m_mem_nacc_pending = false;
+            }
+            else
+                bCont = false;
+        }
     }
+    return resp;
 }
 
 void TrcPktDecodeEtmV4I::SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, const uint8_t isa)
@@ -740,4 +773,50 @@ void TrcPktDecodeEtmV4I::SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, con
     else
         m_instr_info.isa = (isa == 0) ? rctdl_isa_arm : rctdl_isa_thumb2;
 }
+
+// trace an instruction range to a waypoint - and set next address to restart from.
+rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound)
+{
+    uint32_t opcode;
+    uint32_t bytesReq;
+    bool bIsThumb = m_instr_info.isa == rctdl_isa_thumb2;
+    rctdl_err_t err = RCTDL_OK;
+
+    // TBD: update mem space to allow for EL as well.
+    rctdl_mem_space_acc_t mem_space = m_is_secure ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N;
+
+    m_output_elem.st_addr = m_output_elem.en_addr = m_instr_info.instr_addr;
+
+    bWPFound = false;
+
+    while(!bWPFound && !m_mem_nacc_pending)
+    {
+        // start off by reading next opcode;
+        bytesReq = 4;
+        err = accessMemory(m_instr_info.instr_addr,mem_space,&bytesReq,(uint8_t *)&opcode);
+        if(err != RCTDL_OK) break;
+
+        if(bytesReq == 4) // got data back
+        {
+            err = instrDecode(&m_instr_info);
+            if(err != RCTDL_OK) break;
+
+            // increment address - may be adjusted by direct branch value later
+            m_instr_info.instr_addr += m_instr_info.instr_size;
+
+            // update the range decoded address in the output packet.
+            m_output_elem.en_addr = m_instr_info.instr_addr;
+
+            bWPFound = (m_instr_info.type != RCTDL_INSTR_OTHER);
+        }
+        else
+        {
+            // not enough memory accessible.
+            m_mem_nacc_pending = true;
+            m_nacc_addr = m_instr_info.instr_addr;
+        }
+    }
+    return err;
+}
+
 /* End of File trc_pkt_decode_etmv4i.cpp */

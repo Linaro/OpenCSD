@@ -357,12 +357,12 @@ typedef struct _rctdl_instr_info {
 
     /* instruction decode info */
     rctdl_instr_type type;          /**< Decoder: Current instruction type. */
-    rctdl_vaddr_t next_addr;        /**< Decoder: Instruction address for next instruction. (if calculable) */
+    rctdl_vaddr_t branch_addr;      /**< Decoder: Calculated address of branch instrcution (direct branches only) */
     rctdl_isa next_isa;             /**< Decoder: ISA for next intruction. */
-    uint8_t is_conditional;             /**< Decoder : set to 1 if this instruction is conditional */
-    uint8_t is_link;                    /**< Decoder : is a branch with link instruction */
-    uint8_t thumb_it_conditions;        /**< Decoder : return number of following instructions set with conditions by this Thumb IT instruction */
-    uint8_t thumb_size;                 /**< Decoder : return size of the thumb instruction */
+    uint8_t instr_size;             /**< Decoder : size of the decoded instruction */
+    uint8_t is_conditional;         /**< Decoder : set to 1 if this instruction is conditional */
+    uint8_t is_link;                /**< Decoder : is a branch with link instruction */
+    uint8_t thumb_it_conditions;    /**< Decoder : return number of following instructions set with conditions by this Thumb IT instruction */
 } rctdl_instr_info;
 
 

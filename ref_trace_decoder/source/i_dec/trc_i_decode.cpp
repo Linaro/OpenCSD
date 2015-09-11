@@ -68,7 +68,7 @@ rctdl_err_t TrcIDecode::DecodeA32(rctdl_instr_info *instr_info)
     uint32_t branchAddr = 0;
     arm_barrier_t barrier;
 
-    instr_info->next_addr = instr_info->instr_addr + 4; // default address update
+    instr_info->instr_size = 4; // instruction size A32
     instr_info->type =  RCTDL_INSTR_OTHER;  // default type
     instr_info->next_isa = instr_info->isa; // assume same ISA 
     instr_info->is_link = 0;
@@ -82,7 +82,7 @@ rctdl_err_t TrcIDecode::DecodeA32(rctdl_instr_info *instr_info)
     {
         inst_ARM_branch_destination(instr_info->instr_addr,instr_info->opcode,&branchAddr);
         instr_info->type = RCTDL_INSTR_BR;
-        instr_info->next_addr = (rctdl_vaddr_t)branchAddr;
+        instr_info->branch_addr = (rctdl_vaddr_t)branchAddr;
         if(branchAddr & 0x1)
             instr_info->next_isa = rctdl_isa_thumb2;
         instr_info->is_link = inst_ARM_is_branch_and_link(instr_info->opcode);
@@ -113,7 +113,7 @@ rctdl_err_t TrcIDecode::DecodeA64(rctdl_instr_info *instr_info)
     uint64_t branchAddr = 0;
     arm_barrier_t barrier;
 
-    instr_info->next_addr = instr_info->instr_addr + 4; // default address update
+    instr_info->instr_size =  4; // default address update
     instr_info->type =  RCTDL_INSTR_OTHER;  // default type
     instr_info->next_isa = instr_info->isa; // assume same ISA 
     instr_info->is_link = 0;
@@ -127,7 +127,7 @@ rctdl_err_t TrcIDecode::DecodeA64(rctdl_instr_info *instr_info)
     {
         inst_A64_branch_destination(instr_info->instr_addr,instr_info->opcode,&branchAddr);
         instr_info->type = RCTDL_INSTR_BR;
-        instr_info->next_addr = (rctdl_vaddr_t)branchAddr;
+        instr_info->branch_addr = (rctdl_vaddr_t)branchAddr;
         instr_info->is_link = inst_A64_is_branch_and_link(instr_info->opcode);
     }
     else if((barrier = inst_A64_barrier(instr_info->opcode)) != ARM_BARRIER_NONE)
@@ -156,8 +156,7 @@ rctdl_err_t TrcIDecode::DecodeT32(rctdl_instr_info *instr_info)
     uint32_t branchAddr = 0;
     arm_barrier_t barrier;
 
-    instr_info->thumb_size = is_wide_thumb((uint16_t)(instr_info->opcode >> 16)) ? 4 : 2;
-    instr_info->next_addr = instr_info->instr_addr + instr_info->thumb_size; // default address update
+    instr_info->instr_size = is_wide_thumb((uint16_t)(instr_info->opcode >> 16)) ? 4 : 2;
     instr_info->type =  RCTDL_INSTR_OTHER;  // default type
     instr_info->next_isa = instr_info->isa; // assume same ISA 
     instr_info->is_link = 0;
@@ -171,7 +170,7 @@ rctdl_err_t TrcIDecode::DecodeT32(rctdl_instr_info *instr_info)
     {
         inst_Thumb_branch_destination(instr_info->instr_addr,instr_info->opcode,&branchAddr);
         instr_info->type = RCTDL_INSTR_BR;
-        instr_info->next_addr = (rctdl_vaddr_t)branchAddr;
+        instr_info->branch_addr = (rctdl_vaddr_t)branchAddr;
         if((branchAddr & 0x1) == 0)
             instr_info->next_isa = rctdl_isa_arm;
         instr_info->is_link = inst_Thumb_is_branch_and_link(instr_info->opcode);

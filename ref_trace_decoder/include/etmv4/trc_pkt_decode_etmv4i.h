@@ -80,6 +80,7 @@ protected:
 private:
     void SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, const uint8_t isa); 
 
+    rctdl_err_t traceInstrToWP(bool &bWPFound);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
 
 //** intra packet state (see ETMv4 spec 6.2.1);
 
@@ -137,10 +138,13 @@ private:
     bool m_except_pending_addr_ctxt;    //!< next address/context packet is part of exception.
 
     
-    rctdl_instr_info m_instr_info;  //!< instruction info for code follower.
+    rctdl_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
 
-    rctdl_pe_context m_pe_context;
-    etmv4_trace_info_t m_trace_info;
+    bool m_mem_nacc_pending;    //!< need to output a memory access failure packet
+    rctdl_vaddr_t m_nacc_addr;  //!< 
+
+    rctdl_pe_context m_pe_context;  //!< current context information
+    etmv4_trace_info_t m_trace_info; //!< trace info for this trace run.
 
 
 //** output element
