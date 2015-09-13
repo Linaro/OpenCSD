@@ -1,5 +1,5 @@
 /*
- * \file       trc_i_decode.h
+ * \file       trc_mem_acc.h
  * \brief      Reference CoreSight Trace Decoder : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
@@ -31,26 +31,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
-#ifndef ARM_TRC_I_DECODE_H_INCLUDED
-#define ARM_TRC_I_DECODE_H_INCLUDED
 
-#include "interfaces/trc_instr_decode_i.h"
-#include "rctdl_if_types.h"
+#ifndef ARM_TRC_MEM_ACC_H_INCLUDED
+#define ARM_TRC_MEM_ACC_H_INCLUDED
 
-class TrcIDecode : public IInstrDecode  
-{
-public:
-    TrcIDecode() {};
-    virtual ~TrcIDecode() {};
+#include "trc_mem_acc_bufptr.h"
+#include "trc_mem_acc_file.h"
+#include "trc_mem_acc_mapper.h"
 
-    virtual rctdl_err_t DecodeInstruction(rctdl_instr_info *instr_info);
 
-private:
-    rctdl_err_t DecodeA32(rctdl_instr_info *instr_info);
-    rctdl_err_t DecodeA64(rctdl_instr_info *instr_info);
-    rctdl_err_t DecodeT32(rctdl_instr_info *instr_info);
-};
+#endif // ARM_TRC_MEM_ACC_H_INCLUDED
 
-#endif // ARM_TRC_I_DECODE_H_INCLUDED
-
-/* End of File trc_i_decode.h */
+/* End of File trc_mem_acc.h */

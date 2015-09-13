@@ -56,7 +56,7 @@ typedef struct _decoder_elements
         } etmv3;    /**< ETMv3 decoders */
         struct {
             TrcPktProcEtmV4I *proc;
-            void * /*TrcPktDecodeEtmV4 **/ dcd; //** TBD
+            TrcPktDecodeEtmV4I *dcd; 
         } etmv4i;   /**< ETMv4 Decoders */
         struct {
             TrcPktProcEtmV4D *proc;
@@ -107,6 +107,13 @@ public:
         return 0;
     }
 
+    TrcPktDecodeEtmV4I *  getEtmV4IPktDecoder() const
+    {
+        if(protocol == RCTDL_PROTOCOL_ETMV4I)
+            return decoder.etmv4i.dcd;
+        return 0;
+    }
+
     TrcPktProcEtmV4D *  getEtmV4DPktProc() const
     {
         if(protocol == RCTDL_PROTOCOL_ETMV4D)
@@ -126,6 +133,19 @@ public:
             return decoder.extern_custom.proc;
         return 0;
     }
+
+    TrcPktDecodeI *   getDecoderBaseI() const 
+    {
+        TrcPktDecodeI *pDecoder = 0;
+        switch(protocol) 
+        {
+        case RCTDL_PROTOCOL_ETMV4I:
+            pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv4i.dcd);
+            break;
+        }
+        return pDecoder;
+    }
+
 
     rctdl_trace_protocol_t getProtocol() const { return protocol; };
 

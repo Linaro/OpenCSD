@@ -113,7 +113,6 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
                         {
                             if(createPEDecoder(core_dev->deviceTypeName,etm_dev))
                             {
-                                
                                 numDecodersCreated++;
                             }
                             else

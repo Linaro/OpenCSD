@@ -172,6 +172,7 @@
     <ClInclude Include="..\..\..\include\interfaces\trc_tgt_mem_access_i.h" />
     <ClInclude Include="..\..\..\include\i_dec\trc_idec_arminst.h" />
     <ClInclude Include="..\..\..\include\i_dec\trc_i_decode.h" />
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_base.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_bufptr.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_file.h" />

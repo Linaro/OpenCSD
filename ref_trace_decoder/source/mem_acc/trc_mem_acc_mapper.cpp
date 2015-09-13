@@ -58,7 +58,7 @@ TrcMemAccMapper::~TrcMemAccMapper()
 }
 
 // memory access interface
-rctdl_err_t TrcMemAccMapper::ReadTargetMemory(const rctdl_vaddr_t address, const uint8_t cs_trace_id, uint32_t *num_bytes, uint8_t *p_buffer)
+rctdl_err_t TrcMemAccMapper::ReadTargetMemory(const rctdl_vaddr_t address, const uint8_t cs_trace_id, const rctdl_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer)
 {
     bool bReadFromCurr = true;
 

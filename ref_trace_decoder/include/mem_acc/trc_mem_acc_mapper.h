@@ -49,13 +49,22 @@ public:
     virtual ~TrcMemAccMapper();
 
     // memory access interface
-    virtual rctdl_err_t ReadTargetMemory(const rctdl_vaddr_t address, const uint8_t cs_trace_id, uint32_t *num_bytes, uint8_t *p_buffer);
+    virtual rctdl_err_t ReadTargetMemory(   const rctdl_vaddr_t address, 
+                                            const uint8_t cs_trace_id, 
+                                            const rctdl_mem_space_acc_t mem_space, 
+                                            uint32_t *num_bytes, 
+                                            uint8_t *p_buffer);
+    //virtual rctdl_err_t ReadTargetMemory(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id, uint32_t *num_bytes, uint8_t *p_buffer);
 
     // mapper configuration interface
     virtual rctdl_err_t AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id) = 0;
 
     // destroy all attached accessors
     void DestroyAllAccessors();
+
+    typedef enum {
+        MEMACC_MAP_GLOBAL,
+    } memacc_mapper_t;
 
 protected:
     virtual bool findAccessor(const rctdl_vaddr_t address, const uint8_t cs_trace_id) = 0;     // set m_acc_curr if found valid range, leave unchanged if not.
@@ -66,7 +75,7 @@ protected:
 
     TrcMemAccessorBase *m_acc_curr;     // most recently used - try this first.
     uint8_t m_trace_id_curr;            // trace ID for the current accessor
-    const bool m_using_trace_id;        // true if we are using separate memory spaces.
+    const bool m_using_trace_id;        // true if we are using separate memory spaces by TraceID.
 };
 
 

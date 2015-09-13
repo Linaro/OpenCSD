@@ -207,6 +207,9 @@
     <ClInclude Include="..\..\..\source\etmv4\trc_etmv4_stack_elem.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc.h">
+      <Filter>Header Files\mem_acc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">

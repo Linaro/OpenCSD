@@ -101,8 +101,12 @@ public:
 
     /* set key interfaces - attach / replace on any existing tree components? */
     void setInstrDecoder(IInstrDecode *i_instr_decode);
-    void setMemAccessor(ITargetMemAccess *i_mem_access);
+    void setMemAccessI(ITargetMemAccess *i_mem_access);
     void setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem);
+
+    /* create mapper within the decode tree. */ 
+    rctdl_err_t createMemAccMapper(TrcMemAccMapper::memacc_mapper_t type);
+    rctdl_err_t addMemAccessorToMap(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id);
 
     /* get decoder elements currently in use  */
     DecodeTreeElement *getDecoderElement(const uint8_t CSID) const;
@@ -123,6 +127,7 @@ private:
     void setSingleRoot(TrcPktProcI *pComp);
     rctdl_err_t createDecodeElement(const uint8_t CSID);
     void destroyDecodeElement(const uint8_t CSID);
+    void destroyMemAccMapper();
 
     rctdl_dcd_tree_src_t m_dcd_tree_type;
 
@@ -138,10 +143,17 @@ private:
 
     uint8_t m_decode_elem_iter;
 
+    TrcMemAccMapper *m_default_mapper;
+
     /* global error logger  - all sources */ 
     static ITraceErrorLog *s_i_error_logger;
     static std::list<DecodeTree *> s_trace_dcd_trees;
+
+    /**! default error logger */
     static rctdlDefaultErrorLogger s_error_logger;
+
+    /**! default instruction decoder */
+    static TrcIDecode s_instruction_decoder;
 };
 
 /** @}*/

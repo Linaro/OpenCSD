@@ -34,6 +34,7 @@
  */ 
 
 #include "rctdl_dcd_tree.h"
+#include "mem_acc/trc_mem_acc_mapper.h"
 
 
 void DecodeTreeElement::SetProcElement(const rctdl_trace_protocol_t protocol_type, void *pkt_proc, const bool decoder_created)
@@ -91,8 +92,9 @@ void DecodeTreeElement::DestroyElem()
 
 /***************************************************************/
 ITraceErrorLog *DecodeTree::s_i_error_logger = &DecodeTree::s_error_logger; 
-std::list<DecodeTree *> DecodeTree::s_trace_dcd_trees; /**< list of pointers to decode tree objects */
-rctdlDefaultErrorLogger DecodeTree::s_error_logger; /**< The library default error logger */
+std::list<DecodeTree *> DecodeTree::s_trace_dcd_trees;  /**< list of pointers to decode tree objects */
+rctdlDefaultErrorLogger DecodeTree::s_error_logger;     /**< The library default error logger */
+TrcIDecode DecodeTree::s_instruction_decoder;           /**< default instruction decode library */
 
 DecodeTree *DecodeTree::CreateDecodeTree(const rctdl_dcd_tree_src_t src_type, uint32_t formatterCfgFlags)
 {
@@ -141,12 +143,13 @@ void DecodeTree::setAlternateErrorLogger(ITraceErrorLog *p_error_logger)
 /***************************************************************/
 
 DecodeTree::DecodeTree() :
-    m_i_instr_decode(0),
+    m_i_instr_decode(&s_instruction_decoder),
     m_i_mem_access(0),
     m_i_gen_elem_out(0),
     m_i_decoder_root(0),
     m_frame_deformatter_root(0),
-    m_decode_elem_iter(0)
+    m_decode_elem_iter(0),
+    m_default_mapper(0)
 
 {
     for(int i = 0; i < 0x80; i++)
@@ -159,7 +162,10 @@ DecodeTree::~DecodeTree()
     {
         destroyDecodeElement(i);
     }
+
 }
+
+
 
 rctdl_datapath_resp_t DecodeTree::TraceDataIn( const rctdl_datapath_op_t op,
                                                const rctdl_trc_index_t index,
@@ -176,17 +182,95 @@ rctdl_datapath_resp_t DecodeTree::TraceDataIn( const rctdl_datapath_op_t op,
 /* set key interfaces - attach / replace on any existing tree components */
 void DecodeTree::setInstrDecoder(IInstrDecode *i_instr_decode)
 {
-    //** TBD - implement for first decoder
+    uint8_t elemID;
+    DecodeTreeElement *pElem = 0;
+    TrcPktDecodeI *pDecoder;
+
+    pElem = getFirstElement(elemID);
+    while(pElem != 0)
+    {
+        pDecoder = pElem->getDecoderBaseI();
+        if(pDecoder)
+        {
+            pDecoder->getInstrDecodeAttachPt()->attach(i_instr_decode);
+        }
+        pElem = getNextElement(elemID);
+    }
 }
 
-void DecodeTree::setMemAccessor(ITargetMemAccess *i_mem_access)
+void DecodeTree::setMemAccessI(ITargetMemAccess *i_mem_access)
 {
-    //** TBD - implement for first decoder
+    uint8_t elemID;
+    DecodeTreeElement *pElem = 0;
+    TrcPktDecodeI *pDecoder;
+
+    pElem = getFirstElement(elemID);
+    while(pElem != 0)
+    {
+        pDecoder = pElem->getDecoderBaseI();
+        if(pDecoder)
+        {
+            pDecoder->getMemoryAccessAttachPt()->attach(i_mem_access);
+        }
+        pElem = getNextElement(elemID);
+    }
+    m_i_mem_access = i_mem_access;
 }
 
 void DecodeTree::setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem)
 {
-   //** TBD - implement for first decoder
+    uint8_t elemID;
+    DecodeTreeElement *pElem = 0;
+    TrcPktDecodeI *pDecoder;
+
+    pElem = getFirstElement(elemID);
+    while(pElem != 0)
+    {
+        pDecoder = pElem->getDecoderBaseI();
+        if(pDecoder)
+        {
+            pDecoder->getTraceElemOutAttachPt()->attach(i_gen_trace_elem);
+        }
+        pElem = getNextElement(elemID);
+    }
+}
+
+rctdl_err_t DecodeTree::createMemAccMapper(TrcMemAccMapper::memacc_mapper_t type)
+{
+    // clean up any old one
+    destroyMemAccMapper();
+
+    // make a new one
+    switch(type)
+    {
+    default:
+    case TrcMemAccMapper::MEMACC_MAP_GLOBAL:
+        m_default_mapper = new (std::nothrow) TrcMemAccMapGlobalSpace();
+        break;
+    }
+
+    // set the access interface
+    if(m_default_mapper)
+        setMemAccessI(m_default_mapper);
+    return (m_default_mapper != 0) ? RCTDL_OK : RCTDL_ERR_MEM;
+}
+
+rctdl_err_t DecodeTree::addMemAccessorToMap(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id)
+{
+    rctdl_err_t err= RCTDL_ERR_NOT_INIT;
+    if(m_default_mapper)
+        err = m_default_mapper->AddAccessor(p_accessor,cs_trace_id);
+    return err;
+}
+
+void DecodeTree::destroyMemAccMapper()
+{
+    if(m_default_mapper)
+    {
+        m_default_mapper->DestroyAllAccessors();
+        delete m_default_mapper;
+        m_default_mapper = 0;
+    }
 }
 
 
@@ -344,7 +428,36 @@ rctdl_err_t DecodeTree::createETMv3Decoder(const EtmV3Config *p_config)
 rctdl_err_t DecodeTree::createETMv4Decoder(const EtmV4Config *p_config, bool bDataChannel /*= false*/)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
-        //** TBD
+    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
+    if(usingFormatter())
+        CSID = p_config->getTraceID();
+
+
+    if(!bDataChannel)
+    {
+        TrcPktDecodeEtmV4I *pProc = 0;
+        pProc = new (std::nothrow) TrcPktDecodeEtmV4I(CSID);
+        if(!pProc)
+            return RCTDL_ERR_MEM;
+
+        err = createETMv4IPktProcessor(p_config,pProc);
+        if(err == RCTDL_OK)
+        {
+            m_decode_elements[CSID]->SetDecoderElement(pProc);
+            if(m_i_instr_decode)
+                err = pProc->getInstrDecodeAttachPt()->attach(m_i_instr_decode);
+            if(m_i_mem_access && (err == RCTDL_OK))
+                err = pProc->getMemoryAccessAttachPt()->attach(m_i_mem_access);
+            if( m_i_gen_elem_out && (err == RCTDL_OK))
+                err = pProc->getTraceElemOutAttachPt()->attach(m_i_gen_elem_out);
+            if(err == RCTDL_OK)
+                err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
+
+            if(err != RCTDL_OK)
+                destroyDecodeElement(CSID);
+        }
+
+    }
     return err;
 }
 

@@ -69,12 +69,8 @@
 #include "rctdl_error_logger.h"
 #include "rctdl_msg_logger.h"
 #include "rctdl_dcd_tree.h"
-
-
-
-
-
-
+#include "i_dec/trc_i_decode.h"
+#include "mem_acc/trc_mem_acc.h"
 
 #endif // ARM_RCTDL_H_INCLUDED
 
