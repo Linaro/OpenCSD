@@ -46,7 +46,7 @@
 /**  Enum for generic element types */
 typedef enum _rctdl_gen_trc_elem_t 
 {  
-    RCTDL_GEN_TRC_ELEM_UNKNOWN,         /*!< Unknown trace element - default value or indicate error in stream to client */
+    RCTDL_GEN_TRC_ELEM_UNKNOWN = 0,     /*!< Unknown trace element - default value or indicate error in stream to client */
     RCTDL_GEN_TRC_ELEM_NO_SYNC,         /*!< Waiting for sync - either at start of decode, or after overflow / bad packet */
     RCTDL_GEN_TRC_ELEM_TRACE_ON,        /*!< Start of trace - beginning of elements or restart after discontinuity (overflow, trace filtering). */
     RCTDL_GEN_TRC_ELEM_TRACE_OVERFLOW,  /*!< trace overflow - indicates discontinuity - normally followed by trace on */

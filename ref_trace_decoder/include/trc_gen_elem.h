@@ -56,6 +56,8 @@ public:
     void setType(const rctdl_gen_trc_elem_t type) { elem_type = type; };
 
     void setContext(const rctdl_pe_context &new_context) { context = new_context; };
+
+    virtual void toString(std::string &str) const;
 };
 
 inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)    

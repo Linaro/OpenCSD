@@ -230,6 +230,7 @@
     <ClCompile Include="..\..\..\source\trc_component.cpp" />
     <ClCompile Include="..\..\..\source\trc_core_arch_map.cpp" />
     <ClCompile Include="..\..\..\source\trc_frame_deformatter.cpp" />
+    <ClCompile Include="..\..\..\source\trc_gen_elem.cpp" />
     <ClCompile Include="..\..\..\source\trc_printable_elem.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
