@@ -765,6 +765,16 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val, bool 
     return resp;
 }
 
+rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    rctdl_err_t err;    
+    bool bWPFound = false;
+
+
+    return resp;
+}
+
 void TrcPktDecodeEtmV4I::SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, const uint8_t isa)
 {
     m_instr_info.instr_addr = addr_val;

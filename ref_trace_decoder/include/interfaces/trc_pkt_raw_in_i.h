@@ -73,7 +73,7 @@ public:
                                    const rctdl_trc_index_t index_sop,
                                    const P *pkt,
                                    const uint32_t size,
-                                   const uint8_t *p_data);
+                                   const uint8_t *p_data) = 0;
 };
 
 #endif // ARM_TRC_PKT_RAW_IN_I_H_INCLUDED
