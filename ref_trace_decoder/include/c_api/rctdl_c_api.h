@@ -112,7 +112,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t hand
 
 /*!
  * Create an ETMv4 instruction trace packet processor only for the supplied configuration. 
- * Must supply an output callback function which handles tehe etmv4 packet types, to attach to the packet processor.
+ * Must supply an output callback function which handles the etmv4 packet types, to attach to the packet processor.
  *
  * @param handle : handle a decode tree to create the packet processsor.
  * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.

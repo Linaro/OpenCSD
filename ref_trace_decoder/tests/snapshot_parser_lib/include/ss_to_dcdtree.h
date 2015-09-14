@@ -74,6 +74,8 @@ private:
 
     void LogError(const std::string &msg);
 
+    void processDumpfiles(std::vector<Parser::DumpDef> &dumps);
+
     bool m_bInit;
     DecodeTree *m_pDecodeTree;
     SnapShotReader *m_pReader;

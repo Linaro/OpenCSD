@@ -96,6 +96,11 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
             // use our error logger - don't use the tree default.
             m_pDecodeTree->setAlternateErrorLogger(m_pErrLogInterface);
 
+            if(!bPacketProcOnly)
+            {
+                m_pDecodeTree->createMemAccMapper();
+            }
+
             /* run through each protocol source to this buffer... */
             std::map<std::string, std::string>::iterator it = tree.source_core_assoc.begin();
             while(it != tree.source_core_assoc.end())
@@ -114,6 +119,10 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
                             if(createPEDecoder(core_dev->deviceTypeName,etm_dev))
                             {
                                 numDecodersCreated++;
+                                if(!bPacketProcOnly &&(core_dev->dumpDefs.size() > 0))
+                                {
+                                    processDumpfiles(core_dev->dumpDefs);
+                                }
                             }
                             else
                             {
@@ -329,6 +338,22 @@ bool CreateDcdTreeFromSnapShot::getRegByPrefix(std::map<std::string, std::string
     }
     return bFound;
 }
+
+void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &dumps)
+{
+    std::string dumpFilePathName;
+    std::vector<Parser::DumpDef>::const_iterator it;
+
+    it = dumps.begin();
+    while(it != dumps.end())
+    {        
+        dumpFilePathName = m_pReader->getSnapShotDir() + it->path;
+        
+
+        it++;
+    }
+}
+
 
 
 /* End of File ss_to_dcdtree.cpp */

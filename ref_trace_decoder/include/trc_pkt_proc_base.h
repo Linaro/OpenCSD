@@ -123,8 +123,9 @@ public:
 
     /* component attachment points */ 
     componentAttachPt<IPktDataIn<P>> *getPacketOutAttachPt()  { return &m_pkt_out_i; };
+    componentAttachPt<IPktRawDataMon<P>> *getRawPacketMonAttachPt() { return &m_pkt_raw_mon_i; };
+
     componentAttachPt<ITrcPktIndexer<Pt>> *getTraceIDIndexerAttachPt() { return &m_pkt_indexer_i; };
-    componentAttachPt<IPktRawDataMon<Pt>> *getRawPacketMonAttachPt() { return &m_pkt_raw_mon_i; };
    
     /* protocol configuration */
     virtual rctdl_err_t setProtocolConfig(const Pc *config);

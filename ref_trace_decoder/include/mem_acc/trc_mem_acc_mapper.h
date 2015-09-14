@@ -41,6 +41,10 @@
 #include "interfaces/trc_tgt_mem_access_i.h"
 #include "mem_acc/trc_mem_acc_base.h"
 
+typedef enum _memacc_mapper_t {
+    MEMACC_MAP_GLOBAL,
+} memacc_mapper_t;
+
 class TrcMemAccMapper : public ITargetMemAccess
 {
 public:
@@ -62,9 +66,7 @@ public:
     // destroy all attached accessors
     void DestroyAllAccessors();
 
-    typedef enum {
-        MEMACC_MAP_GLOBAL,
-    } memacc_mapper_t;
+
 
 protected:
     virtual bool findAccessor(const rctdl_vaddr_t address, const uint8_t cs_trace_id) = 0;     // set m_acc_curr if found valid range, leave unchanged if not.

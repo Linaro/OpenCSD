@@ -85,6 +85,16 @@ public:
      */
     virtual const bool addrInRange(const rctdl_vaddr_t s_address) const;
 
+
+    /*!
+     * test if an address is the start of range for this accessor
+     *
+     * @param s_address : Address to test.
+     *
+     * @return const bool  : true if the address is start of range.
+     */
+    virtual const bool addrStartOfRange(const rctdl_vaddr_t s_address) const;
+
     /*!
      * Test number of bytes available from the start address, up to the number of requested bytes.
      * Tests if all the requested bytes are available from the supplied start address.
@@ -158,6 +168,12 @@ inline const bool TrcMemAccessorBase::addrInRange(const rctdl_vaddr_t s_address)
 {
     return (s_address >= m_startAddress) && (s_address <= m_endAddress);
 }
+
+inline const bool TrcMemAccessorBase::addrStartOfRange(const rctdl_vaddr_t s_address) const
+{
+    return (s_address == m_startAddress);
+}
+
 
 inline const uint32_t TrcMemAccessorBase::bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const
 {

@@ -32,5 +32,8 @@
     <ClInclude Include="..\..\..\source\raw_frame_printer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\source\gen_elem_printer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

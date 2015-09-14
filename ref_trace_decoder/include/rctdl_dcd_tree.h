@@ -105,7 +105,7 @@ public:
     void setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem);
 
     /* create mapper within the decode tree. */ 
-    rctdl_err_t createMemAccMapper(TrcMemAccMapper::memacc_mapper_t type);
+    rctdl_err_t createMemAccMapper(memacc_mapper_t type = MEMACC_MAP_GLOBAL);
     rctdl_err_t addMemAccessorToMap(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id);
 
     /* get decoder elements currently in use  */

@@ -62,8 +62,9 @@ TrcMemAccessorFile::~TrcMemAccessorFile()
     }
 }
 
-bool TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset, size_t size)
+rctdl_err_t TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset, size_t size)
 {
+    rctdl_err_t err = RCTDL_OK;
     bool init = false;
 
     m_mem_file.open(pathToFile.c_str(), std::ifstream::binary | std::ifstream::ate);
@@ -84,7 +85,9 @@ bool TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctdl_vaddr
 
         m_file_path = pathToFile;
     }
-    return init;
+    else 
+        err = RCTDL_ERR_MEM_ACC_FILE_NOT_FOUND;
+    return err;
 }
 
 
@@ -113,33 +116,43 @@ FileRegionMemAccessor *TrcMemAccessorFile::getRegionForAddress(const rctdl_vaddr
 std::map<std::string, TrcMemAccessorFile *> TrcMemAccessorFile::s_FileAccessorMap;
 
 // return existing or create new accessor
-TrcMemAccessorFile *TrcMemAccessorFile::createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset /*= 0*/, size_t size /*= 0*/)
+rctdl_err_t TrcMemAccessorFile::createFileAccessor(TrcMemAccessorFile **p_acc, const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset /*= 0*/, size_t size /*= 0*/)
 {
-    TrcMemAccessorFile *p_acc = 0;
+    rctdl_err_t err = RCTDL_OK;
+    TrcMemAccessorFile * acc = 0;
     std::map<std::string, TrcMemAccessorFile *>::iterator it = s_FileAccessorMap.find(pathToFile);
     if(it != s_FileAccessorMap.end())
     {
-        p_acc = it->second;
-        p_acc->IncRefCount();
+        acc = it->second;
+        if(acc->addrStartOfRange(startAddr))
+            acc->IncRefCount();
+        else
+        {
+            err = RCTDL_ERR_MEM_ACC_FILE_DIFF_RANGE;
+            acc = 0;
+        }
     }
     else
     { 
-        p_acc = new (std::nothrow) TrcMemAccessorFile();
-        if(p_acc != 0)
+        acc = new (std::nothrow) TrcMemAccessorFile();
+        if(acc != 0)
         {
-            if(p_acc->initAccessor(pathToFile,startAddr, offset,size))
+            if((err = acc->initAccessor(pathToFile,startAddr, offset,size)) == RCTDL_OK)
             {
-                p_acc->IncRefCount();
-                s_FileAccessorMap.insert(std::pair<std::string, TrcMemAccessorFile *>(pathToFile,p_acc));
+                acc->IncRefCount();
+                s_FileAccessorMap.insert(std::pair<std::string, TrcMemAccessorFile *>(pathToFile,acc));
             }
             else
             {
-                delete p_acc;
-                p_acc = 0;
+                delete acc;
+                acc = 0;
             }
         }
+        else
+            err = RCTDL_ERR_MEM;
     }
-    return p_acc;
+    *p_acc = acc;
+    return err;
 }
 
 void TrcMemAccessorFile::destroyFileAccessor(TrcMemAccessorFile *p_accessor)
@@ -266,6 +279,20 @@ const bool TrcMemAccessorFile::addrInRange(const rctdl_vaddr_t s_address) const
     {
         if(getRegionForAddress(s_address) != 0)
             bInRange = true;
+    }
+    return bInRange;
+}
+
+const bool TrcMemAccessorFile::addrStartOfRange(const rctdl_vaddr_t s_address) const
+{
+    bool bInRange = false;
+    if(m_base_range_set)
+        bInRange = TrcMemAccessorBase::addrStartOfRange(s_address);
+    if(!bInRange && m_has_access_regions)
+    {
+        FileRegionMemAccessor *pRegion = getRegionForAddress(s_address);
+        if(pRegion)
+            bInRange = (pRegion->regionStartAddress() == s_address);
     }
     return bInRange;
 }

@@ -41,10 +41,13 @@
 #include <sstream>
 #include <cstring>
 
-#include "rctdl.h"
-#include "trace_snapshots.h"
+#include "rctdl.h"              // the library
+#include "trace_snapshots.h"    // the snapshot reading test library
+
+// include some printers for packet elements
 #include "pkt_printer_t.h"
 #include "raw_frame_printer.h"
+#include "gen_elem_printer.h"
 
 static bool process_cmd_line_opts( int argc, char* argv[]);
 static void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name);
@@ -67,6 +70,8 @@ static std::string logfileName = "trc_pkt_lister.log";
 static bool outRawPacked = false;
 static bool outRawUnpacked = false;
 static bool ss_verbose = false;
+static bool decode = false;
+static bool no_undecoded_packets = false;
 
 int main(int argc, char* argv[])
 {
@@ -177,6 +182,8 @@ void print_help()
     oss << "Decode:\n";
     oss << "-id <n>             Set an ID to list (may be used mutiple times) - default if no id set is for all IDs to be printed\n";
     oss << "-src_name <name>    List packets from a given snapshot source name (defaults to first source found)\n";
+    oss << "-decode             Full decode of the packets from the trace snapshot (default is to list undecoded packets only\n";
+    oss << "-decode_only        Does not list the undecoded packets, just the trace decode.\n";
     oss << "-o_raw_packed       Output raw packed trace frames\n";
     oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
     logger.LogMsg(oss.str());
@@ -324,6 +331,15 @@ bool process_cmd_line_opts(int argc, char* argv[])
             {
                 ss_verbose = true;
             }
+            else if(strcmp(argv[optIdx], "-decode") == 0)
+            {
+                decode = true;              
+            }
+            else if(strcmp(argv[optIdx], "-decode_only") == 0)
+            {
+                no_undecoded_packets = true;
+                decode = true; 
+            }
             else if(strcmp(argv[optIdx], "-help") == 0)
             {
                 print_help();
@@ -359,11 +375,14 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
 {
     CreateDcdTreeFromSnapShot tree_creator;
     RawFramePrinter framePrinter;
+    TrcGenericElementPrinter genElemPrinter;
 
     framePrinter.setMessageLogger(&logger);
     tree_creator.initialise(&reader,&err_logger);
+    if(decode)
+        genElemPrinter.setMessageLogger(&logger);
 
-    if(tree_creator.createDecodeTree(trace_buffer_name, true))
+    if(tree_creator.createDecodeTree(trace_buffer_name, (decode == false)))
     {
         std::vector<ItemPrinter *> printers;
         DecodeTreeElement *pElement;
@@ -372,7 +391,7 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
         
         // attach packet printers to each trace source in the tree
         pElement = dcd_tree->getFirstElement(elemID);
-        while(pElement)
+        while(pElement && !no_undecoded_packets)
         {
             if(!element_filtered(elemID))
             {
@@ -384,10 +403,15 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                         PacketPrinter<EtmV4ITrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV4ITrcPacket>(elemID,&logger);
                         if(pPrinter)
                         {
-                            pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
+                            if(decode)
+                                pElement->getEtmV4IPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                            else
+                                pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
                             printers.push_back(pPrinter); // save printer to destroy it later
                         }
                     
+
                         oss << "Trace Packet Lister : ETMv4 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                         logger.LogMsg(oss.str());
                     }
@@ -407,13 +431,14 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
             pElement = dcd_tree->getNextElement(elemID);
         }
 
-        // attached a frame printer to the frame deformatter
+        // configure the frame deformatter, and attach a frame printer to the frame deformatter if needed
         TraceFormatterFrameDecoder *pDeformatter = dcd_tree->getFrameDeformatter();
         if(pDeformatter != 0)
         {
+            // configuration - memory alinged buffer
             uint32_t configFlags = RCTDL_DFRMTR_FRAME_MEM_ALIGN;
 
-            // we want the raw frames.
+            // if we want the raw frames output
             if(outRawPacked || outRawUnpacked)
             {
                 pDeformatter->getTrcRawFrameAttachPt()->attach(&framePrinter);
@@ -423,8 +448,17 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
             pDeformatter->Configure(configFlags);
         }
 
+        // if decoding set the generic element printer to the output interface on the tree.
+        if(decode)
+        {
+            std::ostringstream oss;
+            dcd_tree->setGenTraceElemOutI(&genElemPrinter);
+            oss << "Trace Packet Lister : Set trace element decode printer\n";
+            logger.LogMsg(oss.str());
+        }
+
          // check if we have attached at least one printer
-        if(printers.size() > 0)
+        if(decode || (printers.size() > 0))
         {
             // set up the filtering at the tree level (avoid pushing to processors with no attached printers)
             if(!all_source_ids)

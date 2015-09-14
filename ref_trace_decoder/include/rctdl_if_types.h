@@ -112,6 +112,8 @@ typedef enum _rctdl_err_t {
     RCTDL_ERR_DCDT_NO_FORMATTER,         /**< No formatter in use - operation not valid. */
     /* target memory access errors */
     RCTDL_ERR_MEM_ACC_OVERLAP,           /**< Attempted to set an overlapping range in memory access map */
+    RCTDL_ERR_MEM_ACC_FILE_NOT_FOUND,    /**< Memory access file could not be opened */
+    RCTDL_ERR_MEM_ACC_FILE_DIFF_RANGE,   /**< Attempt to re-use the same memory access file for a different address range */
     /* test errors - errors generated only by the test code, not the library */
     RCTDL_ERR_TEST_SNAPSHOT_PARSE,       /**< test snapshot file parse error */
     RCTDL_ERR_TEST_SNAPSHOT_PARSE_INFO,  /**< test snapshot file parse information */

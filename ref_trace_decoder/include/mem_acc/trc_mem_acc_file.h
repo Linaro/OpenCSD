@@ -40,8 +40,10 @@
 #include <fstream>
 #include <list>
 
+#include "rctdl_if_types.h"
 #include "mem_acc/trc_mem_acc_base.h"
 
+// an add-on region to a file - allows setting of a region at a none-zero offset for a file.
 class FileRegionMemAccessor : public TrcMemAccessorBase
 {
 public:
@@ -99,7 +101,7 @@ protected:
      *
      * @return bool  : true if set up successfully, false if file could not be opened.
      */
-    bool initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset, size_t size);
+    rctdl_err_t initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset, size_t size);
 
     /** get the file path */
     const std::string &getFilePath() const { return m_file_path; };
@@ -129,6 +131,15 @@ public:
      * @return const bool  : true if the address is in range.
      */
     virtual const bool addrInRange(const rctdl_vaddr_t s_address) const;
+
+    /*!
+     * test if an address is the start of range for this accessor
+     *
+     * @param s_address : Address to test.
+     *
+     * @return const bool  : true if the address is start of range.
+     */
+    virtual const bool addrStartOfRange(const rctdl_vaddr_t s_address) const;
 
     /*!
      * Test number of bytes available from the start address, up to the number of requested bytes.
@@ -167,7 +178,7 @@ public:
      *
      * @return TrcMemAccessorFile * : pointer to accessor if successful, 0 if it could not be created.
      */
-    static TrcMemAccessorFile *createFileAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset = 0, size_t size = 0);
+    static rctdl_err_t createFileAccessor(TrcMemAccessorFile **p_acc, const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset = 0, size_t size = 0);
 
     /*!
      * Destroy supplied accessor. 
@@ -209,7 +220,7 @@ private:
     std::string m_file_path;    /**< path to input file */
     std::list<FileRegionMemAccessor *> m_access_regions;    /**< additional regions in the file at non-zero offsets */
     bool m_base_range_set;      /**< true when offset 0 set */
-    bool m_has_access_regions;
+    bool m_has_access_regions;  /**< true if single file contains multiple regions */
 };
 
 #endif // ARM_TRC_MEM_ACC_FILE_H_INCLUDED

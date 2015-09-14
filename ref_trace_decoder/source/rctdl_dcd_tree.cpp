@@ -235,7 +235,7 @@ void DecodeTree::setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem)
     }
 }
 
-rctdl_err_t DecodeTree::createMemAccMapper(TrcMemAccMapper::memacc_mapper_t type)
+rctdl_err_t DecodeTree::createMemAccMapper(memacc_mapper_t type)
 {
     // clean up any old one
     destroyMemAccMapper();
@@ -244,7 +244,7 @@ rctdl_err_t DecodeTree::createMemAccMapper(TrcMemAccMapper::memacc_mapper_t type
     switch(type)
     {
     default:
-    case TrcMemAccMapper::MEMACC_MAP_GLOBAL:
+    case MEMACC_MAP_GLOBAL:
         m_default_mapper = new (std::nothrow) TrcMemAccMapGlobalSpace();
         break;
     }

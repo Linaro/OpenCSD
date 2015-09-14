@@ -35,6 +35,7 @@
 #ifndef ARM_TRC_MEM_ACC_H_INCLUDED
 #define ARM_TRC_MEM_ACC_H_INCLUDED
 
+#include "trc_mem_acc_base.h"
 #include "trc_mem_acc_bufptr.h"
 #include "trc_mem_acc_file.h"
 #include "trc_mem_acc_mapper.h"
