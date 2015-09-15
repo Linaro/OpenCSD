@@ -348,8 +348,17 @@ void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &d
     while(it != dumps.end())
     {        
         dumpFilePathName = m_pReader->getSnapShotDir() + it->path;
-        
-
+        if(!TrcMemAccessorFile::isExistingFileAccessor(dumpFilePathName))
+        {
+            TrcMemAccessorFile *p_acc;
+            // not already a file accessor on this tree (n.b. assume only one tree in use)
+            rctdl_err_t err =  TrcMemAccessorFile::createFileAccessor(&p_acc,dumpFilePathName,it->address);
+            if(err == RCTDL_OK)
+            { 
+                err == m_pDecodeTree->addMemAccessorToMap(p_acc,0);
+            }
+            // TBD: error handling
+        }
         it++;
     }
 }

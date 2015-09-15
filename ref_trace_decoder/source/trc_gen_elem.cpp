@@ -73,6 +73,10 @@ void RctdlTraceElement::toString(std::string &str) const
             oss << " 0x" << std::hex << st_addr << " ";
             break;
 
+        case RCTDL_GEN_TRC_ELEM_EXCEPTION:
+            oss << "ret addr:0x" << std::hex << st_addr << "; excep num " << gen_value;
+            break;
+
         default: break;
         }
         oss << ")" << std::endl;

@@ -38,7 +38,7 @@
 /** @defgroup gen_trc_elem  Reference CoreSight Trace Decoder Library : Generic Trace Elements
   * @brief Generic trace elements output by the PE trace decode and SW stim decode stages.
   *
-  * Details TBC
+  * 
 @{*/
 
 #include "rctdl_if_types.h"
@@ -69,7 +69,6 @@ typedef enum _rctdl_gen_trc_elem_t
     
 } rctdl_gen_trc_elem_t;
 
-
 typedef struct _rctdl_generic_trace_elem {
     rctdl_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
     rctdl_isa           isa;          /**< instruction set for executed instructions */
@@ -78,8 +77,17 @@ typedef struct _rctdl_generic_trace_elem {
     rctdl_pe_context    context;      /**< PE Context */
     uint64_t            timestamp;    /**< timestamp value for TS element type */
     uint32_t            cycle_count;  /**< cycle count for cycle count element (if none 0 with TS, cycle count for this element also). */
-    uint32_t            gen_value;    /**< general value for simpler types of element. */
-
+    union {
+        uint32_t            gen_value;    /**< general value for simpler types of element. */
+        struct except {
+            uint16_t ex_type;          /**< exception type */
+            uint16_t ex_num;           /**< exception number (CM3 numbered IRQ ) */
+        };
+        struct trace_event {
+            uint16_t ev_type;          /**< event type - trigger, numbered event */
+            uint16_t ev_number;        /**< event number if numbered event type */
+        };
+    };
 } rctdl_generic_trace_elem;
 
 /** @}*/
