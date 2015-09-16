@@ -222,6 +222,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     bool bAllocErr = false;
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     Complete = true;
+    bool is_addr = false;
+    bool is_ctxt = false;
     
 
     switch(m_curr_packet_in->getType())
@@ -273,49 +275,30 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         break;
 
     case ETM4_PKT_I_CTXT:
-        if(m_except_pending_addr_ctxt)
         {
-            TrcStackElemExcept *pElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack[0]);
-            if(pElem)
-            {
-                m_except_pending_addr_ctxt = false;
-                m_curr_spec_depth++;
-                pElem->setContext(m_curr_packet_in->getContext());
-            }
+        TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
+        if(pElem)
+        {
+            pElem->setContext(m_curr_packet_in->getContext());
+            m_P0_stack.push_front(pElem);
         }
         else
-        {
-            TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-            {
-                pElem->setContext(m_curr_packet_in->getContext());
-                m_P0_stack.push_front(pElem);
-            }
-            else
-                bAllocErr = true;
+            bAllocErr = true;
+        is_ctxt = true;
+        }
+        break;
 
-        }
     case ETM4_PKT_I_ADDR_MATCH:
-        if(m_except_pending_addr_ctxt)
         {
-            TrcStackElemExcept *pElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack[0]);
-            if(pElem)
-            {
-                m_except_pending_addr_ctxt = false;
-                m_curr_spec_depth++;
-                pElem->setAddr(m_pAddrRegs->get(m_curr_packet_in->getAddrMatch()));
-            }
+        TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
+        if(pElem)
+        {
+            pElem->setAddr(m_pAddrRegs->get(m_curr_packet_in->getAddrMatch()));
+            m_P0_stack.push_front(pElem);
         }
         else
-        {
-            TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-            {
-                pElem->setAddr(m_pAddrRegs->get(m_curr_packet_in->getAddrMatch()));
-                m_P0_stack.push_front(pElem);
-            }
-            else
-                bAllocErr = true;
+            bAllocErr = true;
+        is_addr = true;
         }
         break;
 
@@ -323,16 +306,6 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_CTXT_L_32IS1:       
     case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
-
-        if(m_except_pending_addr_ctxt)
-        {
-            TrcStackElemExcept *pElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack[0]);
-            if(pElem)
-            {
-                pElem->setContext(m_curr_packet_in->getContext());
-            }
-        }
-        else
         {
             TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
             if(pElem)
@@ -342,7 +315,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             }
             else
                 bAllocErr = true;
-
+            is_ctxt = true;
         }
     case ETM4_PKT_I_ADDR_L_32IS0:
     case ETM4_PKT_I_ADDR_L_32IS1:         
@@ -350,20 +323,6 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_L_64IS1:   
     case ETM4_PKT_I_ADDR_S_IS0:
     case ETM4_PKT_I_ADDR_S_IS1:
-        if(m_except_pending_addr_ctxt)
-        {
-            TrcStackElemExcept *pElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack[0]);
-            if(pElem)
-            {
-                m_except_pending_addr_ctxt = false;
-                m_curr_spec_depth++;
-                etmv4_addr_val_t addr;
-                addr.val = m_curr_packet_in->getAddrVal();
-                addr.isa = m_curr_packet_in->getAddrIS();
-                pElem->setAddr(addr);
-            }
-        }
-        else
         {
             TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
             if(pElem)
@@ -376,7 +335,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             }
             else
                 bAllocErr = true;
-
+            is_addr = true;
         }
         break;
 
@@ -388,8 +347,9 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             {
                 pElem->setPrevSame(m_curr_packet_in->exception_info.addr_interp == 0x1);
                 m_P0_stack.push_front(pElem);
-                m_except_pending_addr_ctxt = true;  // wait for following packets
-
+                m_except_pending_addr_ctxt = true;  // wait for following packets before marking for commit.
+                m_except_has_addr = false;
+                m_except_has_ctxt = false;
             }
             else
                 bAllocErr = true;
@@ -498,6 +458,37 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_DECODE_PKT,"Unknown packet type."));
         break;
 
+    }
+
+    // we need to wait for following address & optional context packet after exception 
+    // - work out if we have seen enough here...
+    if(m_except_pending_addr_ctxt)
+    {
+        bool b_term = false;
+        // check for exception termination condition
+        if(is_addr)
+        {
+            b_term = m_except_has_addr; // 2nd address terminates
+            m_except_has_addr = is_addr;
+        }
+        if(is_ctxt)
+        {
+            b_term = m_except_has_ctxt; // 2nd context terminates.
+            m_except_has_ctxt = is_ctxt;
+        }
+
+        if(!is_ctxt && !is_addr)  // neither type - terminate 
+            b_term = true;
+
+        if(m_except_has_ctxt && m_except_has_addr)  // both done - terminate.
+            b_term = true;
+
+        // exception packet sequence complete
+        if(b_term)
+        {
+            m_except_pending_addr_ctxt = false;
+            m_curr_spec_depth++;   // exceptions are P0 elements so up the spec depth to commit if needed.
+        }        
     }
 
     if(bAllocErr)
@@ -736,6 +727,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val, bool 
     {
         // action according to waypoint type and atom value
 
+
     }
     else
     {
@@ -769,7 +761,7 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     rctdl_err_t err;    
-    bool bWPFound = false;
+    
 
 
     return resp;

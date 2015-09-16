@@ -136,6 +136,8 @@ private:
     bool m_need_ctxt;   //!< need context to continue
     bool m_need_addr;   //!< need an address to continue
     bool m_except_pending_addr_ctxt;    //!< next address/context packet is part of exception.
+    bool m_except_has_addr;
+    bool m_except_has_ctxt;
 
     
     rctdl_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
