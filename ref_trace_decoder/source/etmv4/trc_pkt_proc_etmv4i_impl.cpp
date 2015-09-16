@@ -480,7 +480,6 @@ void EtmV4IPktProcImpl::iPktTimestamp()
 
         m_curr_packet.setTS(tsVal,(uint8_t)ts_bits);
 
-       
         if((m_currPacketData[0] & 0x1) == 0x1)
         {
             uint32_t countVal, countMask;
@@ -780,8 +779,8 @@ void EtmV4IPktProcImpl::iPktContext()
         }
         else
         {
-            m_vmidBytes = ((lastByte & 0x40) == 0x40) ? (m_config.vmidSize()/4) : 0;
-            m_ctxtidBytes = ((lastByte & 0x80) == 0x80) ? (m_config.cidSize()/4) : 0;
+            m_vmidBytes = ((lastByte & 0x40) == 0x40) ? (m_config.vmidSize()/8) : 0;
+            m_ctxtidBytes = ((lastByte & 0x80) == 0x80) ? (m_config.cidSize()/8) : 0;
         }
     }
     else    // 3rd byte onwards
@@ -1454,11 +1453,11 @@ int EtmV4IPktProcImpl::extractContField(const std::vector<uint8_t> &buffer, cons
     value = 0;
     while(!lastByte && (idx < byte_limit))   // max 5 bytes for 32 bit value;
     {
-        if(buffer.size() < (st_idx + idx))
+        if(buffer.size() > (st_idx + idx))
         {
             // each byte has seven bits + cont bit
             byteVal = buffer[(st_idx + idx)];
-            lastByte = (byteVal & 0x80) == 0x80;
+            lastByte = (byteVal & 0x80) != 0x80;
             value |= ((uint32_t)byteVal) << (idx * 7);
             idx++;
         }
@@ -1478,11 +1477,11 @@ int EtmV4IPktProcImpl::extractContField64(const std::vector<uint8_t> &buffer, co
     value = 0;
     while(!lastByte && (idx < byte_limit))   // max 9 bytes for 32 bit value;
     {
-        if(buffer.size() < (st_idx + idx))
+        if(buffer.size() > (st_idx + idx))
         {
             // each byte has seven bits + cont bit
             byteVal = buffer[(st_idx + idx)];
-            lastByte = (byteVal & 0x80) == 0x80;
+            lastByte = (byteVal & 0x80) != 0x80;
             value |= ((uint64_t)byteVal) << (idx * 7);
             idx++;
         }

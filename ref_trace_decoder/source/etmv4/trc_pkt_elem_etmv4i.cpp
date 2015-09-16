@@ -113,6 +113,11 @@ void EtmV4ITrcPacket::toString(std::string &str) const
         str += "; Addr=" + valStr + "; " + ctxtStr;
         break;
 
+    case ETM4_PKT_I_CTXT:
+        contextStr(ctxtStr);
+        str += "; " + ctxtStr;
+        break;
+
     case ETM4_PKT_I_ADDR_S_IS0:
     case ETM4_PKT_I_ADDR_S_IS1:
         trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,v_addr.pkt_bits);
@@ -138,6 +143,15 @@ void EtmV4ITrcPacket::toString(std::string &str) const
         exceptionInfo(valStr);
         str += "; " + valStr;
         break;
+
+    case ETM4_PKT_I_TIMESTAMP:
+        {
+            std::ostringstream oss;
+            oss << "; Updated val = " << std::hex << "0x" << ts.timestamp;
+            str += oss.str();
+        }
+        break;
+        
     }
 }
 
