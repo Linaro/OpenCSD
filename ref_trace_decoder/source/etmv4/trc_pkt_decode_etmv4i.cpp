@@ -143,6 +143,11 @@ rctdl_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
     m_p0_key_max = m_config->P0_Key_Max();
     m_cond_key_max_incr = m_config->CondKeyMaxIncr();
 
+    // set up static trace instruction decode elements
+    m_instr_info.dsb_dmb_waypoints = 0;
+    m_instr_info.pe_type.arch = m_config->archVersion();
+    m_instr_info.pe_type.profile = m_config->coreProfile();
+
     // check config compatible with current decoder support level.
     // at present no data trace, no spec depth, no return stack, no QE
     // Remove these checks as support is added.
@@ -211,7 +216,8 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_cond_r_key = 0;
     m_need_ctxt = true;
     m_need_addr = true;
-    m_except_pending_addr_ctxt = false;
+    m_except_pending_addr = false;
+    m_mem_nacc_pending = false;
 }
 
 
@@ -224,6 +230,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     Complete = true;
     bool is_addr = false;
     bool is_ctxt = false;
+    bool is_except = false;
     
 
     switch(m_curr_packet_in->getType())
@@ -347,13 +354,11 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             {
                 pElem->setPrevSame(m_curr_packet_in->exception_info.addr_interp == 0x1);
                 m_P0_stack.push_front(pElem);
-                m_except_pending_addr_ctxt = true;  // wait for following packets before marking for commit.
-                m_except_has_addr = false;
-                m_except_has_ctxt = false;
+                m_except_pending_addr = true;  // wait for following packets before marking for commit.
+                is_except = true;
             }
             else
                 bAllocErr = true;
-
          }
          break;
 
@@ -460,35 +465,20 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
 
     }
 
-    // we need to wait for following address & optional context packet after exception 
+    // we need to wait for following address after exception 
     // - work out if we have seen enough here...
-    if(m_except_pending_addr_ctxt)
+    if(m_except_pending_addr && !is_except)
     {
-        bool b_term = false;
-        // check for exception termination condition
+        m_except_pending_addr = false;  //next packet has to be an address
+        // exception packet sequence complete
         if(is_addr)
         {
-            b_term = m_except_has_addr; // 2nd address terminates
-            m_except_has_addr = is_addr;
-        }
-        if(is_ctxt)
-        {
-            b_term = m_except_has_ctxt; // 2nd context terminates.
-            m_except_has_ctxt = is_ctxt;
-        }
-
-        if(!is_ctxt && !is_addr)  // neither type - terminate 
-            b_term = true;
-
-        if(m_except_has_ctxt && m_except_has_addr)  // both done - terminate.
-            b_term = true;
-
-        // exception packet sequence complete
-        if(b_term)
-        {
-            m_except_pending_addr_ctxt = false;
             m_curr_spec_depth++;   // exceptions are P0 elements so up the spec depth to commit if needed.
-        }        
+        }
+        else
+        {
+            // TBD: error out here on none address 
+        }
     }
 
     if(bAllocErr)
@@ -690,7 +680,10 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
         }
         else
         {
-            // too few elements for commit operation - decode error.
+            // TBD: too few elements for commit operation - decode error.
+            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_COMMIT_PKT_OVERRUN,pElem->getRootIndex(),m_CSID,"Not enough elements to commit"));
+            bPause = true;
         }
     }
 
@@ -701,7 +694,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val, bool &bCont)
+rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, bool &bCont)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     TrcStackElem *pElem = m_P0_stack.back();  // get the atom element
@@ -726,7 +719,20 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val, bool 
     if(bWPFound)
     {
         // action according to waypoint type and atom value
+        switch(m_instr_info.type)
+        {
+        case RCTDL_INSTR_BR:
+            if(atom == ATOM_E)
+                m_instr_info.instr_addr = m_instr_info.branch_addr;
+            break;
 
+        case RCTDL_INSTR_BR_INDIRECT:
+            if(atom == ATOM_E)
+                m_need_addr = true; // indirect branch taken - need new address.
+            break;
+        }
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+        resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
 
     }
     else
@@ -800,6 +806,7 @@ rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound)
 
         if(bytesReq == 4) // got data back
         {
+            m_instr_info.opcode = opcode;
             err = instrDecode(&m_instr_info);
             if(err != RCTDL_OK) break;
 

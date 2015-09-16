@@ -154,7 +154,7 @@ template<class P> void PacketPrinter<P>::RawPacketDataMon( const rctdl_datapath_
 
 template<class P> void PacketPrinter<P>::printIdx_ID(const rctdl_trc_index_t index_sop)
 {
-    m_oss << "Idx:" << index_sop << "; ID:"<< std::hex << (uint32_t)m_trcID;
+    m_oss << "Idx:" << std::dec << index_sop << "; ID:"<< std::hex << (uint32_t)m_trcID;
 }
 
 

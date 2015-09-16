@@ -80,17 +80,17 @@ public:
     /* create packet processing element only - attach to CSID in config
        optionally attach the output interface
        */
-    rctdl_err_t createETMv3PktProcessor(const EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout = 0);
-    rctdl_err_t createETMv4IPktProcessor(const EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout = 0);
-    rctdl_err_t createETMv4DPktProcessor(const EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout = 0);
-    rctdl_err_t createPTMPktProcessor(const PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout = 0);
+    rctdl_err_t createETMv3PktProcessor(EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout = 0);
+    rctdl_err_t createETMv4IPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout = 0);
+    rctdl_err_t createETMv4DPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout = 0);
+    rctdl_err_t createPTMPktProcessor(PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout = 0);
 
     /* create full decoder - packet processor + packet decoder  - attach to CSID in config 
        All use the standard generic elements output interface.
     */
-    rctdl_err_t createETMv3Decoder(const EtmV3Config *p_config);
-    rctdl_err_t createETMv4Decoder(const EtmV4Config *p_config, bool bDataChannel = false);
-    rctdl_err_t createPTMDecoder(const PtmConfig *p_config);
+    rctdl_err_t createETMv3Decoder(EtmV3Config *p_config);
+    rctdl_err_t createETMv4Decoder(EtmV4Config *p_config, bool bDataChannel = false);
+    rctdl_err_t createPTMDecoder(PtmConfig *p_config);
 
     /* remove a decoder / packet processor attached to an ID  - allows another decoder to be substituted. */
     rctdl_err_t removeDecoder(const uint8_t CSID);

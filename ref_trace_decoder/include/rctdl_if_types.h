@@ -108,6 +108,7 @@ typedef enum _rctdl_err_t {
     RCTDL_ERR_HW_CFG_UNSUPP,            /**< Programmed trace configuration not supported by decoder.*/
     RCTDL_ERR_UNSUPP_DECODE_PKT,        /**< Packet not supported in decoder */
     RCTDL_ERR_BAD_DECODE_PKT,           /**< reserved or unknown packet in decoder. */
+    RCTDL_ERR_COMMIT_PKT_OVERRUN,       /**< overrun in commit packet stack - tried to commit more than available */
     /* decode tree errors */
     RCTDL_ERR_DCDT_NO_FORMATTER,         /**< No formatter in use - operation not valid. */
     /* target memory access errors */

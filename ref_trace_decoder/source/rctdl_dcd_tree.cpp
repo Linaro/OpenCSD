@@ -275,7 +275,7 @@ void DecodeTree::destroyMemAccMapper()
 
 
 /* create packet processing element only - attach to CSID in config */
-rctdl_err_t DecodeTree::createETMv3PktProcessor(const EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout /*= 0*/)
+rctdl_err_t DecodeTree::createETMv3PktProcessor(EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout /*= 0*/)
 {
     rctdl_err_t err = RCTDL_OK;
 #if 0
@@ -319,7 +319,7 @@ rctdl_err_t DecodeTree::createETMv3PktProcessor(const EtmV3Config *p_config, IPk
     return err;
 }
 
-rctdl_err_t DecodeTree::createETMv4IPktProcessor(const EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout/* = 0*/)
+rctdl_err_t DecodeTree::createETMv4IPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout/* = 0*/)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
     uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
@@ -362,7 +362,7 @@ rctdl_err_t DecodeTree::createETMv4IPktProcessor(const EtmV4Config *p_config, IP
     return err;
 }
 
-rctdl_err_t DecodeTree::createETMv4DPktProcessor(const EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout/* = 0*/)
+rctdl_err_t DecodeTree::createETMv4DPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout/* = 0*/)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
     uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
@@ -401,7 +401,7 @@ rctdl_err_t DecodeTree::createETMv4DPktProcessor(const EtmV4Config *p_config, IP
     return err;
 }
 
-rctdl_err_t DecodeTree::createPTMPktProcessor(const PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout /*= 0*/)
+rctdl_err_t DecodeTree::createPTMPktProcessor(PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout /*= 0*/)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
         //** TBD
@@ -409,7 +409,7 @@ rctdl_err_t DecodeTree::createPTMPktProcessor(const PtmConfig *p_config, IPktDat
 }
 
 /* create full decoder - packet processor + packet decoder  - attach to CSID in config */
-rctdl_err_t DecodeTree::createETMv3Decoder(const EtmV3Config *p_config)
+rctdl_err_t DecodeTree::createETMv3Decoder(EtmV3Config *p_config)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
 #if 0 //TBD:
@@ -425,7 +425,7 @@ rctdl_err_t DecodeTree::createETMv3Decoder(const EtmV3Config *p_config)
     return err;
 }
 
-rctdl_err_t DecodeTree::createETMv4Decoder(const EtmV4Config *p_config, bool bDataChannel /*= false*/)
+rctdl_err_t DecodeTree::createETMv4Decoder(EtmV4Config *p_config, bool bDataChannel /*= false*/)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
     uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
@@ -444,7 +444,8 @@ rctdl_err_t DecodeTree::createETMv4Decoder(const EtmV4Config *p_config, bool bDa
         if(err == RCTDL_OK)
         {
             m_decode_elements[CSID]->SetDecoderElement(pProc);
-            if(m_i_instr_decode)
+            err = pProc->setProtocolConfig(p_config);
+            if(m_i_instr_decode && (err == RCTDL_OK))
                 err = pProc->getInstrDecodeAttachPt()->attach(m_i_instr_decode);
             if(m_i_mem_access && (err == RCTDL_OK))
                 err = pProc->getMemoryAccessAttachPt()->attach(m_i_mem_access);
@@ -461,7 +462,7 @@ rctdl_err_t DecodeTree::createETMv4Decoder(const EtmV4Config *p_config, bool bDa
     return err;
 }
 
-rctdl_err_t DecodeTree::createPTMDecoder(const PtmConfig *p_config)
+rctdl_err_t DecodeTree::createPTMDecoder(PtmConfig *p_config)
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
         //** TBD
