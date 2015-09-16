@@ -72,6 +72,7 @@ static bool outRawUnpacked = false;
 static bool ss_verbose = false;
 static bool decode = false;
 static bool no_undecoded_packets = false;
+static bool pkt_mon = false;
 
 int main(int argc, char* argv[])
 {
@@ -335,6 +336,10 @@ bool process_cmd_line_opts(int argc, char* argv[])
             {
                 decode = true;              
             }
+            else if(strcmp(argv[optIdx], "-pkt_mon") == 0)
+            {
+                pkt_mon = true;              
+            }
             else if(strcmp(argv[optIdx], "-decode_only") == 0)
             {
                 no_undecoded_packets = true;
@@ -404,7 +409,7 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                         if(pPrinter)
                         {
                             // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
-                            if(decode)
+                            if(decode || pkt_mon)
                                 pElement->getEtmV4IPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
                             else
                                 pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);

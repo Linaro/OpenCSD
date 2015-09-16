@@ -196,13 +196,19 @@ void  CreateDcdTreeFromSnapShot::LogError(const std::string &msg)
 bool CreateDcdTreeFromSnapShot::createPEDecoder(const std::string &coreName, Parser::Parsed *devSrc)
 {
     bool bCreatedDecoder = false;
+    std::string devTypeName = devSrc->deviceTypeName;
+
+    // split off .x from type name.
+    std::string::size_type pos = devTypeName.find_first_of('.');
+    if(pos != std::string::npos)
+        devTypeName = devTypeName.substr(0,pos);
 
     // split according to protocol 
-    if(devSrc->deviceTypeName == ETMv4Protocol)
+    if(devTypeName == ETMv4Protocol)
     {
         bCreatedDecoder = createETMv4Decoder(coreName,devSrc);
     }
-
+    // TBD create other protocols here.
     return bCreatedDecoder;
 }
 
