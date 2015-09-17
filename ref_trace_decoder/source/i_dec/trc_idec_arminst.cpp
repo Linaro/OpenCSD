@@ -534,9 +534,9 @@ arm_barrier_t inst_A64_barrier(uint32_t inst)
         switch (inst & 0x60) {
         case 0x0:
             return ARM_BARRIER_DSB;
-        case 0x02:
+        case 0x20:
             return ARM_BARRIER_DMB;
-        case 0x04:
+        case 0x40:
             return ARM_BARRIER_ISB;
         default:
             return ARM_BARRIER_NONE;
