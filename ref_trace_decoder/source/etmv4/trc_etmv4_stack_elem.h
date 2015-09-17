@@ -128,17 +128,29 @@ public:
     TrcStackElemAddr(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
     virtual ~TrcStackElemAddr() {};
 
-    void setAddr(const etmv4_addr_val_t addr_val) { m_addr_val = addr_val; };
+    void setAddr(const etmv4_addr_val_t addr_val, const bool is64bit) { m_addr_val = addr_val; m_64bit = is64bit; };
+    void setAddrMatch(const int idx) { m_is_addr_match = true; m_addr_match_idx = idx; };
 
+    const bool is64bit() const { return m_64bit; };
     const etmv4_addr_val_t &getAddr() const { return m_addr_val; };
+    const bool isAddrMatch(int &idx) const { idx = m_addr_match_idx; return m_is_addr_match; };
+
 
 private:
     etmv4_addr_val_t m_addr_val;
+    bool m_64bit;
+    bool m_is_addr_match;
+    int  m_addr_match_idx;
 };
 
 inline TrcStackElemAddr::TrcStackElemAddr(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
-    TrcStackElem(P0_ADDR, false, root_pkt,root_index)
+    TrcStackElem(P0_ADDR, false, root_pkt,root_index),
+        m_64bit(false),
+        m_is_addr_match(false),
+        m_addr_match_idx(0)
 {
+    m_addr_val.val = 0;
+    m_addr_val.isa = 0;
 }
 
 /************************************************************/
@@ -174,12 +186,16 @@ public:
     void setPrevSame(bool bSame) { m_prev_addr_same = bSame; };
     const bool getPrevSame() const { return m_prev_addr_same; };
 
+    void setExcepNum(const uint16_t num) { m_excep_num = num; };
+    const uint16_t getExcepNum() const { return m_excep_num; };
+
 private:
     bool m_prev_addr_same;
+    uint16_t m_excep_num;
 };
 
 inline TrcStackElemExcept::TrcStackElemExcept(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
-    TrcStackElem(P0_CTXT, true, root_pkt,root_index),
+    TrcStackElem(P0_EXCEP, true, root_pkt,root_index),
         m_prev_addr_same(false)
 {
 }

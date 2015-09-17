@@ -148,6 +148,8 @@ rctdl_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
     m_instr_info.pe_type.arch = m_config->archVersion();
     m_instr_info.pe_type.profile = m_config->coreProfile();
 
+    m_IASize64 = (m_config->iaSizeMax() == 64);
+
     // check config compatible with current decoder support level.
     // at present no data trace, no spec depth, no return stack, no QE
     // Remove these checks as support is added.
@@ -193,6 +195,7 @@ void TrcPktDecodeEtmV4I::initDecoder()
      m_p0_key_max = 0;
      m_CSID = 0;
      m_cond_key_max_incr = 0;
+     m_IASize64 = false;
 
      // set up the broadcast address stack
      m_pAddrRegs = new (std::nothrow) AddrValStack();
@@ -218,6 +221,12 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_need_addr = true;
     m_except_pending_addr = false;
     m_mem_nacc_pending = false;
+
+    etmv4_addr_val_t addr;
+    addr.isa = 0;
+    addr.val = 0;
+    m_pAddrRegs->push(addr);    // preload first value with 0x0
+
 }
 
 
@@ -231,6 +240,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     bool is_addr = false;
     bool is_ctxt = false;
     bool is_except = false;
+    bool is_64L = false;
     
 
     switch(m_curr_packet_in->getType())
@@ -300,7 +310,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
         if(pElem)
         {
-            pElem->setAddr(m_pAddrRegs->get(m_curr_packet_in->getAddrMatch()));
+            pElem->setAddrMatch(m_curr_packet_in->getAddrMatch());  // must wait till speculation is resolved before we know the rigth address / index match
             m_P0_stack.push_front(pElem);
         }
         else
@@ -309,10 +319,11 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         }
         break;
 
-    case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
-    case ETM4_PKT_I_ADDR_CTXT_L_32IS1:       
     case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
+        is_64L = true;
+    case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
+    case ETM4_PKT_I_ADDR_CTXT_L_32IS1:    
         {
             TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
             if(pElem)
@@ -325,9 +336,12 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             is_ctxt = true;
         }
     case ETM4_PKT_I_ADDR_L_32IS0:
-    case ETM4_PKT_I_ADDR_L_32IS1:         
+    case ETM4_PKT_I_ADDR_L_32IS1:
     case ETM4_PKT_I_ADDR_L_64IS0:
-    case ETM4_PKT_I_ADDR_L_64IS1:   
+    case ETM4_PKT_I_ADDR_L_64IS1:
+        if((m_curr_packet_in->getType() == ETM4_PKT_I_ADDR_L_64IS0) ||
+           (m_curr_packet_in->getType() == ETM4_PKT_I_ADDR_L_64IS1))
+           is_64L = true;
     case ETM4_PKT_I_ADDR_S_IS0:
     case ETM4_PKT_I_ADDR_S_IS1:
         {
@@ -335,9 +349,10 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             if(pElem)
             {
                 etmv4_addr_val_t addr;
+
                 addr.val = m_curr_packet_in->getAddrVal();
                 addr.isa = m_curr_packet_in->getAddrIS();
-                pElem->setAddr(addr);
+                pElem->setAddr(addr,is_64L);
                 m_P0_stack.push_front(pElem);
             }
             else
@@ -356,6 +371,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
                 m_P0_stack.push_front(pElem);
                 m_except_pending_addr = true;  // wait for following packets before marking for commit.
                 is_except = true;
+                pElem->setExcepNum(m_curr_packet_in->exception_info.exceptionType);
             }
             else
                 bAllocErr = true;
@@ -492,7 +508,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         // (this will auto commit anything if spec depth not supported!)
         m_P0_commit = m_curr_spec_depth - m_max_spec_depth;
         m_curr_state = COMMIT_ELEM;
-        Complete = false;   // force the processing of the commit elements.
+        Complete = false;   // force the processing of the commit elements.        
     }
     return resp;
 }
@@ -515,7 +531,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
     bool bPause = false;    // pause commit operation 
     bool bDecodeFatalErr = false;   // bad sequencing or other issue.
     bool bPopElem = true;       // do we remove the element from the stack (multi atom elements may need to stay!)
-    
+    int num_commit_req = m_P0_commit;
+
     Complete = true; // assume we exit due to completion of commit operation
 
     TrcStackElem *pElem;    // stacked element pointer
@@ -539,9 +556,32 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 TrcStackElemAddr *pAddrElem = dynamic_cast<TrcStackElemAddr *>(pElem);
                 if(pAddrElem)
                 {
-                    m_pAddrRegs->push(pAddrElem->getAddr());
+                    int match_idx = 0;
+                    if(pAddrElem->isAddrMatch(match_idx))
+                    {
+                        SetInstrInfoInAddrISA(m_pAddrRegs->get(match_idx).val,m_pAddrRegs->get(match_idx).isa);
+                    }
+                    else
+                    {
+                        // if 64 bit value, or IAsize is 32 bit only...
+                        if(!m_IASize64 || pAddrElem->is64bit())
+                        {
+                            // use value immediately
+                            SetInstrInfoInAddrISA(pAddrElem->getAddr().val,pAddrElem->getAddr().isa);
+                            m_pAddrRegs->push(pAddrElem->getAddr());
+                        }
+                        else
+                        {
+                            // otherwise 32 bit values must add in the top 32 from the stack
+                            etmv4_addr_val_t new_addr = m_pAddrRegs->get(0);
+                            new_addr.val &= ~0xFFFFFFFF;
+                            new_addr.val |= (pAddrElem->getAddr().val & 0xFFFFFFFF);
+                            new_addr.isa = pAddrElem->getAddr().isa;
+                            SetInstrInfoInAddrISA(new_addr.val,new_addr.isa);
+                            m_pAddrRegs->push(new_addr);
+                        }                                                                                                
+                    }
                     m_need_addr = false;
-                    SetInstrInfoInAddrISA(pAddrElem->getAddr().val,pAddrElem->getAddr().isa);
                 }
                 }
                 break;
@@ -555,23 +595,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                     // check this is an updated context
                     if(ctxt.updated)
                     {
-                        // map to output element  and local saved state.
-                        m_is_64bit = (ctxt.SF != 0);
-                        m_output_elem.context.bits64 = ctxt.SF;
-                        m_is_secure = (ctxt.NS == 0);
-                        m_output_elem.context.security_level = ctxt.NS ? rctdl_sec_nonsecure : rctdl_sec_secure;
-                        m_output_elem.context.exception_level = (rctdl_ex_level)ctxt.EL;
-                        if(ctxt.updated_c)
-                        {
-                            m_output_elem.context.ctxt_id_valid = 1;
-                            m_context_id = m_output_elem.context.context_id = ctxt.ctxtID;
-                        }
-                        if(ctxt.updated_v)
-                        {
-                            m_output_elem.context.vmid_valid = 1;
-                            m_vmid_id = m_output_elem.context.vmid = ctxt.VMID;
-                        }
-                        m_need_ctxt = false;
+                        updateContext(pCtxtElem);
+
                         m_output_elem.setType(RCTDL_GEN_TRC_ELEM_PE_CONTEXT);
                         resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                     }
@@ -691,6 +716,9 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
     if(m_P0_commit == 0)    
         m_curr_state = DECODE_PKTS;
 
+    // reduce the spec depth by number of comitted elements
+    m_curr_spec_depth -= (num_commit_req-m_P0_commit);
+
     return resp;
 }
 
@@ -708,11 +736,17 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
         // TBD: set up error handling
         if(err == RCTDL_ERR_UNSUPPORTED_ISA)
         {
-            
+             m_need_addr = true;
+             m_need_ctxt = true;
+             // wait for next context
+             return resp;
         }
         else
         {
-
+            bCont = false;
+            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,pElem->getRootIndex(),m_CSID,"Error processing atom packet."));  
+            return resp;
         }
     }
 
@@ -751,7 +785,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
         {
             if(RCTDL_DATA_RESP_IS_CONT(resp))
             {
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
                 m_output_elem.st_addr = m_nacc_addr;
                 resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                 m_mem_nacc_pending = false;
@@ -767,9 +801,80 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     rctdl_err_t err;    
-    
+    TrcStackElemExcept *pExceptElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack.back());  // get the exception element
+    TrcStackElemAddr *pAddressElem = 0;
+    TrcStackElemCtxt *pCtxtElem = 0;
+    TrcStackElem *pElem = 0;
 
+    m_P0_stack.pop_back(); // remove the exception element
+    pElem = m_P0_stack.back();  // look at next element.
+    if(pElem->getP0Type() == P0_CTXT)
+    {
+        pCtxtElem = dynamic_cast<TrcStackElemCtxt *>(pElem);
+        m_P0_stack.pop_back(); // remove the context element
+        pElem = m_P0_stack.back();  // next one should be an address element
+    }
+   
+    if(pElem->getP0Type() != P0_ADDR)
+    {
+        // no following address element - indicate processing error.
+        resp = RCDTL_RESP_FATAL_INVALID_DATA;
+        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,pExceptElem->getRootIndex(),m_CSID,"Address missing in exception packet."));  
+    }
+    else
+    {
+        // extract address
+        pAddressElem = static_cast<TrcStackElemAddr *>(pElem);
+        etmv4_addr_val_t addr;
+        int match_idx;
+        if(pAddressElem->isAddrMatch(match_idx))
+        {
+            addr = m_pAddrRegs->get(match_idx);
+        }
+        else
+        {
+            // if 64 bit value, or IAsize is 32 bit only...
+            if(!m_IASize64 || pAddressElem->is64bit())
+            {
+                // use value immediately
+                addr = pAddressElem->getAddr();                
+            }
+            else
+            {
+                // otherwise 32 bit values must add in the top 32 from the stack
+                addr = m_pAddrRegs->get(0);
+                addr.val &= ~0xFFFFFFFF;
+                addr.val |= (pAddressElem->getAddr().val & 0xFFFFFFFF);
+                addr.isa = pAddressElem->getAddr().isa;
+            }                                                                                                
+        }
 
+        // if we have context, get that.
+        if(pCtxtElem)
+             updateContext(pCtxtElem);
+
+        // if implied same as previous P0 target then add to instruction start address,
+        if(pExceptElem->getPrevSame())
+        {
+            SetInstrInfoInAddrISA(addr.val,addr.isa);
+            m_output_elem.isa = m_instr_info.isa;
+        }
+
+        // last instr_info address is the start address - which may now also be the pref ret addr.
+        m_output_elem.st_addr = m_instr_info.instr_addr;
+
+        // add end address as preferred return address to end addr in element
+        m_output_elem.en_addr = addr.val;
+
+        if(!pAddressElem->isAddrMatch(match_idx))
+            m_pAddrRegs->push(addr);
+        
+        m_output_elem.gen_value = pExceptElem->getExcepNum();
+
+        // output element.
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION);
+        resp = outputTraceElementIdx(pExceptElem->getRootIndex(),m_output_elem);        
+    }   
     return resp;
 }
 
@@ -827,5 +932,28 @@ rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound)
     }
     return err;
 }
+
+void TrcPktDecodeEtmV4I::updateContext(TrcStackElemCtxt *pCtxtElem)
+{
+    etmv4_context_t ctxt = pCtxtElem->getContext();
+    // map to output element  and local saved state.
+    m_is_64bit = (ctxt.SF != 0);
+    m_output_elem.context.bits64 = ctxt.SF;
+    m_is_secure = (ctxt.NS == 0);
+    m_output_elem.context.security_level = ctxt.NS ? rctdl_sec_nonsecure : rctdl_sec_secure;
+    m_output_elem.context.exception_level = (rctdl_ex_level)ctxt.EL;
+    if(ctxt.updated_c)
+    {
+        m_output_elem.context.ctxt_id_valid = 1;
+        m_context_id = m_output_elem.context.context_id = ctxt.ctxtID;
+    }
+    if(ctxt.updated_v)
+    {
+        m_output_elem.context.vmid_valid = 1;
+        m_vmid_id = m_output_elem.context.vmid = ctxt.VMID;
+    }
+    m_need_ctxt = false;
+}
+
 
 /* End of File trc_pkt_decode_etmv4i.cpp */

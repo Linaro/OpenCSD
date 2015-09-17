@@ -44,6 +44,7 @@
 
 class AddrValStack;
 class TrcStackElem;
+class TrcStackElemCtxt;
 
 class TrcPktDecodeEtmV4I : public TrcPktDecodeBase<EtmV4ITrcPacket, EtmV4Config>
 {
@@ -69,8 +70,8 @@ protected:
     rctdl_datapath_resp_t commitElements(bool &Complete);   // commit elements - may get wait response, or flag completion.
 
     void doTraceInfoPacket();
-
-
+    void updateContext(TrcStackElemCtxt *pCtxtElem);
+    
     // process atom will output instruction trace, or no memory access trace elements. 
     rctdl_datapath_resp_t processAtom(const rctdl_atm_val, bool &bCont);
 
@@ -113,6 +114,8 @@ private:
     int m_cond_key_max_incr;
 
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.
+
+    bool m_IASize64;    //!< True if 64 bit instruction addresses supported.
 
 //** Other processor state;
 

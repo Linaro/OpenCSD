@@ -66,7 +66,7 @@ void RctdlTraceElement::toString(std::string &str) const
         switch(elem_type)
         {
         case RCTDL_GEN_TRC_ELEM_INSTR_RANGE:
-            oss << " 0x" << std::hex << st_addr << ":0x" << en_addr << " ";
+            oss << "exec range=0x" << std::hex << st_addr << ":0x" << en_addr-1 << " ";
             break;
 
         case RCTDL_GEN_TRC_ELEM_ADDR_NACC:
@@ -74,7 +74,11 @@ void RctdlTraceElement::toString(std::string &str) const
             break;
 
         case RCTDL_GEN_TRC_ELEM_EXCEPTION:
-            oss << "ret addr:0x" << std::hex << st_addr << "; excep num " << gen_value;
+            if(en_addr != st_addr)
+            {
+                oss << "exec range=0x" << std::hex << st_addr << ":0x" << en_addr-1 << "; ";
+            }
+            oss << "pref ret addr:0x" << std::hex << en_addr << "; excep num " << gen_value;
             break;
 
         default: break;

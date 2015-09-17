@@ -67,7 +67,8 @@ static const char *s_errorCodeDescs[][2] = {
     {"RCTDL_ERR_UNSUPPORTED_ISA","ISA not supported in decoder"},
     {"RCTDL_ERR_HW_CFG_UNSUPP","Programmed trace configuration not supported by decoder."},
     {"RCTDL_ERR_UNSUPP_DECODE_PKT","Packet not supported in decoder"},
-    {"RCTDL_ERR_BAD_DECODE_PKT","Reserved or unknown packet in decoder."},    
+    {"RCTDL_ERR_BAD_DECODE_PKT","Reserved or unknown packet in decoder."}, 
+    {"RCTDL_ERR_COMMIT_PKT_OVERRUN","Overrun in commit packet stack - tried to commit more than available"},
     /* decode tree errors */
     {"RCTDL_ERR_DCDT_NO_FORMATTER","No formatter in use - operation not valid."},
     /* target memory access errors */
@@ -80,7 +81,7 @@ static const char *s_errorCodeDescs[][2] = {
     {"RCTDL_ERR_TEST_SNAPSHOT_READ","test snapshot reader error"},
     {"RCTDL_ERR_TEST_SS_TO_DECODER","test snapshot to decode tree conversion error"},
     /* end marker*/
-    {"RCTDL_ERR_LAST", "No error - code end marker"}
+    {"RCTDL_ERR_LAST", "No error - error code end marker"}
 };
 
 rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t code) :

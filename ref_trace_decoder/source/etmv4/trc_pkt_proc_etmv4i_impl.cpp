@@ -805,8 +805,9 @@ void EtmV4IPktProcImpl::extractAndSetContextInfo(const std::vector<uint8_t> &buf
 {
     // on input, buffer index points at the info byte - always present
     uint8_t infoByte = m_currPacketData[st_idx];
-    m_curr_packet.setContextInfo((infoByte & 0x3) != 0, (infoByte >> 5) & 0x1, (infoByte >> 4) & 0x1);
     
+    m_curr_packet.setContextInfo(true, (infoByte & 0x3), (infoByte >> 5) & 0x1, (infoByte >> 4) & 0x1);    
+
     // see if there are VMID and CID bytes, and how many.
     int nVMID_bytes = ((infoByte & 0x40) == 0x40) ? (m_config.vmidSize()/8) : 0;
     int nCtxtID_bytes = ((infoByte & 0x80) == 0x80) ? (m_config.cidSize()/8) : 0;

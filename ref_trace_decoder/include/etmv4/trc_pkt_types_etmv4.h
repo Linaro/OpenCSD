@@ -186,10 +186,10 @@ typedef struct _rctdl_etmv4_i_pkt
     etmv4_trace_info_t trace_info;
 
     struct {
-        uint32_t exceptionType:10;
-        uint32_t addr_interp:2;
-        uint32_t m_fault_pending:1;
-        uint32_t m_type:1;
+        uint32_t exceptionType:10;      //!< exception number
+        uint32_t addr_interp:2;         //!< address value interpretation
+        uint32_t m_fault_pending:1;     //!< M class fault pending.
+        uint32_t m_type:1;              //!< 1 if M class exception.
     } exception_info;
     
 

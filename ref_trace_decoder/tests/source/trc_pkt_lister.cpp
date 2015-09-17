@@ -66,7 +66,7 @@ static std::vector<uint8_t> id_list;    // output specific IDs in source
 
 static rctdlMsgLogger logger;
 static int logOpts = rctdlMsgLogger::OUT_STDOUT | rctdlMsgLogger::OUT_FILE;
-static std::string logfileName = "trc_pkt_lister.log";
+static std::string logfileName = "trc_pkt_lister.ppl";
 static bool outRawPacked = false;
 static bool outRawUnpacked = false;
 static bool ss_verbose = false;
