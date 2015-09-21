@@ -79,12 +79,12 @@ typedef struct _rctdl_generic_trace_elem {
     uint32_t            cycle_count;  /**< cycle count for cycle count element (if none 0 with TS, cycle count for this element also). */
     uint32_t            gen_value;    /**< general value for simpler types of element. */
     
-    struct _except {
+    struct exception_t {
         uint16_t ex_type;         /**< exception type */
         uint16_t ex_num;          /**< exception number (CM3 numbered IRQ ) */
     } exception;
 
-    struct _trace_event {
+    struct trace_event_t {
             uint16_t ev_type;          /**< event type - trigger, numbered event */
             uint16_t ev_number;        /**< event number if numbered event type */
     } trace_event;
