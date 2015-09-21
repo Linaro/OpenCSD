@@ -76,7 +76,8 @@ OBJECTS=$(BUILD_DIR)/rctdl_dcd_tree.o \
 		$(BUILD_DIR)/trc_idec_arminst.o \
 		$(BUILD_DIR)/trc_mem_acc_mapper.o \
 		$(BUILD_DIR)/trc_mem_acc_bufptr.o \
-		$(BUILD_DIR)/trc_mem_acc_file.o
+		$(BUILD_DIR)/trc_mem_acc_file.o \
+		$(BUILD_DIR)/trc_gen_elem.o
 
 all: build_dir $(OBJECTS)
 	mkdir -p $(LIB_TARGET_DIR)

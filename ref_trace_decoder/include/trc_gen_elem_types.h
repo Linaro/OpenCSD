@@ -77,17 +77,17 @@ typedef struct _rctdl_generic_trace_elem {
     rctdl_pe_context    context;      /**< PE Context */
     uint64_t            timestamp;    /**< timestamp value for TS element type */
     uint32_t            cycle_count;  /**< cycle count for cycle count element (if none 0 with TS, cycle count for this element also). */
-    union {
-        uint32_t            gen_value;    /**< general value for simpler types of element. */
-        struct except {
-            uint16_t ex_type;          /**< exception type */
-            uint16_t ex_num;           /**< exception number (CM3 numbered IRQ ) */
-        };
-        struct trace_event {
+    uint32_t            gen_value;    /**< general value for simpler types of element. */
+    
+    struct _except {
+        uint16_t ex_type;         /**< exception type */
+        uint16_t ex_num;          /**< exception number (CM3 numbered IRQ ) */
+    } exception;
+
+    struct _trace_event {
             uint16_t ev_type;          /**< event type - trigger, numbered event */
             uint16_t ev_number;        /**< event number if numbered event type */
-        };
-    };
+    } trace_event;
 } rctdl_generic_trace_elem;
 
 /** @}*/
