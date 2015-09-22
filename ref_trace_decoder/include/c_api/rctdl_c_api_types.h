@@ -76,6 +76,12 @@ typedef rctdl_datapath_resp_t (* FnTraceElemIn)(const rctdl_trc_index_t index_so
 /** function pointer type for ETMv4 packet processor output, packet analyser/decoder input */
 typedef rctdl_datapath_resp_t (* FnEtmv4IPacketDataIn)(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv4_i_pkt *p_packet_in);
 
+/** function pointer type for ETMv4 packet processor monitor output, raw packet monitor / display input  */
+typedef void (* FnEtmv4IPktMonDataIn)(  const rctdl_datapath_op_t op, 
+                                        const rctdl_trc_index_t index_sop, 
+                                        const rctdl_etmv4_i_pkt *p_packet_in,
+                                        const uint32_t size,
+                                        const uint8_t *p_data);
 /** @}*/
 
 

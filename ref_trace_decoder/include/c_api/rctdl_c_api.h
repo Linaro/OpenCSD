@@ -122,11 +122,27 @@ RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t hand
  */
 RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn);
 
-/* TBD: full decoder -> packet processor attached to a packet decoder -> output via common generic elements interface 
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *rctdl_etmv4_cfg);
-*/
+/*!
+ * Creates a packet processor + packet decoder pair for the supplied configuration structure.
+ * Uses the output function set in rctdl_dt_set_gen_elem_outfn() as the output sink.
+ *
+ * @param handle : Handle to decode tree.
+ * @param *rctdl_etmv4_cfg : pointer to valid Etmv4 configuration structure.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *etmv4_cfg);
 
-
+/*!
+ * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
+ *
+ * @param handle : Handle to decode tree.
+ * @param trace_id : CoreSight Trace ID for packet processor 
+ * @param pPktFn : Function to attach to monitor point.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn); 
 
 /** TBD : more C API functions to be added here */    
     

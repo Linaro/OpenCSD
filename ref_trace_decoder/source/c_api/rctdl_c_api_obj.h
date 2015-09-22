@@ -10,6 +10,7 @@
 
 #include "c_api/rctdl_c_api_types.h"
 #include "interfaces/trc_gen_elem_in_i.h"
+ 
 
 class TraceElemCBBase
 {
@@ -48,6 +49,22 @@ private:
     FnEtmv4IPacketDataIn m_c_api_cb_fn;
 };
 
+
+class EtmV4IPktMonCBObj : public IPktRawDataMon<EtmV4ITrcPacket>, public TraceElemCBBase
+{
+public:
+    EtmV4IPktMonCBObj(FnEtmv4IPktMonDataIn pCBFn);
+    virtual ~EtmV4IPktMonCBObj() {};
+    
+    virtual void RawPacketDataMon( const rctdl_datapath_op_t op,
+                                   const rctdl_trc_index_t index_sop,
+                                   const EtmV4ITrcPacket *p_packet_in,
+                                   const uint32_t size,
+                                   const uint8_t *p_data);
+                                   
+private:
+    FnEtmv4IPktMonDataIn m_c_api_cb_fn;
+};
 
 #endif // ARM_RCTDL_C_API_OBJ_H_INCLUDED
 
