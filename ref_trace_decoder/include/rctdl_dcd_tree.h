@@ -107,6 +107,7 @@ public:
     /* create mapper within the decode tree. */ 
     rctdl_err_t createMemAccMapper(memacc_mapper_t type = MEMACC_MAP_GLOBAL);
     rctdl_err_t addMemAccessorToMap(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id);
+    const bool hasMemAccMapper() const { return (bool)(m_default_mapper != 0); };
 
     /* get decoder elements currently in use  */
     DecodeTreeElement *getDecoderElement(const uint8_t CSID) const;

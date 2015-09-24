@@ -252,6 +252,7 @@ rctdl_err_t DecodeTree::createMemAccMapper(memacc_mapper_t type)
     // set the access interface
     if(m_default_mapper)
         setMemAccessI(m_default_mapper);
+
     return (m_default_mapper != 0) ? RCTDL_OK : RCTDL_ERR_MEM;
 }
 

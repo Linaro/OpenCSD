@@ -58,6 +58,10 @@ public:
     void setContext(const rctdl_pe_context &new_context) { context = new_context; };
 
     virtual void toString(std::string &str) const;
+
+    RctdlTraceElement &operator =(const rctdl_generic_trace_elem* p_elem);
+
+    static void toString(const rctdl_generic_trace_elem *p_elem, std::string &str);
 };
 
 inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)    
@@ -69,8 +73,6 @@ inline RctdlTraceElement::RctdlTraceElement()
 {
     elem_type = RCTDL_GEN_TRC_ELEM_UNKNOWN;
 }
-
-
 
 /** @}*/
 

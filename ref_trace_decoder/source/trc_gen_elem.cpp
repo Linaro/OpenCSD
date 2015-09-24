@@ -92,4 +92,17 @@ void RctdlTraceElement::toString(std::string &str) const
     str = oss.str();
 }
 
+RctdlTraceElement &RctdlTraceElement::operator =(const rctdl_generic_trace_elem* p_elem)
+{
+    *dynamic_cast<rctdl_generic_trace_elem*>(this) = *p_elem;
+    return *this;
+}
+
+void RctdlTraceElement::toString(const rctdl_generic_trace_elem *p_elem, std::string &str)
+{
+    RctdlTraceElement elem;
+    elem = p_elem;
+    elem.toString(str);
+}
+
 /* End of File trc_gen_elem.cpp */

@@ -84,7 +84,6 @@ typedef void (* FnEtmv4IPktMonDataIn)(  const rctdl_datapath_op_t op,
                                         const uint8_t *p_data);
 /** @}*/
 
-
 #endif // ARM_RCTDL_C_API_TYPES_H_INCLUDED
 
 /* End of File rctdl_c_api_types.h */

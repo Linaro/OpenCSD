@@ -266,6 +266,74 @@ RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol,
     return err;
 }
 
+RCTDL_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt, char *buffer, const int buffer_size)
+{
+    rctdl_err_t err = RCTDL_OK;
+    if((buffer == NULL) || (buffer_size < 2))
+        return RCTDL_ERR_INVALID_PARAM_VAL;
+    std::string str;
+    RctdlTraceElement::toString(p_pkt,str);
+    if(str.size() > 0)
+    {
+        strncpy(buffer,str.c_str(),buffer_size -1);
+        buffer[buffer_size-1] = 0;
+    }
+    return err;
+}
+
+RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const char *filepath)
+{
+    rctdl_err_t err = RCTDL_OK;
+
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+        if(!pDT->hasMemAccMapper())
+            err = pDT->createMemAccMapper();
+
+        if(err == RCTDL_OK)
+        {
+            TrcMemAccessorFile *pAcc = 0;
+            std::string pathToFile = filepath;
+            err = TrcMemAccessorFile::createFileAccessor(&pAcc,pathToFile,address);
+            if(err == RCTDL_OK)
+            {
+                pAcc->setMemSpace(mem_space);
+                pDT->addMemAccessorToMap(pAcc,0);
+            }
+        }
+    }
+    else
+        err = RCTDL_ERR_INVALID_PARAM_VAL;
+    return err;
+}
+
+RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length)
+{
+    rctdl_err_t err = RCTDL_OK;
+
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+        if(!pDT->hasMemAccMapper())
+            err = pDT->createMemAccMapper();
+
+        if(err == RCTDL_OK)
+        {
+            TrcMemAccBufPtr *pBuff = new (std::nothrow) TrcMemAccBufPtr(address,p_mem_buffer,mem_length);
+            if(pBuff)
+            {
+                pBuff->setMemSpace(mem_space);
+                pDT->addMemAccessorToMap(pBuff,0);
+            }
+            else 
+                err = RCTDL_ERR_MEM;
+        }
+    }
+    else
+        err = RCTDL_ERR_INVALID_PARAM_VAL;
+    return err;
+}
 
 /*******************************************************************************/
 /* C API Helper objects                                                        */
@@ -291,8 +359,8 @@ EtmV4ICBObj::EtmV4ICBObj(FnEtmv4IPacketDataIn pCBFn) :
 }
 
 rctdl_datapath_resp_t EtmV4ICBObj::PacketDataIn( const rctdl_datapath_op_t op,
-                                                const rctdl_trc_index_t index_sop,
-                                                const EtmV4ITrcPacket *p_packet_in)
+                                                 const rctdl_trc_index_t index_sop,
+                                                 const EtmV4ITrcPacket *p_packet_in)
 {
     return m_c_api_cb_fn(op,index_sop,p_packet_in);
 }

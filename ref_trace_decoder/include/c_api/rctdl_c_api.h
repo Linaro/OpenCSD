@@ -148,6 +148,43 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t h
     
 /** @}*/
 
+/** @name Library Memory Accessor configuration on decode tree.
+    @brief Configure the memory regions available for decode.
+    
+    Full decode requires memory regions set up to allow access to the traced
+    opcodes. Add memory buffers or binary file regions to a map of regions.
+
+@{*/
+
+/*!
+ * Add a binary file based memory range accessor to the decode tree.
+ *
+ * @param handle : Handle to decode tree.
+ * @param address : Start address of memory area.
+ * @param mem_space : Associated memory space.
+ * @param *filepath : Path to binary data file.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
+
+/*!
+ * Add a memory buffer based memory range accessor to the decode tree.
+ *
+ * @param handle : Handle to decode tree.
+ * @param address : Start address of memory area.
+ * @param mem_space : Associated memory space.
+ * @param *p_mem_buffer : pointer to memory buffer.
+ * @param mem_length : Size of memory buffer.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length); 
+
+
+/** @}*/
+    
+
 /** @name Library Default Error Log Object API
     @brief Configure the default error logging object in the library.
 
@@ -207,6 +244,17 @@ RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg);
  * @return  rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
  */
 RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, void *p_pkt, char *buffer, const int buffer_size);
+
+/*!
+ * Get a string representation of the generic trace element.
+ *
+ * @param *p_pkt : pointer to valid generic element structure.
+ * @param *buffer : character buffer for string.
+ * @param buffer_size : size of character buffer.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
+ */
+RCTDL_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt, char *buffer, const int buffer_size);
 
 /** @}*/
 
