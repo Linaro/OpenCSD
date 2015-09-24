@@ -241,9 +241,11 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     bool is_except = false;
     bool is_64L = false;
     
-
     switch(m_curr_packet_in->getType())
     {
+    case ETM4_PKT_I_ASYNC: // nothing to do with this packet.
+        break;
+
     case ETM4_PKT_I_TRACE_INFO:
         // skip subsequent TInfo packets.
         break;
