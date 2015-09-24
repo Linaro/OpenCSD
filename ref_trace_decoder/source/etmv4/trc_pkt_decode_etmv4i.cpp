@@ -575,7 +575,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                         {
                             // otherwise 32 bit values must add in the top 32 from the stack
                             etmv4_addr_val_t new_addr = m_pAddrRegs->get(0);
-                            new_addr.val &= ~0xFFFFFFFF;
+                            new_addr.val &= ~((rctdl_vaddr_t)0xFFFFFFFF);
                             new_addr.val |= (pAddrElem->getAddr().val & 0xFFFFFFFF);
                             new_addr.isa = pAddrElem->getAddr().isa;
                             SetInstrInfoInAddrISA(new_addr.val,new_addr.isa);
@@ -844,7 +844,7 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
             {
                 // otherwise 32 bit values must add in the top 32 from the stack
                 addr = m_pAddrRegs->get(0);
-                addr.val &= ~0xFFFFFFFF;
+                addr.val &= ~((rctdl_vaddr_t)0xFFFFFFFF);
                 addr.val |= (pAddressElem->getAddr().val & 0xFFFFFFFF);
                 addr.isa = pAddressElem->getAddr().isa;
             }                                                                                                
