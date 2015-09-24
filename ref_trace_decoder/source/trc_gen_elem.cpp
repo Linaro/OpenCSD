@@ -36,6 +36,7 @@
 
 #include <string>
 #include <sstream>
+#include <iomanip>
 
 static const char *s_elem_descs[][2] =  
 {
@@ -66,7 +67,7 @@ void RctdlTraceElement::toString(std::string &str) const
         switch(elem_type)
         {
         case RCTDL_GEN_TRC_ELEM_INSTR_RANGE:
-            oss << "exec range=0x" << std::hex << st_addr << ":0x" << en_addr-1 << " ";
+            oss << "exec range=0x" << std::hex << st_addr << ":[0x" << en_addr << "] ";
             break;
 
         case RCTDL_GEN_TRC_ELEM_ADDR_NACC:
@@ -76,18 +77,26 @@ void RctdlTraceElement::toString(std::string &str) const
         case RCTDL_GEN_TRC_ELEM_EXCEPTION:
             if(en_addr != st_addr)
             {
-                oss << "exec range=0x" << std::hex << st_addr << ":0x" << en_addr-1 << "; ";
+                oss << "exec range=0x" << std::hex << st_addr << ":[0x" << en_addr << "]; ";
             }
-            oss << "pref ret addr:0x" << std::hex << en_addr << "; excep num " << gen_value;
+            oss << "pref ret addr:0x" << std::hex << en_addr << "; excep num (0x" << std::setfill('0') << std::setw(2) << gen_value;
+            break;
+
+        case RCTDL_GEN_TRC_ELEM_PE_CONTEXT:
+            oss << "EL" << std::dec << (int)(context.exception_level) << (context.security_level == rctdl_sec_secure ? " S; " : "N; ") << (context.bits64 ? "AArch64; " : "AArch32; ");
+            if(context.vmid_valid)
+                oss << "VMID=0x" << std::hex << context.vmid << "; ";
+            if(context.ctxt_id_valid)
+                oss << "CTXTID=0x" << std::hex << context.context_id << "; ";
             break;
 
         default: break;
         }
-        oss << ")" << std::endl;
+        oss << ")";
     }
     else
     {
-        oss << "RCTDL_GEN_TRC_ELEM??: index out of range." << std::endl;
+        oss << "RCTDL_GEN_TRC_ELEM??: index out of range.";
     }
     str = oss.str();
 }
