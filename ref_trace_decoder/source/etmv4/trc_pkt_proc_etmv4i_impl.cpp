@@ -212,13 +212,14 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::outputPacket()
 rctdl_datapath_resp_t EtmV4IPktProcImpl::outputUnsyncedRawPacket()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    
 
     m_interface->outputRawPacketToMonitor(m_packet_index,&m_curr_packet,m_dump_unsynced_bytes,&m_currPacketData[0]);
-    
+        
     if(!m_sent_notsync_packet)
-    {
-        m_sent_notsync_packet = true;
+    {        
         resp = m_interface->outputDecodedPacket(m_packet_index,&m_curr_packet);
+        m_sent_notsync_packet = true;
     }
     
     if(m_currPacketData.size() <= m_dump_unsynced_bytes)

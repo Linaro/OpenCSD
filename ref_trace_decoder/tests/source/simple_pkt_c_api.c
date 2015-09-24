@@ -43,6 +43,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 /* include the C-API library header */
 #include "c_api/rctdl_c_api.h"
@@ -76,6 +77,39 @@ typedef enum _test_op {
 
 static test_op_t op = TEST_PKT_PRINT; 
 
+static uint8_t test_trc_id_override = 0x00;
+
+static int print_data_array(const uint8_t *p_array, const int array_size, char *p_buffer, int buf_size)
+{
+    int chars_printed = 0;
+    int bytes_processed;
+    p_buffer[0] = 0;
+    
+    if(buf_size > 9)
+    {
+        /* set up the header */
+        strcat(p_buffer,"[ ");
+        chars_printed+=2;
+
+        for(bytes_processed = 0; bytes_processed < array_size; bytes_processed++)
+        {
+           sprintf(p_buffer+chars_printed,"0x%02X ", p_array[bytes_processed]);
+           chars_printed += 5;
+           if((chars_printed + 5) > buf_size)
+               break;
+        }
+
+        strcat(p_buffer,"];");
+        chars_printed+=2;
+    }
+    else if(buf_size >= 4)
+    {
+        sprintf(p_buffer,"[];");
+        chars_printed+=3;
+    }
+    return chars_printed;
+}
+
 /*  choose the operation to use for the test. */
 static void process_cmd_line(int argc, char *argv[])
 {
@@ -83,13 +117,22 @@ static void process_cmd_line(int argc, char *argv[])
 
     while(idx < argc)
     {
-        if(strcmp(argv[idx],"-decode") == 0)
+        if(strcmp(argv[idx],"-decode_only") == 0)
+        {
+            op = TEST_PKT_DECODEONLY;
+        }
+        else if(strcmp(argv[idx],"-decode") == 0)
         {
             op = TEST_PKT_DECODE;
         }
-        else if(strcmp(argv[idx],"-decode_only") == 0)
+        else if(strcmp(argv[idx],"-id") == 0)
         {
-            op = TEST_PKT_DECODEONLY;
+            idx++;
+            if(idx < argc)
+            {
+                test_trc_id_override = (uint8_t)(strtoul(argv[idx],0,0));
+                printf("ID override = 0x%02X\n",test_trc_id_override);
+            }
         }
         else 
             printf("Ignored unknown argument %s\n", argv[idx]);
@@ -140,14 +183,18 @@ void etm_v4i_packet_monitor(  const rctdl_datapath_op_t op,
                               const uint32_t size,
                               const uint8_t *p_data)
 {
-
+    int offset = 0;
 
     switch(op)
     {
     default: break;
     case RCTDL_OP_DATA:
+        sprintf(packet_str,"Idx:%ld;", index_sop);
+        offset = strlen(packet_str);
+        offset+= print_data_array(p_data,size,packet_str+offset,PACKET_STR_LEN-offset);
+
         /* got a packet - convert to string and use the libraries' message output to print to file and stdoout */
-        if(rctdl_pkt_str(RCTDL_PROTOCOL_ETMV4I,(void *)p_packet_in,packet_str,PACKET_STR_LEN) == RCTDL_OK)
+        if(rctdl_pkt_str(RCTDL_PROTOCOL_ETMV4I,(void *)p_packet_in,packet_str+offset,PACKET_STR_LEN-offset) == RCTDL_OK)
         {
             /* add in <CR> */
             if(strlen(packet_str) == PACKET_STR_LEN - 1) /* maximum length */
@@ -158,8 +205,6 @@ void etm_v4i_packet_monitor(  const rctdl_datapath_op_t op,
             /* print it using the library output logger. */
             rctdl_def_errlog_msgout(packet_str);
         }
-
-
         break;
 
     case RCTDL_OP_EOT:
@@ -167,7 +212,6 @@ void etm_v4i_packet_monitor(  const rctdl_datapath_op_t op,
         rctdl_def_errlog_msgout(packet_str);
         break;
     }
-
 }
 
 /* TBD: function to print generic packets. */
@@ -206,6 +250,11 @@ void set_config_struct()
 
     trace_config.reg_configr    = 0x000000C1;
     trace_config.reg_traceidr   = 0x00000010;   /* this is the trace ID -> 0x10, change this to analyse other streams in snapshot.*/
+
+    if(test_trc_id_override != 0)
+    {
+        trace_config.reg_traceidr = (uint32_t)test_trc_id_override;
+    }
 
     trace_config.reg_idr0   = 0x28000EA1;
     trace_config.reg_idr1   = 0x4100F403;
