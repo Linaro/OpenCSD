@@ -146,13 +146,17 @@ static void process_cmd_line(int argc, char *argv[])
 rctdl_datapath_resp_t etm_v4i_packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv4_i_pkt *p_packet_in)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    int offset = 0;
 
     switch(op)
     {
     default: break;
     case RCTDL_OP_DATA:
+        sprintf(packet_str,"Idx:%ld; ", index_sop);
+        offset = strlen(packet_str);
+   
         /* got a packet - convert to string and use the libraries' message output to print to file and stdoout */
-        if(rctdl_pkt_str(RCTDL_PROTOCOL_ETMV4I,(void *)p_packet_in,packet_str,PACKET_STR_LEN) == RCTDL_OK)
+        if(rctdl_pkt_str(RCTDL_PROTOCOL_ETMV4I,(void *)p_packet_in,packet_str+offset,PACKET_STR_LEN-offset) == RCTDL_OK)
         {
             /* add in <CR> */
             if(strlen(packet_str) == PACKET_STR_LEN - 1) /* maximum length */
