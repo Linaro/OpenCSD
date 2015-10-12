@@ -132,13 +132,13 @@ typedef enum _rctdl_etmv4_i_pkt_type
 } rctdl_etmv4_i_pkt_type;
 
 typedef union _etmv4_trace_info_t {
-    uint32_t val;
+    uint32_t val;   //!< trace info full value.
     struct {
-        uint32_t cc_enabled:1;
-        uint32_t cond_enabled:3;
-        uint32_t p0_load:1;
-        uint32_t p0_store:1;
-    } bits;
+        uint32_t cc_enabled:1;      //!< 1 if cycle count enabled
+        uint32_t cond_enabled:3;    //!< conditional trace enabeld type
+        uint32_t p0_load:1;         //!< 1 if tracing with P0 load elements (for data trace)
+        uint32_t p0_store:1;        //1< 1 if tracing with P0 store elements (for data trace)
+    } bits;         //!< bitfields for trace info value.
 } etmv4_trace_info_t;
 
 typedef struct _etmv4_context_t {
@@ -164,11 +164,11 @@ typedef struct _rctdl_etmv4_i_pkt
     rctdl_pkt_vaddr v_addr;         //!< most recently broadcast address packet
     uint8_t         v_addr_ISA;     //!< ISA for the address packet. (0 = IS0 / 1 = IS1)
 
-    etmv4_context_t context;
+    etmv4_context_t context;        //!< current context for PE
 
     struct {
         uint64_t timestamp;         //!< current timestamp value
-        uint8_t bits_changed;
+        uint8_t bits_changed;       //!< bits updated in this timestamp packet.
     } ts;
 
     uint32_t cc_threshold;      //!< cycle count threshold - from trace info.
@@ -177,13 +177,13 @@ typedef struct _rctdl_etmv4_i_pkt
     rctdl_pkt_atom  atom;       //!< atom elements - number of atoms indicates validity of packet
     uint32_t cycle_count;       //!< cycle count
 
-    uint32_t curr_spec_depth;
-    uint32_t p0_key;
+    uint32_t curr_spec_depth;   //!< current speculation depth
+    uint32_t p0_key;            //!< current P0 key value for data packet synchronisation
 
-    uint32_t commit_elements;  // valid dependent on the packet type.
-    uint32_t cancel_elements;   // valid dependent on the packet type.
+    uint32_t commit_elements;  //<! commit elements indicated by this packet - valid dependent on the packet type.
+    uint32_t cancel_elements;  //<! cancel elements indicated by this packet - valid dependent on the packet type.
 
-    etmv4_trace_info_t trace_info;
+    etmv4_trace_info_t trace_info;  //!< trace info structure - programmed configuration of trace capture.
 
     struct {
         uint32_t exceptionType:10;      //!< exception number
@@ -193,7 +193,7 @@ typedef struct _rctdl_etmv4_i_pkt
     } exception_info;
     
 
-    uint8_t addr_exact_match_idx;
+    uint8_t addr_exact_match_idx;   //!< address match index in this packet.
     uint8_t dsm_val;    //!<  Data Sync Marker number, or unnumbered atom count - packet type determines.
     uint8_t event_val;  //!< Event value on event packet.
 
