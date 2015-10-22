@@ -97,7 +97,9 @@ protected:
     void SendPacket();  // mark state for packet output
     rctdl_datapath_resp_t outputPacket();   // output a packet
 
-
+    // bad packets 
+    void throwMalformedPacketErr(const char *pszErrMsg);
+    void throwPacketHeaderErr(const char *pszErrMsg);
 
     std::vector<uint8_t> m_currPacketData;  // raw data
     int m_currPktIdx;   // index into packet when expanding
@@ -137,6 +139,17 @@ inline void EtmV3PktProcImpl::SendPacket()
 {
     m_process_state = SEND_PKT;
 }
+
+inline void EtmV3PktProcImpl::throwMalformedPacketErr(const char *pszErrMsg)
+{
+    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,m_packet_index,m_chanIDCopy,pszErrMsg);
+}
+
+inline void EtmV3PktProcImpl::throwPacketHeaderErr(const char *pszErrMsg)
+{
+    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PCKT_HDR,m_packet_index,m_chanIDCopy,pszErrMsg);
+}
+
 
 #endif // ARM_TRC_PKT_PROC_ETMV3_IMPL_H_INCLUDED
 

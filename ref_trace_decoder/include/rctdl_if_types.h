@@ -103,6 +103,7 @@ typedef enum _rctdl_err_t {
     /* packet processor errors - protocol issues etc */
     RCTDL_ERR_BAD_PACKET_SEQ,        /**< Bad packet sequence */
     RCTDL_ERR_INVALID_PCKT_HDR,      /**< Invalid packet header */
+    RCTDL_ERR_PKT_INTERP_FAIL,       /**< Interpreter failed - cannot recover - bad data or sequence */
     /* packet decoder errors */
     RCTDL_ERR_UNSUPPORTED_ISA,          /**< ISA not supported in decoder. */
     RCTDL_ERR_HW_CFG_UNSUPP,            /**< Programmed trace configuration not supported by decoder.*/

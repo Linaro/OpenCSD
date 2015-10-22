@@ -85,13 +85,25 @@ typedef struct _rctdl_etmv3_excep {
     rctdl_armv7_exception type; /**<  exception type. */
     uint16_t number;    /**< exception as number */
     struct {
-    int present:1;      /**< exception present in packet */
-    int cancel:1;       /**< exception cancels prev instruction traced. */
-    int cm_resume:4;    /**< M class resume code */
-    int cm_irq_n:9;     /**< M class IRQ n */
+        uint32_t present:1;      /**< exception present in packet */
+        uint32_t cancel:1;       /**< exception cancels prev instruction traced. */
+        uint32_t cm_resume:4;    /**< M class resume code */
+        uint32_t cm_irq_n:9;     /**< M class IRQ n */
     } bits;
 } rctdl_etmv3_excep;
 
+typedef struct _etmv3_context_t {
+    struct {
+        uint32_t curr_alt_isa:1;     /**< current Alt ISA flag for Tee / T32 (used if not in present packet) */
+        uint32_t curr_NS:1;          /**< current NS flag  (used if not in present packet) */
+        uint32_t curr_Hyp:1;         /**< current Hyp flag  (used if not in present packet) */
+        uint32_t updated:1;          /**< context updated */
+        uint32_t updated_c:1;        /**< updated CtxtID */
+        uint32_t updated_v:1;        /**< updated VMID */
+    };
+    uint32_t ctxtID;    /**< Context ID */
+    uint8_t VMID;       /**< VMID */
+} etmv3_context_t;
 
 typedef struct _rctdl_etmv3_pkt
 {
@@ -100,22 +112,14 @@ typedef struct _rctdl_etmv3_pkt
     rctdl_isa curr_isa;         /**< current ISA */
     rctdl_isa prev_isa;         /**< ISA in previous packet */
 
-    struct {
-    int      curr_alt_isa:1;     /**< current Alt ISA flag for Tee / T16 (used if not in present packet) */
-    int      curr_NS:1;          /**< current NS flag  (used if not in present packet) */
-    int      curr_Hyp:1;         /**< current Hyp flag  (used if not in present packet) */
-    } bits;
-
+    etmv3_context_t context;    /**< current context */
     rctdl_pkt_vaddr addr;       /**< current Addr */
 
     rctdl_etmv3_excep exception;
     
-    
-    //rctdl_pkt_byte_sz_val by_sz_val;        /**< byte sized value - ContextID, VMID - always whole num of bytes. */
-    //rctdl_pkt_atom  atom;
-
-    //uint32_t cycle_count;
-    //uint64_t timestamp;
+    rctdl_pkt_atom atom;        /**< atom elements - non zerom number indicates valid atom count */
+    uint32_t cycle_count;       /**< cycle count associated with this packet (ETMv3 has counts in atom packets and as individual packets */
+    uint64_t timestamp;
 
     rctdl_etmv3_pkt_type err_type;  /**< Basic packet type if primary type indicates error or incomplete. (header type) */
 
@@ -130,6 +134,9 @@ typedef struct _rctdl_etmv3_cfg
     rctdl_arch_version_t    arch_ver;   /**< Architecture version */
     rctdl_core_profile_t    core_prof;  /**< Core Profile */
 } rctdl_etmv3_cfg;
+
+
+#define DATA_ADDR_EXPECTED_FLAG 0x20 /**< Bit set for data trace headers if data address packets follow */
 
 /** @}*/
 /** @}*/

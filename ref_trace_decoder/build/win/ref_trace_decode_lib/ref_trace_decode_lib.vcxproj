@@ -209,6 +209,7 @@
     <ClCompile Include="..\..\..\source\etmv3\trc_cmp_cfg_etmv3.cpp" />
     <ClCompile Include="..\..\..\source\etmv3\trc_pkt_elem_etmv3.cpp" />
     <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3.cpp" />
+    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_cmp_cfg_etmv4.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_decode_etmv4i.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4d.cpp" />

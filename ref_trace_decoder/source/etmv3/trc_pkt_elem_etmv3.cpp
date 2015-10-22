@@ -51,6 +51,12 @@ void EtmV3TrcPacket::Clear()
     addr.pkt_bits = 0;
     prev_isa = curr_isa;    // mark ISA as not changed
     exception.bits.present = 0;
+    atom.num = 0;
+    cycle_count = 0;
+    context.updated = 0;
+    context.updated_c = 0;
+    context.updated_v = 0;
+    exception.bits.present = 0;
 }
 
 // reset all state including intra packet
@@ -59,9 +65,13 @@ void EtmV3TrcPacket::ResetState()
     addr.val = 0;
     addr.valid_bits = 0;
     curr_isa = prev_isa = rctdl_isa_unknown;
-    bits.curr_alt_isa = 0;
-    bits.curr_NS = 0;     
-    bits.curr_Hyp = 0;  
+    context.curr_alt_isa = 0;
+    context.curr_NS = 0;     
+    context.curr_Hyp = 0;  
+    context.VMID = 0;
+    context.ctxtID = 0;    
+    timestamp = 0;
+    Clear();
 }
 
 void EtmV3TrcPacket::UpdateAddress(const rctdl_vaddr_t partAddrVal, const int updateBits)

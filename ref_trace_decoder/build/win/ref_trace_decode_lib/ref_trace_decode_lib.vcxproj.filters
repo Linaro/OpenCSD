@@ -290,5 +290,8 @@
     <ClCompile Include="..\..\..\source\trc_gen_elem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

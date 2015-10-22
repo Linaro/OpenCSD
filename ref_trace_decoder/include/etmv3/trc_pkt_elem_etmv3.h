@@ -65,12 +65,46 @@ public:
                         const bool cancel,
                         const int irq_n = 0,
                         const int resume = 0);
+    void UpdateNS(const int NS);
+    void UpdateAltISA(const int AltISA);
+    void UpdateHyp(const int Hyp);
+    void UpdateISA(const rctdl_isa isa);
+
     // packet status interface - get packet info.
+    const int AltISA() const { return context.curr_alt_isa; };
+    const rctdl_isa ISA() const { return curr_isa; };
 
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
 };
+
+inline void EtmV3TrcPacket::UpdateNS(const int NS)
+{
+    context.curr_NS = NS;
+    context.updated = 1;
+};
+
+inline void EtmV3TrcPacket::UpdateAltISA(const int AltISA)
+{
+    context.curr_alt_isa = AltISA;
+    context.updated = 1;
+}
+
+inline void EtmV3TrcPacket::UpdateHyp(const int Hyp)
+{
+    context.curr_Hyp = Hyp;
+    context.updated = 1;
+}
+
+inline void EtmV3TrcPacket::UpdateISA(const rctdl_isa isa)
+{
+    prev_isa = curr_isa;
+    curr_isa = isa;
+}
+
+
+
 /** @}*/
 #endif // ARM_TRC_PKT_ELEM_ETMV3_H_INCLUDED
 
