@@ -401,10 +401,15 @@ typedef enum _rctdl_mem_space_acc_t {
 /** @}*/
 
 /** @name Packet Processor Operation Control Flags
+    common operational flags - bottom 16 bits,
+    component specific - top 16 bits.
 @{*/
 
-#define RCTDL_PKTPROC_FLG_NOFWD_BAD_PKTS 0x00000001  /**< don't forward bad packets up data path */
-#define RCTDL_PKTPROC_FLG_NOMON_BAD_PKTS 0x00000002  /**< don't forward bad packets to monitor interface */
+#define RCTDL_OPFLG_PKTPROC_NOFWD_BAD_PKTS 0x00000001  /**< don't forward bad packets up data path */
+#define RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS 0x00000002  /**< don't forward bad packets to monitor interface */
+#define RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS   0x00000004  /**< throw error for bad packets. */
+
+#define RCTDL_OPFLG_PKTPROC_COMMON (RCTDL_OPFLG_PKTPROC_NOFWD_BAD_PKTS | RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS | RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS)
 
 /** @}*/
 
