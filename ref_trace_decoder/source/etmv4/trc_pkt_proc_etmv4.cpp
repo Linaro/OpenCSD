@@ -48,6 +48,8 @@
 #define ETMV4D_PKTS_NAME RCTDL_CMPNAME_PREFIX_PKTPROC##"_ETMV4D"
 #endif
 
+static const uint32_t ETMV4_SUPPORTED_OP_FLAGS = RCTDL_OPFLG_PKTPROC_COMMON;
+
 /***************************************************************************/
 /*******************ETM V4 INSTRUCTION *************************************/
 /***************************************************************************/
@@ -55,11 +57,13 @@
 TrcPktProcEtmV4I::TrcPktProcEtmV4I() : TrcPktProcBase(ETMV4I_PKTS_NAME), 
     m_pProcessor(0)
 {
+    m_supported_op_flags = ETMV4_SUPPORTED_OP_FLAGS;
 }
 
 TrcPktProcEtmV4I::TrcPktProcEtmV4I(int instIDNum) : TrcPktProcBase(ETMV4I_PKTS_NAME, instIDNum),
     m_pProcessor(0)
 {
+    m_supported_op_flags = ETMV4_SUPPORTED_OP_FLAGS;
 }
 
 TrcPktProcEtmV4I::~TrcPktProcEtmV4I()
@@ -115,6 +119,12 @@ rctdl_datapath_resp_t TrcPktProcEtmV4I::onFlush()
     return RCTDL_RESP_FATAL_NOT_INIT;
 }
 
+const bool TrcPktProcEtmV4I::isBadPacket() const
+{
+    if(m_pProcessor)
+        return m_pProcessor->isBadPacket();
+    return false;
+}
 
 /***************************************************************************/
 /*******************ETM V4 DATA ********************************************/

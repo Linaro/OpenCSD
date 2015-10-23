@@ -57,6 +57,7 @@ public:
     rctdl_datapath_resp_t onEOT();
     rctdl_datapath_resp_t onReset();
     rctdl_datapath_resp_t onFlush();
+    const bool isBadPacket() const;
 
 protected:
     typedef enum _process_state {
@@ -183,6 +184,12 @@ private:
 
     void throwBadSequenceError(const char *pszExtMsg);
 };
+
+
+inline const bool EtmV4IPktProcImpl::isBadPacket() const
+{
+    return m_curr_packet.isBadPacket();
+}
 
 #endif // ARM_TRC_PKT_PROC_ETMV4I_IMPL_H_INCLUDED
 
