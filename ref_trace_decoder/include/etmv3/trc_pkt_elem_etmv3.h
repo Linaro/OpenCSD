@@ -59,6 +59,8 @@ public:
     void Clear();       //!< clear update data in packet ready for new one.
     void ResetState();  //!< reset intra packet state data
 
+    void SetType(const rctdl_etmv3_pkt_type p_type);
+    void SetErrType(const rctdl_etmv3_pkt_type e_type);
     void UpdateAddress(const rctdl_vaddr_t partAddrVal, const int updateBits);
     void SetException(  const rctdl_armv7_exception type, 
                         const uint16_t number, 
@@ -69,10 +71,13 @@ public:
     void UpdateAltISA(const int AltISA);
     void UpdateHyp(const int Hyp);
     void UpdateISA(const rctdl_isa isa);
+    
+    bool UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccurate);  //!< Interpret P Hdr, return true if valid, false if not.
 
     // packet status interface - get packet info.
     const int AltISA() const { return context.curr_alt_isa; };
     const rctdl_isa ISA() const { return curr_isa; };
+    const bool isBadPacket() const;
 
     // printing
     virtual void toString(std::string &str) const;
@@ -101,6 +106,22 @@ inline void EtmV3TrcPacket::UpdateISA(const rctdl_isa isa)
 {
     prev_isa = curr_isa;
     curr_isa = isa;
+}
+
+inline void EtmV3TrcPacket::SetType(const rctdl_etmv3_pkt_type p_type)
+{
+    type = p_type;
+}
+
+inline void EtmV3TrcPacket::SetErrType(const rctdl_etmv3_pkt_type e_type)
+{
+    err_type = type;
+    type = e_type;
+}
+
+inline const bool EtmV3TrcPacket::isBadPacket() const
+{
+    return (type < ETM3_PKT_BRANCH_ADDRESS);
 }
 
 

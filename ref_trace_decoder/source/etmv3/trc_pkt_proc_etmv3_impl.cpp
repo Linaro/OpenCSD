@@ -221,13 +221,13 @@ void EtmV3PktProcImpl::moveBytesPartPkt(int n)
 
 int EtmV3PktProcImpl::waitForSync(const rctdl_trc_index_t index, const uint32_t dataBlockSize, const uint8_t *pDataBlock)
 {
-
+    // TBD:
+    return 0;
 }
 
 
-rctdl_err_t  EtmV3PktProcImpl::processHeaderByte(uint8_t by)
+rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 {
-
     m_currPacketData.clear();
     m_currPacketData.push_back(by);
     m_curr_packet.Clear();  // new packet - clear old update data.
@@ -236,13 +236,14 @@ rctdl_err_t  EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 
 	// check for branch address 0bCxxxxxxx1
 	if((by & 0x01) == 0x01 ) {
-		m_curr_packet.type = ETM3_PKT_BRANCH_ADDRESS;
+		m_curr_packet.SetType(ETM3_PKT_BRANCH_ADDRESS);
 		m_BranchPktNeedsException = false;
 		if((by & 0x80) != 0x80) {
 			// no continuation - 1 byte branch same in alt and std...
-			if(by == 0x01) // could be EOTrace marker from bypassed formatter
+            if((by == 0x01) && (m_interface->getComponentOpMode() & ETMV3_OPFLG_UNFORMATTED_SOURCE))
 			{
-				m_curr_packet.type = ETM3_PKT_BRANCH_OR_BYPASS_EOT;
+                // could be EOTrace marker from bypassed formatter
+				m_curr_packet.SetType(ETM3_PKT_BRANCH_OR_BYPASS_EOT);
 			}
 			else
             {
@@ -253,29 +254,33 @@ rctdl_err_t  EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 	}
 	// check for p-header - 0b1xxxxxx0
 	else if((by & 0x81) == 0x80) {
-		m_curr_packet.type = ETM3_PKT_P_HDR;
-		SendPacket();
+		m_curr_packet.SetType(ETM3_PKT_P_HDR);
+        if(m_curr_packet.UpdateAtomFromPHdr(by,m_config.isCycleAcc()))
+		    SendPacket();
+        else
+            throwPacketHeaderErr("Invalid P-Header.");
 	}
 	// check 0b0000xx00 group
 	else if((by & 0xF3) == 0x00) {
 			
 		// 	A-Sync
 		if(by == 0x00) {
-			m_curr_packet.type = ETM3_PKT_A_SYNC;
+			m_curr_packet.SetType(ETM3_PKT_A_SYNC);
 		}
 		// cycle count
 		else if(by == 0x04) {
-			m_curr_packet.type = ETM3_PKT_CYCLE_COUNT;
+			m_curr_packet.SetType(ETM3_PKT_CYCLE_COUNT);
 		}
 		// I-Sync
 		else if(by == 0x08) {
-			m_curr_packet.type = ETM3_PKT_I_SYNC;
+			m_curr_packet.SetType(ETM3_PKT_I_SYNC);
 			m_bIsync_got_cycle_cnt = false;
 			m_bIsync_get_LSiP_addr = false;							
 		}
 		// trigger
 		else if(by == 0x0C) {
-			m_curr_packet.type = ETM3_PKT_TRIGGER;
+			m_curr_packet.SetType(ETM3_PKT_TRIGGER);
+            // no payload - just send it.
 			SendPacket();
 		}
 	}
@@ -285,9 +290,9 @@ rctdl_err_t  EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 		if((by & 0x93 )== 0x00) {
             if(!m_config.isDataTrace()) {
                 throwPacketHeaderErr("Invalid data trace header - not tracing data.");
-                m_curr_packet.type = ETM3_PKT_BAD_TRACEMODE;
+                m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
 			}
-			m_curr_packet.type = ETM3_PKT_OOO_DATA;
+			m_curr_packet.SetType(ETM3_PKT_OOO_DATA);
 			uint8_t size = ((by & 0x0C) >> 2);
 			// header contains a count of the data to follow
 			// size 3 == 4 bytes, other sizes == size bytes
@@ -298,18 +303,18 @@ rctdl_err_t  EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 		}
 		// I-Sync + cycle count
 		else if(by == 0x70) {
-			m_curr_packet.type = ETM3_PKT_I_SYNC_CYCLE;
+			m_curr_packet.SetType(ETM3_PKT_I_SYNC_CYCLE);
 			m_bIsync_got_cycle_cnt = false;
 			m_bIsync_get_LSiP_addr = false;			
 		}
 		// store failed
 		else if(by == 0x50) {
-			m_curr_packet.type = ETM3_PKT_STORE_FAIL;
+			m_curr_packet.SetType(ETM3_PKT_STORE_FAIL);
 			SendPacket();
 		}
 		// OoO placeholder 0b01x1xx00
 		else if((by & 0xD3 )== 0x50) {
-			m_curr_packet.type = ETM3_PKT_OOO_ADDR_PLC;
+			m_curr_packet.SetType(ETM3_PKT_OOO_ADDR_PLC);
 			m_bExpectingDataAddress = ((by & DATA_ADDR_EXPECTED_FLAG) == DATA_ADDR_EXPECTED_FLAG) && m_config.isDataAddrTrace();
 			m_bFoundDataAddress = false;
 			if(!m_bExpectingDataAddress) {
@@ -318,16 +323,16 @@ rctdl_err_t  EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 		}
 		// aux data 0b0001xx00
 		else if((by & 0xF3 )== 0x10) {
-			m_curr_packet.type = ETM3_PKT_AUX_DATA;
+			m_curr_packet.SetType(ETM3_PKT_AUX_DATA);
 			SendPacket();
 		}
         // vmid 0b00111100 
         else if(by == 0x3c) {
-            m_curr_packet.type = ETM3_PKT_VMID;
+            m_curr_packet.SetType(ETM3_PKT_VMID);
         }
 		else
 		{
-			m_curr_packet.type = ETM3_PKT_RESERVED;
+			m_curr_packet.SetErrType(ETM3_PKT_RESERVED);
             throwPacketHeaderErr("Packet header reserved encoding");
 		}
 	}
@@ -335,10 +340,10 @@ rctdl_err_t  EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 	else if((by & 0xD3 )== 0x02) {
 		uint8_t size = ((by & 0x0C) >> 2);
 		if(!m_config.isDataTrace()) {
-            m_curr_packet.type = ETM3_PKT_BAD_TRACEMODE;
+            m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
             throwPacketHeaderErr("Invalid data trace header - not tracing data.");
 		}
-		m_curr_packet.type = ETM3_PKT_NORM_DATA;
+		m_curr_packet.SetType(ETM3_PKT_NORM_DATA);
 		m_bExpectingDataAddress = ((by & DATA_ADDR_EXPECTED_FLAG) == DATA_ADDR_EXPECTED_FLAG) && m_config.isDataAddrTrace();
 		m_bFoundDataAddress = false;
 
@@ -354,22 +359,22 @@ rctdl_err_t  EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 	else if(by == 0x62) {
 		if(!m_config.isDataTrace())
         {
-            m_curr_packet.type = ETM3_PKT_BAD_TRACEMODE;
+            m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
             throwPacketHeaderErr("Invalid data trace header - not tracing data.");
         }
 		else
         {
-			m_curr_packet.type = ETM3_PKT_DATA_SUPPRESSED;
+			m_curr_packet.SetType(ETM3_PKT_DATA_SUPPRESSED);
             SendPacket();
         }
 	}
 	// value not traced 0b011x1010
 	else if((by & 0xEF )== 0x6A) {
 		if(!m_config.isDataTrace()) {
-            m_curr_packet.type = ETM3_PKT_BAD_TRACEMODE;
+            m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
             throwPacketHeaderErr("Invalid data trace header - not tracing data.");
 		}
-		m_curr_packet.type = ETM3_PKT_VAL_NOT_TRACED;
+		m_curr_packet.SetType(ETM3_PKT_VAL_NOT_TRACED);
 		m_bExpectingDataAddress = ((by & DATA_ADDR_EXPECTED_FLAG) == DATA_ADDR_EXPECTED_FLAG) && m_config.isDataAddrTrace();
 		m_bFoundDataAddress = false;
 		if(!m_bExpectingDataAddress) {
@@ -378,34 +383,35 @@ rctdl_err_t  EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 	}
 	// ignore 0b01100110
 	else if(by == 0x66) {
-		m_curr_packet.type = ETM3_PKT_IGNORE;
+		m_curr_packet.SetType(ETM3_PKT_IGNORE);
         SendPacket();					
 	}
 	// context ID 0b01101110
 	else if(by == 0x6E) {
-		m_curr_packet.type = ETM3_PKT_CONTEXT_ID;
+		m_curr_packet.SetType(ETM3_PKT_CONTEXT_ID);
         m_bytesExpectedThisPkt = (short)(1 + m_config.CtxtIDBytes());
 	}
 	// exception entry 0b01110110
 	else if(by == 0x76) {
-		m_curr_packet.type = ETM3_PKT_EXCEPTION_ENTRY;
+		m_curr_packet.SetType(ETM3_PKT_EXCEPTION_ENTRY);
         SendPacket();
 	}
 	// exception exit 0b01111110
 	else if(by == 0x7E) {
-		m_curr_packet.type = ETM3_PKT_EXCEPTION_EXIT;
+		m_curr_packet.SetType(ETM3_PKT_EXCEPTION_EXIT);
         SendPacket();
 	}
 	// timestamp packet 0b01000x10
 	else if((by & 0xFB )== 0x42)
 	{
-		m_curr_packet.type = ETM3_PKT_TIMESTAMP;
+		m_curr_packet.SetType(ETM3_PKT_TIMESTAMP);
 	}
 	else
 	{
-		m_curr_packet.type = ETM3_PKT_RESERVED;
+		m_curr_packet.SetErrType(ETM3_PKT_RESERVED);
         throwPacketHeaderErr("Packet header reserved encoding.");
 	}
+    return RCTDL_OK;
 }
 
 rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
@@ -469,21 +475,22 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 		break;
 
 	case ETM3_PKT_BRANCH_OR_BYPASS_EOT:
-		if((by != 0x00) || ( m_currPacketSize == ETM3_PKT_BUFF_SIZE)) {
-			if(by == 0x80 && ( m_currPacketSize == 7)) {
+        /*
+		if((by != 0x00) || ( m_currPacketData.size() == ETM3_PKT_BUFF_SIZE)) {
+			if(by == 0x80 && ( m_currPacketData.size() == 7)) {
 				// branch 0 followed by A-sync!
-				m_currPacketSize = 1;
-                m_curr_packet.type = ETM3_PKT_BRANCH_ADDRESS;
+				m_currPacketData.size() = 1;
+                m_curr_packet.SetType(ETM3_PKT_BRANCH_ADDRESS;
 				SendPacket();
                 memcpy(m_currPacketData, &m_currPacketData[1],6);
-				m_currPacketSize = 6;
-                m_curr_packet.type = ETM3_PKT_A_SYNC;
+				m_currPacketData.size() = 6;
+                m_curr_packet.SetType(ETM3_PKT_A_SYNC;
 				SendPacket();
 			}
-			else if( m_currPacketSize == 2) {
+			else if( m_currPacketData.size() == 2) {
 				// branch followed by another byte
-                m_currPacketSize = 1;
-                m_curr_packet.type = ETM3_PKT_BRANCH_ADDRESS;
+                m_currPacketData.size() = 1;
+                m_curr_packet.SetType(ETM3_PKT_BRANCH_ADDRESS;
                 SendPacket();
                 ProcessHeaderByte(by);
 			}
@@ -494,55 +501,57 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 			else if(by == 0x01) {
 				// 0x01 - 0x00 x N - 0x1
 				// end of buffer...output something
-                m_currPacketSize--;
+                m_currPacketData.size()--;
                 SendPacket();
 				ProcessHeaderByte(by);					
 			}
 			else {
 				// branch followed by unknown sequence
-				int oldidx =  m_currPacketSize;
-                m_currPacketSize = 1;
-                m_curr_packet.type = ETM3_PKT_BRANCH_ADDRESS;
+				int oldidx =  m_currPacketData.size();
+                m_currPacketData.size() = 1;
+                m_curr_packet.SetType(ETM3_PKT_BRANCH_ADDRESS;
 				SendPacket();
                 oldidx--;
                 memcpy(m_currPacketData, &m_currPacketData[1],oldidx);
-                m_currPacketSize = oldidx;
+                m_currPacketData.size() = oldidx;
                 SendBadPacket("ERROR : unknown sequence");
 			}
-		}
+		}*/
 		// just ignore zeros
 		break;
 			
 		
 
 	case ETM3_PKT_A_SYNC:
+        // TBD
+        /*
 		if(by == 0x00) {
-			if( m_currPacketSize > 5) {
+			if( m_currPacketData.size() > 5) {
 				// extra 0, lose one
-				m_currPacketSize = 1;
+				m_currPacketData.size() = 1;
 				SendBadPacket("A-Sync ?: Extra 0x00 in sequence");
                 memcpy(m_currPacketData,&m_currPacketData[1],5);
-				m_curr_packet.type = ETM3_PKT_A_SYNC;
+				m_curr_packet.SetType(ETM3_PKT_A_SYNC;
 				// wait for next byte
-				m_currPacketSize = 5;
+				m_currPacketData.size() = 5;
 			}
 		}
-		else if((by == 0x80) && ( m_currPacketSize == 6)) {
+		else if((by == 0x80) && ( m_currPacketData.size() == 6)) {
 			SendPacket();
 			m_bStreamSync = true;
 		}
 		else
 		{
-            m_currPacketSize--;
+            m_currPacketData.size()--;
             SendBadPacket("A-Sync ? : Unexpected byte in sequence");
 			ProcessHeaderByte(by); // send last byte back round...
-		}
+		}*/
 		break;			
 			
 	case ETM3_PKT_CYCLE_COUNT:
 		bTopBitSet = ((by & 0x80) == 0x80);
-		if(!bTopBitSet || ( m_currPacketSize >= 6))
-			SendPacket();				
+        if(!bTopBitSet || ( m_currPacketData.size() >= 6))
+			SendPacket();
 		break;
 			
 	case ETM3_PKT_I_SYNC_CYCLE:
@@ -555,7 +564,7 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 		// fall through when we have the first non-cycle count byte
 	case ETM3_PKT_I_SYNC:
 		if(m_bytesExpectedThisPkt == 0) {
-			int cycCountBytes = m_currPacketSize - 2;
+			int cycCountBytes = m_currPacketData.size() - 2;
             int ctxtIDBytes = m_config.CtxtIDBytes();
 			// bytes expected = header + n x ctxt id + info byte + 4 x addr; 
             if(m_config.isInstrTrace())
@@ -564,12 +573,12 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 				m_bytesExpectedThisPkt = (short)(2 + ctxtIDBytes);
 			m_IsyncInfoIdx = (short)(1 + cycCountBytes + ctxtIDBytes);
 		}
-		if(( m_currPacketSize - 1) == m_IsyncInfoIdx) {
+		if(( m_currPacketData.size() - 1) == m_IsyncInfoIdx) {
 			m_bIsync_get_LSiP_addr = ((m_currPacketData[m_IsyncInfoIdx] & 0x80) == 0x80);
 		}
 			
 		// if bytes collected >= bytes expected
-		if( m_currPacketSize >= m_bytesExpectedThisPkt) {
+		if( m_currPacketData.size() >= m_bytesExpectedThisPkt) {
 			// if we still need the LSip Addr, then this is not part of the expected
 			// count as we have no idea how long it is
 			if(m_bIsync_get_LSiP_addr) {
@@ -590,25 +599,25 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 			if((by & 0x80) != 0x80) {
 				m_bFoundDataAddress = true;
 				// add on the bytes we have found for the address to the expected data bytes
-				m_bytesExpectedThisPkt += ( m_currPacketSize - 1);   					
+				m_bytesExpectedThisPkt += ( m_currPacketData.size() - 1);   					
 			}
 			else 
 				break;
 		}
 		// found any data address we were expecting
-		if(m_bytesExpectedThisPkt ==  m_currPacketSize) {
+		if(m_bytesExpectedThisPkt == m_currPacketData.size()) {
 			SendPacket();
 		}
-		if(m_bytesExpectedThisPkt <  m_currPacketSize)
+		if(m_bytesExpectedThisPkt <  m_currPacketData.size())
         {
             throwMalformedPacketErr("Malformed normal data packet.");
         }
 		break;
 			
 	case ETM3_PKT_OOO_DATA:
-		if(m_bytesExpectedThisPkt ==  m_currPacketSize)
+		if(m_bytesExpectedThisPkt ==  m_currPacketData.size())
 			SendPacket();
-		if(m_bytesExpectedThisPkt <  m_currPacketSize)
+		if(m_bytesExpectedThisPkt <  m_currPacketData.size())
 			throwMalformedPacketErr("Malformed out of order data packet.");
 		break;
 			
@@ -631,10 +640,10 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 		break;
 			
 	case ETM3_PKT_CONTEXT_ID:
-		if(m_bytesExpectedThisPkt ==  m_currPacketSize) {
+		if(m_bytesExpectedThisPkt == m_currPacketData.size()) {
 			SendPacket();
 		}
-		if(m_bytesExpectedThisPkt <  m_currPacketSize)
+		if(m_bytesExpectedThisPkt <  m_currPacketData.size())
 			throwMalformedPacketErr("Malformed context id packet.");
 		break;
 			

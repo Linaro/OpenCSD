@@ -44,9 +44,9 @@
 #define ETMV3_PKTS_NAME RCTDL_CMPNAME_PREFIX_PKTPROC##"_ETMV3"
 #endif 
 
-static const uint32_t ETMV3_SUPPORTED_OP_FLAGS = RCTDL_PKTPROC_FLG_NOFWD_BAD_PKTS | 
-        RCTDL_PKTPROC_FLG_NOMON_BAD_PKTS;
-
+static const uint32_t ETMV3_SUPPORTED_OP_FLAGS = RCTDL_OPFLG_PKTPROC_COMMON |
+    ETMV3_OPFLG_UNFORMATTED_SOURCE;
+    
 TrcPktProcEtmV3::TrcPktProcEtmV3() : TrcPktProcBase(ETMV3_PKTS_NAME), 
     m_pProcessor(0)
 {
@@ -110,6 +110,13 @@ rctdl_datapath_resp_t TrcPktProcEtmV3::onFlush()
     if(m_pProcessor)
         return m_pProcessor->onFlush();
     return RCTDL_RESP_FATAL_NOT_INIT;
+}
+
+const bool TrcPktProcEtmV3::isBadPacket() const 
+{
+    if(m_pProcessor)
+        return m_pProcessor->isBadPacket();
+    return false;
 }
 
 /* End of File trc_pkt_proc_etmv3.cpp */

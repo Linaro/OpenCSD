@@ -61,6 +61,7 @@ public:
     rctdl_datapath_resp_t onEOT();
     rctdl_datapath_resp_t onReset();
     rctdl_datapath_resp_t onFlush();
+    const bool isBadPacket() const;
 
 protected:
     typedef enum _process_state {
@@ -148,6 +149,11 @@ inline void EtmV3PktProcImpl::throwMalformedPacketErr(const char *pszErrMsg)
 inline void EtmV3PktProcImpl::throwPacketHeaderErr(const char *pszErrMsg)
 {
     throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PCKT_HDR,m_packet_index,m_chanIDCopy,pszErrMsg);
+}
+
+inline const bool EtmV3PktProcImpl::isBadPacket() const
+{
+    return m_curr_packet.isBadPacket();
 }
 
 

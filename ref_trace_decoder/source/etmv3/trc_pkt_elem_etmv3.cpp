@@ -56,7 +56,6 @@ void EtmV3TrcPacket::Clear()
     context.updated = 0;
     context.updated_c = 0;
     context.updated_v = 0;
-    exception.bits.present = 0;
 }
 
 // reset all state including intra packet
@@ -100,6 +99,83 @@ void EtmV3TrcPacket::SetException(  const rctdl_armv7_exception type,
 
     // mark as valid in this packet
     exception.bits.present = 1;
+}
+
+bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccurate)
+{
+    bool bValid = true;
+    uint8_t E = 0, N = 0;
+    if(!cycleAccurate)
+    {
+        if((pHdr & 0x3) == 0x0)
+        {
+            E = ((pHdr >> 2) & 0xF);
+            N = (pHdr & 0x40) ? 1 : 0;
+            atom.num = E+N;
+            atom.En_bits = (((uint32_t)0x1) << E) - 1;
+            p_hdr_fmt = 1;
+        }
+        else if((pHdr & 0x3) == 0x2)
+        {
+            atom.num = 2;
+            p_hdr_fmt = 2;
+            atom.En_bits = (pHdr & 0x8 ? 0 : 1) |  (pHdr & 0x4 ? 0 : 0x2);
+        }
+        else 
+            bValid = false;
+    }
+    else
+    {
+        uint8_t pHdr_code = pHdr & 0xA3;
+        switch(pHdr_code)
+        {
+        case 0x80:
+            p_hdr_fmt = 1;
+            E = ((pHdr >> 2) & 0x7);
+            N = (pHdr & 0x40) ? 1 : 0;
+            atom.num = E+N;
+            if(atom.num)
+            {
+                atom.En_bits = (((uint32_t)0x1) << E) - 1;
+                cycle_count = E+N;
+            }
+            else 
+                bValid = false; // deprecated 8b'10000000 code
+
+            break;
+
+        case 0x82:
+            p_hdr_fmt = 2;
+            if(pHdr & 0x10)
+            {
+                p_hdr_fmt = 4;
+                atom.num = 1;
+                cycle_count  = 1;
+                atom.En_bits = pHdr & 0x04 ? 0 : 1;
+            }
+            else
+            {
+                atom.num = 1;
+                cycle_count  = 1;
+                atom.En_bits = (pHdr & 0x8 ? 0 : 1) |  (pHdr & 0x4 ? 0 : 0x2);
+            }
+            break;
+
+        case 0xA0:
+            p_hdr_fmt = 3;
+            cycle_count  = ((pHdr >> 2) & 7) + 1;
+            E = pHdr & 0x20 ? 1 : 0;
+            atom.num = E;
+            atom.En_bits = E;
+            break;
+
+        default:
+            bValid = false;
+            break;
+
+        }
+    }
+    return bValid;
 }
 
     // printing

@@ -118,9 +118,11 @@ typedef struct _rctdl_etmv3_pkt
     rctdl_etmv3_excep exception;
     
     rctdl_pkt_atom atom;        /**< atom elements - non zerom number indicates valid atom count */
+    uint8_t p_hdr_fmt;          /**< if atom elements, associated phdr format */
     uint32_t cycle_count;       /**< cycle count associated with this packet (ETMv3 has counts in atom packets and as individual packets */
+    
     uint64_t timestamp;
-
+    
     rctdl_etmv3_pkt_type err_type;  /**< Basic packet type if primary type indicates error or incomplete. (header type) */
 
 } rctdl_etmv3_pkt;
