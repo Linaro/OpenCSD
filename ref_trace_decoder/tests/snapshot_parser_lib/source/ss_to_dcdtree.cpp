@@ -361,14 +361,12 @@ void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &d
             rctdl_err_t err =  TrcMemAccessorFile::createFileAccessor(&p_acc,dumpFilePathName,it->address);
             if(err == RCTDL_OK)
             { 
-                err == m_pDecodeTree->addMemAccessorToMap(p_acc,0);
+                err = m_pDecodeTree->addMemAccessorToMap(p_acc,0);
             }
             // TBD: error handling
         }
         it++;
     }
 }
-
-
 
 /* End of File ss_to_dcdtree.cpp */

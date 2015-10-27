@@ -105,7 +105,7 @@ const bool SnapShotReader::readSnapShot()
 
         ModernSnapshotParser::DevPtr device;
 
-        for(int i = 0; i < device_list.size(); i++)
+        for(size_t i = 0; i < device_list.size(); i++)
         {
             device = parser.getDevice(device_list[i]);
             if(m_verbose)

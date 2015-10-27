@@ -131,7 +131,7 @@ public:
     /* handle memory spaces */
     void setMemSpace(rctdl_mem_space_acc_t memSpace) { m_mem_space = memSpace; };
     const rctdl_mem_space_acc_t getMemSpace() const { return m_mem_space; };
-    const bool inMemSpace(const rctdl_mem_space_acc_t mem_space) const { return (bool)((uint8_t)m_mem_space & (uint8_t)mem_space); }; 
+    const bool inMemSpace(const rctdl_mem_space_acc_t mem_space) const { return (bool)(((uint8_t)m_mem_space & (uint8_t)mem_space) != 0); }; 
     
 
 protected:
@@ -176,7 +176,7 @@ inline const bool TrcMemAccessorBase::addrStartOfRange(const rctdl_vaddr_t s_add
 
 inline const uint32_t TrcMemAccessorBase::bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const
 {
-    uint32_t bytesInRange = 0;
+    rctdl_vaddr_t bytesInRange = 0;
     if(addrInRange(s_address))  // start not in range, return 0.
     {
         // bytes available till end address.
@@ -184,7 +184,7 @@ inline const uint32_t TrcMemAccessorBase::bytesInRange(const rctdl_vaddr_t s_add
         if(bytesInRange > reqBytes)
             bytesInRange = reqBytes;
     }
-    return bytesInRange;
+    return (uint32_t)bytesInRange;
 }
 
 inline const bool TrcMemAccessorBase::overLapRange(const TrcMemAccessorBase *p_test_acc) const

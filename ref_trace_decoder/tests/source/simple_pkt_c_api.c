@@ -281,7 +281,7 @@ rctdl_err_t process_data_block(dcd_tree_handle_t dcd_tree_h, int block_index, ui
     rctdl_datapath_resp_t dp_ret = RCTDL_RESP_CONT;
     uint32_t bytes_this_time = 0;
 
-    while((bytes_done < block_size) && (ret == RCTDL_OK))
+    while((bytes_done < (uint32_t)block_size) && (ret == RCTDL_OK))
     {
         if(RCTDL_DATA_RESP_IS_CONT(dp_ret))
         {

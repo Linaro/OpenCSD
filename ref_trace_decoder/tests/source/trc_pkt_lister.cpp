@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
                 }
                 else
                 {
-                    for(int i = 0; i < sourceBuffList.size(); i++)
+                    for(size_t i = 0; i < sourceBuffList.size(); i++)
                     {
                         if(sourceBuffList[i] == source_buffer_name)
                         {
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
                     logger.LogMsg(oss.str());
                     oss.str("");
                     oss << "Valid source names are:-\n";
-                    for(int i = 0; i < sourceBuffList.size(); i++)
+                    for(size_t i = 0; i < sourceBuffList.size(); i++)
                     {
                         oss << sourceBuffList[i] << "\n";
                     }
@@ -486,8 +486,8 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                 {
                     in.read((char *)&trace_buffer[0],bufferSize);   // load a block of data into the buffer
 
-                    int nBuffRead = in.gcount();    // get count of data loaded.
-                    int nBuffProcessed = 0;         // amount processed in this buffer.
+                    std::streamsize nBuffRead = in.gcount();    // get count of data loaded.
+                    std::streamsize nBuffProcessed = 0;         // amount processed in this buffer.
                     uint32_t nUsedThisTime = 0;
 
                     // process the current buffer load until buffer done, or fatal error occurs
@@ -498,7 +498,7 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                             dataPathResp = dcd_tree->TraceDataIn(
                                 RCTDL_OP_DATA,
                                 trace_index,
-                                nBuffRead - nBuffProcessed,
+                                (uint32_t)(nBuffRead - nBuffProcessed),
                                 &(trace_buffer[0])+nBuffProcessed,
                                 &nUsedThisTime);
 

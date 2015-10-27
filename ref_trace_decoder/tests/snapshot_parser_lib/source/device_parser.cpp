@@ -91,7 +91,7 @@ uint32_t ModernSnapshotParser::getUniqueDeviceID(std::string &rawName)
             // didn't throw means already in list, so bad candidate
             candidate++;
         }
-        catch (rctdlError &e)
+        catch (rctdlError & /*e*/)
         {
             // threw, so unique ID, so this is good, leave loop
             break;
