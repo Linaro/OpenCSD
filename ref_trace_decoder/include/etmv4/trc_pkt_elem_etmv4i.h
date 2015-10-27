@@ -434,7 +434,7 @@ inline void EtmV4ITrcPacket::setQType(const bool has_count, const uint32_t count
 
 inline const bool EtmV4ITrcPacket::isBadPacket() const
 {
-    return (type >= ETM4_PKT_I_BAD_SEQUENCE) && (type <= ETM4_PKT_I_RESERVED);
+    return (type >= ETM4_PKT_I_BAD_SEQUENCE);
 }
 
 

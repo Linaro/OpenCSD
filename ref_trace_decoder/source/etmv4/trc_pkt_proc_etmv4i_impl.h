@@ -92,7 +92,7 @@ protected:
     bool m_is_sync;             //!< seen first sync packet
     bool m_first_trace_info;    //!< seen first trace info packet after sync
     bool m_sent_notsync_packet; //!< send one not sync packet if we see any unsynced data on the channel 
-    int m_dump_unsynced_bytes;  //!< number of unsynced bytes to send
+    unsigned m_dump_unsynced_bytes;  //!< number of unsynced bytes to send
     rctdl_trc_index_t m_update_on_unsync_packet_index;
 
 
@@ -163,9 +163,9 @@ private:
     void iPktQ();
     void iAtom();
 
-    int extractContField(const std::vector<uint8_t> &buffer, const int st_idx, uint32_t &value, const int byte_limit = 5);
-    int extractContField64(const std::vector<uint8_t> &buffer, const int st_idx, uint64_t &value, const int byte_limit = 9);
-    int extractCondResult(const std::vector<uint8_t> &buffer, const int st_idx, uint32_t& key, uint8_t &result);
+    unsigned extractContField(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint32_t &value, const unsigned byte_limit = 5);
+    unsigned extractContField64(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint64_t &value, const unsigned byte_limit = 9);
+    unsigned extractCondResult(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint32_t& key, uint8_t &result);
     void extractAndSetContextInfo(const std::vector<uint8_t> &buffer, const int st_idx);
     int extract64BitLongAddr(const std::vector<uint8_t> &buffer, const int st_idx, const uint8_t IS, uint64_t &value);
     int extract32BitLongAddr(const std::vector<uint8_t> &buffer, const int st_idx, const uint8_t IS, uint32_t &value);

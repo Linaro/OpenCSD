@@ -800,8 +800,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
 
 rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    rctdl_err_t err;    
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;   
     TrcStackElemExcept *pExceptElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack.back());  // get the exception element
     TrcStackElemAddr *pAddressElem = 0;
     TrcStackElemCtxt *pCtxtElem = 0;

@@ -47,13 +47,15 @@
 /** I stream packets. */
 typedef enum _rctdl_etmv4_i_pkt_type
 {
-// markers for unknown/bad packets
+/* state of decode markers */
 		ETM4_PKT_I_NOTSYNC = 0x200,             /*!< no sync found yet.  */
-		ETM4_PKT_I_BAD_SEQUENCE,                /*!< invalid sequence for packet type. */
-        ETM4_PKT_I_BAD_TRACEMODE,               /*!< invalid packet type for this trace mode. */
-		ETM4_PKT_I_RESERVED,                    /*!< packet type reserved. */
         ETM4_PKT_I_INCOMPLETE_EOT,              /*!< flushing incomplete/empty packet at end of trace.*/
         ETM4_PKT_I_NO_ERR_TYPE,                 /*!< error type not set for packet. */
+
+/* markers for unknown/bad packets */
+		ETM4_PKT_I_BAD_SEQUENCE = 0x300,        /*!< invalid sequence for packet type. */
+        ETM4_PKT_I_BAD_TRACEMODE,               /*!< invalid packet type for this trace mode. */
+		ETM4_PKT_I_RESERVED,                    /*!< packet type reserved. */
 
 /* I stream packet types. */
     /* extension header. */
