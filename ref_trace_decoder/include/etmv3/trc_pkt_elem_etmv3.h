@@ -55,9 +55,12 @@ public:
     EtmV3TrcPacket();
     ~EtmV3TrcPacket();
 
+    EtmV3TrcPacket &operator =(const rctdl_etmv3_pkt* p_pkt);
+
     // update interface - set packet values
+
     void Clear();       //!< clear update data in packet ready for new one.
-    void ResetState();  //!< reset intra packet state data
+    void ResetState();  //!< reset intra packet state data -on full decoder reset.
 
     void SetType(const rctdl_etmv3_pkt_type p_type);
     void SetErrType(const rctdl_etmv3_pkt_type e_type);
@@ -86,14 +89,19 @@ public:
     void SetISyncHasCC();
     void SetISyncIsLSiP();
 
-    // packet status interface - get packet info.
+ // packet status interface - get packet info.
+
     const int AltISA() const { return context.curr_alt_isa; };
     const rctdl_isa ISA() const { return curr_isa; };
     const bool isBadPacket() const;
 
-    // printing
+// printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
+
+
+private:
+    const char *packetTypeName(const rctdl_etmv3_pkt_type type, const char **ppDesc) const;
 };
 
 inline void EtmV3TrcPacket::UpdateNS(const int NS)
@@ -144,6 +152,7 @@ inline void EtmV3TrcPacket::SetDataOOOTag(const uint8_t tag)
 inline void EtmV3TrcPacket::SetDataValue(const uint32_t value)
 {
     data.value = value;
+    data.update_dval = 1;
 }
 
 inline void EtmV3TrcPacket::UpdateContextID(const uint32_t contextID)

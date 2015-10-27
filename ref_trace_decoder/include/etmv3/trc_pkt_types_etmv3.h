@@ -117,6 +117,7 @@ typedef struct _etmv3_data_t {
     uint32_t  be:1;             /**< data transfers big-endian */
     uint32_t  update_be:1;      /**< updated Be flag */
     uint32_t  update_addr:1;    /**< updated address */
+    uint32_t  update_dval:1;    /**< updated data value */
     };
 } etmv3_data_t;
 

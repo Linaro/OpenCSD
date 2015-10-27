@@ -32,6 +32,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
+#include <sstream>
+#include <iomanip>
+
 #include "etmv3/trc_pkt_elem_etmv3.h"
 
 EtmV3TrcPacket::EtmV3TrcPacket()
@@ -60,6 +63,7 @@ void EtmV3TrcPacket::Clear()
     data.value = 0;
     data.update_addr = 0;
     data.update_be = 0;
+    data.update_dval = 0;
     ts_update_bits = 0;
     isync_info.has_cycle_count = 0;
     isync_info.has_LSipAddress = 0;
@@ -212,15 +216,253 @@ bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccu
     return bValid;
 }
 
+EtmV3TrcPacket &EtmV3TrcPacket::operator =(const rctdl_etmv3_pkt* p_pkt)
+{
+    *dynamic_cast<rctdl_etmv3_pkt *>(this) = *p_pkt;
+    return *this;        
+}
+
     // printing
 void EtmV3TrcPacket::toString(std::string &str) const
 {
+    const char *name;
+    const char *desc;
+    std::string valStr, ctxtStr = "";
+    bool bHasCC = false;    // packet has additional CC value
+
+    name = packetTypeName(type, &desc);
+    str = name + (std::string)" : " + desc;
+    
+    switch(type)
+    {
+        // print the original header type for the bad sequences.
+    case ETM3_PKT_BAD_SEQUENCE: 
+    case ETM3_PKT_BAD_TRACEMODE:
+        name = packetTypeName(err_type,0);
+        str += "[" + (std::string)name + "]";
+        break;
+
+    case ETM3_PKT_BRANCH_ADDRESS:
+    case ETM3_PKT_CYCLE_COUNT:
+    case ETM3_PKT_I_SYNC:
+    case ETM3_PKT_I_SYNC_CYCLE:
+    case ETM3_PKT_P_HDR:
+
+    case ETM3_PKT_CONTEXT_ID:
+        {
+            std::ostringstream oss;
+            oss << "; CtxtID=" << std::hex << "0x" << context.ctxtID;
+            str += oss.str();
+        }
+        break;
+
+    case ETM3_PKT_VMID:
+        {
+            std::ostringstream oss;
+            oss << "; VMID=" << std::hex << "0x" << context.VMID;
+            str += oss.str();
+        }
+        break;
+
+    case ETM3_PKT_TIMESTAMP:
+        {
+            std::ostringstream oss;
+            oss << "; TS=" << std::hex << "0x" << timestamp;
+            str += oss.str();
+        }
+        break;
+
+    case ETM3_PKT_OOO_DATA:
+        {
+            std::ostringstream oss;
+            oss << "; Val=" << std::hex << "0x" << data.value;
+            oss << "; OO_Tag=" << std::hex << "0x" << data.ooo_tag;
+            str += oss.str();
+        }
+        break;
+
+    case ETM3_PKT_VAL_NOT_TRACED:
+        if(data.update_addr)
+        {
+            trcPrintableElem::getValStr(valStr,32, data.addr.valid_bits, data.addr.val,true,data.addr.pkt_bits);
+            str += "; Addr=" + valStr;
+        }
+        break;
+
+    case ETM3_PKT_OOO_ADDR_PLC:
+        if(data.update_addr)
+        {
+            trcPrintableElem::getValStr(valStr,32, data.addr.valid_bits, data.addr.val,true,data.addr.pkt_bits);
+            str += "; Addr=" + valStr;
+        }
+        {
+            std::ostringstream oss;
+            oss << "; OO_Tag=" << std::hex << "0x" << data.ooo_tag;
+            str += oss.str();
+        }
+        break;
+
+    case ETM3_PKT_NORM_DATA:
+        if(data.update_addr)
+        {
+            trcPrintableElem::getValStr(valStr,32, data.addr.valid_bits, data.addr.val,true,data.addr.pkt_bits);
+            str += "; Addr=" + valStr;
+        }
+        if(data.update_dval)
+        {
+            std::ostringstream oss;
+            oss << "; Val=" << std::hex << "0x" << data.value;
+            str += oss.str();
+        }
+        break;
+    }
 }
 
 void EtmV3TrcPacket::toStringFmt(const uint32_t fmtFlags, std::string &str) const
 {
+    // no formatting implemented at present.
+    toString(str);
 }
 
+const char *EtmV3TrcPacket::packetTypeName(const rctdl_etmv3_pkt_type type, const char **ppDesc) const
+{
+    const char *pName = "I_RESERVED";
+    const char *pDesc = "Reserved Packet Header";
+
+    switch(type)
+    {
+// markers for unknown packets
+    // case ETM3_PKT_NOERROR:,        //!< no error in packet - supplimentary data.
+    case ETM3_PKT_NOTSYNC:        //!< no sync found yet
+        pName = "NOTSYNC";
+        pDesc = "Trace Stream not synchronised";
+        break;
+
+    case ETM3_PKT_INCOMPLETE_EOT: //!< flushing incomplete/empty packet at end of trace.
+        pName = "INCOMPLETE_EOT.";
+        pDesc = "Incomplete packet at end of trace data.";
+        break;
+
+// markers for valid packets
+    case ETM3_PKT_BRANCH_ADDRESS:
+        pName = "BRANCH_ADDRESS";
+        pDesc = "Branch address.";
+        break;
+
+    case ETM3_PKT_A_SYNC:
+        pName = "A_SYNC";
+        pDesc = "Alignment Synchronisation.";
+        break;
+
+    case ETM3_PKT_CYCLE_COUNT:
+        pName = "CYCLE_COUNT";
+        pDesc = "Cycle Count.";
+        break;
+
+    case ETM3_PKT_I_SYNC:
+        pName = "I_SYNC";
+        pDesc = "Instruction Packet synchronisation.";
+        break;
+
+    case ETM3_PKT_I_SYNC_CYCLE:
+        pName = "I_SYNC_CYCLE";
+        pDesc = "Instruction Packet synchronisation with cycle count.";
+        break;
+
+    case ETM3_PKT_TRIGGER:
+        pName = "TRIGGER";
+        pDesc = "Trace Trigger Event.";
+        break;
+
+    case ETM3_PKT_P_HDR:
+        pName = "P_HDR";
+        pDesc = "Atom P-header.";
+        break;
+
+    case ETM3_PKT_STORE_FAIL:
+        pName = "STORE_FAIL";
+        pDesc = "Data Store Failed.";
+        break; 
+
+    case ETM3_PKT_OOO_DATA:
+        pName = "OOO_DATA";
+        pDesc = "Out of Order data value packet.";
+        break;
+
+    case ETM3_PKT_OOO_ADDR_PLC:
+        pName = "OOO_ADDR_PLC";
+        pDesc = "Out of Order data address placeholder.";
+        break;
+
+    case ETM3_PKT_NORM_DATA:
+        pName = "NORM_DATA";
+        pDesc = "Data trace packet.";
+        break;
+
+    case ETM3_PKT_DATA_SUPPRESSED:
+        pName = "DATA_SUPPRESSED";
+        pDesc = "Data trace suppressed.";
+        break;
+
+    case ETM3_PKT_VAL_NOT_TRACED:
+        pName = "VAL_NOT_TRACED";
+        pDesc = "Data trace value not traced.";
+        break;
+
+    case ETM3_PKT_IGNORE:
+        pName = "IGNORE";
+        pDesc = "Packet ignored.";
+        break;
+
+    case ETM3_PKT_CONTEXT_ID:
+        pName = "CONTEXT_ID";
+        pDesc = "Context ID change.";
+        break;
+
+    case ETM3_PKT_VMID:
+        pName = "VMID";
+        pDesc = "VMID change.";
+        break;
+
+    case ETM3_PKT_EXCEPTION_ENTRY:
+        pName = "EXCEPTION_ENTRY";
+        pDesc = "Exception entry data marker.";
+        break;
+
+    case ETM3_PKT_EXCEPTION_EXIT:
+        pName = "EXCEPTION_EXIT";
+        pDesc = "Exception exit.";
+        break;
+
+    case ETM3_PKT_TIMESTAMP:
+        pName = "TIMESTAMP";
+        pDesc = "Timestamp Value.";
+        break;
+
+// internal processing types
+    // case ETM3_PKT_BRANCH_OR_BYPASS_EOT: not externalised
+
+// packet errors 
+    case ETM3_PKT_BAD_SEQUENCE: 
+        pName = "BAD_SEQUENCE";
+        pDesc = "Invalid sequence for packet type.";
+        break;
+
+    case ETM3_PKT_BAD_TRACEMODE:  
+        pName = "BAD_TRACEMODE";
+        pDesc = "Invalid packet type for this trace mode.";
+        break;
+
+        // leave thest unchanged.
+    case ETM3_PKT_RESERVED:
+    default:
+        break;
+
+    }
+
+    if(ppDesc) *ppDesc = pDesc;
+    return pName;
+}
 
 
 /* End of File trc_pkt_elem_etmv3.cpp */
