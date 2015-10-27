@@ -67,25 +67,26 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::processData(const rctdl_trc_index_t inde
                                                     uint32_t *numBytesProcessed)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    uint32_t bytesProcessed = 0;
+    m_bytesProcessed = 0;
 
-    while((bytesProcessed < dataBlockSize) && RCTDL_DATA_RESP_IS_CONT(resp))
+    while((m_bytesProcessed < dataBlockSize) && RCTDL_DATA_RESP_IS_CONT(resp))
     {
         try 
         {
             switch(m_process_state)
             {
             case WAIT_SYNC:
-                bytesProcessed += waitForSync(index, dataBlockSize,pDataBlock);
+                m_packet_index = index +  m_bytesProcessed;
+                m_bytesProcessed += waitForSync(dataBlockSize-m_bytesProcessed,pDataBlock+m_bytesProcessed);
                 break;
 
             case PROC_HDR:
-                m_packet_index = index +  bytesProcessed;
-                processHeaderByte(pDataBlock[bytesProcessed++]);
+                m_packet_index = index +  m_bytesProcessed;
+                processHeaderByte(pDataBlock[m_bytesProcessed++]);
                 break;
 
             case PROC_DATA:
-                processPayloadByte(pDataBlock [bytesProcessed++]);
+                processPayloadByte(pDataBlock [m_bytesProcessed++]);
                 break;
 
             case SEND_PKT:
@@ -118,7 +119,7 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::processData(const rctdl_trc_index_t inde
         }
     }
 
-    *numBytesProcessed = bytesProcessed;
+    *numBytesProcessed = m_bytesProcessed;
     return resp;
 }
 
@@ -182,6 +183,7 @@ void EtmV3PktProcImpl::InitPacketState()
 	m_bExpectingDataAddress = false;
 	m_bFoundDataAddress = false;
     m_currPacketData.clear();
+    m_currPktIdx = 0;       // index into processed bytes in current packet
     m_curr_packet.Clear();
     
 }
@@ -194,7 +196,8 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::outputPacket()
         if(!m_bSendPartPkt) 
         {
             dp_resp = m_interface->outputOnAllInterfaces(m_packet_index,&m_curr_packet,&m_curr_packet.type,m_currPacketData);
-            m_process_state = PROC_HDR; // need a header next time.
+            m_process_state = m_bStreamSync ? PROC_HDR : WAIT_SYNC; // need a header next time, or still waiting to sync.
+            m_currPacketData.clear();
         }
         else
         {
@@ -203,35 +206,109 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::outputPacket()
             m_process_state = m_post_part_pkt_state;
             m_packet_index += m_partPktData.size();
             m_bSendPartPkt = false;
+            m_curr_packet.SetType(m_post_part_pkt_type);
         }
     }
     return dp_resp;
 }
 
-void EtmV3PktProcImpl::moveBytesPartPkt(int n)
+void EtmV3PktProcImpl::setBytesPartPkt(int numBytes, process_state nextState, const rctdl_etmv3_pkt_type nextType)
 {
     m_partPktData.clear();
-    for(int i=0; i < n; i++)
+    for(int i=0; i < numBytes; i++)
     {
         m_partPktData.push_back(m_currPacketData[i]);
     }
-    m_currPacketData.erase(m_currPacketData.begin(), m_currPacketData.begin()+n);
+    m_currPacketData.erase(m_currPacketData.begin(), m_currPacketData.begin()+numBytes);
     m_bSendPartPkt = true;
+    m_post_part_pkt_state = nextState;
+    m_post_part_pkt_type = nextType;
 }
 
-int EtmV3PktProcImpl::waitForSync(const rctdl_trc_index_t index, const uint32_t dataBlockSize, const uint8_t *pDataBlock)
+uint32_t EtmV3PktProcImpl::waitForSync(const uint32_t dataBlockSize, const uint8_t *pDataBlock)
 {
-    // TBD:
-    return 0;
-}
+    uint8_t currByte;
+    uint32_t bytesProcessed = 0;
+    bool bSendBlock = false;
 
+    // need to wait for the first sync packet
+    while(!bSendBlock && (bytesProcessed < dataBlockSize))
+    {
+        currByte = pDataBlock[bytesProcessed++];
+
+        if(m_bStartOfSync)
+        {
+            // need to handle consecutive 0 bytes followed by genuine A-SYNC.
+
+            m_currPacketData.push_back(currByte);
+            if((currByte == 0x80) && (m_currPacketData.size() >= 6))
+            {
+                // it is a sync packet possibly with leading zeros
+                bSendBlock = true;
+                if(m_currPacketData.size() > 6)
+                {
+                    m_currPacketData.pop_back();
+                    bytesProcessed--;   // return 0x80 to the input buffer to re-process next pass after stripping 0's
+                    setBytesPartPkt(m_currPacketData.size()-5,WAIT_SYNC,ETM3_PKT_NOTSYNC);
+                }
+                else
+                {
+                    m_bStreamSync = true;
+                    m_curr_packet.SetType(ETM3_PKT_A_SYNC); 
+                }
+            }
+            else if(currByte != 0x00)
+            {
+                m_bStartOfSync = false; // not a sync packet                
+            }
+            else if(m_currPacketData.size() >= 13)  // 13 0's, strip 8 of them...
+            {
+                setBytesPartPkt(8,WAIT_SYNC,ETM3_PKT_NOTSYNC);
+                bSendBlock = true;
+            }
+        }
+        else    // not seen a start of sync candidate yet
+        {
+            if(currByte == 0x00)  // could be the start of a-sync
+            {
+                if(m_currPacketData.size() == 0)
+                {
+                    m_currPacketData.push_back(currByte);
+                    m_bStartOfSync = true;
+                }
+                else
+                {
+                    bytesProcessed--;
+                    bSendBlock = true;  // send none sync packet data, re-process this byte next time.
+                    m_curr_packet.SetType(ETM3_PKT_NOTSYNC);    // send unsynced data packet.
+                }
+            }
+            else
+            {
+                //save a byte - not start of a-sync
+                m_currPacketData.push_back(currByte);
+            }
+        }
+
+        // syncs cannot be this long, send what we have so far as unsynced data.
+        if(m_currPacketData.size() == 16)   
+        {
+            bSendBlock = true;  // send none sync packet block
+            m_curr_packet.SetType(ETM3_PKT_NOTSYNC);    // send unsynced data packet.
+        }
+    }
+    if(bSendBlock)
+        SendPacket();
+    return bytesProcessed;
+}
 
 rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 {
-    m_currPacketData.clear();
+    InitPacketState();  // new packet, clear old single packet state (retains intra packet state).
+
+    // save byte
     m_currPacketData.push_back(by);
-    m_curr_packet.Clear();  // new packet - clear old update data.
-    m_currPktIdx = 0;       // index into processed bytes in current packet
+   
     m_process_state = PROC_DATA;    // assume next is data packet
 
 	// check for branch address 0bCxxxxxxx1
@@ -242,6 +319,8 @@ rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 			// no continuation - 1 byte branch same in alt and std...
             if((by == 0x01) && (m_interface->getComponentOpMode() & ETMV3_OPFLG_UNFORMATTED_SOURCE))
 			{
+                // TBD: need to fix up for handling bypassed ETM stream at some point.
+                throwUnsupportedErr("Bypassed ETM stream not supported in this version of the decoder.");
                 // could be EOTrace marker from bypassed formatter
 				m_curr_packet.SetType(ETM3_PKT_BRANCH_OR_BYPASS_EOT);
 			}
@@ -288,16 +367,20 @@ rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 	else if((by & 0x03 )== 0x00) {
 		// OoO data 0b0xx0xx00
 		if((by & 0x93 )== 0x00) {
-            if(!m_config.isDataTrace()) {
-                throwPacketHeaderErr("Invalid data trace header - not tracing data.");
+            if(!m_config.isDataValTrace()) {
                 m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
+                throwPacketHeaderErr("Invalid data trace header (out of order data) - not tracing data values.");
 			}
 			m_curr_packet.SetType(ETM3_PKT_OOO_DATA);
 			uint8_t size = ((by & 0x0C) >> 2);
 			// header contains a count of the data to follow
 			// size 3 == 4 bytes, other sizes == size bytes
 			if(size == 0)
+            {
+                m_curr_packet.SetDataOOOTag((by >> 5)  & 0x3);
+                m_curr_packet.SetDataValue(0);
 				SendPacket();
+            }
 			else
 				m_bytesExpectedThisPkt = (short)(1 + ((size == 3) ? 4 : size));
 		}
@@ -309,22 +392,29 @@ rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 		}
 		// store failed
 		else if(by == 0x50) {
-			m_curr_packet.SetType(ETM3_PKT_STORE_FAIL);
-			SendPacket();
+            if(!m_config.isDataValTrace())
+            {
+                m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
+                throwPacketHeaderErr("Invalid data trace header (store failed) - not tracing data values.");
+            }
+            m_curr_packet.SetType(ETM3_PKT_STORE_FAIL);
+            SendPacket();
 		}
 		// OoO placeholder 0b01x1xx00
 		else if((by & 0xD3 )== 0x50) {
 			m_curr_packet.SetType(ETM3_PKT_OOO_ADDR_PLC);
+            if(!m_config.isDataTrace())
+            {
+                m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
+                throwPacketHeaderErr("Invalid data trace header (out of order placeholder) - not tracing data.");
+            }
+            // expecting data address if flagged and address tracing enabled (flag can be set even if address tracing disabled)
 			m_bExpectingDataAddress = ((by & DATA_ADDR_EXPECTED_FLAG) == DATA_ADDR_EXPECTED_FLAG) && m_config.isDataAddrTrace();
 			m_bFoundDataAddress = false;
+            m_curr_packet.SetDataOOOTag((by >> 2) & 0x3);
 			if(!m_bExpectingDataAddress) {
 				SendPacket();
 			}
-		}
-		// aux data 0b0001xx00
-		else if((by & 0xF3 )== 0x10) {
-			m_curr_packet.SetType(ETM3_PKT_AUX_DATA);
-			SendPacket();
 		}
         // vmid 0b00111100 
         else if(by == 0x3c) {
@@ -341,7 +431,7 @@ rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 		uint8_t size = ((by & 0x0C) >> 2);
 		if(!m_config.isDataTrace()) {
             m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
-            throwPacketHeaderErr("Invalid data trace header - not tracing data.");
+            throwPacketHeaderErr("Invalid data trace header (normal data) - not tracing data.");
 		}
 		m_curr_packet.SetType(ETM3_PKT_NORM_DATA);
 		m_bExpectingDataAddress = ((by & DATA_ADDR_EXPECTED_FLAG) == DATA_ADDR_EXPECTED_FLAG) && m_config.isDataAddrTrace();
@@ -351,6 +441,7 @@ rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 		m_bytesExpectedThisPkt = (short)( 1 + ((size == 3) ? 4 : size));
 		if(!m_bExpectingDataAddress && (m_bytesExpectedThisPkt == 1)) {
 			// single byte data packet, value = 0;
+            m_curr_packet.SetDataValue(0);
 			SendPacket();
 		}
 
@@ -360,19 +451,16 @@ rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 		if(!m_config.isDataTrace())
         {
             m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
-            throwPacketHeaderErr("Invalid data trace header - not tracing data.");
+            throwPacketHeaderErr("Invalid data trace header (data suppressed) - not tracing data.");
         }
-		else
-        {
-			m_curr_packet.SetType(ETM3_PKT_DATA_SUPPRESSED);
-            SendPacket();
-        }
+        m_curr_packet.SetType(ETM3_PKT_DATA_SUPPRESSED);
+        SendPacket();
 	}
 	// value not traced 0b011x1010
 	else if((by & 0xEF )== 0x6A) {
 		if(!m_config.isDataTrace()) {
             m_curr_packet.SetErrType(ETM3_PKT_BAD_TRACEMODE);
-            throwPacketHeaderErr("Invalid data trace header - not tracing data.");
+            throwPacketHeaderErr("Invalid data trace header (value not traced) - not tracing data.");
 		}
 		m_curr_packet.SetType(ETM3_PKT_VAL_NOT_TRACED);
 		m_bExpectingDataAddress = ((by & DATA_ADDR_EXPECTED_FLAG) == DATA_ADDR_EXPECTED_FLAG) && m_config.isDataAddrTrace();
@@ -414,7 +502,7 @@ rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
     return RCTDL_OK;
 }
 
-rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
+rctdl_err_t EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 {
     bool bTopBitSet = false;
     bool packetDone = false;
@@ -429,7 +517,7 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
      	
 	case ETM3_PKT_BRANCH_ADDRESS:
 		bTopBitSet = (bool)((by & 0x80) == 0x80);
-        if(m_config.isAltBranch()) 
+        if(m_config.isAltBranch())  // etm implements the alternative branch encoding
         {
 			if(!bTopBitSet)     // no continuation
             {
@@ -523,17 +611,15 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 		
 
 	case ETM3_PKT_A_SYNC:
-        // TBD
-        /*
 		if(by == 0x00) {
 			if( m_currPacketData.size() > 5) {
-				// extra 0, lose one
-				m_currPacketData.size() = 1;
-				SendBadPacket("A-Sync ?: Extra 0x00 in sequence");
-                memcpy(m_currPacketData,&m_currPacketData[1],5);
-				m_curr_packet.SetType(ETM3_PKT_A_SYNC;
-				// wait for next byte
-				m_currPacketData.size() = 5;
+				// extra 0, need to lose one
+                
+                // set error type
+                m_curr_packet.SetErrType(ETM3_PKT_BAD_SEQUENCE);
+                // mark extra 0 for sending, retain remaining, restart in A-SYNC processing mode.
+                setBytesPartPkt(1,PROC_DATA,ETM3_PKT_A_SYNC);   
+                throwMalformedPacketErr("A-Sync ?: Extra 0x00 in sequence");
 			}
 		}
 		else if((by == 0x80) && ( m_currPacketData.size() == 6)) {
@@ -542,21 +628,24 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 		}
 		else
 		{
-            m_currPacketData.size()--;
-            SendBadPacket("A-Sync ? : Unexpected byte in sequence");
-			ProcessHeaderByte(by); // send last byte back round...
-		}*/
+            m_curr_packet.SetErrType(ETM3_PKT_BAD_SEQUENCE);
+            m_bytesProcessed--; // remove the last byte from the number processed to re-try
+            m_currPacketData.pop_back();  // remove the last byte processed from the packet
+            throwMalformedPacketErr("A-Sync ? : Unexpected byte in sequence");
+		}
 		break;			
 			
 	case ETM3_PKT_CYCLE_COUNT:
 		bTopBitSet = ((by & 0x80) == 0x80);
         if(!bTopBitSet || ( m_currPacketData.size() >= 6))
+            m_currPktIdx = 1;
+            m_curr_packet.SetCycleCount(extractCycleCount());
 			SendPacket();
 		break;
 			
 	case ETM3_PKT_I_SYNC_CYCLE:
 		if(!m_bIsync_got_cycle_cnt) {
-			if((by & 0x80) != 0x80) {
+			if(((by & 0x80) != 0x80) || ( m_currPacketData.size() >= 6)) {
 				m_bIsync_got_cycle_cnt = true;
 			}
 			break;
@@ -568,10 +657,10 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
             int ctxtIDBytes = m_config.CtxtIDBytes();
 			// bytes expected = header + n x ctxt id + info byte + 4 x addr; 
             if(m_config.isInstrTrace())
-				m_bytesExpectedThisPkt = (short)(cycCountBytes + 6 + ctxtIDBytes);
+				m_bytesExpectedThisPkt = cycCountBytes + 6 + ctxtIDBytes;
 			else
-				m_bytesExpectedThisPkt = (short)(2 + ctxtIDBytes);
-			m_IsyncInfoIdx = (short)(1 + cycCountBytes + ctxtIDBytes);
+				m_bytesExpectedThisPkt = 2 + ctxtIDBytes;
+			m_IsyncInfoIdx = 1 + cycCountBytes + ctxtIDBytes;
 		}
 		if(( m_currPacketData.size() - 1) == m_IsyncInfoIdx) {
 			m_bIsync_get_LSiP_addr = ((m_currPacketData[m_IsyncInfoIdx] & 0x80) == 0x80);
@@ -583,12 +672,12 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 			// count as we have no idea how long it is
 			if(m_bIsync_get_LSiP_addr) {
 				if((by & 0x80) != 0x80) {
-					SendPacket();
+                    OnISyncPacket();
 				}
 			}
 			else {
 				// otherwise, output now
-				SendPacket();
+                OnISyncPacket();
 			}
 		}
 		break;
@@ -605,73 +694,91 @@ rctdl_err_t  EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 				break;
 		}
 		// found any data address we were expecting
-		if(m_bytesExpectedThisPkt == m_currPacketData.size()) {
+		else if(m_bytesExpectedThisPkt == m_currPacketData.size()) {
+            m_currPktIdx = 1;
+            if(m_bExpectingDataAddress)
+            {
+                uint8_t bits = 0, beVal = 0;
+                bool updateBE = false;
+                uint32_t dataAddress = extractDataAddress(bits,updateBE,beVal);
+                m_curr_packet.UpdateDataAddress(dataAddress, bits);
+                if(updateBE)
+                    m_curr_packet.UpdateDataEndian(beVal);
+            }
+            m_curr_packet.SetDataValue(extractDataValue((m_currPacketData[0] >> 2) & 0x3));
 			SendPacket();
 		}
-		if(m_bytesExpectedThisPkt <  m_currPacketData.size())
-        {
-            throwMalformedPacketErr("Malformed normal data packet.");
-        }
 		break;
 			
 	case ETM3_PKT_OOO_DATA:
 		if(m_bytesExpectedThisPkt ==  m_currPacketData.size())
+        {
+            m_currPktIdx = 1;
+            m_curr_packet.SetDataValue(extractDataValue((m_currPacketData[0] >> 2) & 0x3));
+            m_curr_packet.SetDataOOOTag((m_currPacketData[0] >> 5) & 0x3);
 			SendPacket();
+        }
 		if(m_bytesExpectedThisPkt <  m_currPacketData.size())
 			throwMalformedPacketErr("Malformed out of order data packet.");
 		break;
 			
-	case ETM3_PKT_OOO_ADDR_PLC:
+        // both these expect an address only.
+	case ETM3_PKT_VAL_NOT_TRACED:
+    case ETM3_PKT_OOO_ADDR_PLC: // we set the tag earlier.
 		if(m_bExpectingDataAddress) {
 			// look for end of continuation bits
 			if((by & 0x80) != 0x80) {
+                uint8_t bits = 0, beVal = 0;
+                bool updateBE = false;
+                m_currPktIdx = 1;
+                uint32_t dataAddress = extractDataAddress(bits,updateBE,beVal);
+                m_curr_packet.UpdateDataAddress(dataAddress, bits);
+                if(updateBE)
+                    m_curr_packet.UpdateDataEndian(beVal);
 				SendPacket();
 			}
 		}
 		break;
-			
-	case ETM3_PKT_VAL_NOT_TRACED:
-		if(m_bExpectingDataAddress) {
-			// look for end of continuation bits
-			if((by & 0x80) != 0x80) {
-				SendPacket();
-			}
-		}			
-		break;
-			
+					
 	case ETM3_PKT_CONTEXT_ID:
 		if(m_bytesExpectedThisPkt == m_currPacketData.size()) {
+            m_currPktIdx = 1;
+            m_curr_packet.UpdateContextID(extractCtxtID());
 			SendPacket();
 		}
-		if(m_bytesExpectedThisPkt <  m_currPacketData.size())
+		if(m_bytesExpectedThisPkt < m_currPacketData.size())
 			throwMalformedPacketErr("Malformed context id packet.");
 		break;
 			
 	case ETM3_PKT_TIMESTAMP:
 		if((by & 0x80) != 0x80) {
+            uint8_t tsBits = 0;
+            m_currPktIdx = 1;
+            uint64_t tsVal = extractTimestamp(tsBits);
+            m_curr_packet.UpdateTimestamp(tsVal,tsBits);
 			SendPacket();
 		}
         break;
 
     case ETM3_PKT_VMID:
         // single byte payload
+        m_curr_packet.UpdateVMID(by);
         SendPacket();
         break;
 	}
 
+    return RCTDL_OK;
 }
 
 // extract branch address packet at current location in packet data.
 void EtmV3PktProcImpl::OnBranchAddress()
 {
-    bool exceptionFollows = false;
     int validBits = 0;
     rctdl_vaddr_t partAddr = 0;
   
     partAddr = extractBrAddrPkt(validBits);
     m_curr_packet.UpdateAddress(partAddr,validBits);
 }
-
 
 uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
 {
@@ -720,7 +827,7 @@ uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
     {
         checkPktLimits();
         addrbyte = m_currPacketData[m_currPktIdx++];
-        CBit = (bool)(addrbyte & 0x80);
+        CBit = (bool)((addrbyte & 0x80) != 0);
         shift = bitcount;
         if(bytecount == 0)
         {
@@ -903,6 +1010,202 @@ void EtmV3PktProcImpl::checkPktLimits()
     // index running off the end of the packet means a malformed packet.
     if(m_currPktIdx >= m_currPacketData.size())
         throwMalformedPacketErr("Malformed Packet - oversized packet.");
+}
+
+uint32_t EtmV3PktProcImpl::extractCtxtID()
+{
+    uint32_t ctxtID = 0;
+    int size = m_config.CtxtIDBytes();
+
+    // check we have enough data
+    if((m_currPktIdx + size) > m_currPacketData.size())
+        throwMalformedPacketErr("Too few bytes to extract context ID.");
+
+    switch(size)
+    {
+    case 1:
+        ctxtID = (uint32_t)m_currPacketData[m_currPktIdx];
+        m_currPktIdx++;
+        break;
+
+    case 2:
+        ctxtID = (uint32_t)m_currPacketData[m_currPktIdx] 
+                    | ((uint32_t)m_currPacketData[m_currPktIdx+1]) << 8;
+        m_currPktIdx+=2;
+        break;
+
+    case 4:
+        ctxtID = (uint32_t)m_currPacketData[m_currPktIdx] 
+                    | ((uint32_t)m_currPacketData[m_currPktIdx+1]) << 8
+                    | ((uint32_t)m_currPacketData[m_currPktIdx+2]) << 16
+                    | ((uint32_t)m_currPacketData[m_currPktIdx+3]) << 24;
+        m_currPktIdx+=4;
+        break;
+    }
+    return ctxtID;
+}
+
+uint64_t EtmV3PktProcImpl::extractTimestamp(uint8_t &tsBits)
+{
+    uint64_t ts = 0;
+    unsigned tsMaxBytes = m_config.TSPkt64() ? 9 : 7;
+    unsigned tsCurrBytes = 0;
+    bool bCont = true;
+    uint8_t mask = 0x7F;
+    uint8_t last_mask = m_config.TSPkt64() ? 0xFF : 0x3F;
+    uint8_t ts_iter_bits = 7;
+    uint8_t ts_last_iter_bits = m_config.TSPkt64() ? 8 : 6;
+    uint8_t currByte;
+    tsBits = 0;
+
+    while((tsCurrBytes < tsMaxBytes) && !bCont)
+    {
+        if(m_currPacketData.size() < (m_currPktIdx + tsCurrBytes + 1))
+            throwMalformedPacketErr("Insufficient bytes to extract timestamp.");
+
+        currByte = m_currPacketData[m_currPktIdx+tsCurrBytes];
+        ts |= ((uint64_t)(currByte & mask)) << (7 * tsCurrBytes);
+        tsCurrBytes++;
+        tsBits += ts_iter_bits;
+        bCont = ((0x80 & currByte) == 0x80);
+        if(tsCurrBytes = (tsMaxBytes - 1))
+        {
+            mask = last_mask;
+            ts_iter_bits = ts_last_iter_bits;
+        }
+    }
+    m_currPktIdx += tsCurrBytes;
+    return ts;
+}
+
+
+uint32_t EtmV3PktProcImpl::extractDataAddress(uint8_t &bits, bool &updateBE, uint8_t &beVal)
+{
+    uint32_t dataAddr = 0;
+    int bytesIdx = 0;
+    bool bCont = true;
+    uint8_t currByte = 0;
+
+    updateBE = false;
+    bits = 0;
+
+    while(bCont)
+    {
+        checkPktLimits();
+        currByte = m_currPacketData[m_currPktIdx++] & ((bytesIdx == 4) ? 0x0F : 0x7F);
+        dataAddr |= (((uint32_t)currByte)  << (bytesIdx * 7));
+        bCont = ((currByte & 0x80) == 0x80);
+        if(bytesIdx == 4)
+        {
+            bits += 4;
+            updateBE = true;
+            beVal = ((currByte >> 4) & 0x1);
+            bCont = false;
+        }
+        else
+            bits+=7;
+        bytesIdx++;
+    }    
+    return dataAddr;
+}
+
+uint32_t EtmV3PktProcImpl::extractDataValue(const int dataByteSize)
+{
+    static int bytesReqTable[] = { 0,1,2,4 };
+
+    uint32_t dataVal = 0;
+    int bytesUsed = 0;
+    int bytesReq = bytesReqTable[dataByteSize & 0x3]; 
+    while(bytesUsed < bytesReq)
+    {
+        checkPktLimits();
+        dataVal |= (((uint32_t)m_currPacketData[m_currPktIdx++])  << (bytesUsed * 8));
+        bytesUsed++;
+    }
+    return dataVal;
+}
+
+
+uint32_t EtmV3PktProcImpl::extractCycleCount()
+{
+    uint32_t cycleCount = 0;
+    int byteIdx = 0;
+    uint8_t mask = 0x7F;
+    bool bCond = true;
+    uint8_t currByte = 0;
+
+    while(bCond)
+    {
+        checkPktLimits();
+        currByte = m_currPacketData[m_currPktIdx++] & mask;
+        cycleCount |= ((uint32_t)currByte) << (7 * byteIdx);
+        bCond = ((currByte & 0x80) == 0x80);
+        byteIdx++;
+
+        if(byteIdx == 4)
+            mask = 0x0F;
+
+        if(byteIdx == 5)
+            bCond = false;
+    }
+    return cycleCount;
+}
+
+void EtmV3PktProcImpl::OnISyncPacket()
+{
+    uint8_t iSyncInfoByte = 0;
+    uint32_t instrAddr = 0, LSiPAddr = 0;
+    int LSiPBits = 0;
+    uint8_t T = 0, J = 0, AltISA = 0;
+
+    m_currPktIdx = 1;
+    if(m_bIsync_got_cycle_cnt)
+    {
+        m_curr_packet.SetCycleCount(extractCycleCount());
+        m_curr_packet.SetISyncHasCC();
+    }
+
+    if(m_config.CtxtIDBytes() != 0)
+    {
+        m_curr_packet.UpdateContextID(extractCtxtID());
+        m_currPktIdx += m_config.CtxtIDBytes();
+    }
+
+    // extract context info 
+    iSyncInfoByte = m_currPacketData[m_currPktIdx++];
+    m_curr_packet.SetISyncReason((etmv3_isync_reason_t)((iSyncInfoByte >> 5) & 0x3));
+    J = (iSyncInfoByte >> 4) & 0x1;
+    AltISA = m_config.MinorRev() >= 3 ? (iSyncInfoByte >> 2) & 0x1 : 0;
+    m_curr_packet.UpdateNS((iSyncInfoByte >> 3) & 0x1);
+     if(m_config.hasVirtExt())
+         m_curr_packet.UpdateHyp((iSyncInfoByte >> 1) & 0x1);
+    
+    // main address value - full 32 bit address value
+    for(int i = 0; i < 4; i++)
+        instrAddr |= ((uint32_t)m_currPacketData[m_currPktIdx++]) << (8*i);
+    T = instrAddr & 0x1;    // get the T bit.
+    instrAddr &= ~0x1;      // remove from address.
+    m_curr_packet.UpdateAddress(instrAddr,32);  
+
+    // enough data now to set the instruction set.
+    rctdl_isa currISA = rctdl_isa_arm;
+    if(J)
+        currISA = rctdl_isa_jazelle;
+    else if(T)
+        currISA = AltISA ? rctdl_isa_tee : rctdl_isa_thumb2;
+    m_curr_packet.UpdateISA(currISA);
+     
+    // possible follow up address value - rarely uses unless trace enabled during
+    // load and store instruction executing on top of other instruction. 
+    if(m_bIsync_get_LSiP_addr)
+    {
+        LSiPAddr = extractBrAddrPkt(LSiPBits);
+        // follow up address value is compressed relative to the main value
+        // we store this in the data address value temporarily.
+        m_curr_packet.UpdateDataAddress(instrAddr,32);
+        m_curr_packet.UpdateDataAddress(LSiPAddr,LSiPBits);
+    }
+    SendPacket(); // mark ready to send
 }
 
 /* End of File trc_pkt_proc_etmv3_impl.cpp */

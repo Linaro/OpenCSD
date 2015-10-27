@@ -46,12 +46,9 @@
 typedef enum _rctdl_etmv3_pkt_type
 {
 
-// markers for unknown/bad packets
+// markers for unknown packets
         ETM3_PKT_NOERROR,        //!< no error in packet - supplimentary data.
 		ETM3_PKT_NOTSYNC,        //!< no sync found yet
-		ETM3_PKT_BAD_SEQUENCE,   //!< invalid sequence for packet type
-        ETM3_PKT_BAD_TRACEMODE,  //!< invalid packet type for this trace mode.
-		ETM3_PKT_RESERVED,       //!< packet type reserved.
         ETM3_PKT_INCOMPLETE_EOT, //!< flushing incomplete/empty packet at end of trace.
 
 // markers for valid packets
@@ -77,7 +74,11 @@ typedef enum _rctdl_etmv3_pkt_type
 
 // internal processing types
 		ETM3_PKT_BRANCH_OR_BYPASS_EOT,
-        ETM3_PKT_AUX_DATA
+
+// packet errors 
+		ETM3_PKT_BAD_SEQUENCE,   //!< invalid sequence for packet type
+        ETM3_PKT_BAD_TRACEMODE,  //!< invalid packet type for this trace mode.
+		ETM3_PKT_RESERVED       //!< packet type reserved.
 
 } rctdl_etmv3_pkt_type;
 
@@ -105,6 +106,35 @@ typedef struct _etmv3_context_t {
     uint8_t VMID;       /**< VMID */
 } etmv3_context_t;
 
+
+typedef struct _etmv3_data_t {
+
+    uint32_t value;        /**< Data value */
+    rctdl_pkt_vaddr addr;  /**< current data address */
+
+    struct {
+    uint32_t  ooo_tag:2;        /**< Out of order data tag. */
+    uint32_t  be:1;             /**< data transfers big-endian */
+    uint32_t  update_be:1;      /**< updated Be flag */
+    uint32_t  update_addr:1;    /**< updated address */
+    };
+} etmv3_data_t;
+
+typedef enum _etmv3_isync_reason_t {
+    ISYNC_PERIODIC,
+    ISYNC_TRACE_ENABLE,
+    ISYNC_OVERFLOW,
+    ISYNC_DEBUG_EXIT
+} etmv3_isync_reason_t;
+
+typedef struct _etmv3_isync_t {
+    etmv3_isync_reason_t reason;
+    struct {
+        uint32_t has_cycle_count:1; /**< updated cycle count */
+        uint32_t has_LSipAddress:1; /**< main address is load-store instuction, data address is overlapping instruction @ start of trace */
+    };
+} etmv3_isync_t;
+
 typedef struct _rctdl_etmv3_pkt
 {
     rctdl_etmv3_pkt_type type;  /**< Primary packet type. */
@@ -115,14 +145,19 @@ typedef struct _rctdl_etmv3_pkt
     etmv3_context_t context;    /**< current context */
     rctdl_pkt_vaddr addr;       /**< current Addr */
 
+    etmv3_isync_t isync_info;
+    
     rctdl_etmv3_excep exception;
     
     rctdl_pkt_atom atom;        /**< atom elements - non zerom number indicates valid atom count */
     uint8_t p_hdr_fmt;          /**< if atom elements, associated phdr format */
     uint32_t cycle_count;       /**< cycle count associated with this packet (ETMv3 has counts in atom packets and as individual packets */
     
-    uint64_t timestamp;
+    uint64_t timestamp;         /**< current timestamp value */
+    uint8_t ts_update_bits;     /**< bits of ts updated this packet (if TS packet) */
     
+    etmv3_data_t data;          /**< data transfer values */
+
     rctdl_etmv3_pkt_type err_type;  /**< Basic packet type if primary type indicates error or incomplete. (header type) */
 
 } rctdl_etmv3_pkt;

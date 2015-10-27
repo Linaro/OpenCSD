@@ -71,8 +71,20 @@ public:
     void UpdateAltISA(const int AltISA);
     void UpdateHyp(const int Hyp);
     void UpdateISA(const rctdl_isa isa);
+    void UpdateContextID(const uint32_t contextID);
+    void UpdateVMID(const uint8_t VMID);
+    void UpdateTimestamp(const uint64_t tsVal, const uint8_t updateBits);
     
     bool UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccurate);  //!< Interpret P Hdr, return true if valid, false if not.
+
+    void SetDataOOOTag(const uint8_t tag);
+    void SetDataValue(const uint32_t value);
+    void UpdateDataAddress(const uint32_t value, const uint8_t valid_bits);
+    void UpdateDataEndian(const uint8_t BE_Val);
+    void SetCycleCount(const uint32_t cycleCount);
+    void SetISyncReason(const etmv3_isync_reason_t reason);
+    void SetISyncHasCC();
+    void SetISyncIsLSiP();
 
     // packet status interface - get packet info.
     const int AltISA() const { return context.curr_alt_isa; };
@@ -121,7 +133,55 @@ inline void EtmV3TrcPacket::SetErrType(const rctdl_etmv3_pkt_type e_type)
 
 inline const bool EtmV3TrcPacket::isBadPacket() const
 {
-    return (type < ETM3_PKT_BRANCH_ADDRESS);
+    return (type >= ETM3_PKT_BAD_SEQUENCE);
+}
+
+inline void EtmV3TrcPacket::SetDataOOOTag(const uint8_t tag)
+{
+    data.ooo_tag = tag;
+}
+
+inline void EtmV3TrcPacket::SetDataValue(const uint32_t value)
+{
+    data.value = value;
+}
+
+inline void EtmV3TrcPacket::UpdateContextID(const uint32_t contextID)
+{
+    context.updated_c = 1;
+    context.ctxtID = contextID;
+}
+
+inline void EtmV3TrcPacket::UpdateVMID(const uint8_t VMID)
+{
+    context.updated_v = 1;
+    context.VMID = VMID;
+}
+
+inline void EtmV3TrcPacket::UpdateDataEndian(const uint8_t BE_Val)
+{
+    data.be = BE_Val;
+    data.update_be = 1;
+}
+
+inline void EtmV3TrcPacket::SetCycleCount(const uint32_t cycleCount)
+{
+    cycle_count = cycleCount;
+}
+
+inline void EtmV3TrcPacket::SetISyncReason(const etmv3_isync_reason_t reason)
+{
+    isync_info.reason = reason;
+}
+
+inline void EtmV3TrcPacket::SetISyncHasCC()
+{
+    isync_info.has_cycle_count = 1;
+}
+
+inline void EtmV3TrcPacket::SetISyncIsLSiP()
+{
+    isync_info.has_LSipAddress = 1;
 }
 
 

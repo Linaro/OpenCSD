@@ -56,6 +56,13 @@ void EtmV3TrcPacket::Clear()
     context.updated = 0;
     context.updated_c = 0;
     context.updated_v = 0;
+    data.ooo_tag = 0;
+    data.value = 0;
+    data.update_addr = 0;
+    data.update_be = 0;
+    ts_update_bits = 0;
+    isync_info.has_cycle_count = 0;
+    isync_info.has_LSipAddress = 0;
 }
 
 // reset all state including intra packet
@@ -70,6 +77,9 @@ void EtmV3TrcPacket::ResetState()
     context.VMID = 0;
     context.ctxtID = 0;    
     timestamp = 0;
+    data.addr.valid_bits = 0;
+    data.addr.val = 0;
+    data.be = 0;
     Clear();
 }
 
@@ -83,6 +93,30 @@ void EtmV3TrcPacket::UpdateAddress(const rctdl_vaddr_t partAddrVal, const int up
     if(updateBits > addr.valid_bits)
         addr.valid_bits = updateBits;    
 }
+
+void EtmV3TrcPacket::UpdateDataAddress(const uint32_t value, const uint8_t valid_bits)
+{
+    // ETMv3 data addresses 32 bits.
+    uint32_t validMask = 0xFFFFFFFF;
+    validMask >>= 32-valid_bits;
+    addr.pkt_bits = valid_bits;
+    addr.val &= ~validMask;
+    addr.val |= (value & validMask);
+    if(valid_bits > addr.valid_bits)
+        addr.valid_bits = valid_bits;
+    data.update_addr = 1;
+}
+
+void EtmV3TrcPacket::UpdateTimestamp(const uint64_t tsVal, const uint8_t updateBits)
+{
+    uint64_t validMask = ~0ULL;
+    validMask >>= 64-updateBits;
+    timestamp &= ~validMask;
+    timestamp |= (tsVal & validMask);
+    ts_update_bits = updateBits;
+}
+
+
 
 void EtmV3TrcPacket::SetException(  const rctdl_armv7_exception type, 
                                     const uint16_t number, 

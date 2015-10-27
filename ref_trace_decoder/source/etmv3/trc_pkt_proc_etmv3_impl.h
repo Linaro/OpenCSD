@@ -80,19 +80,24 @@ protected:
 
     // byte processing
 
-    int waitForSync(const rctdl_trc_index_t index, const uint32_t dataBlockSize, const uint8_t *pDataBlock);          //!< look for sync, return none-sync bytes processed.
+    uint32_t waitForSync(const uint32_t dataBlockSize, const uint8_t *pDataBlock);  //!< look for sync, return none-sync bytes processed.
     rctdl_err_t processHeaderByte(uint8_t by);
     rctdl_err_t processPayloadByte(uint8_t by);
 
     // packet handling - main routines
-
     void OnBranchAddress();
+    void OnISyncPacket();
+    uint32_t extractCtxtID();
+    uint64_t extractTimestamp(uint8_t &tsBits);
+    uint32_t extractDataAddress(uint8_t &bits, bool &updateBE, uint8_t &beVal);
+    uint32_t extractDataValue(const int dataByteSize);
+    uint32_t extractCycleCount();
 
     // packet handling - helper routines
     uint32_t extractBrAddrPkt(int &nBitsOut);
     void extractExceptionData();
     void checkPktLimits();
-    void moveBytesPartPkt(int n); // move first n bytes to alt packet
+    void setBytesPartPkt(const int numBytes, const process_state nextState, const rctdl_etmv3_pkt_type nextType); // set first n bytes from current packet to be sent via alt packet.
 
     // packet output
     void SendPacket();  // mark state for packet output
@@ -101,22 +106,24 @@ protected:
     // bad packets 
     void throwMalformedPacketErr(const char *pszErrMsg);
     void throwPacketHeaderErr(const char *pszErrMsg);
+    void throwUnsupportedErr(const char *pszErrMsg);
 
+    uint32_t m_bytesProcessed; // bytes processed by the process data routine (index into input buffer)
     std::vector<uint8_t> m_currPacketData;  // raw data
-    int m_currPktIdx;   // index into packet when expanding
+    uint32_t m_currPktIdx;   // index into packet when expanding
     EtmV3TrcPacket m_curr_packet;  // expanded packet
 
     std::vector<uint8_t> m_partPktData;   // raw data when we need to split a packet. 
     bool m_bSendPartPkt;                  // mark the part packet as the one we send.
-    process_state m_post_part_pkt_state;         // state to set after part packet set
+    process_state m_post_part_pkt_state;  // state to set after part packet set
+    rctdl_etmv3_pkt_type m_post_part_pkt_type;  // reset the packet type.
 
     // process state
     bool            m_bStreamSync;          //!< true if we have synced this stream
-    bool            m_bPartSync;            //!< true if we have a part sync but no more bytes.
-
-
+    bool            m_bStartOfSync;         //!< true if we have a start of sync.
+    
     // packet state 
-	int m_bytesExpectedThisPkt; // used by some of the variable packet length types.	
+	uint32_t m_bytesExpectedThisPkt; // used by some of the variable packet length types.	
 	bool m_BranchPktNeedsException;
 	bool m_bIsync_got_cycle_cnt;
 	bool m_bIsync_get_LSiP_addr;
@@ -150,6 +157,12 @@ inline void EtmV3PktProcImpl::throwPacketHeaderErr(const char *pszErrMsg)
 {
     throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PCKT_HDR,m_packet_index,m_chanIDCopy,pszErrMsg);
 }
+
+inline void EtmV3PktProcImpl::throwUnsupportedErr(const char *pszErrMsg)
+{
+    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,m_packet_index,m_chanIDCopy,pszErrMsg);
+}
+
 
 inline const bool EtmV3PktProcImpl::isBadPacket() const
 {
