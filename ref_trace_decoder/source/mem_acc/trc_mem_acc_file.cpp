@@ -75,7 +75,7 @@ rctdl_err_t TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctd
         // adding an offset of 0, sets the base range.
         if(offset == 0)
         {
-            init = AddOffsetRange(startAddr, m_file_size-offset, offset);
+            init = AddOffsetRange(startAddr, ((size_t)m_file_size)-offset, offset);
         }
         else if((offset != 0) && (size != 0) && ((offset + size) <= m_file_size))
         {
