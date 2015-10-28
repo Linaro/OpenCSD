@@ -865,7 +865,7 @@ uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
         {
             uint8_t excep_num = (addrbyte >> 3) & 0x7;
             m_curr_packet.UpdateISA(rctdl_isa_arm);
-            m_curr_packet.SetException(exceptionTypeARMdeprecated[excep_num], excep_num, (addrbyte & 0x40) ? true : false);
+            m_curr_packet.SetException(exceptionTypeARMdeprecated[excep_num], excep_num, (addrbyte & 0x40) ? true : false,m_config.isV7MArch());
         }
         else
         // normal 5 byte branch, or uses exception bytes.
@@ -1002,7 +1002,7 @@ void EtmV3PktProcImpl::extractExceptionData()
         exceptionNum &= 0xF;
         excep_type = exceptionTypesStd[exceptionNum];
     }
-    m_curr_packet.SetException(excep_type, exceptionNum, cancel_prev_instr,irq_n,resume);
+    m_curr_packet.SetException(excep_type, exceptionNum, cancel_prev_instr,m_config.isV7MArch(), irq_n,resume);
 }
 
 void EtmV3PktProcImpl::checkPktLimits()
@@ -1177,34 +1177,40 @@ void EtmV3PktProcImpl::OnISyncPacket()
     J = (iSyncInfoByte >> 4) & 0x1;
     AltISA = m_config.MinorRev() >= 3 ? (iSyncInfoByte >> 2) & 0x1 : 0;
     m_curr_packet.UpdateNS((iSyncInfoByte >> 3) & 0x1);
-     if(m_config.hasVirtExt())
-         m_curr_packet.UpdateHyp((iSyncInfoByte >> 1) & 0x1);
+    if(m_config.hasVirtExt())
+        m_curr_packet.UpdateHyp((iSyncInfoByte >> 1) & 0x1);
     
     // main address value - full 32 bit address value
-    for(int i = 0; i < 4; i++)
-        instrAddr |= ((uint32_t)m_currPacketData[m_currPktIdx++]) << (8*i);
-    T = instrAddr & 0x1;    // get the T bit.
-    instrAddr &= ~0x1;      // remove from address.
-    m_curr_packet.UpdateAddress(instrAddr,32);  
-
-    // enough data now to set the instruction set.
-    rctdl_isa currISA = rctdl_isa_arm;
-    if(J)
-        currISA = rctdl_isa_jazelle;
-    else if(T)
-        currISA = AltISA ? rctdl_isa_tee : rctdl_isa_thumb2;
-    m_curr_packet.UpdateISA(currISA);
-     
-    // possible follow up address value - rarely uses unless trace enabled during
-    // load and store instruction executing on top of other instruction. 
-    if(m_bIsync_get_LSiP_addr)
+    if(m_config.isInstrTrace())
     {
-        LSiPAddr = extractBrAddrPkt(LSiPBits);
-        // follow up address value is compressed relative to the main value
-        // we store this in the data address value temporarily.
-        m_curr_packet.UpdateDataAddress(instrAddr,32);
-        m_curr_packet.UpdateDataAddress(LSiPAddr,LSiPBits);
+        for(int i = 0; i < 4; i++)
+            instrAddr |= ((uint32_t)m_currPacketData[m_currPktIdx++]) << (8*i);
+        T = instrAddr & 0x1;    // get the T bit.
+        instrAddr &= ~0x1;      // remove from address.
+        m_curr_packet.UpdateAddress(instrAddr,32);  
+
+        // enough data now to set the instruction set.
+        rctdl_isa currISA = rctdl_isa_arm;
+        if(J)
+            currISA = rctdl_isa_jazelle;
+        else if(T)
+            currISA = AltISA ? rctdl_isa_tee : rctdl_isa_thumb2;
+        m_curr_packet.UpdateISA(currISA);
+
+        // possible follow up address value - rarely uses unless trace enabled during
+        // load and store instruction executing on top of other instruction. 
+        if(m_bIsync_get_LSiP_addr)
+        {
+            LSiPAddr = extractBrAddrPkt(LSiPBits);
+            // follow up address value is compressed relative to the main value
+            // we store this in the data address value temporarily.
+            m_curr_packet.UpdateDataAddress(instrAddr,32);
+            m_curr_packet.UpdateDataAddress(LSiPAddr,LSiPBits);
+        }
     }
+    else
+        m_curr_packet.SetISyncNoAddr();
+         
     SendPacket(); // mark ready to send
 }
 

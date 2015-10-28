@@ -88,6 +88,7 @@ typedef struct _rctdl_etmv3_excep {
     struct {
         uint32_t present:1;      /**< exception present in packet */
         uint32_t cancel:1;       /**< exception cancels prev instruction traced. */
+        uint32_t cm_type:1;
         uint32_t cm_resume:4;    /**< M class resume code */
         uint32_t cm_irq_n:9;     /**< M class IRQ n */
     } bits;
@@ -133,6 +134,7 @@ typedef struct _etmv3_isync_t {
     struct {
         uint32_t has_cycle_count:1; /**< updated cycle count */
         uint32_t has_LSipAddress:1; /**< main address is load-store instuction, data address is overlapping instruction @ start of trace */
+        uint32_t no_address:1;      /**< data only ISync */
     };
 } etmv3_isync_t;
 

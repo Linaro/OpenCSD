@@ -68,6 +68,7 @@ public:
     void SetException(  const rctdl_armv7_exception type, 
                         const uint16_t number, 
                         const bool cancel,
+                        const bool cm_type,
                         const int irq_n = 0,
                         const int resume = 0);
     void UpdateNS(const int NS);
@@ -88,6 +89,7 @@ public:
     void SetISyncReason(const etmv3_isync_reason_t reason);
     void SetISyncHasCC();
     void SetISyncIsLSiP();
+    void SetISyncNoAddr();
 
  // packet status interface - get packet info.
 
@@ -102,6 +104,11 @@ public:
 
 private:
     const char *packetTypeName(const rctdl_etmv3_pkt_type type, const char **ppDesc) const;
+    void getBranchAddressStr(std::string &valStr) const;
+    void getAtomStr(std::string &valStr) const;
+    void getISyncStr(std::string &valStr) const;
+    void getISAStr(std::string &isaStr) const;
+    void getExcepStr(std::string &excepStr) const;
 };
 
 inline void EtmV3TrcPacket::UpdateNS(const int NS)
@@ -193,7 +200,10 @@ inline void EtmV3TrcPacket::SetISyncIsLSiP()
     isync_info.has_LSipAddress = 1;
 }
 
-
+inline void EtmV3TrcPacket::SetISyncNoAddr()
+{
+    isync_info.no_address = 1;
+}
 
 /** @}*/
 #endif // ARM_TRC_PKT_ELEM_ETMV3_H_INCLUDED

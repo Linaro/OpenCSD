@@ -125,6 +125,7 @@ void EtmV3TrcPacket::UpdateTimestamp(const uint64_t tsVal, const uint8_t updateB
 void EtmV3TrcPacket::SetException(  const rctdl_armv7_exception type, 
                                     const uint16_t number, 
                                     const bool cancel,
+                                    const bool cm_type,
                                     const int irq_n  /*= 0*/,
                                     const int resume /* = 0*/)
 {
@@ -132,6 +133,7 @@ void EtmV3TrcPacket::SetException(  const rctdl_armv7_exception type,
     exception.bits.cancel = cancel ? 1 : 0;
     exception.bits.cm_irq_n = irq_n;
     exception.bits.cm_resume = resume;
+    exception.bits.cm_type = cm_type ? 1 : 0;
     exception.number = number;
     exception.type = type;
 
@@ -188,7 +190,7 @@ bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccu
             {
                 p_hdr_fmt = 4;
                 atom.num = 1;
-                cycle_count  = 1;
+                cycle_count  = 0;
                 atom.En_bits = pHdr & 0x04 ? 0 : 1;
             }
             else
@@ -228,7 +230,6 @@ void EtmV3TrcPacket::toString(std::string &str) const
     const char *name;
     const char *desc;
     std::string valStr, ctxtStr = "";
-    bool bHasCC = false;    // packet has additional CC value
 
     name = packetTypeName(type, &desc);
     str = name + (std::string)" : " + desc;
@@ -243,10 +244,28 @@ void EtmV3TrcPacket::toString(std::string &str) const
         break;
 
     case ETM3_PKT_BRANCH_ADDRESS:
-    case ETM3_PKT_CYCLE_COUNT:
-    case ETM3_PKT_I_SYNC:
+        getBranchAddressStr(valStr);
+        str += "; " + valStr;
+        break;
+
     case ETM3_PKT_I_SYNC_CYCLE:
+    case ETM3_PKT_I_SYNC:
+        getISyncStr(valStr);
+        str += "; " + valStr;
+        break;
+
     case ETM3_PKT_P_HDR:
+        getAtomStr(valStr);
+        str += "; " + valStr;
+        break;
+
+    case ETM3_PKT_CYCLE_COUNT:
+        {
+            std::ostringstream oss;
+            oss << "; Cycles=" << cycle_count;
+            str += oss.str();
+        }
+        break;
 
     case ETM3_PKT_CONTEXT_ID:
         {
@@ -464,5 +483,208 @@ const char *EtmV3TrcPacket::packetTypeName(const rctdl_etmv3_pkt_type type, cons
     return pName;
 }
 
+void EtmV3TrcPacket::getBranchAddressStr(std::string &valStr) const
+{
+    std::ostringstream oss;
+    std::string subStr;
 
+    // print address.
+    trcPrintableElem::getValStr(subStr,32,addr.valid_bits,addr.val,true,addr.pkt_bits);
+    oss << "Addr=" << subStr << "; ";
+
+    // current ISA if changed.
+    if(curr_isa != prev_isa)
+    {
+        getISAStr(subStr);
+        oss << subStr;
+    }
+
+    // S / NS etc if changed.
+    if(context.updated)
+    {
+        oss << context.curr_NS ? "NS; " : "S; ";
+        oss << context.curr_Hyp ? "Hyp; " : "";
+    }
+    
+    // exception? 
+    if(exception.bits.present)
+    {
+        getExcepStr(subStr);
+        oss << subStr;
+    }
+
+}
+
+void EtmV3TrcPacket::getAtomStr(std::string &valStr) const
+{   
+    std::ostringstream oss;
+    uint32_t bitpattern = atom.En_bits; // arranged LSBit oldest, MSbit newest
+
+    if(!cycle_count)
+    {
+        for(int i = 0; i < atom.num; i++)
+        {
+            oss << ((bitpattern & 0x1) ? "E" : "N"); // in spec read L->R, oldest->newest
+            bitpattern >>= 1;
+        }        
+    }
+    else
+    {
+        switch(p_hdr_fmt)
+        {
+        case 1:
+            for(int i = 0; i < atom.num; i++)
+            {
+                oss << ((bitpattern & 0x1) ? "WE" : "WN"); // in spec read L->R, oldest->newest
+                bitpattern >>= 1;
+            }        
+            break;
+
+        case 2:
+            oss << "W";
+            for(int i = 0; i < atom.num; i++)
+            {
+                oss << ((bitpattern & 0x1) ? "E" : "N"); // in spec read L->R, oldest->newest
+                bitpattern >>= 1;
+            }        
+            break;
+
+        case 3:
+            for(uint32_t i = 0; i < cycle_count; i++)
+                oss << "W";
+            if(atom.num)
+                oss << ((bitpattern & 0x1) ? "E" : "N"); // in spec read L->R, oldest->newest
+            break;
+        }
+        oss << "; Cycles=" << cycle_count;
+    }
+    valStr = oss.str();
+}
+
+void EtmV3TrcPacket::getISyncStr(std::string &valStr) const
+{
+    std::ostringstream oss;
+    static const char *reason[] = { "Periodic", "Trace Enable", "Restart Overflow", "Debug Exit" };
+
+    // reason.
+    oss << "(" << reason[(int)isync_info.reason] << "); ";
+
+    // full address.
+    if(!isync_info.no_address)
+    {
+        if(isync_info.has_LSipAddress)
+            oss << "Data Instr Addr=0x";
+        else
+            oss << "Addr=0x";
+        oss << std::hex << std::setfill('0') << std::setw(8) << addr.val << "; ";
+    }
+    
+    oss << context.curr_NS ? "NS; " : "S; ";
+    oss << context.curr_Hyp ? "Hyp; " : " ";
+    
+    if(context.updated_c)
+    {
+        oss << "CtxtID=" << std::hex << context.ctxtID << "; ";
+    }
+
+    if(isync_info.no_address)
+    {
+        valStr = oss.str();
+        return;     // bail out at this point if a data only ISYNC
+    }
+
+    std::string isaStr;
+    getISAStr(isaStr);
+    oss << isaStr;
+
+    if(isync_info.has_cycle_count)
+    {
+        oss << "Cycles=" << std::dec << cycle_count << "; ";
+    }
+
+    if(isync_info.has_LSipAddress)
+    {
+        std::string addrStr;
+
+        // extract address updata.
+        trcPrintableElem::getValStr(addrStr,32,data.addr.valid_bits,data.addr.val,true,data.addr.pkt_bits);
+        oss << "Curr Instr Addr=" << addrStr << ";";        
+    }    
+    valStr = oss.str();
+}
+
+void EtmV3TrcPacket::getISAStr(std::string &isaStr) const
+{
+    std::ostringstream oss;
+    oss << "ISA=";
+    switch(curr_isa)
+    {
+    case rctdl_isa_arm: 
+        oss << "ARM(32); ";
+        break;
+
+    case rctdl_isa_thumb2:
+        oss << "Thumb2; ";
+        break;
+
+    case rctdl_isa_aarch64:
+        oss << "AArch64; ";
+        break;
+
+    case rctdl_isa_tee:
+        oss << "ThumbEE; ";
+        break;
+
+    case rctdl_isa_jazelle:
+        oss << "Jazelle; ";
+        break;
+
+    default:
+    case rctdl_isa_unknown:
+        oss << "Unknown; ";
+        break;
+    }
+    isaStr = oss.str();
+}
+
+void EtmV3TrcPacket::getExcepStr(std::string &excepStr) const
+{
+    static const char *ARv7Excep[] = {
+        "No Exception", "Debug Halt", "SMC", "Hyp", 
+        "Async Data Abort", "Jazelle", "Reserved", "Reserved",
+        "PE Reset", "Undefined Instr", "SVC", "Prefetch Abort", 
+        "Data Fault", "Generic", "IRQ", "FIQ"
+    };
+
+    static const char *MExcep[] = {
+        "No Exception", "IRQ1", "IRQ2", "IRQ3",
+        "IRQ4", "IRQ5", "IRQ6", "IRQ7",
+        "IRQ0","usage Fault","NMI","SVC",
+        "DebugMonitor", "Mem Manage","PendSV","SysTick",
+        "Reserved","PE Reset","Reserved","HardFault"
+        "Reserved","BusFault","Reserved","Reserved"
+    };
+
+    std::ostringstream oss;
+    oss << "Exception=";
+
+    if(exception.bits.cm_type)
+    {
+        if(exception.number < 0x18)
+            oss << MExcep[exception.number];
+        else
+            oss << "IRQ" << std::dec << (exception.number - 0x10);
+        if(exception.bits.cm_resume)
+            oss << "; Resume=" << exception.bits.cm_resume;
+        if(exception.bits.cancel)
+            oss << "; Cancel prev instr";
+    }
+    else
+    {
+        oss << ARv7Excep[exception.number] << "; ";
+        if(exception.bits.cancel)
+            oss << "; Cancel prev instr";
+    }
+    excepStr = oss.str();
+}
 /* End of File trc_pkt_elem_etmv3.cpp */
