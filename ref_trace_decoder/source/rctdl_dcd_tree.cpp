@@ -274,12 +274,11 @@ void DecodeTree::destroyMemAccMapper()
     }
 }
 
-
 /* create packet processing element only - attach to CSID in config */
 rctdl_err_t DecodeTree::createETMv3PktProcessor(EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout /*= 0*/)
 {
     rctdl_err_t err = RCTDL_OK;
-#if 0
+
     uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
     if(usingFormatter())
         CSID = p_config->getTraceID();
@@ -289,34 +288,37 @@ rctdl_err_t DecodeTree::createETMv3PktProcessor(EtmV3Config *p_config, IPktDataI
     {
 
         TrcPktProcEtmV3 *pProc = new (std::nothrow) TrcPktProcEtmV3(CSID);
-        if(pProc)
+        if(!pProc)
+            return RCTDL_ERR_MEM;
+
+        // set the configuration
+        err = pProc->setProtocolConfig(p_config);
+
+        // attach the decoder if passed in.
+        if((err == RCTDL_OK) && p_Iout)
+            err = pProc->getPacketOutAttachPt()->attach(p_Iout);
+
+        // attach the error logger
+        if(err == RCTDL_OK)
+             pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
+
+        // attach to the frame demuxer.
+        if(usingFormatter() && (err == RCTDL_OK))
+            err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
+
+        if(err != RCTDL_OK)
         {
-            err = pProc->setProtocolConfig(p_config);
-            if(err == RCTDL_OK)
-                pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-            if(usingFormatter() && (err == RCTDL_OK))
-                err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
-
-            if(err != RCTDL_OK)
-            {
-                // unable to attach as in use
-                delete pProc;
-                destroyDecodeElement(CSID);
-            }
-            else
-            {
-                if(!usingFormatter())
-                    setSingleRoot(pProc);
-                m_decode_elements[CSID]->decoder.etmv3.proc = pProc;
-                m_decode_elements[CSID]->created = true;
-                m_decode_elements[CSID]->protocol = RCTDL_PROTOCOL_ETMV3;
-            }
+            // unable to attach as in use - delete the processor and return.
+            delete pProc;
+            destroyDecodeElement(CSID);
         }
         else
-            err = RCTDL_ERR_MEM;
+        {
+            if(!usingFormatter())
+                setSingleRoot(pProc);
+            m_decode_elements[CSID]->SetProcElement(RCTDL_PROTOCOL_ETMV3,pProc,true);
+        }        
     }
-#endif
     return err;
 }
 
