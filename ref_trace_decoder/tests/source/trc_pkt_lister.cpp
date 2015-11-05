@@ -417,7 +417,25 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                         }
                     
 
-                        oss << "Trace Packet Lister : ETMv4 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                        oss << "Trace Packet Lister : ETMv4 Instuction trace Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                        logger.LogMsg(oss.str());
+                    }
+                    break;
+
+                case RCTDL_PROTOCOL_ETMV3:
+                    {
+                        std::ostringstream oss;
+                        PacketPrinter<EtmV3TrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV3TrcPacket>(elemID,&logger);
+                        if(pPrinter)
+                        {
+                            // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
+                            if(decode || pkt_mon)
+                                pElement->getEtmV3PktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                            else
+                                pElement->getEtmV3PktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            printers.push_back(pPrinter); // save printer to destroy it later
+                        }                    
+                        oss << "Trace Packet Lister : ETMv3 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                         logger.LogMsg(oss.str());
                     }
                     break;
