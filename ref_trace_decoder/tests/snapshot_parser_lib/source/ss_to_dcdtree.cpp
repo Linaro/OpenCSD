@@ -193,6 +193,11 @@ void  CreateDcdTreeFromSnapShot::LogError(const std::string &msg)
     m_pErrLogInterface->LogError(m_errlog_handle,&err);
 }
 
+void CreateDcdTreeFromSnapShot::LogError(const rctdlError &err)
+{
+    m_pErrLogInterface->LogError(m_errlog_handle,&err);
+}
+
 bool CreateDcdTreeFromSnapShot::createPEDecoder(const std::string &coreName, Parser::Parsed *devSrc)
 {
     bool bCreatedDecoder = false;
@@ -208,25 +213,28 @@ bool CreateDcdTreeFromSnapShot::createPEDecoder(const std::string &coreName, Par
     {
         bCreatedDecoder = createETMv4Decoder(coreName,devSrc);
     }
+    else if(devTypeName == ETMv3Protocol)
+    {
+        bCreatedDecoder = createETMv3Decoder(coreName,devSrc);
+    }
+    else if(devTypeName == PTMProtocol)
+    {
+    }
+
     // TBD create other protocols here.
     return bCreatedDecoder;
 }
 
+// create an ETMv4 decoder based on the deviceN.ini file.
 bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, Parser::Parsed *devSrc, const bool bDataChannel /* = false*/)
 {
     bool createdDecoder = false;
-    bool configError = false;
+    bool configOK = true;
     
     // generate the config data from the device data.
     EtmV4Config config;
-    std::string reg_value;
 
-    struct _regs_to_access {
-        const char *pszName;
-        bool failIfMissing;
-        uint32_t *value;
-        uint32_t val_default;
-    } regs_to_access[] = {
+    regs_to_access_t regs_to_access[] = {
         { ETMv4RegCfg, true, &config.reg_configr, 0 },
         { ETMv4RegIDR, true, &config.reg_traceidr, 0 },
         { ETMv4RegIDR0, true, &config.reg_idr0, 0 },
@@ -240,63 +248,93 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
         { ETMv4RegIDR13,false, &config.reg_idr13, 0 },
     };
 
-    for(int rv = 0; rv < sizeof(regs_to_access)/sizeof(struct _regs_to_access); rv++)
-    {
-        if(!getRegByPrefix( devSrc->regDefs,
-                            regs_to_access[rv].pszName,
-                            regs_to_access[rv].value,
-                            regs_to_access[rv].failIfMissing,
-                            regs_to_access[rv].val_default))
-        {
-            configError = true;
-            break;
-        }
-    }
+    // extract registers
+    configOK = getRegisters(devSrc->regDefs,sizeof(regs_to_access)/sizeof(regs_to_access_t), regs_to_access);
 
-    // so far, so good
-    if(!configError)
-    {
-        rctdl_arch_profile_t ap = m_arch_profiles.getArchProfile(coreName);
-        if(ap.arch != ARCH_UNKNOWN)
-        {
-            config.arch_ver = ap.arch;
-            config.core_prof = ap.profile;
-        }
-        else
-        {
-            std::ostringstream oss;
-            oss << "Unrecognized Core name " << coreName << ". Cannot evaluate profile or architecture.";
-            LogError(oss.str());
-            configError = true;
-        }
-    }
-    
+    // extract core profile
+    if(configOK)
+        configOK = getCoreProfile(coreName,config.arch_ver,config.core_prof);
+
     // good config - generate the decoder on the tree.
-    if(!configError)
+    if(configOK)
     {
+        rctdl_err_t err = RCTDL_OK;
         if(m_bPacketProcOnly)
         {
             if(bDataChannel)
-                m_pDecodeTree->createETMv4DPktProcessor(&config);
+                err = m_pDecodeTree->createETMv4DPktProcessor(&config);
             else
-                m_pDecodeTree->createETMv4IPktProcessor(&config);
+                err = m_pDecodeTree->createETMv4IPktProcessor(&config);
         }
         else
         {
-            m_pDecodeTree->createETMv4Decoder(&config,bDataChannel);
+            err = m_pDecodeTree->createETMv4Decoder(&config,bDataChannel);
         }
-        createdDecoder = true;
+        if(err ==  RCTDL_OK)
+            createdDecoder = true;
+        else
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
     }
 
     return createdDecoder;
 }
 
+// create an ETMv3 decoder based on the register values in the deviceN.ini file.
+bool CreateDcdTreeFromSnapShot::createETMv3Decoder(const std::string &coreName, Parser::Parsed *devSrc)
+{
+    bool createdDecoder = false;
+    bool configOK = true;
+    
+    // generate the config data from the device data.
+    EtmV3Config config;
+
+    regs_to_access_t regs_to_access[] = {
+        { ETMv3PTMRegIDR, true, &config.reg_idr, 0 },
+        { ETMv3PTMRegCR, true, &config.reg_ctrl, 0 },
+        { ETMv3PTMRegCCER, true, &config.reg_ccer, 0 },
+        { ETMv3PTMRegTraceIDR, true, &config.reg_trc_id, 0}
+    };
+
+    // extract registers
+    configOK = getRegisters(devSrc->regDefs,sizeof(regs_to_access)/sizeof(regs_to_access_t), regs_to_access);
+
+    // extract core profile
+    if(configOK)
+        configOK = getCoreProfile(coreName,config.arch_ver,config.core_prof);
+
+    // good config - generate the decoder on the tree.
+    if(configOK)
+    {
+        rctdl_err_t err = RCTDL_OK;
+        if(m_bPacketProcOnly)
+            err = m_pDecodeTree->createETMv3PktProcessor(&config);
+        else
+            err = m_pDecodeTree->createETMv3Decoder(&config);
+
+        if(err ==  RCTDL_OK)
+            createdDecoder = true;
+        else
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
+    }
+    return createdDecoder;
+}
+
+// get a set of register values.
+bool CreateDcdTreeFromSnapShot::getRegisters(std::map<std::string, std::string, Util::CaseInsensitiveLess> &regDefs, int numRegs, regs_to_access_t *reg_access_array)
+{
+    bool regsOK = true;
+
+    for(int rv = 0; rv < numRegs; rv++)
+    {
+        if(!getRegByPrefix( regDefs,reg_access_array[rv]))
+            regsOK = false;
+    }
+    return regsOK;
+}
+
 // strip out any parts with brackets
 bool CreateDcdTreeFromSnapShot::getRegByPrefix(std::map<std::string, std::string, Util::CaseInsensitiveLess> &regDefs, 
-    const std::string &prefix,              
-    uint32_t *value,
-    bool failIfMissing,
-    uint32_t val_default)
+    regs_to_access_t &reg_accessor)
 {
     std::ostringstream oss;
     bool bFound = false;
@@ -304,7 +342,8 @@ bool CreateDcdTreeFromSnapShot::getRegByPrefix(std::map<std::string, std::string
     std::string prefix_cmp;
     std::string::size_type pos;
     std::string strval;
-    *value = 0;
+    
+    *reg_accessor.value = 0;
 
     it = regDefs.begin();
     while((it != regDefs.end()) && !bFound)
@@ -315,7 +354,7 @@ bool CreateDcdTreeFromSnapShot::getRegByPrefix(std::map<std::string, std::string
         {
             prefix_cmp = prefix_cmp.substr(0, pos);
         }
-        if(prefix_cmp == prefix)
+        if(prefix_cmp == reg_accessor.pszName)
         {
             strval = it->second;
             bFound = true;
@@ -324,26 +363,48 @@ bool CreateDcdTreeFromSnapShot::getRegByPrefix(std::map<std::string, std::string
     }
 
     if(bFound)
-        *value = strtoul(strval.c_str(),0,0);
+        *reg_accessor.value = strtoul(strval.c_str(),0,0);
     else
     {
         rctdl_err_severity_t sev = RCTDL_ERR_SEV_ERROR;
-        if(failIfMissing)
+        if(reg_accessor.failIfMissing)
         {
-            bFound = false;
             oss << "Error:";
         }
         else
         {
-            oss << "Warning:";
+            // no fail if missing - set any default and just warn.
+            bFound = true;
+            oss << "Warning: Default set for register. ";
             sev = RCTDL_ERR_SEV_WARN;
-
+            *reg_accessor.value = reg_accessor.val_default;
         }
-        oss << "Missing " << prefix << "\n";
+        oss << "Missing " << reg_accessor.pszName << "\n";
         m_pErrLogInterface->LogMessage(m_errlog_handle, sev, oss.str());
     }
     return bFound;
 }
+
+bool CreateDcdTreeFromSnapShot::getCoreProfile(const std::string &coreName, rctdl_arch_version_t &arch_ver, rctdl_core_profile_t &core_prof)
+{
+    bool profileOK = true;
+    rctdl_arch_profile_t ap = m_arch_profiles.getArchProfile(coreName);
+    if(ap.arch != ARCH_UNKNOWN)
+    {
+        arch_ver = ap.arch;
+        core_prof = ap.profile;
+    }
+    else
+    {
+        std::ostringstream oss;
+        oss << "Unrecognized Core name " << coreName << ". Cannot evaluate profile or architecture.";
+        LogError(oss.str());
+        profileOK = false;
+    }
+    return profileOK;
+}
+
+
 
 void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &dumps)
 {

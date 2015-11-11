@@ -67,6 +67,7 @@ void EtmV3TrcPacket::Clear()
     ts_update_bits = 0;
     isync_info.has_cycle_count = 0;
     isync_info.has_LSipAddress = 0;
+    isync_info.no_address = 0;
 }
 
 // reset all state including intra packet
@@ -579,8 +580,8 @@ void EtmV3TrcPacket::getISyncStr(std::string &valStr) const
         oss << std::hex << std::setfill('0') << std::setw(8) << addr.val << "; ";
     }
     
-    oss << context.curr_NS ? "NS; " : "S; ";
-    oss << context.curr_Hyp ? "Hyp; " : " ";
+    oss << (context.curr_NS ? "NS; " : "S; ");
+    oss << (context.curr_Hyp ? "Hyp; " : " ");
     
     if(context.updated_c)
     {

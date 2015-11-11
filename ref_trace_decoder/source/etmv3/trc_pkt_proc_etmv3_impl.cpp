@@ -69,14 +69,17 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::processData(const rctdl_trc_index_t inde
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     m_bytesProcessed = 0;
 
-    while((m_bytesProcessed < dataBlockSize) && RCTDL_DATA_RESP_IS_CONT(resp))
+    while(((m_bytesProcessed < dataBlockSize) ||
+          (m_bytesProcessed == dataBlockSize) && (m_process_state == SEND_PKT))
+        && RCTDL_DATA_RESP_IS_CONT(resp))
     {
         try 
         {
             switch(m_process_state)
             {
             case WAIT_SYNC:
-                m_packet_index = index +  m_bytesProcessed;
+                if(!m_bStartOfSync)
+                    m_packet_index = index +  m_bytesProcessed;
                 m_bytesProcessed += waitForSync(dataBlockSize-m_bytesProcessed,pDataBlock+m_bytesProcessed);
                 break;
 
@@ -149,28 +152,28 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::onFlush()
     return RCTDL_RESP_CONT;
 }
 
- void EtmV3PktProcImpl::Initialise(TrcPktProcEtmV3 *p_interface)
- {
-     if(p_interface)
-     {
-         m_interface = p_interface;
-         m_isInit = true;
-         
-     }
-     InitProcessorState();
-
-     /* not using pattern matcher for sync at present
-     static const uint8_t a_sync[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x80 };
-     m_syncMatch.setPattern(a_sync, sizeof(a_sync));*/
- }
-
+void EtmV3PktProcImpl::Initialise(TrcPktProcEtmV3 *p_interface)
+{
+    if(p_interface)
+    {
+        m_interface = p_interface;
+        m_isInit = true;
+        
+    }
+    InitProcessorState();
+    /* not using pattern matcher for sync at present
+    static const uint8_t a_sync[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x80 };
+    m_syncMatch.setPattern(a_sync, sizeof(a_sync));*/
+}
 
 void EtmV3PktProcImpl::InitProcessorState()
 {
-    m_bStreamSync = false;
-    InitPacketState();
-    m_process_state = WAIT_SYNC;
-    m_curr_packet.ResetState();
+    m_bStreamSync = false;  // not synced 
+    m_process_state = WAIT_SYNC; // waiting for sync
+    m_bStartOfSync = false; // not seen start of sync packet
+    m_curr_packet.ResetState(); // reset intra packet state
+    InitPacketState();  // set curr packet state
+    m_bSendPartPkt = false;
 }
 
 void EtmV3PktProcImpl::InitPacketState()
@@ -235,6 +238,7 @@ uint32_t EtmV3PktProcImpl::waitForSync(const uint32_t dataBlockSize, const uint8
     while(!bSendBlock && (bytesProcessed < dataBlockSize))
     {
         currByte = pDataBlock[bytesProcessed++];
+        // TBD: forced sync point
 
         if(m_bStartOfSync)
         {
@@ -287,14 +291,14 @@ uint32_t EtmV3PktProcImpl::waitForSync(const uint32_t dataBlockSize, const uint8
             {
                 //save a byte - not start of a-sync
                 m_currPacketData.push_back(currByte);
-            }
-        }
 
-        // syncs cannot be this long, send what we have so far as unsynced data.
-        if(m_currPacketData.size() == 16)   
-        {
-            bSendBlock = true;  // send none sync packet block
-            m_curr_packet.SetType(ETM3_PKT_NOTSYNC);    // send unsynced data packet.
+                // done all data in this block, or got 16 unsynced bytes
+                if((bytesProcessed == dataBlockSize) || (m_currPacketData.size() == 16))
+                {
+                    bSendBlock = true;  // send none sync packet block
+                    m_curr_packet.SetType(ETM3_PKT_NOTSYNC);    // send unsynced data packet.
+                }
+            }
         }
     }
     if(bSendBlock)
@@ -1058,7 +1062,7 @@ uint64_t EtmV3PktProcImpl::extractTimestamp(uint8_t &tsBits)
     uint8_t currByte;
     tsBits = 0;
 
-    while((tsCurrBytes < tsMaxBytes) && !bCont)
+    while((tsCurrBytes < tsMaxBytes) && bCont)
     {
         if(m_currPacketData.size() < (m_currPktIdx + tsCurrBytes + 1))
             throwMalformedPacketErr("Insufficient bytes to extract timestamp.");
@@ -1068,7 +1072,7 @@ uint64_t EtmV3PktProcImpl::extractTimestamp(uint8_t &tsBits)
         tsCurrBytes++;
         tsBits += ts_iter_bits;
         bCont = ((0x80 & currByte) == 0x80);
-        if(tsCurrBytes = (tsMaxBytes - 1))
+        if(tsCurrBytes == (tsMaxBytes - 1))
         {
             mask = last_mask;
             ts_iter_bits = ts_last_iter_bits;

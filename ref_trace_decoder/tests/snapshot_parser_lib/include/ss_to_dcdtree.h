@@ -62,19 +62,28 @@ public:
 private:
     bool createPEDecoder(const std::string &coreName, Parser::Parsed *devSrc);
     bool createETMv4Decoder(const std::string &coreName, Parser::Parsed *devSrc, const bool bDataChannel = false);
+    bool createETMv3Decoder(const std::string &coreName, Parser::Parsed *devSrc);
+    // TBD add etmv4d, stm, itm
 
-    // TBD add etmv4d, etm3, ptm
+    typedef struct _regs_to_access {
+        const char *pszName;
+        bool failIfMissing;
+        uint32_t *value;
+        uint32_t val_default;
+    } regs_to_access_t;
 
+    bool getRegisters(std::map<std::string, std::string, Util::CaseInsensitiveLess> &regDefs, int numRegs, regs_to_access_t *reg_access_array);
     bool getRegByPrefix(std::map<std::string, std::string, Util::CaseInsensitiveLess> &regDefs, 
-                        const std::string &prefix, 
-                        uint32_t *value,
-                        bool failIfMissing,
-                        uint32_t val_default
-                        );
+                        regs_to_access_t &reg_accessor);
+    bool getCoreProfile(const std::string &coreName, rctdl_arch_version_t &arch_ver, rctdl_core_profile_t &core_prof);
 
     void LogError(const std::string &msg);
+    void LogError(const rctdlError &err);
 
     void processDumpfiles(std::vector<Parser::DumpDef> &dumps);
+
+
+
 
     bool m_bInit;
     DecodeTree *m_pDecodeTree;
