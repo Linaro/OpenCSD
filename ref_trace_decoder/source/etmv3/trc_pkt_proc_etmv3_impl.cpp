@@ -483,14 +483,14 @@ rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 		m_curr_packet.SetType(ETM3_PKT_CONTEXT_ID);
         m_bytesExpectedThisPkt = (short)(1 + m_config.CtxtIDBytes());
 	}
-	// exception entry 0b01110110
+	// exception return 0b01110110
 	else if(by == 0x76) {
-		m_curr_packet.SetType(ETM3_PKT_EXCEPTION_ENTRY);
+		m_curr_packet.SetType(ETM3_PKT_EXCEPTION_EXIT);
         SendPacket();
 	}
-	// exception exit 0b01111110
+	// exception entry 0b01111110
 	else if(by == 0x7E) {
-		m_curr_packet.SetType(ETM3_PKT_EXCEPTION_EXIT);
+		m_curr_packet.SetType(ETM3_PKT_EXCEPTION_ENTRY);
         SendPacket();
 	}
 	// timestamp packet 0b01000x10
@@ -835,8 +835,9 @@ uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
         shift = bitcount;
         if(bytecount == 0)
         {
-            addrbyte &= ~0x1;
+            addrbyte &= ~0x81;
             bitcount+=6;
+            addrbyte >>= 1;
         }
         else
         {
@@ -1141,8 +1142,8 @@ uint32_t EtmV3PktProcImpl::extractCycleCount()
     while(bCond)
     {
         checkPktLimits();
-        currByte = m_currPacketData[m_currPktIdx++] & mask;
-        cycleCount |= ((uint32_t)currByte) << (7 * byteIdx);
+        currByte = m_currPacketData[m_currPktIdx++];
+        cycleCount |= ((uint32_t)(currByte & mask)) << (7 * byteIdx);
         bCond = ((currByte & 0x80) == 0x80);
         byteIdx++;
 

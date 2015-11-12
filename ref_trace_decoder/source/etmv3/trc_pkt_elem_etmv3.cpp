@@ -196,7 +196,7 @@ bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccu
             }
             else
             {
-                atom.num = 1;
+                atom.num = 2;
                 cycle_count  = 1;
                 atom.En_bits = (pHdr & 0x8 ? 0 : 1) |  (pHdr & 0x4 ? 0 : 0x2);
             }
@@ -205,7 +205,7 @@ bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccu
         case 0xA0:
             p_hdr_fmt = 3;
             cycle_count  = ((pHdr >> 2) & 7) + 1;
-            E = pHdr & 0x20 ? 1 : 0;
+            E = pHdr & 0x40 ? 1 : 0;
             atom.num = E;
             atom.En_bits = E;
             break;
@@ -287,7 +287,7 @@ void EtmV3TrcPacket::toString(std::string &str) const
     case ETM3_PKT_TIMESTAMP:
         {
             std::ostringstream oss;
-            oss << "; TS=" << std::hex << "0x" << timestamp;
+            oss << "; TS=" << std::hex << "0x" << timestamp << " (" << std::dec << timestamp << ") ";
             str += oss.str();
         }
         break;
@@ -451,7 +451,7 @@ const char *EtmV3TrcPacket::packetTypeName(const rctdl_etmv3_pkt_type type, cons
 
     case ETM3_PKT_EXCEPTION_EXIT:
         pName = "EXCEPTION_EXIT";
-        pDesc = "Exception exit.";
+        pDesc = "Exception return.";
         break;
 
     case ETM3_PKT_TIMESTAMP:
@@ -513,7 +513,7 @@ void EtmV3TrcPacket::getBranchAddressStr(std::string &valStr) const
         getExcepStr(subStr);
         oss << subStr;
     }
-
+    valStr = oss.str();
 }
 
 void EtmV3TrcPacket::getAtomStr(std::string &valStr) const
