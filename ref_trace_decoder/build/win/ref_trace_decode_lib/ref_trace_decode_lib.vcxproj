@@ -189,6 +189,9 @@
     <ClInclude Include="..\..\..\include\rctdl_error_logger.h" />
     <ClInclude Include="..\..\..\include\rctdl_if_types.h" />
     <ClInclude Include="..\..\..\include\rctdl_msg_logger.h" />
+    <ClInclude Include="..\..\..\include\stm\stm_decoder.h" />
+    <ClInclude Include="..\..\..\include\stm\trc_pkt_elem_stm.h" />
+    <ClInclude Include="..\..\..\include\stm\trc_pkt_types_stm.h" />
     <ClInclude Include="..\..\..\include\trc_component.h" />
     <ClInclude Include="..\..\..\include\trc_core_arch_map.h" />
     <ClInclude Include="..\..\..\include\trc_frame_deformatter.h" />
