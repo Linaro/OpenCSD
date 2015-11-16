@@ -208,6 +208,7 @@ typedef enum _rctdl_trace_protocol_t {
     RCTDL_PROTOCOL_ETMV4I,
     RCTDL_PROTOCOL_ETMV4D,
     RCTDL_PROTOCOL_PTM,
+    RCTDL_PROTOCOL_STM,
     /* others to be added here */
     RCTDL_PROTOCOL_END
 } rctdl_trace_protocol_t;

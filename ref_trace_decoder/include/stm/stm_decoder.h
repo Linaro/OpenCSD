@@ -36,6 +36,8 @@
 #define ARM_STM_DECODER_H_INCLUDED
 
 #include "trc_pkt_types_stm.h"
+#include "trc_pkt_elem_stm.h"
+
 
 #endif // ARM_STM_DECODER_H_INCLUDED
 

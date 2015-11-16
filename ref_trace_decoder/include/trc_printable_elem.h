@@ -65,6 +65,15 @@ inline void trcPrintableElem::toStringFmt(const uint32_t /*fmtFlags*/, std::stri
     toString(str);
 }
 
+/* static template string function - used in "C" API to provide generic printing */
+template<class Pc, class Pt>
+void trcPrintElemToString(const Pt *p_pkt, std::string &str)
+{
+    Pc pktClass;
+    pktClass = p_pkt;
+    pktClass.toString(str);
+}
+
 /** @}*/
 
 #endif // ARM_TRC_PRINTABLE_ELEM_H_INCLUDED

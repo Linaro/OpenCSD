@@ -138,8 +138,6 @@ public:
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
 
-    static void toString(const rctdl_etmv4_i_pkt *p_pkt, std::string &str);
-
 private:
     const char *packetTypeName(const rctdl_etmv4_i_pkt_type type, const char **pDesc) const;
     void contextStr(std::string &ctxtStr) const;

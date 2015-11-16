@@ -250,7 +250,16 @@ RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol,
     switch(pkt_protocol)
     {
     case RCTDL_PROTOCOL_ETMV4I:
-        EtmV4ITrcPacket::toString(static_cast<rctdl_etmv4_i_pkt *>(p_pkt), pktStr);
+        trcPrintElemToString<EtmV4ITrcPacket,rctdl_etmv4_i_pkt>(static_cast<rctdl_etmv4_i_pkt *>(p_pkt), pktStr);
+        //EtmV4ITrcPacket::toString(static_cast<rctdl_etmv4_i_pkt *>(p_pkt), pktStr);
+        break;
+
+    case RCTDL_PROTOCOL_ETMV3:
+        trcPrintElemToString<EtmV3TrcPacket,rctdl_etmv3_pkt>(static_cast<rctdl_etmv3_pkt *>(p_pkt), pktStr);
+        break;
+
+    case RCTDL_PROTOCOL_STM:
+        trcPrintElemToString<StmTrcPacket,rctdl_stm_pkt>(static_cast<rctdl_stm_pkt *>(p_pkt), pktStr);
         break;
 
     default:
@@ -272,7 +281,8 @@ RCTDL_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt
     if((buffer == NULL) || (buffer_size < 2))
         return RCTDL_ERR_INVALID_PARAM_VAL;
     std::string str;
-    RctdlTraceElement::toString(p_pkt,str);
+    trcPrintElemToString<RctdlTraceElement,rctdl_generic_trace_elem>(p_pkt,str);
+//    RctdlTraceElement::toString(p_pkt,str);
     if(str.size() > 0)
     {
         strncpy(buffer,str.c_str(),buffer_size -1);

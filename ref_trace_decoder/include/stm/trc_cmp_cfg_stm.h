@@ -1,6 +1,6 @@
 /*
- * \file       rctdl.h
- * \brief      Reference CoreSight Trace Decoder : Master include file for C++ library
+ * \file       trc_cmp_cfg_stm.h
+ * \brief      Reference CoreSight Trace Decoder : STM compnent configuration.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -32,50 +32,71 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_RCTDL_H_INCLUDED
-#define ARM_RCTDL_H_INCLUDED
+#ifndef ARM_TRC_CMP_CFG_STM_H_INCLUDED
+#define ARM_TRC_CMP_CFG_STM_H_INCLUDED
 
-/** C/C++ interface types */
-#include "rctdl_if_types.h"
-#include "trc_pkt_types.h"
-#include "trc_gen_elem_types.h"
+#include "trc_pkt_types_stm.h"
 
-/* C++ abstract interfaces */
-#include "interfaces/trc_data_raw_in_i.h"
-#include "interfaces/trc_data_rawframe_in_i.h"
-#include "interfaces/trc_error_log_i.h"
-#include "interfaces/trc_gen_elem_in_i.h"
-#include "interfaces/trc_instr_decode_i.h"
-#include "interfaces/trc_pkt_in_i.h"
-#include "interfaces/trc_pkt_raw_in_i.h"
-#include "interfaces/trc_tgt_mem_access_i.h"
+/** @addtogroup rctdl_protocol_cfg
+@{*/
 
-/* TBD : include the indexers and reader interfaces in here when implmented. */
+/** @name STM configuration
+@{*/
 
 
-/* protocol base classes and generic elements */
-#include "rctdl_error.h"
-#include "trc_gen_elem.h"
-#include "trc_core_arch_map.h"
+class STMConfig : public rctdl_stm_cfg
+{
+public:
+    STMConfig();
+    ~STMConfig() {};
 
-/** Implemented Protocol decoders */
-#include "trc_frame_deformatter.h"
+    STMConfig & operator=(const rctdl_stm_cfg *p_cfg);  //!< set from full config.
+    void setTraceID(const uint8_t traceID);     //!< use default 256 masters + 65536 channels & set trace ID.
+    
+    const uint8_t getTraceID() const;
+    const uint8_t getMaxMasterIdx() const;
+    const uint16_t getMaxChannelIdx() const;
+};
 
-#include "etmv3/etmv3_decoder.h"
-#include "etmv4/etmv4_decoder.h"
-#include "ptm/ptm_decoder.h"
-#include "stm/stm_decoder.h"
+STMConfig::STMConfig()
+{
+    reg_tcsr = 0;
+    reg_devid = 0xFF;   // default to 256 masters.
+    reg_feat3r = 0x10000; // default to 65536 channels.
+}
+  
+STMConfig & STMConfig::operator=(const rctdl_stm_cfg *p_cfg)
+{
+    *dynamic_cast<rctdl_stm_cfg *>(this) = *p_cfg;
+    return *this;
+}
 
-/** C++ library object types */
-#include "rctdl_error_logger.h"
-#include "rctdl_msg_logger.h"
-#include "i_dec/trc_i_decode.h"
-#include "mem_acc/trc_mem_acc.h"
+void STMConfig::setTraceID(const uint8_t traceID)
+{
+    uint32_t IDmask = 0x007F0000;
+    reg_tcsr &= ~IDmask;
+    reg_tcsr |= (((uint32_t)traceID) << 16) & IDmask;
+}
 
-/** The decode tree */
-#include "rctdl_dcd_tree.h"
+const uint8_t STMConfig::getTraceID() const
+{
+    return (uint8_t)((reg_tcsr >> 16) & 0x7F);
+}
 
+const uint8_t STMConfig::getMaxMasterIdx() const
+{
+    return (uint8_t)(reg_devid & 0xFF);
+}
 
-#endif // ARM_RCTDL_H_INCLUDED
+const uint16_t STMConfig::getMaxChannelIdx() const
+{
+    return (uint16_t)(reg_feat3r - 1);
+}
 
-/* End of File rctdl.h */
+/** @}*/
+
+/** @}*/
+
+#endif // ARM_TRC_CMP_CFG_STM_H_INCLUDED
+
+/* End of File trc_cmp_cfg_stm.h */

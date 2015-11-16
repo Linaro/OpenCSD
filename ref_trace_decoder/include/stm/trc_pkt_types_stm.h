@@ -64,6 +64,8 @@ typedef enum _rctdl_stm_pkt_type
     STM_PKT_C8,
     STM_PKT_C16,
 
+    STM_PKT_FLAG,
+
     STM_PKT_D8,
     STM_PKT_D16,
     STM_PKT_D32,
@@ -83,20 +85,20 @@ typedef struct _rctdl_stm_pkt
 {
     rctdl_stm_pkt_type type;
 
-    uint8_t     master;             /* current master */
-    uint16_t    channel;            /* current channel */
+    uint8_t     master;             /**< current master */
+    uint16_t    channel;            /**< current channel */
     
-    uint64_t    timestamp;          /* latest ts value */
-    uint8_t     pks_ts_bits;        /* ts bits updated this packet */
-    rctdl_stm_ts_type ts_type;
+    uint64_t    timestamp;          /**< latest ts value */
+    uint8_t     pkt_ts_bits;        /**< ts bits updated this packet */
+    rctdl_stm_ts_type ts_type;      /**< ts encoding type */
 
-    uint8_t     pkt_has_marker;
+    uint8_t     pkt_has_marker;     /**< flag to indicate marker packet */
 
     union {
-        uint8_t  D8;
-        uint16_t D16;
-        uint32_t D32;
-        uint64_t D64;
+        uint8_t  D8;    /**< payload for D8 data packet, or parameter value for other packets with 8 bit value [VERSION, TRIG, xERR] */
+        uint16_t D16;   /**< payload for D16 data packet */
+        uint32_t D32;   /**< payload for D32 data packet, or parameter value for other packets with 32 bit value [FREQ] */
+        uint64_t D64;   /**< payload for D64 data packet */
     } payload;
 
     rctdl_stm_pkt_type err_type;
@@ -106,7 +108,10 @@ typedef struct _rctdl_stm_pkt
 
 typedef struct _rctdl_stm_cfg
 {
-    uint32_t reg_tcsr;
+    uint32_t reg_tcsr;      /**< Contains CoreSight trace ID */
+    uint32_t reg_feat3r;    /**< defines number of masters */
+    uint32_t reg_devid;     /**< defines number of channels per master */
+
 } rctdl_stm_cfg;
 
 /** @}*/
