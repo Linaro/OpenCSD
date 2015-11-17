@@ -56,7 +56,7 @@ public:
     void setTS(const uint64_t ts_val, const uint8_t updatedBits);
     void onVersionPkt(const rctdl_stm_ts_type type);
     void setD8Payload(const uint8_t value);
-    void setD15Payload(const uint16_t value);
+    void setD16Payload(const uint16_t value);
     void setD32Payload(const uint32_t value);
     void setD64Payload(const uint64_t value);
 
@@ -74,6 +74,8 @@ public:
     const uint16_t getD16Val() const;
     const uint32_t getD32Val() const;
     const uint64_t getD64Val() const;
+
+    const bool isBadPacket() const;
 
     // printing
     virtual void toString(std::string &str) const;
@@ -123,7 +125,7 @@ inline void StmTrcPacket::setD8Payload(const uint8_t value)
     payload.D8 = value;
 }
 
-inline void StmTrcPacket::setD15Payload(const uint16_t value)
+inline void StmTrcPacket::setD16Payload(const uint16_t value)
 {
     payload.D16 = value;
 }
@@ -197,6 +199,12 @@ inline const uint64_t StmTrcPacket::getD64Val() const
 {
     return payload.D64;
 }
+
+inline const bool StmTrcPacket::isBadPacket() const
+{
+    return (bool)(type >= STM_PKT_BAD_SEQUENCE);
+}
+
 
 #endif // ARM_TRC_PKT_ELEM_STM_H_INCLUDED
 

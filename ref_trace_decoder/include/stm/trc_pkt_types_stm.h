@@ -44,13 +44,12 @@
 
 typedef enum _rctdl_stm_pkt_type
 {
+// markers for unknown packets  / state
     STM_PKT_NOTSYNC,
     STM_PKT_INCOMPLETE_EOT,
     STM_PKT_NO_ERR_TYPE,
 
-    STM_PKT_BAD_SEQUENCE,
-    STM_PKT_RESERVED,
-
+// markers for valid packets
     STM_PKT_ASYNC,
     STM_PKT_VERSION,
     STM_PKT_FREQ,
@@ -69,7 +68,11 @@ typedef enum _rctdl_stm_pkt_type
     STM_PKT_D8,
     STM_PKT_D16,
     STM_PKT_D32,
-    STM_PKT_D64
+    STM_PKT_D64, 
+
+// packet errors.
+    STM_PKT_BAD_SEQUENCE,
+    STM_PKT_RESERVED,
 
 } rctdl_stm_pkt_type;
 
@@ -96,7 +99,7 @@ typedef struct _rctdl_stm_pkt
 
     union {
         uint8_t  D8;    /**< payload for D8 data packet, or parameter value for other packets with 8 bit value [VERSION, TRIG, xERR] */
-        uint16_t D16;   /**< payload for D16 data packet */
+        uint16_t D16;   /**< payload for D16 data packet, or reserved opcode in bad packet header (1-3 nibbles) */
         uint32_t D32;   /**< payload for D32 data packet, or parameter value for other packets with 32 bit value [FREQ] */
         uint64_t D64;   /**< payload for D64 data packet */
     } payload;

@@ -216,13 +216,16 @@
     <ClInclude Include="..\..\..\include\stm\stm_decoder.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\stm\trc_pkt_types_stm.h">
-      <Filter>Header Files\stm</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\stm\trc_pkt_elem_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\stm\trc_cmp_cfg_stm.h">
+      <Filter>Header Files\stm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\stm\trc_pkt_proc_stm.h">
+      <Filter>Header Files\stm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\stm\trc_pkt_types_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
   </ItemGroup>
@@ -309,6 +312,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\stm\trc_pkt_elem_stm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\stm\trc_pkt_proc_stm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
