@@ -93,6 +93,8 @@ typedef struct _rctdl_stm_pkt
     
     uint64_t    timestamp;          /**< latest ts value */
     uint8_t     pkt_ts_bits;        /**< ts bits updated this packet */
+    uint8_t     pkt_has_ts;         /**< ts packet - ts bits can be 0 if same value as last time */
+    
     rctdl_stm_ts_type ts_type;      /**< ts encoding type */
 
     uint8_t     pkt_has_marker;     /**< flag to indicate marker packet */

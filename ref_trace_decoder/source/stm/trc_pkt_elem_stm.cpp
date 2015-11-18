@@ -62,6 +62,7 @@ void StmTrcPacket::initNextPacket()
     err_type = STM_PKT_NO_ERR_TYPE;
     pkt_ts_bits = 0;
     pkt_has_marker = 0;
+    pkt_has_ts = 0;
 }
 
 void StmTrcPacket::setTS(const uint64_t ts_val, const uint8_t updatedBits)
@@ -77,6 +78,7 @@ void StmTrcPacket::setTS(const uint64_t ts_val, const uint8_t updatedBits)
         timestamp |= ts_val & mask;
     }
     pkt_ts_bits = updatedBits;  // mark number of bits 
+    pkt_has_ts = 1;
 }
 
 // printing

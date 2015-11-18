@@ -147,7 +147,7 @@ inline const bool StmTrcPacket::isMarkerPkt() const
 
 inline const bool StmTrcPacket::isTSPkt() const
 {
-    return (pkt_ts_bits != 0);
+    return (pkt_has_ts != 0);
 }
 
 inline const rctdl_stm_pkt_type StmTrcPacket::getPktType() const

@@ -64,7 +64,25 @@ protected:
     virtual rctdl_err_t onProtocolConfig();
     virtual const bool isBadPacket() const;
 
+
+    typedef enum _process_state {
+        WAIT_SYNC,
+        PROC_HDR,
+        PROC_DATA,
+        SEND_PKT
+    } process_state;
+
+    process_state m_proc_state;
+
 private:
+
+    void initProcessorState();
+    void initNextPacket();
+
+    rctdl_datapath_resp_t outputPacket();   // send packet on output 
+    void sendPacket();      // mark packet for send.
+    void throwBadSequenceError(const char *pszMessage = "");
+    void throwReservedHdrError(const char *pszMessage = "");
 
     // packet processing routines
     // 1 nibble opcodes
@@ -115,6 +133,7 @@ private:
 
     uint64_t bin_to_gray(uint64_t bin_value);
     uint64_t gray_to_bin(uint64_t gray_value);
+	void pktNeedsTS();	// init the TS extraction routines
 
     // data processing op function tables
     void buildOpTables();
@@ -130,28 +149,95 @@ private:
     // handles setting up packet data block and end of input 
     bool readNibble();
 
+    const bool dataToProcess() const;
 
     // packet data 
     StmTrcPacket m_curr_packet;     //!< current packet.
     bool m_bNeedsTS;                //!< packet requires a TS
     bool m_bIsMarker;
 
+    // input data handling
     uint8_t  m_num_nibbles;                 //!< number of nibbles in the current packet
     std::vector<uint8_t> m_packet_data;     //!< current packet data (bytes).
     uint8_t  m_nibble;                      //!< current nibble being processed.
-    uint8_t  m_nibble_spare;                //!< unused nibble from a processed byte.
-    bool     m_spare_valid;                 //!< spare nibble is valid;
+    uint8_t  m_nibble_2nd;                  //!< 2nd unused nibble from a processed byte.
+    bool     m_nibble_2nd_valid;            //!< 2nd nibble is valid;
     uint8_t  m_num_data_nibbles;            //!< number of nibbles needed to acheive payload.
 
-    uint8_t  *m_p_data_in;                  //!< pointer to input data.
+    const uint8_t *m_p_data_in;             //!< pointer to input data.
     uint32_t  m_data_in_size;               //!< amount of data in.
     uint32_t  m_data_in_used;               //!< amount of data processed.
+    rctdl_trc_index_t m_packet_index;       //!< byte index for start of current packet
 
+    // payload data
     uint8_t   m_val8;                       //!< 8 bit payload.
     uint16_t  m_val16;                      //!< 16 bit payload
     uint32_t  m_val32;                      //!< 32 bit payload
     uint64_t  m_val64;                      //!< 64 bit payload
+
+    // timestamp handling
+	uint8_t   m_req_ts_nibbles;	
+	uint8_t   m_curr_ts_nibbles;
+	uint64_t  m_ts_update_value;
+	bool m_ts_req_set;
+
+
+    // sync handling - need to spot sync mid other packet in case of wrap / discontinuity
+    uint8_t   m_num_F_nibbles;              //!< count consecutive F nibbles.
+    bool m_sync_start;                      //!< possible start of sync
+    bool m_is_sync;                         //!< true if found sync
+    rctdl_trc_index_t m_sync_index;         //!< index of start of possible sync packet
+
+    void checkSyncNibble();                 //!< check current nibble as part of sync.
+    void clearSyncCount();                  //!< valid packet, so clear sync counters (i.e. a trailing ffff is not part of sync).
+
 };
+
+inline const bool TrcPktProcStm::dataToProcess() const
+{
+    // data to process if
+    // 1) not processed all the input bytes
+    // 2) there is still a nibble available from the last byte.
+    // 3) bytes processed, but there is a full packet to send
+    return (m_data_in_used < m_data_in_size) || m_nibble_2nd_valid || (m_proc_state == SEND_PKT);
+}
+
+
+inline void TrcPktProcStm::checkSyncNibble()
+{
+    if(m_nibble != 0xF)
+    {
+        if((m_nibble == 0) && (m_num_F_nibbles >= 21))
+        {
+            m_is_sync = true;   //this nibble marks a sync sequence
+        }
+        else
+        {
+            m_num_F_nibbles=0;
+            m_sync_start = false;
+            m_is_sync = false;
+        }
+        return;
+    }
+
+    m_num_F_nibbles++;
+    if(!m_sync_start)
+    {
+        m_sync_start = true;
+    }
+}
+
+inline void TrcPktProcStm::clearSyncCount()
+{
+    m_num_F_nibbles = 0;
+    m_sync_start = false;
+    m_is_sync = false;
+}
+
+inline void TrcPktProcStm::sendPacket()
+{
+    m_proc_state = SEND_PKT;
+}
 
 /** @}*/
 

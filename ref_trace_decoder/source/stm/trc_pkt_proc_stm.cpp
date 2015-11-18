@@ -34,45 +34,183 @@
 
 #include "stm/trc_pkt_proc_stm.h"
 
-TrcPktProcStm::TrcPktProcStm()
+
+// processor object construction
+// ************************
+
+#ifdef __GNUC__
+// G++ doesn't like the ## pasting
+#define STM_PKTS_NAME "PKTP_STM"
+#else
+#define STM_PKTS_NAME RCTDL_CMPNAME_PREFIX_PKTPROC##"_STM"
+#endif
+
+static const uint32_t STM_SUPPORTED_OP_FLAGS = 0;
+
+TrcPktProcStm::TrcPktProcStm() : TrcPktProcBase(STM_PKTS_NAME)
+{
+    m_supported_op_flags = STM_SUPPORTED_OP_FLAGS;
+    initProcessorState();
+}
+
+TrcPktProcStm::TrcPktProcStm(int instIDNum) : TrcPktProcBase(STM_PKTS_NAME, instIDNum)
+{
+    m_supported_op_flags = STM_SUPPORTED_OP_FLAGS;
+    initProcessorState();
+}
+
+TrcPktProcStm::~TrcPktProcStm() 
 {
 }
 
-TrcPktProcStm::TrcPktProcStm(int instIDNum)
-{
-}
-
-TrcPktProcStm::~TrcPktProcStm()
-{
-}
-
-
-/* implementation packet processing interface */
+// implementation packet processing interface overrides 
+// ************************
 rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index,
                                             const uint32_t dataBlockSize,
                                             const uint8_t *pDataBlock,
                                             uint32_t *numBytesProcessed)
 {
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    m_p_data_in = pDataBlock;
+    m_data_in_size = dataBlockSize;
+   
+    // while there is data and a continue response on the data path
+    while(  dataToProcess() && RCTDL_DATA_RESP_IS_CONT(resp) )
+    {
+        try 
+        {
+            switch(m_proc_state)
+            {
+            case WAIT_SYNC:
+                /*if(!m_bStartOfSync)
+                    m_packet_index = index +  m_bytesProcessed;
+                m_bytesProcessed += waitForSync(dataBlockSize-m_bytesProcessed,pDataBlock+m_bytesProcessed);*/
+                break;
+
+            case PROC_HDR:
+                m_packet_index = index + m_data_in_used;
+                if(readNibble())
+                {
+                    m_proc_state = PROC_DATA;   // read the header nibble, next if any has to be data
+                    m_pCurrPktFn = m_1N_ops[m_nibble]; // set packet function and fall through                    
+                }
+                else
+                    break;
+
+            case PROC_DATA:
+                (this->*m_pCurrPktFn)();
+
+                // if we have enough to send, fall through, otherwise stop
+                if(m_proc_state != SEND_PKT)
+                    break;
+
+            case SEND_PKT:
+                resp = outputPacket();
+                break;
+            }
+        }
+        catch(rctdlError &err)
+        {
+            LogError(err);
+            if( (err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ) ||
+                (err.getErrorCode() == RCTDL_ERR_INVALID_PCKT_HDR))
+            {
+                // send invalid packets up the pipe to let the next stage decide what to do.
+                resp = outputPacket();
+            }
+            else
+            {
+                // bail out on any other error.
+                resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            }
+        }
+        catch(...)
+        {
+            /// vv bad at this point.
+            resp = RCTDL_RESP_FATAL_SYS_ERR;
+            rctdlError &fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_chanIDCopy);
+            fatal.setMessage("Unknown System Error decoding trace.");
+            LogError(fatal);
+        }
+    }
+       
+    *numBytesProcessed = m_data_in_used;
+    return resp;
+    
 }
 
-rctdl_datapath_resp_t onEOT()
+rctdl_datapath_resp_t TrcPktProcStm::onEOT()
 {
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    if(m_num_nibbles > 0)   // there is a partial packet in flight
+    {
+        m_curr_packet.updateErrType(STM_PKT_INCOMPLETE_EOT);    // re mark as incomplete
+        resp = outputPacket();
+    }
+    return resp;
 }
 
 rctdl_datapath_resp_t TrcPktProcStm::onReset()
 {
+    initProcessorState();
+    return RCTDL_RESP_CONT;
 }
 
 rctdl_datapath_resp_t TrcPktProcStm::onFlush()
 {
+    // packet processor never holds on to flushable data (may have partial packet, 
+    // but any full packets are immediately sent)
+    return RCTDL_RESP_CONT;
 }
 
 rctdl_err_t TrcPktProcStm::onProtocolConfig()
 {
+    return RCTDL_OK;  // nothing to do on config for this processor
 }
 
 const bool TrcPktProcStm::isBadPacket() const
 {
+    return m_curr_packet.isBadPacket();
+}
+
+rctdl_datapath_resp_t TrcPktProcStm::outputPacket()
+{
+
+}
+
+void TrcPktProcStm::throwBadSequenceError(const char *pszMessage /*= ""*/)
+{
+    m_curr_packet.updateErrType(STM_PKT_BAD_SEQUENCE);
+    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,m_packet_index,this->m_config->getTraceID(),pszMessage);
+}
+
+void TrcPktProcStm::throwReservedHdrError(const char *pszMessage /*= ""*/)
+{
+    m_curr_packet.setPacketType(STM_PKT_RESERVED,false);
+    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PCKT_HDR,m_packet_index,this->m_config->getTraceID(),pszMessage);
+}
+
+// processor / packet init
+// ************************
+
+void TrcPktProcStm::initProcessorState()
+{
+    // clear any state that persists between packets
+    m_proc_state = WAIT_SYNC;
+    m_curr_packet.initStartState();
+    m_packet_data.clear();
+    m_nibble_2nd_valid = false;
+    initNextPacket();
+}
+
+void TrcPktProcStm::initNextPacket()
+{
+    // clear state that is unique to each packet
+    m_bNeedsTS = false;
+    m_bIsMarker = false;
+    m_num_nibbles = 0;
+    m_num_data_nibbles = 0;
+    m_curr_packet.initNextPacket();
 }
 
 // packet processing routines
@@ -80,17 +218,15 @@ const bool TrcPktProcStm::isBadPacket() const
 // 1 nibble opcodes
 void TrcPktProcStm::stmPktReserved()
 {
-    uint16_t bad_opcode = (uint16_t)m_nibble;
-    m_curr_packet.setPacketType(STM_PKT_RESERVED,false);
+    uint16_t bad_opcode = (uint16_t)m_nibble;    
     m_curr_packet.setD16Payload(bad_opcode);
-
-    // send packet immediately
+    throwReservedHdrError("STM: Unsupported or Reserved STPv2 Header");
 }
 
 void TrcPktProcStm::stmPktNull()
 {
     m_curr_packet.setPacketType(STM_PKT_NULL,false);
-    // send packet immediately
+    sendPacket();
 }
 
 void TrcPktProcStm::stmPktM8()
@@ -103,7 +239,7 @@ void TrcPktProcStm::stmPktM8()
     if(m_num_nibbles == 3)
     {
         m_curr_packet.setMaster(m_val8);
-        // send packet
+        sendPacket();
     }
 }
 
@@ -117,7 +253,7 @@ void TrcPktProcStm::stmPktMERR()
     if(m_num_nibbles == 3)
     {
         m_curr_packet.setD8Payload(m_val8);
-        // send packet
+        sendPacket();
     }
 
 }
@@ -130,7 +266,7 @@ void TrcPktProcStm::stmPktC8()
     if(m_num_nibbles == 3)
     {
         m_curr_packet.setChannel((uint16_t)m_val8,true);
-        // send packet
+        sendPacket();
     }
 }
 
@@ -153,7 +289,7 @@ void TrcPktProcStm::stmPktD8()
         }
         else
         {
-            // send packet
+            sendPacket();
         }
     }
 }
@@ -177,7 +313,7 @@ void TrcPktProcStm::stmPktD16()
         }
         else
         {
-            // send packet
+            sendPacket();
         }
     }
 }
@@ -201,7 +337,7 @@ void TrcPktProcStm::stmPktD32()
         }
         else
         {
-            // send packet
+            sendPacket();
         }
     }
 }
@@ -225,14 +361,14 @@ void TrcPktProcStm::stmPktD64()
         }
         else
         {
-            // send packet
+            sendPacket();
         }
     }
 }
 
 void TrcPktProcStm::stmPktD8MTS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_bIsMarker = true;  
     m_pCurrPktFn = &TrcPktProcStm::stmPktD8;
     (this->*m_pCurrPktFn)();
@@ -240,7 +376,7 @@ void TrcPktProcStm::stmPktD8MTS()
 
 void TrcPktProcStm::stmPktD16MTS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_bIsMarker = true;    
     m_pCurrPktFn = &TrcPktProcStm::stmPktD16;
     (this->*m_pCurrPktFn)();
@@ -248,7 +384,7 @@ void TrcPktProcStm::stmPktD16MTS()
 
 void TrcPktProcStm::stmPktD32MTS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_bIsMarker = true;    
     m_pCurrPktFn = &TrcPktProcStm::stmPktD32;
     (this->*m_pCurrPktFn)();
@@ -256,7 +392,7 @@ void TrcPktProcStm::stmPktD32MTS()
 
 void TrcPktProcStm::stmPktD64MTS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_bIsMarker = true;    
     m_pCurrPktFn = &TrcPktProcStm::stmPktD64;
     (this->*m_pCurrPktFn)();
@@ -264,7 +400,7 @@ void TrcPktProcStm::stmPktD64MTS()
 
 void TrcPktProcStm::stmPktFlagTS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_curr_packet.setPacketType(STM_PKT_FLAG,false);
     m_pCurrPktFn = &TrcPktProcStm::stmExtractTS;
     (this->*m_pCurrPktFn)();
@@ -286,11 +422,9 @@ void TrcPktProcStm::stmPktFExt()
 void TrcPktProcStm::stmPktReservedFn()
 {
     uint16_t bad_opcode = 0x00F;
-    m_curr_packet.setPacketType(STM_PKT_RESERVED,false);
     bad_opcode |= ((uint16_t)m_nibble) << 4;
     m_curr_packet.setD16Payload(bad_opcode);
-
-    // send packet immediately
+    throwReservedHdrError("STM: Unsupported or Reserved STPv2 Header");
 }
 
 void TrcPktProcStm::stmPktF0Ext()
@@ -298,7 +432,7 @@ void TrcPktProcStm::stmPktF0Ext()
     // no type yet, look at the next nibble
     if(readNibble())
     {
-        // switch in 2N function
+        // switch in 3N function
         m_pCurrPktFn = m_3N_ops[m_nibble];
         (this->*m_pCurrPktFn)();        
     }
@@ -312,7 +446,7 @@ void TrcPktProcStm::stmPktGERR()
     if(m_num_nibbles == 4)
     {
         m_curr_packet.setD8Payload(m_val8);
-        // send packet
+        sendPacket();
     }
 }
 
@@ -324,13 +458,13 @@ void TrcPktProcStm::stmPktC16()
     if(m_num_nibbles == 6)
     {
         m_curr_packet.setChannel(m_val16,false);
-        // send packet
+        sendPacket();
     }
 }
 
 void TrcPktProcStm::stmPktD8TS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_curr_packet.setPacketType(STM_PKT_D8,false); // 2nd nibble, set type here
     m_num_data_nibbles = 4;
     m_pCurrPktFn = &TrcPktProcStm::stmPktD8;
@@ -339,7 +473,7 @@ void TrcPktProcStm::stmPktD8TS()
 
 void TrcPktProcStm::stmPktD16TS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_curr_packet.setPacketType(STM_PKT_D16,false); // 2nd nibble, set type here
     m_num_data_nibbles = 6;
     m_pCurrPktFn = &TrcPktProcStm::stmPktD16;
@@ -348,7 +482,7 @@ void TrcPktProcStm::stmPktD16TS()
 
 void TrcPktProcStm::stmPktD32TS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_curr_packet.setPacketType(STM_PKT_D32,false); // 2nd nibble, set type here
     m_num_data_nibbles = 10;
     m_pCurrPktFn = &TrcPktProcStm::stmPktD32;
@@ -357,7 +491,7 @@ void TrcPktProcStm::stmPktD32TS()
 
 void TrcPktProcStm::stmPktD64TS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_curr_packet.setPacketType(STM_PKT_D64,false); // 2nd nibble, set type here
     m_num_data_nibbles = 18;
     m_pCurrPktFn = &TrcPktProcStm::stmPktD64;
@@ -399,7 +533,7 @@ void TrcPktProcStm::stmPktD64M()
 void TrcPktProcStm::stmPktFlag()
 {
     m_curr_packet.setPacketType(STM_PKT_FLAG,false);
-    // send packet immediately
+    sendPacket();
 }
 
 // ************************
@@ -407,11 +541,9 @@ void TrcPktProcStm::stmPktFlag()
 void TrcPktProcStm::stmPktReservedF0n()
 {
     uint16_t bad_opcode = 0x00F;
-    m_curr_packet.setPacketType(STM_PKT_RESERVED,false);
     bad_opcode |= ((uint16_t)m_nibble) << 8;
     m_curr_packet.setD16Payload(bad_opcode);
-
-    // send packet immediately
+    throwReservedHdrError("STM: Unsupported or Reserved STPv2 Header");
 }
 
 void TrcPktProcStm::stmPktVersion()
@@ -430,9 +562,9 @@ void TrcPktProcStm::stmPktVersion()
             m_curr_packet.onVersionPkt(STM_TS_GREY); break;
         default:
             // not a version we support.
-            m_curr_packet.updateErrType(STM_PKT_BAD_SEQUENCE); break;        
+            throwBadSequenceError("STM VERSION packet : unrecognised version number.");
         }
-        // send the packet.
+        sendPacket();
     }
 
 }
@@ -452,14 +584,14 @@ void TrcPktProcStm::stmPktTrigger()
         }
         else
         {
-            // send packet
+            sendPacket();
         }
     }
 }
 
 void TrcPktProcStm::stmPktTriggerTS()
 {
-    m_bNeedsTS = true;
+    pktNeedsTS();
     m_pCurrPktFn = &TrcPktProcStm::stmPktTrigger;
     (this->*m_pCurrPktFn)(); 
 }
@@ -472,13 +604,30 @@ void TrcPktProcStm::stmPktFreq()
     if(m_num_nibbles == 11)
     {
         m_curr_packet.setD32Payload(m_val32);
-        // send packet
+        sendPacket();
     }
 }
 
 void TrcPktProcStm::stmPktASync()
 {
     // 2 nibbles - 0xFF - must be an async or error.
+    bool bCont = true;
+    while(bCont)
+    {
+        bCont = readNibble();
+        if(bCont)
+        {
+            if(m_is_sync) 
+            {
+                bCont = false;  // stop reading nibbles
+                sendPacket();
+            }
+            else if(!m_sync_start)  // no longer valid sync packet
+            {
+                throwBadSequenceError("STM: Invalid ASYNC sequence");
+            }
+        }
+    }
 }
 
 // ************************
@@ -489,11 +638,12 @@ void TrcPktProcStm::stmPktASync()
 bool TrcPktProcStm::readNibble()
 {
     bool dataFound = true;
-    if(m_spare_valid)
+    if(m_nibble_2nd_valid)
     {
-        m_nibble = m_nibble_spare;
-        m_spare_valid = false;
+        m_nibble = m_nibble_2nd;
+        m_nibble_2nd_valid = false;
         m_num_nibbles++;
+        checkSyncNibble();
         /* TBD: do we really want to do this ??? 
         if(m_packet_data.size() == 0) // spare a header - reinsert
         {
@@ -506,18 +656,85 @@ bool TrcPktProcStm::readNibble()
     {
         m_nibble = m_p_data_in[m_data_in_used++];
         m_packet_data.push_back(m_nibble);
-        m_nibble_spare = (m_nibble >> 4) & 0xF;
-        m_spare_valid = true;
+        m_nibble_2nd = (m_nibble >> 4) & 0xF;
+        m_nibble_2nd_valid = true;
         m_nibble &= 0xF;
         m_num_nibbles++;
+        checkSyncNibble();
     }
     else
         dataFound = false;  // no data available
     return dataFound;
 }
-    
+
+void TrcPktProcStm::pktNeedsTS()
+{
+    m_bNeedsTS = true;
+    m_req_ts_nibbles = 0;	
+    m_curr_ts_nibbles = 0;
+    m_ts_update_value = 0;
+    m_ts_req_set = false;
+}
+
 void TrcPktProcStm::stmExtractTS()
 {
+    if(!m_ts_req_set)
+    {
+        if(readNibble())
+        {
+            m_req_ts_nibbles = m_nibble;
+            if(m_nibble == 0xD) 
+                m_req_ts_nibbles = 14;
+            else if(m_nibble == 0xE) 
+                m_req_ts_nibbles = 16;
+
+            if(m_nibble == 0xF)
+                throwBadSequenceError("STM: Invalid timestamp size 0xF");        	 
+        }
+    }
+    else 
+    {
+        // extract the correct amount of nibbles for the ts value. 
+        bool bCont = true;
+        while(bCont && (m_curr_ts_nibbles < m_req_ts_nibbles))
+        {
+            bCont = readNibble();
+            if(bCont)
+            {
+                m_ts_update_value <<= 4;
+                m_ts_update_value |= m_nibble;
+                m_curr_ts_nibbles++;
+            }
+        }
+    }
+
+    if(m_ts_req_set && (m_req_ts_nibbles == m_curr_ts_nibbles))
+    {
+        uint8_t new_bits = m_req_ts_nibbles * 4;
+        if(m_curr_packet.getTSType() == STM_TS_GREY)
+        {            
+            uint64_t gray_val = bin_to_gray(m_curr_packet.getCurrentTSVal());
+            if(new_bits == 64)
+            {
+                gray_val = m_ts_update_value;
+            }
+            else
+            {
+                uint64_t mask = (0x1ULL << new_bits) - 1;
+                gray_val &= ~mask;
+                gray_val |= m_ts_update_value & mask;
+            }
+            m_curr_packet.setTS(gray_to_bin(gray_val),new_bits);
+        }
+        else if(m_curr_packet.getTSType() == STM_TS_NATBINARY)
+        {
+            m_curr_packet.setTS(m_ts_update_value, new_bits);
+        }
+        else
+            throwBadSequenceError("STM: unknown timestamp encoding");
+
+        sendPacket();
+    }
 }
 
 // pass in number of nibbles needed to extract the value
