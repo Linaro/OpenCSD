@@ -60,7 +60,7 @@ rctdl_err_t RawFramePrinter::TraceRawFrameIn(  const rctdl_datapath_op_t op,
         case RCTDL_FRM_PACKED: oss << std::setw(15) << "RAW_PACKED; "; break;
         case RCTDL_FRM_HSYNC:  oss << std::setw(15) << "HSYNC; "; break;
         case RCTDL_FRM_FSYNC:  oss << std::setw(15)  << "FSYNC; "; break;  
-        case RCTDL_FRM_ID_DATA: oss << std::setw(10) << "ID_DATA[0x" << std::hex << std::setw(2) << (uint16_t)traceID << "]; "; break;
+        case RCTDL_FRM_ID_DATA: oss << std::setw(10) << "ID_DATA[0x" << std::hex << std::setw(2) << std::setfill('0') << (uint16_t)traceID << "]; "; break;
         default: oss << std::setw(15) << "UNKNOWN; "; break;
         }
 
@@ -87,7 +87,7 @@ void RawFramePrinter::createDataString(const int dataSize, const uint8_t *pData,
             oss << std::endl;
             lineBytes = 0;
         }
-        oss << std::hex << std::setw(2) <<std::setfill('0') << (uint32_t)pData[i] << " ";
+        oss << std::hex << std::setw(2) << std::setfill('0') << (uint32_t)pData[i] << " ";
         lineBytes ++;
     }
     dataStr = oss.str();
