@@ -85,6 +85,13 @@ void DecodeTreeElement::DestroyElem()
             // TBD: delete decoder.ptm.dcd;
             decoder.ptm.dcd  = 0;
             break;
+
+        case RCTDL_PROTOCOL_STM:
+            delete decoder.ptm.proc;
+            decoder.ptm.proc = 0;
+            // TBD: delete decoder.ptm.dcd;
+            decoder.ptm.dcd  = 0;
+            break;
         }
     }
 }
@@ -408,6 +415,49 @@ rctdl_err_t DecodeTree::createPTMPktProcessor(PtmConfig *p_config, IPktDataIn<Pt
 {
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
         //** TBD
+    return err;
+}
+
+rctdl_err_t DecodeTree::createSTMPktProcessor(STMConfig *p_config, IPktDataIn<StmTrcPacket> *p_Iout/* = 0*/)
+{
+    rctdl_err_t err = RCTDL_ERR_NOT_INIT;
+    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
+    if(usingFormatter())
+        CSID = p_config->getTraceID();
+
+    // see if we can attach to the desired CSID point
+    if((err = createDecodeElement(CSID)) == RCTDL_OK)
+    {
+        TrcPktProcStm *pProc = 0;
+        pProc = new (std::nothrow) TrcPktProcStm(CSID);
+        if(!pProc)
+            return RCTDL_ERR_MEM;
+
+        err = pProc->setProtocolConfig(p_config);
+
+        if((err == RCTDL_OK) && p_Iout)
+            err = pProc->getPacketOutAttachPt()->attach(p_Iout);       
+
+        if(err == RCTDL_OK)
+            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
+
+        if(usingFormatter() && (err == RCTDL_OK))
+            err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
+
+        if(err != RCTDL_OK)
+        {
+            // error - delete the processor and return
+            delete pProc;
+            destroyDecodeElement(CSID);
+        }
+        else
+        {
+            // register with decode element list
+            if(!usingFormatter())
+                setSingleRoot(pProc);
+            m_decode_elements[CSID]->SetProcElement(RCTDL_PROTOCOL_STM,pProc,true);
+        }
+    }    
     return err;
 }
 

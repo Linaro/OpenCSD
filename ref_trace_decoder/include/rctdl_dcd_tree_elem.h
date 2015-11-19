@@ -5,7 +5,6 @@
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
 
-
 /* 
  * Redistribution and use in source and binary forms, with or without modification, 
  * are permitted provided that the following conditions are met:
@@ -33,10 +32,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-
 #ifndef ARM_RCTDL_DCD_TREE_ELEM_H_INCLUDED
 #define ARM_RCTDL_DCD_TREE_ELEM_H_INCLUDED
-
 
 /** @class decoder_elements 
  *  @brief Decode tree element base structure.
@@ -67,6 +64,10 @@ typedef struct _decoder_elements
             void * /*TrcPktDecodePtm **/ dcd; //** TBD
         } ptm;
         struct {
+            TrcPktProcStm *proc;
+            void * /*TrcPktDecodeStm **/ dcd; //** TBD
+        } stm;
+        struct {
             void * proc;
             void * dcd;
         } extern_custom;
@@ -74,7 +75,6 @@ typedef struct _decoder_elements
     rctdl_trace_protocol_t protocol;
     bool created;  /**< decode tree created this element (destroy it on tree destruction) */
 } decoder_element;
-
 
 /*!
  *  @class DecodeTreeElement   
@@ -120,10 +120,18 @@ public:
             return decoder.etmv4d.proc;
         return 0;
     }
+
     TrcPktProcPtm *     getPtmPktProc() const
     {
         if(protocol == RCTDL_PROTOCOL_PTM)
             return decoder.ptm.proc;
+        return 0;
+    }
+
+    TrcPktProcStm *     getStmPktProc() const
+    {
+        if(protocol == RCTDL_PROTOCOL_STM)
+            return decoder.stm.proc;
         return 0;
     }
 

@@ -84,6 +84,7 @@ public:
     rctdl_err_t createETMv4IPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout = 0);
     rctdl_err_t createETMv4DPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout = 0);
     rctdl_err_t createPTMPktProcessor(PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout = 0);
+    rctdl_err_t createSTMPktProcessor(STMConfig *p_config, IPktDataIn<StmTrcPacket> *p_Iout = 0);
 
     /* create full decoder - packet processor + packet decoder  - attach to CSID in config 
        All use the standard generic elements output interface.
