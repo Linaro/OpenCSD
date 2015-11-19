@@ -49,21 +49,25 @@ static const uint32_t STM_SUPPORTED_OP_FLAGS = RCTDL_OPFLG_PKTPROC_COMMON;
 
 TrcPktProcStm::TrcPktProcStm() : TrcPktProcBase(STM_PKTS_NAME)
 {
-    m_supported_op_flags = STM_SUPPORTED_OP_FLAGS;
-    initProcessorState();
-    getRawPacketMonAttachPt()->set_notifier(&mon_in_use);
-
-
+    initObj();
 }
 
 TrcPktProcStm::TrcPktProcStm(int instIDNum) : TrcPktProcBase(STM_PKTS_NAME, instIDNum)
 {
-    m_supported_op_flags = STM_SUPPORTED_OP_FLAGS;
-    initProcessorState();
+    initObj();
 }
 
 TrcPktProcStm::~TrcPktProcStm() 
 {
+    getRawPacketMonAttachPt()->set_notifier(0);
+}
+
+void TrcPktProcStm::initObj()
+{
+    m_supported_op_flags = STM_SUPPORTED_OP_FLAGS;
+    initProcessorState();
+    getRawPacketMonAttachPt()->set_notifier(&mon_in_use);
+    buildOpTables();
 }
 
 // implementation packet processing interface overrides 
@@ -255,8 +259,6 @@ void TrcPktProcStm::waitForSync(const rctdl_trc_index_t blk_st_index)
     // no data from first attempt to read
     if(m_num_nibbles == 0)
         return;
-
-    uint8_t nibbles_to_send = 0;
     
     // we have found a sync or run out of data
     // four possible scenarios
@@ -269,10 +271,11 @@ void TrcPktProcStm::waitForSync(const rctdl_trc_index_t blk_st_index)
     {
         // for a), b), c) send the none sync data then re-enter
         // if out of data, or sync with some previous data, this is sent as unsynced.
-        nibbles_to_send = m_num_nibbles - (m_is_sync ? 22 : m_num_F_nibbles);
+        
         m_curr_packet.setPacketType(STM_PKT_NOTSYNC,false);
         if(mon_in_use.usingMonitor())
         {
+            uint8_t nibbles_to_send = m_num_nibbles - (m_is_sync ? 22 : m_num_F_nibbles);
             uint8_t bytes_to_send = (nibbles_to_send / 2) + (nibbles_to_send % 2);
             for(uint8_t i = 0; i < bytes_to_send; i++)
                 savePacketByte(m_p_data_in[start_offset+i]);
@@ -286,6 +289,7 @@ void TrcPktProcStm::waitForSync(const rctdl_trc_index_t blk_st_index)
         // send the async packet
         m_curr_packet.setPacketType(STM_PKT_ASYNC,false);
         m_bStreamSync = true;
+        clearSyncCount();
         m_packet_index = m_sync_index;
         if(mon_in_use.usingMonitor())
         {
@@ -705,6 +709,8 @@ void TrcPktProcStm::stmPktASync()
             {
                 bCont = false;  // stop reading nibbles
                 m_bStreamSync = true;   // mark stream in sync
+                m_curr_packet.setPacketType(STM_PKT_ASYNC,false);
+                clearSyncCount();
                 sendPacket();
             }
             else if(!m_sync_start)  // no longer valid sync packet

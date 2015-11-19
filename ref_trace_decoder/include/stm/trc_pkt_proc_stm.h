@@ -76,6 +76,7 @@ protected:
 
 private:
 
+    void initObj();
     void initProcessorState();
     void initNextPacket();
     void waitForSync(const rctdl_trc_index_t blk_st_index);

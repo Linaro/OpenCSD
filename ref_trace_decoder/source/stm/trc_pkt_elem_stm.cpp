@@ -100,7 +100,7 @@ void StmTrcPacket::toString(std::string &str) const
         break;
 
     case STM_PKT_VERSION:
-        oss << "; Ver=" << payload.D8;
+        oss << "; Ver=" << (uint16_t)payload.D8;
         str+= oss.str();
         break;
 
@@ -110,12 +110,12 @@ void StmTrcPacket::toString(std::string &str) const
         break;
 
     case STM_PKT_TRIG:
-        oss << "; TrigData=0x" << std::hex << std::setw(2) << std::setfill('0') << payload.D8;
+        oss << "; TrigData=0x" << std::hex << std::setw(2) << std::setfill('0') << (uint16_t)payload.D8;
         str+= oss.str();
         break;
 
     case STM_PKT_M8:
-        oss << "; Master=" << std::dec << master;
+        oss << "; Master=0x" << std::hex << std::setw(2) << std::setfill('0') << (uint16_t)master;
         str+= oss.str();
         break;
        
@@ -126,7 +126,7 @@ void StmTrcPacket::toString(std::string &str) const
         break;
 
     case STM_PKT_D8: 
-        oss << "; Data=0x" << std::hex << std::setw(2) << std::setfill('0') << payload.D8;
+        oss << "; Data=0x" << std::hex << std::setw(2) << std::setfill('0') << (uint16_t)payload.D8;
         str+= oss.str();
         break;
 
