@@ -64,6 +64,8 @@ private:
     bool createETMv4Decoder(const std::string &coreName, Parser::Parsed *devSrc, const bool bDataChannel = false);
     bool createETMv3Decoder(const std::string &coreName, Parser::Parsed *devSrc);
     // TBD add etmv4d, stm, itm
+    bool createSTDecoder(Parser::Parsed *devSrc);
+    bool createSTMDecoder(Parser::Parsed *devSrc);
 
     typedef struct _regs_to_access {
         const char *pszName;

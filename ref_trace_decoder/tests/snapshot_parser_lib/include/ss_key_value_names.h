@@ -66,6 +66,10 @@ const char * const ETMv3PTMRegCR("ETMCR");
 const char * const ETMv3PTMRegCCER("ETMCCER");
 const char * const ETMv3PTMRegTraceIDR("ETMTRACEIDR");
 
+/*** STM/ITM **/
+const char * const STMProtocol("STM");
+const char * const STMRegTCSR("STMTCSR");
+
 #endif // ARM_SS_KEY_VALUE_NAMES_H_INCLUDED
 
 /* End of File ss_key_value_names.h */

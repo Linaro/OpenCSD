@@ -143,10 +143,16 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
                     else
                     {
                         // none-core source 
-                        // not supported in the library at present.
-                        std::ostringstream oss;
-                        oss << "No core device name data for source " << it->first << ".\n";
-                        LogError(oss.str());
+                        if(createSTDecoder(etm_dev))
+                        {
+                             numDecodersCreated++;
+                        }
+                        else
+                        {
+                            std::ostringstream oss;
+                            oss << "Failed to create decoder for none core source " << it->first << ".\n";
+                            LogError(oss.str());
+                        }
                     }
                 }
                 else
@@ -318,6 +324,57 @@ bool CreateDcdTreeFromSnapShot::createETMv3Decoder(const std::string &coreName, 
     }
     return createdDecoder;
 }
+
+
+bool CreateDcdTreeFromSnapShot::createSTDecoder(Parser::Parsed *devSrc)
+{
+    bool bCreatedDecoder = false;
+    std::string devTypeName = devSrc->deviceTypeName;
+
+    // split off .x from type name.
+    std::string::size_type pos = devTypeName.find_first_of('.');
+    if(pos != std::string::npos)
+        devTypeName = devTypeName.substr(0,pos);
+
+    if(devTypeName == STMProtocol)
+    {
+        bCreatedDecoder = createSTMDecoder(devSrc);
+    }
+
+    return bCreatedDecoder;
+}
+
+bool CreateDcdTreeFromSnapShot::createSTMDecoder(Parser::Parsed *devSrc)
+{
+    bool createdDecoder = false;
+    bool configOK = true;
+
+    // generate the config data from the device data.
+    STMConfig config;
+
+    regs_to_access_t regs_to_access[] = {
+        { STMRegTCSR, true, &config.reg_tcsr, 0 }
+    };
+
+    configOK = getRegisters(devSrc->regDefs,sizeof(regs_to_access)/sizeof(regs_to_access_t), regs_to_access);
+    if(configOK)
+    {
+        rctdl_err_t err = RCTDL_OK;
+        if(m_bPacketProcOnly)
+            err = m_pDecodeTree->createSTMPktProcessor(&config);
+        else
+            err = RCTDL_ERR_TEST_SS_TO_DECODER;
+
+        if(err ==  RCTDL_OK)
+            createdDecoder = true;
+        else
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,"Snapshot processor : failed to create STM decoder on decode tree."));
+    }
+
+    return createdDecoder;
+}
+
+
 
 // get a set of register values.
 bool CreateDcdTreeFromSnapShot::getRegisters(std::map<std::string, std::string, Util::CaseInsensitiveLess> &regDefs, int numRegs, regs_to_access_t *reg_access_array)
