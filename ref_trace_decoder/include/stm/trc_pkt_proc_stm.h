@@ -204,7 +204,7 @@ private:
     {
     public:
         monAttachNotify() { m_bInUse = false; };
-        virtual ~monAttachNotify();
+        virtual ~monAttachNotify() {};
         virtual void attachNotify(const int num_attached) { m_bInUse = (num_attached > 0); };
         
         const bool usingMonitor() const { return m_bInUse; };

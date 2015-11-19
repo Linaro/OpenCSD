@@ -83,7 +83,7 @@ public:
 
 
 private:
-    std::string &pktTypeName(const rctdl_stm_pkt_type pkt_type, std::string &desc) const;
+    void pktTypeName(const rctdl_stm_pkt_type pkt_type, std::string &name, std::string &desc) const;
 };
 
 inline void StmTrcPacket::setPacketType(const rctdl_stm_pkt_type type, const bool bMarker)

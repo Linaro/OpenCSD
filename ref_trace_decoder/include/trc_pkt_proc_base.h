@@ -144,7 +144,7 @@ protected:
 
     void indexPacket(const rctdl_trc_index_t index_sop, const Pt *packet_type);
 
-    rctdl_datapath_resp_t outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> pktdata);
+    rctdl_datapath_resp_t outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> &pktdata);
 
     /* the protocol configuration */
     const Pc *m_config;
@@ -306,10 +306,11 @@ template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::indexPacket
         m_pkt_indexer_i.first()->TracePktIndex(index_sop,packet_type);
 }
 
-template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> pktdata)
+template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> &pktdata)
 {
     indexPacket(index_sop,pkt_type);
-    outputRawPacketToMonitor(index_sop,pkt,(uint32_t)pktdata.size(),&pktdata[0]);
+    if(pktdata.size() > 0)  // prevent out of range errors for 0 length vector.
+        outputRawPacketToMonitor(index_sop,pkt,(uint32_t)pktdata.size(),&pktdata[0]);
     return outputDecodedPacket(index_sop,pkt);
 }
 

@@ -52,6 +52,8 @@ TrcPktProcStm::TrcPktProcStm() : TrcPktProcBase(STM_PKTS_NAME)
     m_supported_op_flags = STM_SUPPORTED_OP_FLAGS;
     initProcessorState();
     getRawPacketMonAttachPt()->set_notifier(&mon_in_use);
+
+
 }
 
 TrcPktProcStm::TrcPktProcStm(int instIDNum) : TrcPktProcBase(STM_PKTS_NAME, instIDNum)
@@ -209,10 +211,11 @@ void TrcPktProcStm::initProcessorState()
     setProcUnsynced();
     clearSyncCount();
     m_curr_packet.initStartState();
-    m_packet_data.clear();
     m_nibble_2nd_valid = false;
     initNextPacket();
     m_bWaitSyncSaveSuppressed = false;
+
+    m_packet_data.clear();
 }
 
 void TrcPktProcStm::initNextPacket()
@@ -727,7 +730,7 @@ bool TrcPktProcStm::readNibble()
         m_num_nibbles++;
         checkSyncNibble();
     }
-    else if( m_data_in_size < m_data_in_used)
+    else if(m_data_in_used < m_data_in_size )
     {
         m_nibble = m_p_data_in[m_data_in_used++];
         savePacketByte(m_nibble);

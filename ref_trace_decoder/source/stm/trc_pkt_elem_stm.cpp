@@ -87,7 +87,7 @@ void StmTrcPacket::toString(std::string &str) const
     std::string name, desc;
     std::ostringstream oss;
 
-    name = pktTypeName(type,desc);
+    pktTypeName(type,name, desc);
     str = name + ":" + desc;
 
     // extended information
@@ -95,7 +95,7 @@ void StmTrcPacket::toString(std::string &str) const
     {
     case STM_PKT_INCOMPLETE_EOT:
     case STM_PKT_BAD_SEQUENCE:
-        name = pktTypeName(err_type,desc);
+        pktTypeName(err_type,name, desc);
         str+= "[" + name + "]";
         break;
 
@@ -160,124 +160,124 @@ void StmTrcPacket::toStringFmt(const uint32_t fmtFlags, std::string &str) const
     toString(str);
 }
 
-std::string &StmTrcPacket::pktTypeName(const rctdl_stm_pkt_type pkt_type, std::string &desc) const
+void StmTrcPacket::pktTypeName(const rctdl_stm_pkt_type pkt_type, std::string &name, std::string &desc) const
 {
     std::ostringstream oss_name;
     std::ostringstream oss_desc;
     bool addMarkerTS = false;
 
-    oss_name.str("UNKNOWN");
-    oss_desc.str("ERROR: unknown packet type");
 
     switch(pkt_type)
     {
     case STM_PKT_RESERVED: 
-        oss_name.str("RESERVED");
-        oss_desc.str("Reserved Packet Header");
+        oss_name << "RESERVED";
+        oss_desc << "Reserved Packet Header";
         break;
 
     case STM_PKT_NOTSYNC:
-        oss_name.str("NOTSYNC");
-        oss_desc.str("STM not synchronised");
+        oss_name << "NOTSYNC";
+        oss_desc << "STM not synchronised";
         break;
 
     case STM_PKT_INCOMPLETE_EOT:
-        oss_name.str("INCOMPLETE_EOT");
-        oss_desc.str("Incomplete packet flushed at end of trace");
+        oss_name << "INCOMPLETE_EOT";
+        oss_desc << "Incomplete packet flushed at end of trace";
         break;
 
     case STM_PKT_NO_ERR_TYPE:
-        oss_name.str("NO_ERR_TYPE");
-        oss_desc.str("Error type not set");
+        oss_name << "NO_ERR_TYPE";
+        oss_desc << "Error type not set";
         break;
 
     case STM_PKT_BAD_SEQUENCE:
-        oss_name.str("BAD_SEQUENCE");
-        oss_desc.str("Invalid sequence in packet");
+        oss_name << "BAD_SEQUENCE";
+        oss_desc << "Invalid sequence in packet";
         break;
 
     case STM_PKT_ASYNC:
-        oss_name.str("ASYNC");
-        oss_desc.str("Alignment synchronisation packet");
+        oss_name << "ASYNC";
+        oss_desc << "Alignment synchronisation packet";
         break;
 
     case STM_PKT_VERSION:
-        oss_name.str("VERSION");
-        oss_desc.str("Version packet");
+        oss_name << "VERSION";
+        oss_desc << "Version packet";
         break;
 
     case STM_PKT_FREQ:
-        oss_name.str("FREQ");
-        oss_desc.str("Frequency packet");
+        oss_name << "FREQ";
+        oss_desc << "Frequency packet";
         break;
 
     case STM_PKT_NULL:
-        oss_name.str("NULL");
-        oss_desc.str("Null packet");
+        oss_name << "NULL";
+        oss_desc << "Null packet";
         break;
 
     case STM_PKT_TRIG:
-        oss_name.str("TRIG");
-        oss_desc.str("Trigger packet");
+        oss_name << "TRIG";
+        oss_desc << "Trigger packet";
         addMarkerTS = true;
         break;
 
     case STM_PKT_GERR:
-        oss_name.str("GERR");
-        oss_desc.str("Global Error");
+        oss_name << "GERR";
+        oss_desc << "Global Error";
         break;
 
     case STM_PKT_MERR:
-        oss_name.str("MERR");
-        oss_desc.str("Master Error");
+        oss_name << "MERR";
+        oss_desc << "Master Error";
         break;
 
     case STM_PKT_M8:
-        oss_name.str("M8");
-        oss_desc.str("Set current master");
+        oss_name << "M8";
+        oss_desc << "Set current master";
         break;
 
     case STM_PKT_C8:
-        oss_name.str("C8");
-        oss_desc.str("Set current channel");
+        oss_name << "C8";
+        oss_desc << "Set current channel";
         break;
 
     case STM_PKT_C16:
-        oss_name.str("C16");
-        oss_desc.str("Set current channel");
+        oss_name << "C16";
+        oss_desc << "Set current channel";
         break;
 
     case STM_PKT_FLAG:
-        oss_name.str("FLAG");
-        oss_desc.str("Flag packet");
+        oss_name << "FLAG";
+        oss_desc << "Flag packet";
         addMarkerTS = true;
         break;
 
     case STM_PKT_D8:
-        oss_name.str("D8");
-        oss_desc.str("8 bit data");
+        oss_name << "D8";
+        oss_desc << "8 bit data";
         addMarkerTS = true;
         break;
 
     case STM_PKT_D16:
-        oss_name.str("D16");
-        oss_desc.str("16 bit data");
+        oss_name << "D16";
+        oss_desc << "16 bit data";
         addMarkerTS = true;
         break;
 
     case STM_PKT_D32:
-        oss_name.str("D32");
-        oss_desc.str("32 bit data");
+        oss_name << "D32";
+        oss_desc << "32 bit data";
         addMarkerTS = true;
         break;
 
     case STM_PKT_D64:
-        oss_name.str("D64");
-        oss_desc.str("64 bit data");
+        oss_name << "D64";
+        oss_desc << "64 bit data";
         addMarkerTS = true;
         break;
 
     default:
+        oss_name << "UNKNOWN";
+        oss_desc << "ERROR: unknown packet type";
         break;
     }
 
@@ -297,7 +297,7 @@ std::string &StmTrcPacket::pktTypeName(const rctdl_stm_pkt_type pkt_type, std::s
     }
     oss_desc << ".";
     desc = oss_desc.str();
-    return oss_name.str();
+    name =  oss_name.str();
 }
 
 
