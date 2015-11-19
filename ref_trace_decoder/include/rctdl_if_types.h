@@ -406,11 +406,15 @@ typedef enum _rctdl_mem_space_acc_t {
     component specific - top 16 bits.
 @{*/
 
-#define RCTDL_OPFLG_PKTPROC_NOFWD_BAD_PKTS 0x00000001  /**< don't forward bad packets up data path */
-#define RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS 0x00000002  /**< don't forward bad packets to monitor interface */
-#define RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS   0x00000004  /**< throw error for bad packets. */
+#define RCTDL_OPFLG_PKTPROC_NOFWD_BAD_PKTS  0x00000001  /**< don't forward bad packets up data path */
+#define RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS  0x00000002  /**< don't forward bad packets to monitor interface */
+#define RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS    0x00000004  /**< throw error for bad packets - halt decoding. */
+#define RCTDL_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS 0x00000008  /**< switch to unsynced state on bad packets - wait for next sync point */
 
-#define RCTDL_OPFLG_PKTPROC_COMMON (RCTDL_OPFLG_PKTPROC_NOFWD_BAD_PKTS | RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS | RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS)
+#define RCTDL_OPFLG_PKTPROC_COMMON (RCTDL_OPFLG_PKTPROC_NOFWD_BAD_PKTS | \
+                                    RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS | \
+                                    RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS | \
+                                    RCTDL_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS  )
 
 /** @}*/
 

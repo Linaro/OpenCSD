@@ -45,12 +45,13 @@
 #define STM_PKTS_NAME RCTDL_CMPNAME_PREFIX_PKTPROC##"_STM"
 #endif
 
-static const uint32_t STM_SUPPORTED_OP_FLAGS = 0;
+static const uint32_t STM_SUPPORTED_OP_FLAGS = RCTDL_OPFLG_PKTPROC_COMMON;
 
 TrcPktProcStm::TrcPktProcStm() : TrcPktProcBase(STM_PKTS_NAME)
 {
     m_supported_op_flags = STM_SUPPORTED_OP_FLAGS;
     initProcessorState();
+    getRawPacketMonAttachPt()->set_notifier(&mon_in_use);
 }
 
 TrcPktProcStm::TrcPktProcStm(int instIDNum) : TrcPktProcBase(STM_PKTS_NAME, instIDNum)
@@ -73,6 +74,7 @@ rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     m_p_data_in = pDataBlock;
     m_data_in_size = dataBlockSize;
+    m_data_in_used = 0;
    
     // while there is data and a continue response on the data path
     while(  dataToProcess() && RCTDL_DATA_RESP_IS_CONT(resp) )
@@ -82,9 +84,7 @@ rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index
             switch(m_proc_state)
             {
             case WAIT_SYNC:
-                /*if(!m_bStartOfSync)
-                    m_packet_index = index +  m_bytesProcessed;
-                m_bytesProcessed += waitForSync(dataBlockSize-m_bytesProcessed,pDataBlock+m_bytesProcessed);*/
+                waitForSync(index);
                 break;
 
             case PROC_HDR:
@@ -112,11 +112,14 @@ rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index
         catch(rctdlError &err)
         {
             LogError(err);
-            if( (err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ) ||
-                (err.getErrorCode() == RCTDL_ERR_INVALID_PCKT_HDR))
+            if( ((err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ) ||
+                 (err.getErrorCode() == RCTDL_ERR_INVALID_PCKT_HDR)) &&
+                 !(getComponentOpMode() & RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS))
             {
                 // send invalid packets up the pipe to let the next stage decide what to do.
                 resp = outputPacket();
+                if(getComponentOpMode() & RCTDL_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS)
+                    m_proc_state = WAIT_SYNC;
             }
             else
             {
@@ -128,7 +131,7 @@ rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index
         {
             /// vv bad at this point.
             resp = RCTDL_RESP_FATAL_SYS_ERR;
-            rctdlError &fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_chanIDCopy);
+            rctdlError &fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_config->getTraceID());
             fatal.setMessage("Unknown System Error decoding trace.");
             LogError(fatal);
         }
@@ -175,7 +178,14 @@ const bool TrcPktProcStm::isBadPacket() const
 
 rctdl_datapath_resp_t TrcPktProcStm::outputPacket()
 {
-
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    resp = outputOnAllInterfaces(m_packet_index,&m_curr_packet,&m_curr_packet.type,m_packet_data);
+    m_packet_data.clear();
+    initNextPacket();
+    if(m_nibble_2nd_valid)
+        savePacketByte(m_nibble_2nd << 4);     // put the unused nibble back on to the data stack and pad for output next time.
+    m_proc_state = m_bStreamSync ? PROC_HDR : WAIT_SYNC;
+    return resp;
 }
 
 void TrcPktProcStm::throwBadSequenceError(const char *pszMessage /*= ""*/)
@@ -196,11 +206,13 @@ void TrcPktProcStm::throwReservedHdrError(const char *pszMessage /*= ""*/)
 void TrcPktProcStm::initProcessorState()
 {
     // clear any state that persists between packets
-    m_proc_state = WAIT_SYNC;
+    setProcUnsynced();
+    clearSyncCount();
     m_curr_packet.initStartState();
     m_packet_data.clear();
     m_nibble_2nd_valid = false;
     initNextPacket();
+    m_bWaitSyncSaveSuppressed = false;
 }
 
 void TrcPktProcStm::initNextPacket()
@@ -211,6 +223,76 @@ void TrcPktProcStm::initNextPacket()
     m_num_nibbles = 0;
     m_num_data_nibbles = 0;
     m_curr_packet.initNextPacket();
+}
+
+// search remaining buffer for a start of sync or full sync packet
+void TrcPktProcStm::waitForSync(const rctdl_trc_index_t blk_st_index)
+{
+    bool bGotData = true;
+    uint32_t start_offset = m_data_in_used; // record the offset into the buffer at start of this fn.
+
+    // input conditions:
+    // out of sync - either at start of input stream, or due to bad packet.
+    // m_data_in_used -> bytes already processed
+    // m_sync_start -> seen potential start of sync in current stream
+
+    // set a packet index for the start of the data
+    m_packet_index = blk_st_index + m_data_in_used;
+    m_num_nibbles = m_num_F_nibbles;    // sending unsync data may have cleared down num_nibbles.
+
+    m_bWaitSyncSaveSuppressed = true;   // no need to save bytes until we want to send data.
+
+    while(bGotData && !m_is_sync)
+    {
+        bGotData = readNibble();    // read until we have a sync or run out of data
+    }
+
+    m_bWaitSyncSaveSuppressed = false;
+
+    // no data from first attempt to read
+    if(m_num_nibbles == 0)
+        return;
+
+    uint8_t nibbles_to_send = 0;
+    
+    // we have found a sync or run out of data
+    // four possible scenarios
+    // a) all data none sync data.
+    // b) some none sync data + start of sync sequence
+    // c) some none sync data + full sync sequence
+    // d) full sync sequence
+
+    if(!bGotData || m_num_nibbles > 22)
+    {
+        // for a), b), c) send the none sync data then re-enter
+        // if out of data, or sync with some previous data, this is sent as unsynced.
+        nibbles_to_send = m_num_nibbles - (m_is_sync ? 22 : m_num_F_nibbles);
+        m_curr_packet.setPacketType(STM_PKT_NOTSYNC,false);
+        if(mon_in_use.usingMonitor())
+        {
+            uint8_t bytes_to_send = (nibbles_to_send / 2) + (nibbles_to_send % 2);
+            for(uint8_t i = 0; i < bytes_to_send; i++)
+                savePacketByte(m_p_data_in[start_offset+i]);
+        }
+
+        // if we have found a sync then we will re-enter this function with no pre data, 
+        // but the found flags set.
+    }
+    else
+    {
+        // send the async packet
+        m_curr_packet.setPacketType(STM_PKT_ASYNC,false);
+        m_bStreamSync = true;
+        m_packet_index = m_sync_index;
+        if(mon_in_use.usingMonitor())
+        {
+            // we may not have the full sync packet still in the local buffer so synthesise it.
+            for(int i = 0; i < 10; i++)
+                savePacketByte(0xFF);
+            savePacketByte(0x0F);
+        }        
+    }
+    sendPacket();  // mark packet for sending
 }
 
 // packet processing routines
@@ -566,7 +648,6 @@ void TrcPktProcStm::stmPktVersion()
         }
         sendPacket();
     }
-
 }
 
 void TrcPktProcStm::stmPktTrigger()
@@ -620,6 +701,7 @@ void TrcPktProcStm::stmPktASync()
             if(m_is_sync) 
             {
                 bCont = false;  // stop reading nibbles
+                m_bStreamSync = true;   // mark stream in sync
                 sendPacket();
             }
             else if(!m_sync_start)  // no longer valid sync packet
@@ -644,18 +726,11 @@ bool TrcPktProcStm::readNibble()
         m_nibble_2nd_valid = false;
         m_num_nibbles++;
         checkSyncNibble();
-        /* TBD: do we really want to do this ??? 
-        if(m_packet_data.size() == 0) // spare a header - reinsert
-        {
-            value <<= 4;    // move to 2nd position, leave "null" in 1st position if printing out / re-using
-            m_packet_data.push_back(value);
-        }
-        */
     }
     else if( m_data_in_size < m_data_in_used)
     {
         m_nibble = m_p_data_in[m_data_in_used++];
-        m_packet_data.push_back(m_nibble);
+        savePacketByte(m_nibble);
         m_nibble_2nd = (m_nibble >> 4) & 0xF;
         m_nibble_2nd_valid = true;
         m_nibble &= 0xF;

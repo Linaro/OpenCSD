@@ -286,6 +286,10 @@ template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::outputRawPa
                                     const uint32_t size,
                                     const uint8_t *p_data)
 {
+    // never output 0 sized packets.
+    if(size == 0)
+        return;
+
     // bad packet filter.
     if((getComponentOpMode() & RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS) && isBadPacket())
         return;
