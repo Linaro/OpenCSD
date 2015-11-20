@@ -137,7 +137,7 @@ rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index
         {
             /// vv bad at this point.
             resp = RCTDL_RESP_FATAL_SYS_ERR;
-            rctdlError &fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_config->getTraceID());
+            rctdlError fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_config->getTraceID());
             fatal.setMessage("Unknown System Error decoding trace.");
             LogError(fatal);
         }
@@ -320,7 +320,6 @@ void TrcPktProcStm::stmPktNull()
 
 void TrcPktProcStm::stmPktM8()
 {
-    bool bCont = true;
     if(m_num_nibbles == 1)    // 1st nibble - header - set type
         m_curr_packet.setPacketType(STM_PKT_M8,false);
 
@@ -334,7 +333,6 @@ void TrcPktProcStm::stmPktM8()
 
 void TrcPktProcStm::stmPktMERR()
 {
-    bool bCont = true;
     if(m_num_nibbles == 1)    // 1st nibble - header - set type
         m_curr_packet.setPacketType(STM_PKT_MERR,false);
 

@@ -116,7 +116,7 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::processData(const rctdl_trc_index_t inde
         {
             /// vv bad at this point.
             resp = RCTDL_RESP_FATAL_SYS_ERR;
-            rctdlError &fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_chanIDCopy);
+            rctdlError fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_chanIDCopy);
             fatal.setMessage("Unknown System Error decoding trace.");
             m_interface->LogError(fatal);
         }

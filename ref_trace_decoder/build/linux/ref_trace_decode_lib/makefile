@@ -46,38 +46,56 @@ VPATH=	$(RCTDL_SOURCE) \
 		$(RCTDL_SOURCE)/etmv4 \
 		$(RCTDL_SOURCE)/ptm \
 		$(RCTDL_SOURCE)/i_dec \
-		$(RCTDL_SOURCE)/mem_acc
+		$(RCTDL_SOURCE)/mem_acc \
+		$(RCTDL_SOURCE)/stm
+
 
 CPP_INCLUDES= \
 				-I$(RCTDL_INCLUDE) \
 				-I$(RCTDL_SOURCE)
 
+ETMV3OBJ=	$(BUILD_DIR)/trc_cmp_cfg_etmv3.o \
+			$(BUILD_DIR)/trc_pkt_elem_etmv3.o \
+			$(BUILD_DIR)/trc_pkt_proc_etmv3.o \
+			$(BUILD_DIR)/trc_pkt_proc_etmv3_impl.o
+
+ETMV4OBJ=	$(BUILD_DIR)/trc_cmp_cfg_etmv4.o \
+			$(BUILD_DIR)/trc_pkt_proc_etmv4.o \
+			$(BUILD_DIR)/trc_pkt_proc_etmv4i_impl.o \
+			$(BUILD_DIR)/trc_pkt_decode_etmv4i.o \
+			$(BUILD_DIR)/trc_pkt_elem_etmv4i.o \
+			$(BUILD_DIR)/trc_pkt_elem_etmv4d.o
+
+PTMOBJ=		$(BUILD_DIR)/trc_cmp_cfg_ptm.o \
+			$(BUILD_DIR)/trc_pkt_elem_ptm.o \
+			$(BUILD_DIR)/trc_pkt_proc_ptm.o
+
+IDECOBJ=	$(BUILD_DIR)/trc_i_decode.o \
+			$(BUILD_DIR)/trc_idec_arminst.o
+
+MEMACCOBJ=	$(BUILD_DIR)/trc_mem_acc_mapper.o \
+			$(BUILD_DIR)/trc_mem_acc_bufptr.o \
+			$(BUILD_DIR)/trc_mem_acc_file.o
+
+STMOBJ=		$(BUILD_DIR)/trc_pkt_elem_stm.o \
+			$(BUILD_DIR)/trc_pkt_proc_stm.o
+
 OBJECTS=$(BUILD_DIR)/rctdl_dcd_tree.o \
 		$(BUILD_DIR)/rctdl_error.o \
 		$(BUILD_DIR)/rctdl_error_logger.o \
 		$(BUILD_DIR)/rctdl_msg_logger.o \
-		$(BUILD_DIR)/trc_cmp_cfg_etmv3.o \
-		$(BUILD_DIR)/trc_cmp_cfg_etmv4.o \
-		$(BUILD_DIR)/trc_cmp_cfg_ptm.o \
 		$(BUILD_DIR)/trc_component.o \
 		$(BUILD_DIR)/trc_core_arch_map.o \
 		$(BUILD_DIR)/trc_frame_deformatter.o \
-		$(BUILD_DIR)/trc_pkt_elem_etmv3.o \
-		$(BUILD_DIR)/trc_pkt_elem_etmv4i.o \
-		$(BUILD_DIR)/trc_pkt_elem_etmv4d.o \
-		$(BUILD_DIR)/trc_pkt_elem_ptm.o \
-		$(BUILD_DIR)/trc_pkt_proc_etmv3.o \
-		$(BUILD_DIR)/trc_pkt_proc_etmv4.o \
-		$(BUILD_DIR)/trc_pkt_proc_etmv4i_impl.o \
-		$(BUILD_DIR)/trc_pkt_proc_ptm.o \
+		$(BUILD_DIR)/trc_gen_elem.o \
 		$(BUILD_DIR)/trc_printable_elem.o \
-		$(BUILD_DIR)/trc_pkt_decode_etmv4i.o \
-		$(BUILD_DIR)/trc_i_decode.o \
-		$(BUILD_DIR)/trc_idec_arminst.o \
-		$(BUILD_DIR)/trc_mem_acc_mapper.o \
-		$(BUILD_DIR)/trc_mem_acc_bufptr.o \
-		$(BUILD_DIR)/trc_mem_acc_file.o \
-		$(BUILD_DIR)/trc_gen_elem.o
+		$(ETMV3OBJ) \
+		$(ETMV4OBJ) \
+		$(PTMOBJ) \
+		$(IDECOBJ) \
+		$(MEMACCOBJ) \
+		$(STMOBJ)
+
 
 all: build_dir $(OBJECTS)
 	mkdir -p $(LIB_TARGET_DIR)
