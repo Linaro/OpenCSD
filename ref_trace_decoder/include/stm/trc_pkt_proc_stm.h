@@ -94,10 +94,12 @@ private:
     void stmPktM8();
     void stmPktMERR();
     void stmPktC8();
+    void stmPktD4();
     void stmPktD8();
     void stmPktD16();
     void stmPktD32();
     void stmPktD64();
+    void stmPktD4MTS();
     void stmPktD8MTS();
     void stmPktD16MTS();
     void stmPktD32MTS();
@@ -110,10 +112,12 @@ private:
     void stmPktF0Ext();
     void stmPktGERR();
     void stmPktC16();
+    void stmPktD4TS();
     void stmPktD8TS();
     void stmPktD16TS();
     void stmPktD32TS();
     void stmPktD64TS();
+    void stmPktD4M();
     void stmPktD8M();
     void stmPktD16M();
     void stmPktD32M();

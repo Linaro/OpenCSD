@@ -125,6 +125,11 @@ void StmTrcPacket::toString(std::string &str) const
         str+= oss.str();
         break;
 
+    case STM_PKT_D4: 
+        oss << "; Data=0x" << std::hex << std::setw(1) << (uint16_t)(payload.D8 & 0xF);
+        str+= oss.str();
+        break;
+
     case STM_PKT_D8: 
         oss << "; Data=0x" << std::hex << std::setw(2) << std::setfill('0') << (uint16_t)payload.D8;
         str+= oss.str();
@@ -248,6 +253,12 @@ void StmTrcPacket::pktTypeName(const rctdl_stm_pkt_type pkt_type, std::string &n
     case STM_PKT_FLAG:
         oss_name << "FLAG";
         oss_desc << "Flag packet";
+        addMarkerTS = true;
+        break;
+
+    case STM_PKT_D4:
+        oss_name << "D4";
+        oss_desc << "4 bit data";
         addMarkerTS = true;
         break;
 

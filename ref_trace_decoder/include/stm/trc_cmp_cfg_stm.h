@@ -43,7 +43,6 @@
 /** @name STM configuration
 @{*/
 
-
 class STMConfig : public rctdl_stm_cfg
 {
 public:
@@ -52,10 +51,16 @@ public:
 
     STMConfig & operator=(const rctdl_stm_cfg *p_cfg);  //!< set from full config.
     void setTraceID(const uint8_t traceID);     //!< use default 256 masters + 65536 channels & set trace ID.
+    void setHWTraceFeat(const hw_event_feat_t hw_feat); //!< set usage of HW trace.
     
     const uint8_t getTraceID() const;
     const uint8_t getMaxMasterIdx() const;
     const uint16_t getMaxChannelIdx() const;
+    const uint16_t getHWTraceMasterIdx() const;
+    bool getHWTraceEn() const; 
+
+private:
+    bool m_bHWTraceEn;
 };
 
 inline STMConfig::STMConfig()
@@ -63,11 +68,16 @@ inline STMConfig::STMConfig()
     reg_tcsr = 0;
     reg_devid = 0xFF;   // default to 256 masters.
     reg_feat3r = 0x10000; // default to 65536 channels.
+    reg_feat1r = 0x0;
+    reg_hwev_mast = 0;    // default hwtrace master = 0;
+    hw_event = HwEvent_Unknown_Disabled; // default to not present / disabled.
+    m_bHWTraceEn = false;
 }
   
 inline STMConfig & STMConfig::operator=(const rctdl_stm_cfg *p_cfg)
 {
     *dynamic_cast<rctdl_stm_cfg *>(this) = *p_cfg;
+    setHWTraceFeat(HwEvent_UseRegisters);
     return *this;
 }
 
@@ -76,6 +86,14 @@ inline void STMConfig::setTraceID(const uint8_t traceID)
     uint32_t IDmask = 0x007F0000;
     reg_tcsr &= ~IDmask;
     reg_tcsr |= (((uint32_t)traceID) << 16) & IDmask;
+}
+
+inline void STMConfig::setHWTraceFeat(const hw_event_feat_t hw_feat)
+{
+    hw_event = hw_feat;
+    m_bHWTraceEn = (hw_event == HwEvent_Enabled);
+    if(hw_event == HwEvent_UseRegisters)
+        m_bHWTraceEn = (((reg_feat1r & 0xC0000) == 0x80000) && ((reg_tcsr & 0x8) == 0x8));
 }
 
 inline const uint8_t STMConfig::getTraceID() const
@@ -92,6 +110,17 @@ inline const uint16_t STMConfig::getMaxChannelIdx() const
 {
     return (uint16_t)(reg_feat3r - 1);
 }
+
+inline const uint16_t STMConfig::getHWTraceMasterIdx() const
+{
+    return (uint16_t)(reg_hwev_mast & 0xFFFF);
+}
+
+inline bool STMConfig::getHWTraceEn() const
+{       
+    return m_bHWTraceEn;
+}
+
 
 /** @}*/
 

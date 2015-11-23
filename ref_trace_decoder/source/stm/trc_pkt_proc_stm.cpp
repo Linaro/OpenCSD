@@ -357,12 +357,39 @@ void TrcPktProcStm::stmPktC8()
     }
 }
 
+void TrcPktProcStm::stmPktD4()
+{
+    if(m_num_nibbles == 1)    // 1st nibble - header - set type
+    {
+        m_curr_packet.setPacketType(STM_PKT_D4,m_bIsMarker);
+        m_num_data_nibbles = 2;  // need 2 nibbles to complete data
+    }
+    if(m_num_nibbles != m_num_data_nibbles)
+    {
+        if(readNibble())
+            m_val8 = m_nibble;
+    }
+    else
+    {
+        m_curr_packet.setD8Payload(m_val8);
+        if(m_bNeedsTS)
+        {
+            m_pCurrPktFn = &TrcPktProcStm::stmExtractTS;
+            (this->*m_pCurrPktFn)();
+        }
+        else
+        {
+            sendPacket();
+        }
+    }
+}
+
 void TrcPktProcStm::stmPktD8()
 {
     if(m_num_nibbles == 1)    // 1st nibble - header - set type
     {
-        m_curr_packet.setPacketType(STM_PKT_D8,false);
-        m_num_data_nibbles = 3;
+        m_curr_packet.setPacketType(STM_PKT_D8,m_bIsMarker);
+        m_num_data_nibbles = 3; // need 3 nibbles in total to complete data
     }
 
     stmExtractVal8(m_num_data_nibbles);
@@ -385,7 +412,7 @@ void TrcPktProcStm::stmPktD16()
 {
     if(m_num_nibbles == 1)    // 1st nibble - header - set type
     {
-        m_curr_packet.setPacketType(STM_PKT_D16,false);
+        m_curr_packet.setPacketType(STM_PKT_D16,m_bIsMarker);
         m_num_data_nibbles = 5;
     }
 
@@ -409,7 +436,7 @@ void TrcPktProcStm::stmPktD32()
 {
     if(m_num_nibbles == 1)    // 1st nibble - header - set type
     {
-        m_curr_packet.setPacketType(STM_PKT_D32,false);
+        m_curr_packet.setPacketType(STM_PKT_D32,m_bIsMarker);
         m_num_data_nibbles = 9;
     }
 
@@ -433,7 +460,7 @@ void TrcPktProcStm::stmPktD64()
 {
     if(m_num_nibbles == 1)    // 1st nibble - header - set type
     {
-        m_curr_packet.setPacketType(STM_PKT_D64,false);
+        m_curr_packet.setPacketType(STM_PKT_D64,m_bIsMarker);
         m_num_data_nibbles = 17;
     }
 
@@ -451,6 +478,14 @@ void TrcPktProcStm::stmPktD64()
             sendPacket();
         }
     }
+}
+
+void TrcPktProcStm::stmPktD4MTS()
+{
+    pktNeedsTS();
+    m_bIsMarker = true;  
+    m_pCurrPktFn = &TrcPktProcStm::stmPktD4;
+    (this->*m_pCurrPktFn)();
 }
 
 void TrcPktProcStm::stmPktD8MTS()
@@ -549,6 +584,15 @@ void TrcPktProcStm::stmPktC16()
     }
 }
 
+void TrcPktProcStm::stmPktD4TS()
+{
+    pktNeedsTS();
+    m_curr_packet.setPacketType(STM_PKT_D4,false); // 2nd nibble, set type here
+    m_num_data_nibbles = 3; // one more nibble for data
+    m_pCurrPktFn = &TrcPktProcStm::stmPktD4;
+    (this->*m_pCurrPktFn)();  
+}
+
 void TrcPktProcStm::stmPktD8TS()
 {
     pktNeedsTS();
@@ -582,6 +626,14 @@ void TrcPktProcStm::stmPktD64TS()
     m_curr_packet.setPacketType(STM_PKT_D64,false); // 2nd nibble, set type here
     m_num_data_nibbles = 18;
     m_pCurrPktFn = &TrcPktProcStm::stmPktD64;
+    (this->*m_pCurrPktFn)();  
+}
+
+void TrcPktProcStm::stmPktD4M()
+{
+    m_curr_packet.setPacketType(STM_PKT_D4,true); // 2nd nibble, set type here
+    m_num_data_nibbles = 3; // one more nibble for data
+    m_pCurrPktFn = &TrcPktProcStm::stmPktD4;
     (this->*m_pCurrPktFn)();  
 }
 
@@ -929,7 +981,8 @@ void TrcPktProcStm::buildOpTables()
     m_1N_ops[0x9] = &TrcPktProcStm::stmPktD16MTS;
     m_1N_ops[0xA] = &TrcPktProcStm::stmPktD32MTS;
     m_1N_ops[0xB] = &TrcPktProcStm::stmPktD64MTS;
-    // 0xC & 0xD not used by CS STM.
+    m_1N_ops[0xC] = &TrcPktProcStm::stmPktD4;
+    m_1N_ops[0xD] = &TrcPktProcStm::stmPktD4MTS;
     m_1N_ops[0xE] = &TrcPktProcStm::stmPktFlagTS;
     m_1N_ops[0xF] = &TrcPktProcStm::stmPktFExt;
 
@@ -946,7 +999,8 @@ void TrcPktProcStm::buildOpTables()
     m_2N_ops[0x9] = &TrcPktProcStm::stmPktD16M;
     m_2N_ops[0xA] = &TrcPktProcStm::stmPktD32M;
     m_2N_ops[0xB] = &TrcPktProcStm::stmPktD64M;
-    // 0xC & 0xD not used by CS STM.
+    m_2N_ops[0xC] = &TrcPktProcStm::stmPktD4TS;
+    m_2N_ops[0xD] = &TrcPktProcStm::stmPktD4M;
     m_2N_ops[0xE] = &TrcPktProcStm::stmPktFlag;
     m_2N_ops[0xF] = &TrcPktProcStm::stmPktASync;
 

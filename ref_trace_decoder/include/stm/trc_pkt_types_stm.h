@@ -65,6 +65,7 @@ typedef enum _rctdl_stm_pkt_type
 
     STM_PKT_FLAG,
 
+    STM_PKT_D4,
     STM_PKT_D8,
     STM_PKT_D16,
     STM_PKT_D32,
@@ -100,7 +101,7 @@ typedef struct _rctdl_stm_pkt
     uint8_t     pkt_has_marker;     /**< flag to indicate marker packet */
 
     union {
-        uint8_t  D8;    /**< payload for D8 data packet, or parameter value for other packets with 8 bit value [VERSION, TRIG, xERR] */
+        uint8_t  D8;    /**< payload for D8 or D4 data packet, or parameter value for other packets with 8 bit value [VERSION, TRIG, xERR] */
         uint16_t D16;   /**< payload for D16 data packet, or reserved opcode in bad packet header (1-3 nibbles) */
         uint32_t D32;   /**< payload for D32 data packet, or parameter value for other packets with 32 bit value [FREQ] */
         uint64_t D64;   /**< payload for D64 data packet */
@@ -110,13 +111,21 @@ typedef struct _rctdl_stm_pkt
 
 } rctdl_stm_pkt;
 
+typedef enum _hw_event_feat {
+    HwEvent_Unknown_Disabled,   //!< status of HW event features not known - assume not present or disabled */
+    HwEvent_Enabled,            //!< HW event present and enabled - ignore Feat regs, assume hwev_mast value valid */
+    HwEvent_UseRegisters        //!< Feature Register values and enable bits used to determine HW event trace status */
+} hw_event_feat_t;
+
 
 typedef struct _rctdl_stm_cfg
 {
-    uint32_t reg_tcsr;      /**< Contains CoreSight trace ID */
-    uint32_t reg_feat3r;    /**< defines number of masters */
-    uint32_t reg_devid;     /**< defines number of channels per master */
-
+    uint32_t reg_tcsr;          /**< Contains CoreSight trace ID, HWTEN */
+    uint32_t reg_feat1r;        /**< defines HW trace features */
+    uint32_t reg_feat3r;        /**< defines number of masters */
+    uint32_t reg_devid;         /**< defines number of channels per master */
+    uint32_t reg_hwev_mast;     /**< master ID for HW event trace */
+    hw_event_feat_t hw_event;   /**< status of HW event trace */
 } rctdl_stm_cfg;
 
 /** @}*/
