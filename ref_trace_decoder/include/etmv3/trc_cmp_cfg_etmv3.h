@@ -118,12 +118,8 @@ public:
 
 inline EtmV3Config & EtmV3Config::operator=(const rctdl_etmv3_cfg *p_cfg)
 {
-    this->arch_ver = p_cfg->arch_ver;
-    this->core_prof = p_cfg->core_prof;
-    this->reg_ccer = p_cfg->reg_ccer;
-    this->reg_ctrl = p_cfg->reg_ctrl;
-    this->reg_idr = p_cfg->reg_idr;
-    return *this;
+    *dynamic_cast<rctdl_etmv3_cfg *>(this) = *p_cfg;
+    return *this; 
 }
 
 inline const bool  EtmV3Config::isCycleAcc() const

@@ -36,7 +36,8 @@
  * Example of using the library with the C-API
  *
  * Simple test program to print packets from a single trace source stream.
- * Hard coded configuration based on the Juno r1-1 test snapshot.
+ * Hard coded configuration based on the Juno r1-1 test snapshot for ETMv4 and
+ * STM, TC2 test snapshot for ETMv3
  *
  */
 
@@ -51,32 +52,37 @@
 /* path to juno snapshot, relative to tests/bin/<plat>/<dbg|rel> build output dir */
 #ifdef _WIN32
 const char *default_path_to_snapshot = "..\\..\\..\\snapshots\\juno_r1_1\\";
+const char *tc2_snapshot = "..\\..\\..\\snapshots\\TC2\\";
 #else
 const char *default_path_to_snapshot = "../../../snapshots/juno_r1_1/";
+const char *tc2_snapshot = "../../../snapshots/TC2/";
 #endif
 
 /* trace data and memory file dump names */
 const char *trace_data_filename = "cstrace.bin";
+const char *stmtrace_data_filename = "cstraceitm.bin";
 const char *memory_dump_filename = "kernel_dump.bin";
 const rctdl_vaddr_t mem_dump_address=0xFFFFFFC000081000;
 
-/* trace configuration structure - contains programmed register values of etmv4 hardware */
+/* trace configuration structures - contains programmed register values of trace hardware */
 static rctdl_etmv4_cfg trace_config;
+static rctdl_etmv3_cfg trace_config_etmv3;
+static rctdl_stm_cfg trace_config_stm;
+
 
 /* buffer to handle a packet string */
 #define PACKET_STR_LEN 1024
 static char packet_str[PACKET_STR_LEN];
 
 /* decide if we decode & monitor, decode only or packet print */
-
 typedef enum _test_op {
     TEST_PKT_PRINT,
     TEST_PKT_DECODE,
     TEST_PKT_DECODEONLY
 } test_op_t;
 
-static test_op_t op = TEST_PKT_PRINT; 
-
+static test_op_t op = TEST_PKT_PRINT;
+static rctdl_trace_protocol_t test_protocol = RCTDL_PROTOCOL_ETMV4I;
 static uint8_t test_trc_id_override = 0x00;
 
 static int print_data_array(const uint8_t *p_array, const int array_size, char *p_buffer, int buf_size)
@@ -134,6 +140,16 @@ static void process_cmd_line(int argc, char *argv[])
                 printf("ID override = 0x%02X\n",test_trc_id_override);
             }
         }
+        else if(strcmp(argv[idx],"-etmv3") == 0)
+        {
+            test_protocol =  RCTDL_PROTOCOL_ETMV3;
+            default_path_to_snapshot = tc2_snapshot;
+        }
+        else if(strcmp(argv[idx],"-stm") == 0)
+        {
+            test_protocol = RCTDL_PROTOCOL_STM;
+            trace_data_filename = stmtrace_data_filename;
+        }
         else 
             printf("Ignored unknown argument %s\n", argv[idx]);
         idx++;
@@ -143,7 +159,7 @@ static void process_cmd_line(int argc, char *argv[])
 /* Callback function to process the packets in the stream - 
    simply print them out in this case 
  */
-rctdl_datapath_resp_t etm_v4i_packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv4_i_pkt *p_packet_in)
+rctdl_datapath_resp_t packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const void *p_packet_in)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     int offset = 0;
@@ -156,7 +172,7 @@ rctdl_datapath_resp_t etm_v4i_packet_handler(const rctdl_datapath_op_t op, const
         offset = strlen(packet_str);
    
         /* got a packet - convert to string and use the libraries' message output to print to file and stdoout */
-        if(rctdl_pkt_str(RCTDL_PROTOCOL_ETMV4I,(void *)p_packet_in,packet_str+offset,PACKET_STR_LEN-offset) == RCTDL_OK)
+        if(rctdl_pkt_str(test_protocol,p_packet_in,packet_str+offset,PACKET_STR_LEN-offset) == RCTDL_OK)
         {
             /* add in <CR> */
             if(strlen(packet_str) == PACKET_STR_LEN - 1) /* maximum length */
@@ -180,10 +196,9 @@ rctdl_datapath_resp_t etm_v4i_packet_handler(const rctdl_datapath_op_t op, const
     return resp;
 }
 
-
-void etm_v4i_packet_monitor(  const rctdl_datapath_op_t op, 
+void packet_monitor(const rctdl_datapath_op_t op, 
                               const rctdl_trc_index_t index_sop, 
-                              const rctdl_etmv4_i_pkt *p_packet_in,
+                              const void *p_packet_in,
                               const uint32_t size,
                               const uint8_t *p_data)
 {
@@ -198,7 +213,7 @@ void etm_v4i_packet_monitor(  const rctdl_datapath_op_t op,
         offset+= print_data_array(p_data,size,packet_str+offset,PACKET_STR_LEN-offset);
 
         /* got a packet - convert to string and use the libraries' message output to print to file and stdoout */
-        if(rctdl_pkt_str(RCTDL_PROTOCOL_ETMV4I,(void *)p_packet_in,packet_str+offset,PACKET_STR_LEN-offset) == RCTDL_OK)
+        if(rctdl_pkt_str(test_protocol,p_packet_in,packet_str+offset,PACKET_STR_LEN-offset) == RCTDL_OK)
         {
             /* add in <CR> */
             if(strlen(packet_str) == PACKET_STR_LEN - 1) /* maximum length */
@@ -218,7 +233,6 @@ void etm_v4i_packet_monitor(  const rctdl_datapath_op_t op,
     }
 }
 
-/* TBD: function to print generic packets. */
 rctdl_datapath_resp_t gen_trace_elem_print(const rctdl_trc_index_t index_sop, const uint8_t trc_chan_id, const rctdl_generic_trace_elem *elem)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
@@ -246,8 +260,12 @@ rctdl_datapath_resp_t gen_trace_elem_print(const rctdl_trc_index_t index_sop, co
     return resp;
 }
 
+/************************************************************************/
+/*** ETMV4 ***/
+/************************************************************************/
+
 /* hard coded values from snapshot .ini files */
-void set_config_struct()
+void set_config_struct_etmv4()
 {
     trace_config.arch_ver   = ARCH_V8;
     trace_config.core_prof  = profile_CortexA;
@@ -269,6 +287,261 @@ void set_config_struct()
     trace_config.reg_idr11  = 0x0;
     trace_config.reg_idr12  = 0x0;
     trace_config.reg_idr13  = 0x0;
+}
+
+rctdl_datapath_resp_t etm_v4i_packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv4_i_pkt *p_packet_in)
+{
+    return packet_handler(op,index_sop,(const void *)p_packet_in);
+}
+
+
+void etm_v4i_packet_monitor(  const rctdl_datapath_op_t op, 
+                              const rctdl_trc_index_t index_sop, 
+                              const rctdl_etmv4_i_pkt *p_packet_in,
+                              const uint32_t size,
+                              const uint8_t *p_data)
+{
+    packet_monitor(op,index_sop,(void *)p_packet_in,size,p_data);
+}
+
+static rctdl_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
+{
+    rctdl_err_t ret = RCTDL_OK;
+    char mem_file_path[512];
+
+    /* populate the ETMv4 configuration structure */
+    set_config_struct_etmv4();
+
+
+    if(op == TEST_PKT_PRINT) /* packet printing only */
+    {
+        /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
+            We need to supply the configuration, and a packet handling callback.
+        */
+        ret = rctdl_dt_create_etmv4i_pkt_proc(dcd_tree_h,&trace_config,&etm_v4i_packet_handler);
+    }
+    else
+    {
+        /* Full decode - need decoder, and memory dump */
+
+        /* create the packet decoder and packet processor pair */
+        ret = rctdl_dt_create_etmv4i_decoder(dcd_tree_h,&trace_config);
+        if(ret == RCTDL_OK)
+        {
+            if((op != TEST_PKT_DECODEONLY) && (ret == RCTDL_OK))
+            {
+                    /* print the packets as well as the decode. */
+                    ret = rctdl_dt_attach_etmv4i_pkt_mon(dcd_tree_h, (uint8_t)(trace_config.reg_traceidr & 0xFF), etm_v4i_packet_monitor);
+            }
+        }
+
+        /* trace data file path */
+        strcpy(mem_file_path,default_path_to_snapshot);
+        strcat(mem_file_path,memory_dump_filename);
+
+        if(ret == RCTDL_OK)
+        {
+            /* create a memory file accessor */
+            ret = rctdl_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,RCTDL_MEM_SPACE_ANY,mem_file_path);
+        }
+    }
+    return ret;
+}
+
+/************************************************************************/
+/*** ETMV3 ***/
+/************************************************************************/
+
+static void set_config_struct_etmv3()
+{
+    trace_config_etmv3.arch_ver = ARCH_V7;
+    trace_config_etmv3.core_prof = profile_CortexA;
+    trace_config_etmv3.reg_ccer  = 0x344008F2;
+    trace_config_etmv3.reg_ctrl  = 0x10001860;
+    trace_config_etmv3.reg_idr  = 0x410CF250;
+    trace_config_etmv3.reg_trc_id  = 0x010;
+    if(test_trc_id_override != 0)
+    {
+        trace_config_etmv3.reg_trc_id = (uint32_t)test_trc_id_override;
+    }
+}
+
+rctdl_datapath_resp_t etm_v3_packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv3_pkt *p_packet_in)
+{
+    return packet_handler(op,index_sop,(const void *)p_packet_in);
+}
+
+void etm_v3_packet_monitor(   const rctdl_datapath_op_t op, 
+                              const rctdl_trc_index_t index_sop, 
+                              const rctdl_etmv3_pkt *p_packet_in,
+                              const uint32_t size,
+                              const uint8_t *p_data)
+{
+    packet_monitor(op,index_sop,(void *)p_packet_in,size,p_data);
+}
+
+static rctdl_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
+{
+    rctdl_err_t ret = RCTDL_OK;
+    /*char mem_file_path[512];*/
+
+    /* populate the ETMv3 configuration structure */
+    set_config_struct_etmv3();
+
+
+    if(op == TEST_PKT_PRINT) /* packet printing only */
+    {
+        /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
+            We need to supply the configuration, and a packet handling callback.
+        */
+        ret = rctdl_dt_create_etmv3_pkt_proc(dcd_tree_h,&trace_config_etmv3,&etm_v3_packet_handler);
+    }
+    else
+    {
+        /* Full decode - need decoder, and memory dump */
+        /* not supported in library at present */
+        
+#if 0
+        /* create the packet decoder and packet processor pair */
+        ret = rctdl_dt_create_etmv3_decoder(dcd_tree_h,&trace_config_etmv3);
+        if(ret == RCTDL_OK)
+        {
+            if((op != TEST_PKT_DECODEONLY) && (ret == RCTDL_OK))
+            {
+                    ret = rctdl_dt_attach_etmv3_pkt_mon(dcd_tree_h, (uint8_t)(trace_config_etmv3.reg_trc_id & 0x7F), etm_v4i_packet_monitor);
+            }
+        }
+
+        /* trace data file path */
+        strcpy(mem_file_path,tc2_snapshot);
+        strcat(mem_file_path,memory_dump_filename);
+
+        if(ret == RCTDL_OK)
+        {
+            /* create a memory file accessor */
+            ret = rctdl_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,RCTDL_MEM_SPACE_ANY,mem_file_path);
+        }
+#else
+        printf("ETMv3 Full decode not supported in library at present. Packet print only\n");
+        ret = RCTDL_ERR_RDR_NO_DECODER;
+#endif
+    }
+    return ret;
+}
+
+/************************************************************************/
+/*** STM ***/
+/************************************************************************/
+
+#define STMTCSR_TRC_ID_MASK     0x007F0000
+#define STMTCSR_TRC_ID_SHIFT    16
+static void set_config_struct_stm()
+{
+    trace_config_stm.reg_tcsr = 0x00A00005;
+    if(test_trc_id_override != 0)
+    {
+        trace_config_stm.reg_tcsr &= ~STMTCSR_TRC_ID_MASK;
+        trace_config_stm.reg_tcsr |= ((((uint32_t)test_trc_id_override) << STMTCSR_TRC_ID_SHIFT) & STMTCSR_TRC_ID_MASK);
+    }
+    trace_config_stm.reg_feat3r = 0x10000;  /* channel default */
+    trace_config_stm.reg_devid = 0xFF;      /* master default */
+
+    /* not using hw event trace decode */
+    trace_config_stm.reg_hwev_mast = 0;
+    trace_config_stm.reg_feat1r = 0;
+    trace_config_stm.hw_event = HwEvent_Unknown_Disabled;
+}
+
+rctdl_datapath_resp_t stm_packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_stm_pkt *p_packet_in)
+{
+    return packet_handler(op,index_sop,(const void *)p_packet_in);
+}
+
+void stm_packet_monitor(  const rctdl_datapath_op_t op, 
+                              const rctdl_trc_index_t index_sop, 
+                              const rctdl_stm_pkt *p_packet_in,
+                              const uint32_t size,
+                              const uint8_t *p_data)
+{
+    packet_monitor(op,index_sop,(void *)p_packet_in,size,p_data);
+}
+
+static rctdl_err_t create_decoder_stm(dcd_tree_handle_t dcd_tree_h)
+{
+    rctdl_err_t ret = RCTDL_OK;
+    /*char mem_file_path[512];*/
+
+    /* populate the STM configuration structure */
+    set_config_struct_stm();
+
+
+    if(op == TEST_PKT_PRINT) /* packet printing only */
+    {
+        /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
+            We need to supply the configuration, and a packet handling callback.
+        */
+        ret = rctdl_dt_create_stm_pkt_proc(dcd_tree_h,&trace_config_stm,&stm_packet_handler);
+    }
+    else
+    {
+        /* Full decode */
+        /* not supported in library at present */
+        
+#if 0
+        /* create the packet decoder and packet processor pair */
+        ret = rctdl_dt_create_stm_decoder(dcd_tree_h,&trace_config_stm);
+        if(ret == RCTDL_OK)
+        {
+            if((op != TEST_PKT_DECODEONLY) && (ret == RCTDL_OK))
+            {
+                    ret = rctdl_dt_attach_stm_pkt_mon(dcd_tree_h, (uint8_t)((trace_config_stm.reg_tcsr & STMTCSR_TRC_ID_MASK) >> STMTCSR_TRC_ID_SHIFT), stm_packet_monitor);
+            }
+        }
+
+        /* trace data file path */
+        strcpy(mem_file_path,);
+        strcat(mem_file_path,memory_dump_filename);
+
+        if(ret == RCTDL_OK)
+        {
+            /* create a memory file accessor */
+            ret = rctdl_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,RCTDL_MEM_SPACE_ANY,mem_file_path);
+        }
+#else
+        printf("STM Full decode not supported in library at present. Packet print only\n");
+        ret = RCTDL_ERR_RDR_NO_DECODER;
+#endif
+    }
+    return ret;
+}
+
+
+
+/************************************************************************/
+
+/* create a decoder according to options */
+static rctdl_err_t create_decoder(dcd_tree_handle_t dcd_tree_h)
+{
+    rctdl_err_t err = RCTDL_OK;
+    switch(test_protocol)
+    {
+    case RCTDL_PROTOCOL_ETMV4I:
+        err = create_decoder_etmv4(dcd_tree_h);
+        break;
+
+    case RCTDL_PROTOCOL_ETMV3:
+        err = create_decoder_etmv3(dcd_tree_h);
+        break;
+
+    case RCTDL_PROTOCOL_STM:
+        err = create_decoder_stm(dcd_tree_h);
+        break;
+
+    default:
+        err = RCTDL_ERR_NO_PROTOCOL;
+        break;
+    }
+    return err;
 }
 
 #define INPUT_BLOCK_SIZE 1024
@@ -311,7 +584,7 @@ int process_trace_data(FILE *pf)
     uint8_t data_buffer[INPUT_BLOCK_SIZE];
     rctdl_trc_index_t index = 0;
     size_t data_read;
-    char mem_file_path[512];
+
 
     /*  Create a decode tree for this source data.
         source data is frame formatted, memory aligned from an ETR (no frame syncs) so create tree accordingly 
@@ -320,42 +593,11 @@ int process_trace_data(FILE *pf)
 
     if(dcdtree_handle != C_API_INVALID_TREE_HANDLE)
     {
-        /* populate the ETMv4 configuration structure */
-        set_config_struct();
+        ret = create_decoder(dcdtree_handle);
 
-        if(op == TEST_PKT_PRINT) /* packet printing only */
-        {
-            /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
-                We need to supply the configuration, and a packet handling callback.
-            */
-            ret = rctdl_dt_create_etmv4i_pkt_proc(dcdtree_handle,&trace_config,&etm_v4i_packet_handler);
-        }
-        else
-        {
-            /* Full decode - need decoder, and memory dump */
-
-            /* create the packet decoder and packet processor pair */
-            ret = rctdl_dt_create_etmv4i_decoder(dcdtree_handle,&trace_config);
-            if(ret == RCTDL_OK)
-            {
-                /* attach the generic trace element output callback */
-                ret = rctdl_dt_set_gen_elem_outfn(dcdtree_handle,gen_trace_elem_print);
-                if((op != TEST_PKT_DECODEONLY) && (ret == RCTDL_OK))
-                {
-                     ret = rctdl_dt_attach_etmv4i_pkt_mon(dcdtree_handle, (uint8_t)(trace_config.reg_traceidr & 0xFF), etm_v4i_packet_monitor);
-                }
-            }
-
-            /* trace data file path */
-            strcpy(mem_file_path,default_path_to_snapshot);
-            strcat(mem_file_path,memory_dump_filename);
-
-            if(ret == RCTDL_OK)
-            {
-                /* create a memory file accessor */
-                ret = rctdl_dt_add_binfile_mem_acc(dcdtree_handle,mem_dump_address,RCTDL_MEM_SPACE_ANY,mem_file_path);
-            }
-        }
+        if(ret == RCTDL_OK)
+            /* attach the generic trace element output callback */
+            ret = rctdl_dt_set_gen_elem_outfn(dcdtree_handle,gen_trace_elem_print);
 
         /* now push the trace data through the packet processor */
         while(!feof(pf) && (ret == RCTDL_OK))

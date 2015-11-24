@@ -87,7 +87,7 @@ typedef enum _rctdl_stm_ts_type
 
 typedef struct _rctdl_stm_pkt
 {
-    rctdl_stm_pkt_type type;
+    rctdl_stm_pkt_type type;        /**< STM packet type */
 
     uint8_t     master;             /**< current master */
     uint16_t    channel;            /**< current channel */
@@ -121,9 +121,10 @@ typedef enum _hw_event_feat {
 typedef struct _rctdl_stm_cfg
 {
     uint32_t reg_tcsr;          /**< Contains CoreSight trace ID, HWTEN */
-    uint32_t reg_feat1r;        /**< defines HW trace features */
     uint32_t reg_feat3r;        /**< defines number of masters */
     uint32_t reg_devid;         /**< defines number of channels per master */
+
+    uint32_t reg_feat1r;        /**< defines HW trace features */
     uint32_t reg_hwev_mast;     /**< master ID for HW event trace */
     hw_event_feat_t hw_event;   /**< status of HW event trace */
 } rctdl_stm_cfg;

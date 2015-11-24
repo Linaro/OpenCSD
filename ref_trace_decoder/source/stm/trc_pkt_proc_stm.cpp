@@ -364,22 +364,19 @@ void TrcPktProcStm::stmPktD4()
         m_curr_packet.setPacketType(STM_PKT_D4,m_bIsMarker);
         m_num_data_nibbles = 2;  // need 2 nibbles to complete data
     }
+
     if(m_num_nibbles != m_num_data_nibbles)
     {
         if(readNibble())
-            m_val8 = m_nibble;
-    }
-    else
-    {
-        m_curr_packet.setD8Payload(m_val8);
-        if(m_bNeedsTS)
         {
-            m_pCurrPktFn = &TrcPktProcStm::stmExtractTS;
-            (this->*m_pCurrPktFn)();
-        }
-        else
-        {
-            sendPacket();
+            m_curr_packet.setD4Payload(m_nibble);
+            if(m_bNeedsTS)
+            {
+                m_pCurrPktFn = &TrcPktProcStm::stmExtractTS;
+                (this->*m_pCurrPktFn)();
+            }
+            else
+                sendPacket();
         }
     }
 }

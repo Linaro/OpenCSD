@@ -55,6 +55,8 @@ public:
     void setChannel(const uint16_t channel, const bool b8Bit);
     void setTS(const uint64_t ts_val, const uint8_t updatedBits);
     void onVersionPkt(const rctdl_stm_ts_type type);
+
+    void setD4Payload(const uint8_t value);
     void setD8Payload(const uint8_t value);
     void setD16Payload(const uint16_t value);
     void setD32Payload(const uint32_t value);
@@ -70,6 +72,7 @@ public:
     const rctdl_stm_ts_type getTSType() const;
     const uint64_t getCurrentTSVal() const;
 
+    const uint8_t getD4Val() const;
     const uint8_t getD8Val() const;
     const uint16_t getD16Val() const;
     const uint32_t getD32Val() const;
@@ -118,6 +121,11 @@ inline void StmTrcPacket::onVersionPkt(const rctdl_stm_ts_type type)
     this->ts_type = type;
     master = 0;
     channel = 0;
+}
+
+inline void StmTrcPacket::setD4Payload(const uint8_t value)
+{
+    payload.D8 = value & 0xF;
 }
 
 inline void StmTrcPacket::setD8Payload(const uint8_t value)
@@ -178,6 +186,11 @@ inline const rctdl_stm_ts_type StmTrcPacket::getTSType() const
 inline const uint64_t StmTrcPacket::getCurrentTSVal() const
 {
     return timestamp;
+}
+
+inline const uint8_t StmTrcPacket::getD4Val() const
+{
+    return payload.D8;
 }
 
 inline const uint8_t StmTrcPacket::getD8Val() const

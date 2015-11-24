@@ -77,7 +77,7 @@ inline STMConfig::STMConfig()
 inline STMConfig & STMConfig::operator=(const rctdl_stm_cfg *p_cfg)
 {
     *dynamic_cast<rctdl_stm_cfg *>(this) = *p_cfg;
-    setHWTraceFeat(HwEvent_UseRegisters);
+    setHWTraceFeat(p_cfg->hw_event);
     return *this;
 }
 

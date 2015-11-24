@@ -144,6 +144,46 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t h
  */
 RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn); 
 
+
+/*!
+ * Create an ETMv3  trace packet processor only for the supplied configuration. 
+ * Must supply an output callback function which handles the etmv3 packet types, to attach to the packet processor.
+ *
+ * @param handle : handle a decode tree to create the packet processsor.
+ * @param *etmv3_cfg : pointer to valid Etmv3 configuration structure.
+ * @param pPktFn : pointer to a packet handling callback function.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn);
+
+
+/*!
+ * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
+ * Packet processor must exist for the trace ID and be an ETMv3 processor.
+ *
+ * @param handle : Handle to decode tree.
+ * @param trace_id : CoreSight Trace ID for packet processor 
+ * @param pPktFn : Function to attach to monitor point.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn); 
+
+
+/*!
+ * Create an STM  trace packet processor only for the supplied configuration. 
+ * Must supply an output callback function which handles the stm packet types, to attach to the packet processor.
+ *
+ * @param handle : handle a decode tree to create the packet processsor.
+ * @param *stm_cfg : pointer to valid Stm configuration structure.
+ * @param pPktFn : pointer to a packet handling callback function.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn);
+
+
 /** TBD : more C API functions to be added here */    
     
 /** @}*/
@@ -243,7 +283,7 @@ RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg);
  *
  * @return  rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
  */
-RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, void *p_pkt, char *buffer, const int buffer_size);
+RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, const void *p_pkt, char *buffer, const int buffer_size);
 
 /*!
  * Get a string representation of the generic trace element.
