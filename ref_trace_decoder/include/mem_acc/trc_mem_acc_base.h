@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_mem_acc_base.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : Memory accessor base class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

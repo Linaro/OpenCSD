@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       rctdl_dcd_tree_elem.h
  * \brief      Reference CoreSight Trace Decoder : Decode tree element.
  * 

@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_frame_deformatter.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : De-format CoreSight formatted trace frame.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

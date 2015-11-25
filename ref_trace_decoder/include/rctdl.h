@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       rctdl.h
  * \brief      Reference CoreSight Trace Decoder : Master include file for C++ library
  * 

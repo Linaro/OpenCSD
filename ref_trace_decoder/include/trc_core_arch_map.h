@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_core_arch_map.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : Map core name strings to architecture profile constants.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

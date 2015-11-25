@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_gen_elem.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : Decoder Generic trace element output class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

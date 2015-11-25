@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_pkt_proc_base.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : Trace packet processor base class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

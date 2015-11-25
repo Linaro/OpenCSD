@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       trc_component.h
  * \brief      Reference CoreSight Trace Decoder : Base trace decode component.
  * 

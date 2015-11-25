@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       rctdl_if_types.h
  * \brief      Reference CoreSight Trace Decoder : Standard Types used in the library interfaces.
  * 

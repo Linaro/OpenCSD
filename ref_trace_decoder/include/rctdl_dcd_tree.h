@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       rctdl_dcd_tree.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : Trace Decode Tree.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_printable_elem.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : Standard printable element base class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -42,6 +42,16 @@
 /** @addtogroup rctdl_infrastructure
 @{*/
 
+/*!
+ * @class trcPrintableElem
+ * @brief Class to provide trace element strings for printing
+ * 
+ *  Provide a standard interface to the trace packet classes to allow the packets 
+ *  to be printed in logging or tools.
+ *
+ *  Provides some standard formatting functionality
+ * 
+ */
 class trcPrintableElem
 {
 public:
@@ -65,7 +75,7 @@ inline void trcPrintableElem::toStringFmt(const uint32_t /*fmtFlags*/, std::stri
     toString(str);
 }
 
-/* static template string function - used in "C" API to provide generic printing */
+/** static template string function - used in "C" API to provide generic printing */
 template<class Pc, class Pt>
 void trcPrintElemToString(const Pt *p_pkt, std::string &str)
 {

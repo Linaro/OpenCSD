@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_pkt_types.h
- * \brief      Reference CoreSight Trace Decoder : Common types for trace packets.
+ * \brief      Reference CoreSight Trace Decoder : Common "C" types for trace packets.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
