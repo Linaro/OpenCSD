@@ -43,24 +43,37 @@
 /** @name STM configuration
 @{*/
 
+/*!
+ * @class STMConfig   
+ * @brief STM hardware configuration data.
+ * 
+ *  Represents the programmed and hardware configured state of an STM device.
+ *  Creates default values for most RO register values to effect a default STM
+ *  with values of 256 masters, 65536 channels, HW event trace not present / disabled.
+ *
+ *  If this default is sufficient a single call to setTraceID() will be all that is 
+ *  required to decode the STM protocol.
+ *
+ *  Can also be initialised with a fully populated rctdl_stm_cfg structure.
+ */
 class STMConfig : public rctdl_stm_cfg
 {
 public:
-    STMConfig();
-    ~STMConfig() {};
+    STMConfig();    //!< Constructor - creates a default configuration
+    ~STMConfig() {};    
 
-    STMConfig & operator=(const rctdl_stm_cfg *p_cfg);  //!< set from full config.
-    void setTraceID(const uint8_t traceID);     //!< use default 256 masters + 65536 channels & set trace ID.
-    void setHWTraceFeat(const hw_event_feat_t hw_feat); //!< set usage of HW trace.
+    STMConfig & operator=(const rctdl_stm_cfg *p_cfg);  //!< set from full configuration structure.
+    void setTraceID(const uint8_t traceID);     //!< Set the CoreSight trace ID.
+    void setHWTraceFeat(const hw_event_feat_t hw_feat); //!< set usage of STM HW event trace.
     
-    const uint8_t getTraceID() const;
-    const uint8_t getMaxMasterIdx() const;
-    const uint16_t getMaxChannelIdx() const;
-    const uint16_t getHWTraceMasterIdx() const;
-    bool getHWTraceEn() const; 
+    const uint8_t getTraceID() const;           //!< Get the CoreSight trace ID.
+    const uint8_t getMaxMasterIdx() const;      //!< Get the maximum master index
+    const uint16_t getMaxChannelIdx() const;    //!< Get the maximum channel index.
+    const uint16_t getHWTraceMasterIdx() const; //!< Get the master used for HW event trace.
+    bool getHWTraceEn() const; //!< return true if HW trace is present and enabled.
 
 private:
-    bool m_bHWTraceEn;
+    bool m_bHWTraceEn;  
 };
 
 inline STMConfig::STMConfig()

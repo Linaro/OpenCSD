@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       rctdl_c_api_types.h
  * \brief      Reference CoreSight Trace Decoder : Trace Decoder "C" API types.
  * 

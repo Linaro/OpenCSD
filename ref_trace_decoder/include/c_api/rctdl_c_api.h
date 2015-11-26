@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       rctdl_c_api.h
  * \brief      Reference CoreSight Trace Decoder : "C" API
  * 
@@ -127,7 +127,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t 
  * Uses the output function set in rctdl_dt_set_gen_elem_outfn() as the output sink.
  *
  * @param handle : Handle to decode tree.
- * @param *rctdl_etmv4_cfg : pointer to valid Etmv4 configuration structure.
+ * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
@@ -137,7 +137,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t h
  * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
  *
  * @param handle : Handle to decode tree.
- * @param trace_id : CoreSight Trace ID for packet processor 
+ * @param trc_chan_id : CoreSight Trace ID for packet processor 
  * @param pPktFn : Function to attach to monitor point.
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
@@ -163,7 +163,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t h
  * Packet processor must exist for the trace ID and be an ETMv3 processor.
  *
  * @param handle : Handle to decode tree.
- * @param trace_id : CoreSight Trace ID for packet processor 
+ * @param trc_chan_id : CoreSight Trace ID for packet processor 
  * @param pPktFn : Function to attach to monitor point.
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.

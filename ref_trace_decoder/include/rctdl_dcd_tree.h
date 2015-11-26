@@ -52,23 +52,46 @@
 
 #include "rctdl_dcd_tree_elem.h"
 
+/*!
+ * @class DecodeTree
+ * @brief Class to manage the decoding of data from a single trace sink .
+ * 
+ *  Provides functionality to build a tree of decode objects capable of decoding 
+ *  multiple trace sources within a single trace sink (capture buffer).
+ * 
+ */
 class DecodeTree : public ITrcDataIn
 {
 public:
     DecodeTree();
     ~DecodeTree();
 
+    /*!
+     * Create a decode tree.
+     * Automatically creates a trace frame deformatter if required and a default error log component.
+     *
+     * @param src_type : Data stream source type, can be CoreSight frame formatted trace, or single demuxed trace data stream,
+     * @param formatterCfgFlags : Configuration flags for trace de-formatter.
+     *
+     * @return DecodeTree * : pointer to the decode tree, 0 if creation failed.
+     */
     static DecodeTree *CreateDecodeTree(const rctdl_dcd_tree_src_t src_type, const uint32_t formatterCfgFlags);
+
+    /** Destroy a decode tree */
     static void DestroyDecodeTree(DecodeTree *p_dcd_tree);
 
     /** The library default error logger */
     static rctdlDefaultErrorLogger* getDefaultErrorLogger() { return &s_error_logger; };
 
-    /** error logging interface in use */
+    /** the current error logging interface in use */
     static ITraceErrorLog *getCurrentErrorLogI() { return s_i_error_logger; };
+
+    /** set an alternate error logging interface. */
     static void setAlternateErrorLogger(ITraceErrorLog *p_error_logger);
 
-    /** decode tree implements the data in interface */
+    /** decode tree implements the data in interface : ITrcDataIn .
+        Captured trace data is passed to the deformatter and decoders via this method.
+    */
     virtual rctdl_datapath_resp_t TraceDataIn( const rctdl_datapath_op_t op,
                                                const rctdl_trc_index_t index,
                                                const uint32_t dataBlockSize,

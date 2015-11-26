@@ -42,49 +42,61 @@
 /** @name STM Packet Types
 @{*/
 
+/** STM protocol packet types.
+    Contains both protocol packet types and markers for unsynced processor
+    state and bad packet sequences.
+*/
 typedef enum _rctdl_stm_pkt_type
 {
-// markers for unknown packets  / state
-    STM_PKT_NOTSYNC,
-    STM_PKT_INCOMPLETE_EOT,
-    STM_PKT_NO_ERR_TYPE,
+/* markers for unknown packets  / state*/
+    STM_PKT_NOTSYNC,            /**< Not synchronised */
+    STM_PKT_INCOMPLETE_EOT,     /**< Incomplete packet flushed at end of trace. */
+    STM_PKT_NO_ERR_TYPE,        /**< No error in error packet marker. */
 
-// markers for valid packets
-    STM_PKT_ASYNC,
-    STM_PKT_VERSION,
-    STM_PKT_FREQ,
-    STM_PKT_NULL,
-    STM_PKT_TRIG,
+/* markers for valid packets*/
+    STM_PKT_ASYNC,      /**< Alignment synchronisation packet */
+    STM_PKT_VERSION,    /**< Version packet */
+    STM_PKT_FREQ,       /**< Frequency packet */
+    STM_PKT_NULL,       /**< Null packet */
+    STM_PKT_TRIG,       /**< Trigger event packet. */
 
-    STM_PKT_GERR,
-    STM_PKT_MERR,
+    STM_PKT_GERR,       /**< Global error packet - protocol error but unknown which master had error */
+    STM_PKT_MERR,       /**< Master error packet - current master detected an error (e.g. dropped trace) */
 
-    STM_PKT_M8,
-    STM_PKT_C8,
-    STM_PKT_C16,
+    STM_PKT_M8,         /**< Set current master */
+    STM_PKT_C8,         /**< Set lower 8 bits of current channel */
+    STM_PKT_C16,        /**< Set current channel */
 
-    STM_PKT_FLAG,
+    STM_PKT_FLAG,       /**< Flag packet */
 
-    STM_PKT_D4,
-    STM_PKT_D8,
-    STM_PKT_D16,
-    STM_PKT_D32,
-    STM_PKT_D64, 
+    STM_PKT_D4,         /**< 4 bit data payload packet */
+    STM_PKT_D8,         /**< 8 bit data payload packet */
+    STM_PKT_D16,        /**< 16 bit data payload packet */
+    STM_PKT_D32,        /**< 32 bit data payload packet */
+    STM_PKT_D64,        /**< 64 bit data payload packet */
 
-// packet errors.
-    STM_PKT_BAD_SEQUENCE,
-    STM_PKT_RESERVED,
+/* packet errors.*/
+    STM_PKT_BAD_SEQUENCE,   /**< Incorrect protocol sequence */
+    STM_PKT_RESERVED,       /**< Reserved packet header / not supported by CS-STM */
 
 } rctdl_stm_pkt_type;
 
-
+/** STM timestamp encoding type.
+    Extracted from STM version packet.
+    CS-STM supports Natural binary and grey encodings.
+*/
 typedef enum _rctdl_stm_ts_type
 {
-    STM_TS_UNKNOWN,
-    STM_TS_NATBINARY,
-    STM_TS_GREY
+    STM_TS_UNKNOWN,     /**< TS encoding unknown at present. */
+    STM_TS_NATBINARY,   /**< TS encoding natural binary */
+    STM_TS_GREY         /**< TS encoding grey coded. */
 } rctdl_stm_ts_type;
 
+/** STM trace packet
+
+    Structure containing the packet data for a single STM packet, plus
+    data persisting between packets (master, channel, last timestamp).
+*/
 typedef struct _rctdl_stm_pkt
 {
     rctdl_stm_pkt_type type;        /**< STM packet type */
@@ -92,13 +104,13 @@ typedef struct _rctdl_stm_pkt
     uint8_t     master;             /**< current master */
     uint16_t    channel;            /**< current channel */
     
-    uint64_t    timestamp;          /**< latest ts value */
-    uint8_t     pkt_ts_bits;        /**< ts bits updated this packet */
-    uint8_t     pkt_has_ts;         /**< ts packet - ts bits can be 0 if same value as last time */
+    uint64_t    timestamp;          /**< latest timestamp value */
+    uint8_t     pkt_ts_bits;        /**< timestamp bits updated this packet */
+    uint8_t     pkt_has_ts;         /**< current packet has associated timestamp (ts bits can be 0 if same value as last time) */
     
-    rctdl_stm_ts_type ts_type;      /**< ts encoding type */
+    rctdl_stm_ts_type ts_type;      /**< timestamp encoding type */
 
-    uint8_t     pkt_has_marker;     /**< flag to indicate marker packet */
+    uint8_t     pkt_has_marker;     /**< flag to indicate current packet has marker */
 
     union {
         uint8_t  D8;    /**< payload for D8 or D4 data packet, or parameter value for other packets with 8 bit value [VERSION, TRIG, xERR] */
@@ -107,17 +119,26 @@ typedef struct _rctdl_stm_pkt
         uint64_t D64;   /**< payload for D64 data packet */
     } payload;
 
-    rctdl_stm_pkt_type err_type;
+    rctdl_stm_pkt_type err_type;    /**< Initial type of packet if type indicates bad sequence. */
 
 } rctdl_stm_pkt;
 
+/** HW Event trace feature
+    Defines if the STM supports or has enabled the HW event trace feature.
+    This may not always be able to be determined by the registers, or the feature
+    values can override if HW event trace is to be ignored.
+*/
 typedef enum _hw_event_feat {
-    HwEvent_Unknown_Disabled,   //!< status of HW event features not known - assume not present or disabled */
-    HwEvent_Enabled,            //!< HW event present and enabled - ignore Feat regs, assume hwev_mast value valid */
-    HwEvent_UseRegisters        //!< Feature Register values and enable bits used to determine HW event trace status */
+    HwEvent_Unknown_Disabled,   /*!< status of HW event features not known - assume not present or disabled */
+    HwEvent_Enabled,            /*!< HW event present and enabled - ignore Feat regs, assume hwev_mast value valid */
+    HwEvent_UseRegisters        /*!< Feature Register values and enable bits used to determine HW event trace status */
 } hw_event_feat_t;
 
 
+/** STM hardware configuration.
+    Contains hardware register values at time of trace capture and HW event feature
+    field to enable and control decode of STM trace stream.
+*/
 typedef struct _rctdl_stm_cfg
 {
     uint32_t reg_tcsr;          /**< Contains CoreSight trace ID, HWTEN */

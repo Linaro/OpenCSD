@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_pkt_elem_stm.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : STM packet class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -38,6 +38,17 @@
 #include "trc_pkt_types_stm.h"
 #include "trc_printable_elem.h"
 
+/*!
+ * @class StmTrcPacket 
+ * @brief STM trace packet with packet printing functionality
+ * 
+ *  This class allows for the update and access of the current STM trace 
+ *  packet, implementing the STM protocol rules as appropriate. Maintains
+ *  the intra packet state as well as updates on a per packet basis.
+ * 
+ *  Based on data structure rctdl_stm_pkt.
+ * 
+ */
 class StmTrcPacket : public rctdl_stm_pkt, public trcPrintableElem
 {
 public:
@@ -46,8 +57,8 @@ public:
     
     StmTrcPacket &operator =(const rctdl_stm_pkt *p_pkt);
 
-    void initStartState();
-    void initNextPacket();
+    void initStartState();  //!< Initialise packet state at start of decoder. 
+    void initNextPacket();  //!< Initialise state for next packet.
 
     void setPacketType(const rctdl_stm_pkt_type type, const bool bMarker);
     void updateErrType(const rctdl_stm_pkt_type err_type);

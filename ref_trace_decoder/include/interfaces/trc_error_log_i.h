@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       trc_error_log_i.h
  * \brief      Reference CoreSight Trace Decoder : 
  * 

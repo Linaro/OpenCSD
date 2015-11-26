@@ -339,6 +339,7 @@ void TrcPktProcStm::stmPktMERR()
     stmExtractVal8(3);
     if(m_num_nibbles == 3)
     {
+        m_curr_packet.setChannel(0,false);    // MERR resets channel for current master to 0.
         m_curr_packet.setD8Payload(m_val8);
         sendPacket();
     }
@@ -565,6 +566,7 @@ void TrcPktProcStm::stmPktGERR()
     if(m_num_nibbles == 4)
     {
         m_curr_packet.setD8Payload(m_val8);
+        m_curr_packet.setMaster(0); // GERR sets current master to 0.
         sendPacket();
     }
 }
