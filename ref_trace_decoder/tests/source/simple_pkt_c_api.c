@@ -640,6 +640,7 @@ int main(int argc, char *argv[])
     FILE *trace_data;
     char trace_file_path[512];
     int ret = 0;
+    char message[512];
 
     /* command line params */
     process_cmd_line(argc,argv);
@@ -657,6 +658,10 @@ int main(int argc, char *argv[])
         /* set up the output - to file and stdout, set custom logfile name */
         if(ret == 0)
             ret = rctdl_def_errlog_config_output(C_API_MSGLOGOUT_FLG_FILE | C_API_MSGLOGOUT_FLG_STDOUT, "c_api_test.log");
+
+        /* print sign-on message in log */
+        sprintf(message, "C-API packet print test\nLibrary Version %s\n\n",rctdl_get_version_str());
+        rctdl_def_errlog_msgout(message);
 
         /* process the trace data */
         if(ret == 0)

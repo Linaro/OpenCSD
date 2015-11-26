@@ -228,6 +228,9 @@
     <ClInclude Include="..\..\..\include\stm\trc_pkt_types_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\rctdl_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -315,6 +318,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\stm\trc_pkt_proc_stm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\rctdl_version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

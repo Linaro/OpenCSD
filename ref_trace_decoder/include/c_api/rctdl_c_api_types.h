@@ -39,7 +39,7 @@
 #include "rctdl_if_types.h"
 #include "trc_gen_elem_types.h"
 #include "trc_pkt_types.h"
-
+#include "rctdl_version.h"
 
 /* pull in the protocol decoder types. */
 #include "etmv3/trc_pkt_types_etmv3.h"

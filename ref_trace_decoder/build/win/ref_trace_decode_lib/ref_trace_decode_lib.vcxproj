@@ -189,6 +189,7 @@
     <ClInclude Include="..\..\..\include\rctdl_error_logger.h" />
     <ClInclude Include="..\..\..\include\rctdl_if_types.h" />
     <ClInclude Include="..\..\..\include\rctdl_msg_logger.h" />
+    <ClInclude Include="..\..\..\include\rctdl_version.h" />
     <ClInclude Include="..\..\..\include\stm\stm_decoder.h" />
     <ClInclude Include="..\..\..\include\stm\trc_cmp_cfg_stm.h" />
     <ClInclude Include="..\..\..\include\stm\trc_pkt_elem_stm.h" />
@@ -233,6 +234,7 @@
     <ClCompile Include="..\..\..\source\rctdl_error.cpp" />
     <ClCompile Include="..\..\..\source\rctdl_error_logger.cpp" />
     <ClCompile Include="..\..\..\source\rctdl_msg_logger.cpp" />
+    <ClCompile Include="..\..\..\source\rctdl_version.cpp" />
     <ClCompile Include="..\..\..\source\stm\trc_pkt_elem_stm.cpp" />
     <ClCompile Include="..\..\..\source\stm\trc_pkt_proc_stm.cpp" />
     <ClCompile Include="..\..\..\source\trc_component.cpp" />

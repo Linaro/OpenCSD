@@ -1,6 +1,6 @@
-/*!
- * \file       rctdl.h
- * \brief      Reference CoreSight Trace Decoder : Master include file for C++ library
+/*
+ * \file       rctdl_version.cpp
+ * \brief      Reference CoreSight Trace Decoder : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -32,51 +32,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_RCTDL_H_INCLUDED
-#define ARM_RCTDL_H_INCLUDED
-
-/** C/C++ interface types */
 #include "rctdl_if_types.h"
-#include "trc_pkt_types.h"
-#include "trc_gen_elem_types.h"
-#include "rctdl_version.h"
 
-/* C++ abstract interfaces */
-#include "interfaces/trc_data_raw_in_i.h"
-#include "interfaces/trc_data_rawframe_in_i.h"
-#include "interfaces/trc_error_log_i.h"
-#include "interfaces/trc_gen_elem_in_i.h"
-#include "interfaces/trc_instr_decode_i.h"
-#include "interfaces/trc_pkt_in_i.h"
-#include "interfaces/trc_pkt_raw_in_i.h"
-#include "interfaces/trc_tgt_mem_access_i.h"
+/** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
+ extern "C" const uint32_t rctdl_get_version() 
+ { 
+     return ((uint32_t)RCTDL_VER_MAJOR << 16) | (uint32_t)RCTDL_VER_MINOR; 
+ }
 
-/* TBD : include the indexers and reader interfaces in here when implmented. */
+/** Get library version string */
+ extern "C" const char * rctdl_get_version_str() 
+ { 
+     return RCTDL_VER_STRING; 
+ }
 
 
-/* protocol base classes and generic elements */
-#include "rctdl_error.h"
-#include "trc_gen_elem.h"
-#include "trc_core_arch_map.h"
-
-/** Implemented Protocol decoders */
-#include "trc_frame_deformatter.h"
-
-#include "etmv3/etmv3_decoder.h"
-#include "etmv4/etmv4_decoder.h"
-#include "ptm/ptm_decoder.h"
-#include "stm/stm_decoder.h"
-
-/** C++ library object types */
-#include "rctdl_error_logger.h"
-#include "rctdl_msg_logger.h"
-#include "i_dec/trc_i_decode.h"
-#include "mem_acc/trc_mem_acc.h"
-
-/** The decode tree */
-#include "rctdl_dcd_tree.h"
-
-
-#endif // ARM_RCTDL_H_INCLUDED
-
-/* End of File rctdl.h */
+/* End of File rctdl_version.cpp */
