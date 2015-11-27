@@ -84,6 +84,7 @@ OBJECTS=$(BUILD_DIR)/rctdl_dcd_tree.o \
 		$(BUILD_DIR)/rctdl_error.o \
 		$(BUILD_DIR)/rctdl_error_logger.o \
 		$(BUILD_DIR)/rctdl_msg_logger.o \
+		$(BUILD_DIR)/rctdl_version.o \
 		$(BUILD_DIR)/trc_component.o \
 		$(BUILD_DIR)/trc_core_arch_map.o \
 		$(BUILD_DIR)/trc_frame_deformatter.o \
