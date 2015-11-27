@@ -822,51 +822,58 @@ void TrcPktProcStm::stmExtractTS()
                 m_req_ts_nibbles = 16;
 
             if(m_nibble == 0xF)
-                throwBadSequenceError("STM: Invalid timestamp size 0xF");        	 
-        }
-    }
-    else 
-    {
-        // extract the correct amount of nibbles for the ts value. 
-        bool bCont = true;
-        while(bCont && (m_curr_ts_nibbles < m_req_ts_nibbles))
-        {
-            bCont = readNibble();
-            if(bCont)
-            {
-                m_ts_update_value <<= 4;
-                m_ts_update_value |= m_nibble;
-                m_curr_ts_nibbles++;
-            }
+                throwBadSequenceError("STM: Invalid timestamp size 0xF"); 
+            m_ts_req_set = true;
         }
     }
 
-    if(m_ts_req_set && (m_req_ts_nibbles == m_curr_ts_nibbles))
+    if(m_ts_req_set)
     {
-        uint8_t new_bits = m_req_ts_nibbles * 4;
-        if(m_curr_packet.getTSType() == STM_TS_GREY)
-        {            
-            uint64_t gray_val = bin_to_gray(m_curr_packet.getCurrentTSVal());
-            if(new_bits == 64)
+        // if we do not have all the nibbles for the TS, get some...
+        if(m_req_ts_nibbles != m_curr_ts_nibbles)
+        {
+            // extract the correct amount of nibbles for the ts value. 
+            bool bCont = true;
+            while(bCont && (m_curr_ts_nibbles < m_req_ts_nibbles))
             {
-                gray_val = m_ts_update_value;
+                bCont = readNibble();
+                if(bCont)
+                {
+                    m_ts_update_value <<= 4;
+                    m_ts_update_value |= m_nibble;
+                    m_curr_ts_nibbles++;
+                }
+            }
+        }
+       
+        // at this point we have the correct amount of nibbles, or have run out of data to process.
+        if(m_req_ts_nibbles == m_curr_ts_nibbles)
+        {
+            uint8_t new_bits = m_req_ts_nibbles * 4;
+            if(m_curr_packet.getTSType() == STM_TS_GREY)
+            {            
+                uint64_t gray_val = bin_to_gray(m_curr_packet.getCurrentTSVal());
+                if(new_bits == 64)
+                {
+                    gray_val = m_ts_update_value;
+                }
+                else
+                {
+                    uint64_t mask = (0x1ULL << new_bits) - 1;
+                    gray_val &= ~mask;
+                    gray_val |= m_ts_update_value & mask;
+                }
+                m_curr_packet.setTS(gray_to_bin(gray_val),new_bits);
+            }
+            else if(m_curr_packet.getTSType() == STM_TS_NATBINARY)
+            {
+                m_curr_packet.setTS(m_ts_update_value, new_bits);
             }
             else
-            {
-                uint64_t mask = (0x1ULL << new_bits) - 1;
-                gray_val &= ~mask;
-                gray_val |= m_ts_update_value & mask;
-            }
-            m_curr_packet.setTS(gray_to_bin(gray_val),new_bits);
-        }
-        else if(m_curr_packet.getTSType() == STM_TS_NATBINARY)
-        {
-            m_curr_packet.setTS(m_ts_update_value, new_bits);
-        }
-        else
-            throwBadSequenceError("STM: unknown timestamp encoding");
+                throwBadSequenceError("STM: unknown timestamp encoding");
 
-        sendPacket();
+            sendPacket();
+        }
     }
 }
 
