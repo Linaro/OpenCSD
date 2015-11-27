@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       trc_gen_elem_types.h
  * \brief      Reference CoreSight Trace Decoder : Decoder Output Generic Element types.
  * 

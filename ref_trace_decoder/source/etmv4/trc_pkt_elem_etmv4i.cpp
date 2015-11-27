@@ -534,12 +534,4 @@ EtmV4ITrcPacket &EtmV4ITrcPacket::operator =(const rctdl_etmv4_i_pkt* p_pkt)
     return *this;        
 }
 
-// static string formatter
-void EtmV4ITrcPacket::toString(const rctdl_etmv4_i_pkt *p_pkt, std::string &pkt_str)
-{
-    EtmV4ITrcPacket t_pkt;
-    t_pkt = p_pkt;
-    t_pkt.toString(pkt_str);
-}
-
 /* End of File trc_pkt_elem_etmv4i.cpp */

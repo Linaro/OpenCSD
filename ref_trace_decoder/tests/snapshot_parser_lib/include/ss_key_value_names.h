@@ -58,7 +58,17 @@ const char * const ETMv4RegIDR11("TRCIDR11");
 const char * const ETMv4RegIDR12("TRCIDR12");
 const char * const ETMv4RegIDR13("TRCIDR13");
 
+/*** ETMv3/PTM ***/
+const char * const ETMv3Protocol("ETM3");
+const char * const PTMProtocol("PTM1");
+const char * const ETMv3PTMRegIDR("ETMIDR");
+const char * const ETMv3PTMRegCR("ETMCR");
+const char * const ETMv3PTMRegCCER("ETMCCER");
+const char * const ETMv3PTMRegTraceIDR("ETMTRACEIDR");
 
+/*** STM/ITM **/
+const char * const STMProtocol("STM");
+const char * const STMRegTCSR("STMTCSR");
 
 #endif // ARM_SS_KEY_VALUE_NAMES_H_INCLUDED
 

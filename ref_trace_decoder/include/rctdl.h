@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       rctdl.h
  * \brief      Reference CoreSight Trace Decoder : Master include file for C++ library
  * 
@@ -39,6 +39,7 @@
 #include "rctdl_if_types.h"
 #include "trc_pkt_types.h"
 #include "trc_gen_elem_types.h"
+#include "rctdl_version.h"
 
 /* C++ abstract interfaces */
 #include "interfaces/trc_data_raw_in_i.h"
@@ -64,6 +65,7 @@
 #include "etmv3/etmv3_decoder.h"
 #include "etmv4/etmv4_decoder.h"
 #include "ptm/ptm_decoder.h"
+#include "stm/stm_decoder.h"
 
 /** C++ library object types */
 #include "rctdl_error_logger.h"

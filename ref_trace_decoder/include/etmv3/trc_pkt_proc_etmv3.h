@@ -64,11 +64,15 @@ protected:
     virtual rctdl_datapath_resp_t onReset();
     virtual rctdl_datapath_resp_t onFlush();
     virtual rctdl_err_t onProtocolConfig();
+    virtual const bool isBadPacket() const;
 
     friend class EtmV3PktProcImpl;
 
     EtmV3PktProcImpl *m_pProcessor;
 };
+
+
+#define ETMV3_OPFLG_UNFORMATTED_SOURCE  0x00010000 /**< Single ETM source from bypassed formatter - need to check for EOT markers */
 
 /** @}*/
 

@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
 
     moss << "Trace Packet Lister: CS Decode library testing\n";
     moss << "-----------------------------------------------\n\n";
+    moss << "** Library Version : " << rctdl_get_version_str() << "\n\n";
     logger.LogMsg(moss.str());
 
 
@@ -125,7 +126,7 @@ int main(int argc, char* argv[])
                 }
                 else
                 {
-                    for(int i = 0; i < sourceBuffList.size(); i++)
+                    for(size_t i = 0; i < sourceBuffList.size(); i++)
                     {
                         if(sourceBuffList[i] == source_buffer_name)
                         {
@@ -149,7 +150,7 @@ int main(int argc, char* argv[])
                     logger.LogMsg(oss.str());
                     oss.str("");
                     oss << "Valid source names are:-\n";
-                    for(int i = 0; i < sourceBuffList.size(); i++)
+                    for(size_t i = 0; i < sourceBuffList.size(); i++)
                     {
                         oss << sourceBuffList[i] << "\n";
                     }
@@ -417,7 +418,43 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                         }
                     
 
-                        oss << "Trace Packet Lister : ETMv4 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                        oss << "Trace Packet Lister : ETMv4 Instuction trace Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                        logger.LogMsg(oss.str());
+                    }
+                    break;
+
+                case RCTDL_PROTOCOL_ETMV3:
+                    {
+                        std::ostringstream oss;
+                        PacketPrinter<EtmV3TrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV3TrcPacket>(elemID,&logger);
+                        if(pPrinter)
+                        {
+                            // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
+                            if(decode || pkt_mon)
+                                pElement->getEtmV3PktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                            else
+                                pElement->getEtmV3PktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            printers.push_back(pPrinter); // save printer to destroy it later
+                        }                    
+                        oss << "Trace Packet Lister : ETMv3 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                        logger.LogMsg(oss.str());
+                    }
+                    break;
+
+                case RCTDL_PROTOCOL_STM:
+                    {
+                        std::ostringstream oss;
+                        PacketPrinter<StmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<StmTrcPacket>(elemID,&logger);
+                        if(pPrinter)
+                        {
+                            // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
+                            if(decode || pkt_mon)
+                                pElement->getStmPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                            else
+                                pElement->getStmPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            printers.push_back(pPrinter); // save printer to destroy it later
+                        }                    
+                        oss << "Trace Packet Lister : STM Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                         logger.LogMsg(oss.str());
                     }
                     break;
@@ -486,8 +523,8 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                 {
                     in.read((char *)&trace_buffer[0],bufferSize);   // load a block of data into the buffer
 
-                    int nBuffRead = in.gcount();    // get count of data loaded.
-                    int nBuffProcessed = 0;         // amount processed in this buffer.
+                    std::streamsize nBuffRead = in.gcount();    // get count of data loaded.
+                    std::streamsize nBuffProcessed = 0;         // amount processed in this buffer.
                     uint32_t nUsedThisTime = 0;
 
                     // process the current buffer load until buffer done, or fatal error occurs
@@ -498,7 +535,7 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                             dataPathResp = dcd_tree->TraceDataIn(
                                 RCTDL_OP_DATA,
                                 trace_index,
-                                nBuffRead - nBuffProcessed,
+                                (uint32_t)(nBuffRead - nBuffProcessed),
                                 &(trace_buffer[0])+nBuffProcessed,
                                 &nUsedThisTime);
 

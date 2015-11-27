@@ -55,22 +55,8 @@ EtmV4Config::EtmV4Config()
 
 EtmV4Config & EtmV4Config::operator=(const rctdl_etmv4_cfg *p_cfg)
 {
-    this->reg_idr0      = p_cfg->reg_idr0; 
-    this->reg_idr1      = p_cfg->reg_idr1;   
-    this->reg_idr2      = p_cfg->reg_idr2;     
-    this->reg_idr8      = p_cfg->reg_idr8;
-    this->reg_idr9      = p_cfg->reg_idr9;   
-    this->reg_idr10     = p_cfg->reg_idr10;
-    this->reg_idr11     = p_cfg->reg_idr11;
-    this->reg_idr12     = p_cfg->reg_idr12;
-    this->reg_idr13     = p_cfg->reg_idr13;
-    this->reg_configr   = p_cfg->reg_configr;
-    this->reg_traceidr  = p_cfg->reg_traceidr;
-    this->arch_ver      = p_cfg->arch_ver;   
-    this->core_prof     = p_cfg->core_prof;
-
+    *dynamic_cast<rctdl_etmv4_cfg *>(this) = *p_cfg;
     PrivateInit();
-
     return *this;
 }
 

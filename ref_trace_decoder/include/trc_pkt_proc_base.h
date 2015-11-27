@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_pkt_proc_base.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : Trace packet processor base class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -77,6 +77,7 @@ protected:
     virtual rctdl_datapath_resp_t onReset() = 0;
     virtual rctdl_datapath_resp_t onFlush() = 0;
     virtual rctdl_err_t onProtocolConfig() = 0;
+    virtual const bool isBadPacket() const = 0;     // check if the current packet is an error / bad packet
 };
 
 inline TrcPktProcI::TrcPktProcI(const char *component_name) :
@@ -143,7 +144,7 @@ protected:
 
     void indexPacket(const rctdl_trc_index_t index_sop, const Pt *packet_type);
 
-    rctdl_datapath_resp_t outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> pktdata);
+    rctdl_datapath_resp_t outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> &pktdata);
 
     /* the protocol configuration */
     const Pc *m_config;
@@ -267,11 +268,16 @@ template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt,
 
 template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::outputDecodedPacket(const rctdl_trc_index_t index, const P *pkt)
 {
-    // send a complete packet over the primary data path
      rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-     if(m_pkt_out_i.hasAttachedAndEnabled())
-         resp = m_pkt_out_i.first()->PacketDataIn(RCTDL_OP_DATA,index,pkt);
-     return resp;
+
+    // bad packet filter.
+    if((getComponentOpMode() & RCTDL_OPFLG_PKTPROC_NOFWD_BAD_PKTS) && isBadPacket())
+        return resp;
+
+    // send a complete packet over the primary data path
+    if(m_pkt_out_i.hasAttachedAndEnabled())
+        resp = m_pkt_out_i.first()->PacketDataIn(RCTDL_OP_DATA,index,pkt);
+    return resp;
 }
 
 template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::outputRawPacketToMonitor( 
@@ -280,6 +286,14 @@ template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::outputRawPa
                                     const uint32_t size,
                                     const uint8_t *p_data)
 {
+    // never output 0 sized packets.
+    if(size == 0)
+        return;
+
+    // bad packet filter.
+    if((getComponentOpMode() & RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS) && isBadPacket())
+        return;
+
     // packet monitor - this cannot return CONT / WAIT, but does get the raw packet data.
     if(m_pkt_raw_mon_i.hasAttachedAndEnabled())
         m_pkt_raw_mon_i.first()->RawPacketDataMon(RCTDL_OP_DATA,index_sop,pkt,size,p_data);
@@ -292,10 +306,11 @@ template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::indexPacket
         m_pkt_indexer_i.first()->TracePktIndex(index_sop,packet_type);
 }
 
-template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> pktdata)
+template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> &pktdata)
 {
     indexPacket(index_sop,pkt_type);
-    outputRawPacketToMonitor(index_sop,pkt,(uint32_t)pktdata.size(),&pktdata[0]);
+    if(pktdata.size() > 0)  // prevent out of range errors for 0 length vector.
+        outputRawPacketToMonitor(index_sop,pkt,(uint32_t)pktdata.size(),&pktdata[0]);
     return outputDecodedPacket(index_sop,pkt);
 }
 

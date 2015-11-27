@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_gen_elem.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : Decoder Generic trace element output class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -61,7 +61,7 @@ public:
 
     RctdlTraceElement &operator =(const rctdl_generic_trace_elem* p_elem);
 
-    static void toString(const rctdl_generic_trace_elem *p_elem, std::string &str);
+    //static void toString(const rctdl_generic_trace_elem *p_elem, std::string &str);
 };
 
 inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)    

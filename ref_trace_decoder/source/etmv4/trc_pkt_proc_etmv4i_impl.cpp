@@ -406,7 +406,7 @@ void EtmV4IPktProcImpl::iPktTraceInfo()
     // all sections accounted for?
     if(m_ctrlSect && m_infoSect && m_keySect && m_specSect && m_cyctSect)
     {
-        int idx = 2;
+        unsigned idx = 2;
         uint32_t fieldVal = 0;
 
         // now need to know which sections to look for, so re-examine the flags byte...
@@ -1447,9 +1447,9 @@ void EtmV4IPktProcImpl::BuildIPacketTable()
     }
 }
 
-int EtmV4IPktProcImpl::extractContField(const std::vector<uint8_t> &buffer, const int st_idx, uint32_t &value, const int byte_limit /*= 5*/)
+ unsigned EtmV4IPktProcImpl::extractContField(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint32_t &value, const unsigned byte_limit /*= 5*/)
 {
-    int idx = 0;
+    unsigned idx = 0;
     bool lastByte = false;
     uint8_t byteVal;
     value = 0;
@@ -1471,9 +1471,9 @@ int EtmV4IPktProcImpl::extractContField(const std::vector<uint8_t> &buffer, cons
     return idx;
 }
 
-int EtmV4IPktProcImpl::extractContField64(const std::vector<uint8_t> &buffer, const int st_idx, uint64_t &value, const int byte_limit /*= 9*/)
+unsigned EtmV4IPktProcImpl::extractContField64(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint64_t &value, const unsigned byte_limit /*= 9*/)
 {
-    int idx = 0;
+    unsigned idx = 0;
     bool lastByte = false;
     uint8_t byteVal;
     value = 0;
@@ -1495,9 +1495,9 @@ int EtmV4IPktProcImpl::extractContField64(const std::vector<uint8_t> &buffer, co
     return idx;
 }
 
-int EtmV4IPktProcImpl::extractCondResult(const std::vector<uint8_t> &buffer, const int st_idx, uint32_t& key, uint8_t &result)
+ unsigned EtmV4IPktProcImpl::extractCondResult(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint32_t& key, uint8_t &result)
 {
-    int idx = 0;
+    unsigned idx = 0;
     bool lastByte = false;
     int incr = 0;
 
@@ -1505,7 +1505,7 @@ int EtmV4IPktProcImpl::extractCondResult(const std::vector<uint8_t> &buffer, con
 
     while(!lastByte && (idx < 6)) // cannot be more than 6 bytes for res + 32 bit key
     {
-        if(buffer.size() < (st_idx + idx))
+        if(buffer.size() > (st_idx + idx))
         {
             if(idx == 0)
             {
@@ -1523,7 +1523,7 @@ int EtmV4IPktProcImpl::extractCondResult(const std::vector<uint8_t> &buffer, con
         }
         else
         {
-            // TBD: error out here.
+            throwBadSequenceError("Invalid continuation fields in packet");
         }
     }    
     return idx;

@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       rctdl_if_types.h
  * \brief      Reference CoreSight Trace Decoder : Standard Types used in the library interfaces.
  * 
@@ -103,6 +103,7 @@ typedef enum _rctdl_err_t {
     /* packet processor errors - protocol issues etc */
     RCTDL_ERR_BAD_PACKET_SEQ,        /**< Bad packet sequence */
     RCTDL_ERR_INVALID_PCKT_HDR,      /**< Invalid packet header */
+    RCTDL_ERR_PKT_INTERP_FAIL,       /**< Interpreter failed - cannot recover - bad data or sequence */
     /* packet decoder errors */
     RCTDL_ERR_UNSUPPORTED_ISA,          /**< ISA not supported in decoder. */
     RCTDL_ERR_HW_CFG_UNSUPP,            /**< Programmed trace configuration not supported by decoder.*/
@@ -125,7 +126,7 @@ typedef enum _rctdl_err_t {
 } rctdl_err_t;
 
 /* component handle types */
-typedef unsigned int rctdl_hndl_rdr_t;               /**< reader control handle */
+typedef unsigned int rctdl_hndl_rdr_t;      /**< reader control handle */
 typedef unsigned int rctdl_hndl_err_log_t;  /**< error logger connection handle */
 
 /* common invalid handle type */
@@ -181,17 +182,17 @@ typedef enum _rctdl_datapath_resp_t {
     RCTDL_RESP_FATAL_SYS_ERR,       /**< Processing Fatal Error :  internal system error. */
 } rctdl_datapath_resp_t;
 
-/*! Macro returning true if response value is FATAL. */
+/*! Macro returning true if datapath response value is FATAL. */
 #define RCTDL_DATA_RESP_IS_FATAL(x) (x >= RCTDL_RESP_FATAL_NOT_INIT)
-/*! Macro returning true if response value indicates WARNING logged. */
+/*! Macro returning true if datapath response value indicates WARNING logged. */
 #define RCTDL_DATA_RESP_IS_WARN(x) ((x == RCTDL_RESP_WARN_CONT) || (x == RCTDL_RESP_WARN_WAIT))
-/*! Macro returning true if response value indicates ERROR logged. */
+/*! Macro returning true if datapath response value indicates ERROR logged. */
 #define RCTDL_DATA_RESP_IS_ERR(x) ((x == RCTDL_RESP_ERR_CONT) || (x == RCTDL_RESP_ERR_WAIT))
-/*! Macro returning true if response value indicates WARNING or ERROR logged. */
+/*! Macro returning true if datapath response value indicates WARNING or ERROR logged. */
 #define RCTDL_DATA_RESP_IS_WARN_OR_ERR(x) (RCTDL_DATA_RESP_IS_ERR(x) || RCTDL_DATA_RESP_IS_WARN(x))
-
+/*! Macro returning true if datapath response value is CONT. */
 #define RCTDL_DATA_RESP_IS_CONT(x) (x <  RCTDL_RESP_WAIT)
-
+/*! Macro returning true if datapath response value is WAIT. */
 #define RCTDL_DATA_RESP_IS_WAIT(x) ((x >= RCTDL_RESP_WAIT) && (x < RCTDL_RESP_FATAL_NOT_INIT))
 
 /** @}*/
@@ -202,13 +203,14 @@ typedef enum _rctdl_datapath_resp_t {
 /*! Trace Protocol Types - used to create appropriate decoder.
  */
 typedef enum _rctdl_trace_protocol_t {
-    RCTDL_PROTOCOL_EXTERN, /**< Custom external decoder attached to the decode tree - protocol unknown */
-    RCTDL_PROTOCOL_ETMV3,
-    RCTDL_PROTOCOL_ETMV4I,
-    RCTDL_PROTOCOL_ETMV4D,
-    RCTDL_PROTOCOL_PTM,
+    RCTDL_PROTOCOL_EXTERN,  /**< Custom external decoder attached to the decode tree - protocol unknown */
+    RCTDL_PROTOCOL_ETMV3,   /**< ETMV3 instruction and data trace protocol decoder. */
+    RCTDL_PROTOCOL_ETMV4I,  /**< ETMV4 instruction trace protocol decoder. */
+    RCTDL_PROTOCOL_ETMV4D,  /**< ETMV4 data trace protocol decoder. */
+    RCTDL_PROTOCOL_PTM,     /**< PTM program flow instruction trace protocol decoder. */
+    RCTDL_PROTOCOL_STM,     /**< STM system trace protocol decoder. */
     /* others to be added here */
-    RCTDL_PROTOCOL_END
+    RCTDL_PROTOCOL_END      /**< Invalid protocol - protocol types end marker */
 } rctdl_trace_protocol_t;
 
 
@@ -232,13 +234,14 @@ typedef enum _rctdl_dcd_tree_src_t {
     RCTDL_TRC_SRC_SINGLE,           /**< input source is from a single protocol generator. */
 } rctdl_dcd_tree_src_t;
 
-#define RCTDL_DFRMTR_HAS_FSYNCS         0x01 /**< formatted data has fsyncs - input data 4 byte aligned */
-#define RCTDL_DFRMTR_HAS_HSYNCS         0x02 /**< formatted data has hsyncs - input data 2 byte aligned */
-#define RCTDL_DFRMTR_FRAME_MEM_ALIGN    0x04 /**< formatted frames are memory aligned, no syncs. Input data 16 byte frame aligned. */
-#define RCTDL_DFRMTR_PACKED_RAW_OUT     0x08 /**< output raw packed frame data if raw monitor attached. */
-#define RCTDL_DFRMTR_UNPACKED_RAW_OUT   0x10 /**< output raw unpacked frame data if raw monitor attached. */
-#define RCTDL_DFRMTR_VALID_MASK         0x1F /**< valid mask for deformatter configuration */
-#define RCTDL_DFRMTR_FRAME_SIZE         0x10 /**< CoreSight frame formatter frame size in bytes. */
+#define RCTDL_DFRMTR_HAS_FSYNCS         0x01 /**< Deformatter Config : formatted data has fsyncs - input data 4 byte aligned */
+#define RCTDL_DFRMTR_HAS_HSYNCS         0x02 /**< Deformatter Config : formatted data has hsyncs - input data 2 byte aligned */
+#define RCTDL_DFRMTR_FRAME_MEM_ALIGN    0x04 /**< Deformatter Config : formatted frames are memory aligned, no syncs. Input data 16 byte frame aligned. */
+#define RCTDL_DFRMTR_PACKED_RAW_OUT     0x08 /**< Deformatter Config : output raw packed frame data if raw monitor attached. */
+#define RCTDL_DFRMTR_UNPACKED_RAW_OUT   0x10 /**< Deformatter Config : output raw unpacked frame data if raw monitor attached. */
+#define RCTDL_DFRMTR_VALID_MASK         0x1F /**< Deformatter Config : valid mask for deformatter configuration */
+
+#define RCTDL_DFRMTR_FRAME_SIZE         0x10 /**< CoreSight frame formatter frame size constant in bytes. */
 
 /** @}*/
 
@@ -282,28 +285,26 @@ typedef struct _rctdl_arch_profile_t {
     rctdl_core_profile_t profile;   /**< core profile */
 } rctdl_arch_profile_t;
 
-/** may want to use a 32 bit v-addr when running on 32 bit only ARM platforms. */
+/* may want to use a 32 bit v-addr when running on 32 bit only ARM platforms. */
 #ifdef USE_32BIT_V_ADDR
-typedef uint32_t rctdl_vaddr_t;
-#define RCTDL_MAX_VA_BITSIZE 32
-#define RCTDL_VA_MASK ~0UL
+typedef uint32_t rctdl_vaddr_t;     /**< 32 bit virtual addressing in library - use if compiling on 32 bit platforms */
+#define RCTDL_MAX_VA_BITSIZE 32     /**< 32 bit Virtual address bitsize macro */
+#define RCTDL_VA_MASK ~0UL          /**< 32 bit Virtual address bitsize mask */
 #else
-typedef uint64_t rctdl_vaddr_t;
-#define RCTDL_MAX_VA_BITSIZE 64
-#define RCTDL_VA_MASK ~0ULL
+typedef uint64_t rctdl_vaddr_t;     /**< 64 bit virtual addressing in library */
+#define RCTDL_MAX_VA_BITSIZE 64     /**< 64 bit Virtual address bitsize macro */
+#define RCTDL_VA_MASK ~0ULL         /**< 64 bit Virtual address bitsize mask */
 #endif
 
 /** A bit mask for the first 'bits' consecutive bits of an address */ 
 #define RCTDL_BIT_MASK(bits) (bits == RCTDL_MAX_VA_BITSIZE) ? RCTDL_VA_MASK : ((rctdl_vaddr_t)1 << bits) - 1
-
-
 
 /** @}*/
 
 /** @name Instruction Decode Information
 @{*/
 
-/** Instruction Set Architecture 
+/** Instruction Set Architecture type
  *
  */
 typedef enum _rctdl_isa
@@ -316,7 +317,7 @@ typedef enum _rctdl_isa
     rctdl_isa_unknown       /**< ISA not yet known */
 } rctdl_isa;
 
-/** Security level
+/** Security level type
 */
 typedef enum _rctdl_sec_level
 {
@@ -324,14 +325,14 @@ typedef enum _rctdl_sec_level
     rctdl_sec_nonsecure /**< Core is in non-secure state */
 } rctdl_sec_level ;
 
-/** Exception level 
+/** Exception level type
 */
 typedef enum _rctdl_ex_level
 {
-    rctdl_EL0 = 0,
-    rctdl_EL1,
-    rctdl_EL2,
-    rctdl_EL3,
+    rctdl_EL0 = 0,  /**< EL0 */
+    rctdl_EL1,      /**< EL1 */
+    rctdl_EL2,      /**< EL2 */
+    rctdl_EL3,      /**< EL3 */
 } rctdl_ex_level;
 
 
@@ -369,6 +370,9 @@ typedef struct _rctdl_instr_info {
 } rctdl_instr_info;
 
 
+/** Core(PE) context structure 
+    records current security state, exception level, VMID and ContextID for core.
+*/
 typedef struct _rctdl_pe_context {    
     rctdl_sec_level security_level;     /**< security state */
     rctdl_ex_level  exception_level;    /**< exception level */
@@ -400,10 +404,20 @@ typedef enum _rctdl_mem_space_acc_t {
 /** @}*/
 
 /** @name Packet Processor Operation Control Flags
+    common operational flags - bottom 16 bits,
+    component specific - top 16 bits.
 @{*/
 
-#define RCTDL_PKTPROC_FLG_NOFWD_BAD_PKTS 0x00000001  /**< don't forward bad packets up data path */
-#define RCTDL_PKTPROC_FLG_NOMON_BAD_PKTS 0x00000002  /**< don't forward bad packets to monitor interface */
+#define RCTDL_OPFLG_PKTPROC_NOFWD_BAD_PKTS  0x00000001  /**< don't forward bad packets up data path */
+#define RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS  0x00000002  /**< don't forward bad packets to monitor interface */
+#define RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS    0x00000004  /**< throw error for bad packets - halt decoding. */
+#define RCTDL_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS 0x00000008  /**< switch to unsynced state on bad packets - wait for next sync point */
+
+/** mask to combine all common packet processor operational control flags */
+#define RCTDL_OPFLG_PKTPROC_COMMON (RCTDL_OPFLG_PKTPROC_NOFWD_BAD_PKTS | \
+                                    RCTDL_OPFLG_PKTPROC_NOMON_BAD_PKTS | \
+                                    RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS | \
+                                    RCTDL_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS  )
 
 /** @}*/
 

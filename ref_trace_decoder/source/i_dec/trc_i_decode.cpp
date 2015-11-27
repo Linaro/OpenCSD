@@ -80,7 +80,7 @@ rctdl_err_t TrcIDecode::DecodeA32(rctdl_instr_info *instr_info)
     }
     else if(inst_ARM_is_direct_branch(instr_info->opcode))
     {
-        inst_ARM_branch_destination(instr_info->instr_addr,instr_info->opcode,&branchAddr);
+        inst_ARM_branch_destination((uint32_t)instr_info->instr_addr,instr_info->opcode,&branchAddr);
         instr_info->type = RCTDL_INSTR_BR;
         instr_info->branch_addr = (rctdl_vaddr_t)branchAddr;
         if(branchAddr & 0x1)
@@ -168,7 +168,7 @@ rctdl_err_t TrcIDecode::DecodeT32(rctdl_instr_info *instr_info)
     }
     else if(inst_Thumb_is_direct_branch(instr_info->opcode))
     {
-        inst_Thumb_branch_destination(instr_info->instr_addr,instr_info->opcode,&branchAddr);
+        inst_Thumb_branch_destination((uint32_t)instr_info->instr_addr,instr_info->opcode,&branchAddr);
         instr_info->type = RCTDL_INSTR_BR;
         instr_info->branch_addr = (rctdl_vaddr_t)branchAddr;
         if((branchAddr & 0x1) == 0)

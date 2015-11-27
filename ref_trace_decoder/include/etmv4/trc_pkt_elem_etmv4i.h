@@ -131,11 +131,12 @@ public:
     // cc
     const uint32_t getCC() const { return pkt_valid.bits.cc_valid ? cycle_count : 0; };
 
+    // packet type
+    const bool isBadPacket() const;
+
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
-
-    static void toString(const rctdl_etmv4_i_pkt *p_pkt, std::string &str);
 
 private:
     const char *packetTypeName(const rctdl_etmv4_i_pkt_type type, const char **pDesc) const;
@@ -428,6 +429,12 @@ inline void EtmV4ITrcPacket::setQType(const bool has_count, const uint32_t count
     Q_pkt.addr_present = has_addr ? 1: 0;
     Q_pkt.addr_match = addr_match ? 1 :0;
 }
+
+inline const bool EtmV4ITrcPacket::isBadPacket() const
+{
+    return (type >= ETM4_PKT_I_BAD_SEQUENCE);
+}
+
 
 /** @}*/
 

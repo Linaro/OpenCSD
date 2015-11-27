@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       rctdl_msg_logger.h
- * \brief      Reference CoreSight Trace Decoder : Generic Message logger
+ * \brief      Reference CoreSight Trace Decoder : Generic Message logger / printer
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

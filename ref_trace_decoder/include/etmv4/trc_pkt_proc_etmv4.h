@@ -65,6 +65,7 @@ protected:
     virtual rctdl_datapath_resp_t onReset();
     virtual rctdl_datapath_resp_t onFlush();
     virtual rctdl_err_t onProtocolConfig();
+    virtual const bool isBadPacket() const;
 
     friend class EtmV4IPktProcImpl;
 
@@ -89,6 +90,7 @@ protected:
     virtual rctdl_datapath_resp_t onReset();
     virtual rctdl_datapath_resp_t onFlush();
     virtual rctdl_err_t onProtocolConfig();
+    virtual const bool isBadPacket() const;
 
     friend class EtmV4DPktProcImpl;
 

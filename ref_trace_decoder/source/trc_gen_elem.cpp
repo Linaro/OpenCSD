@@ -107,11 +107,12 @@ RctdlTraceElement &RctdlTraceElement::operator =(const rctdl_generic_trace_elem*
     return *this;
 }
 
+/*
 void RctdlTraceElement::toString(const rctdl_generic_trace_elem *p_elem, std::string &str)
 {
     RctdlTraceElement elem;
     elem = p_elem;
     elem.toString(str);
 }
-
+*/
 /* End of File trc_gen_elem.cpp */

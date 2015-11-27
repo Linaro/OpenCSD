@@ -1,4 +1,4 @@
-/*
+/*!
  * \file       comp_attach_pt_t.h
  * \brief      Reference CoreSight Trace Decoder : Component attachment point interface class.
  * 

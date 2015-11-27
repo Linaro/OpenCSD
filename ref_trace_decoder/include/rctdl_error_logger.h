@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       rctdl_error_logger.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      Reference CoreSight Trace Decoder : Library error logger.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

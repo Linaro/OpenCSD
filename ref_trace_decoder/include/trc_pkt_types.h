@@ -1,6 +1,6 @@
-/*
+/*!
  * \file       trc_pkt_types.h
- * \brief      Reference CoreSight Trace Decoder : Common types for trace packets.
+ * \brief      Reference CoreSight Trace Decoder : Common "C" types for trace packets.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -84,7 +84,7 @@ typedef enum _rctdl_atm_val {
 typedef struct _rctdl_pkt_atom
 {
     /** pattern across num bits.
-        Bit sequence:- ls bit = oldest atom, ms bit = newest, 
+        Bit sequence:- ls bit = oldest atom (1st instruction executed), ms bit = newest (last instruction executed), 
         Bit values  :-  1'b1 = E atom, 1'b0 = N atom.
       */
     uint32_t En_bits;
