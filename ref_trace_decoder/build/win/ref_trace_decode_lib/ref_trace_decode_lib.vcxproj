@@ -150,6 +150,7 @@
     <ClInclude Include="..\..\..\include\comp_attach_pt_t.h" />
     <ClInclude Include="..\..\..\include\etmv3\etmv3_decoder.h" />
     <ClInclude Include="..\..\..\include\etmv3\trc_cmp_cfg_etmv3.h" />
+    <ClInclude Include="..\..\..\include\etmv3\trc_pkt_decode_etmv3.h" />
     <ClInclude Include="..\..\..\include\etmv3\trc_pkt_elem_etmv3.h" />
     <ClInclude Include="..\..\..\include\etmv3\trc_pkt_proc_etmv3.h" />
     <ClInclude Include="..\..\..\include\etmv3\trc_pkt_types_etmv3.h" />
@@ -213,6 +214,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\etmv3\trc_cmp_cfg_etmv3.cpp" />
+    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_decode_etmv3.cpp" />
     <ClCompile Include="..\..\..\source\etmv3\trc_pkt_elem_etmv3.cpp" />
     <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3.cpp" />
     <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.cpp" />
