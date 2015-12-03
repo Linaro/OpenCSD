@@ -245,7 +245,7 @@ void TrcPktProcStm::waitForSync(const rctdl_trc_index_t blk_st_index)
 
     // set a packet index for the start of the data
     m_packet_index = blk_st_index + m_data_in_used;
-    m_num_nibbles = m_num_F_nibbles;    // sending unsync data may have cleared down num_nibbles.
+    m_num_nibbles = m_is_sync ? m_num_F_nibbles + 1 : m_num_F_nibbles;    // sending unsync data may have cleared down num_nibbles.
 
     m_bWaitSyncSaveSuppressed = true;   // no need to save bytes until we want to send data.
 
@@ -261,11 +261,12 @@ void TrcPktProcStm::waitForSync(const rctdl_trc_index_t blk_st_index)
         return;
     
     // we have found a sync or run out of data
-    // four possible scenarios
+    // five possible scenarios
     // a) all data none sync data.
     // b) some none sync data + start of sync sequence
-    // c) some none sync data + full sync sequence
-    // d) full sync sequence
+    // c) some none sync data + full sync sequence in this frame
+    // d) full sync sequence @ start of this frame followed by ???
+    // e) completion of sync sequence in this frame (from b)).
 
     if(!bGotData || m_num_nibbles > 22)
     {
@@ -288,7 +289,7 @@ void TrcPktProcStm::waitForSync(const rctdl_trc_index_t blk_st_index)
     {
         // send the async packet
         m_curr_packet.setPacketType(STM_PKT_ASYNC,false);
-        m_bStreamSync = true;
+        m_bStreamSync = true;   // mark the stream as synchronised
         clearSyncCount();
         m_packet_index = m_sync_index;
         if(mon_in_use.usingMonitor())
