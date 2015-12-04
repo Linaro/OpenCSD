@@ -43,11 +43,28 @@
     Defines API, functions and callback types.
 @{*/
 
-/* ensure C bindings  (expand later for DLL bindings) */
-#ifdef __cplusplus
-#define RCTDL_C_API extern "C"
-#else
-#define RCTDL_C_API
+/* ensure C bindings */
+
+#ifdef WIN32    /* windows bindings */
+    #ifdef _RCTDL_C_API_DLL_EXPORT
+        #ifdef __cplusplus
+            #define RCTDL_C_API extern "C" __declspec(dllexport)
+        #else
+            #define RCTDL_C_API __declspec(dllexport)
+        #endif
+    #else
+        #ifdef __cplusplus
+            #define RCTDL_C_API extern "C" __declspec(dllimport)
+        #else
+            #define RCTDL_C_API __declspec(dllimport)
+        #endif
+    #endif
+#else           /* linux bindings */
+    #ifdef __cplusplus
+        #define RCTDL_C_API extern "C"
+    #else
+        #define RCTDL_C_API
+    #endif
 #endif
 
 #include "rctdl_c_api_types.h"
