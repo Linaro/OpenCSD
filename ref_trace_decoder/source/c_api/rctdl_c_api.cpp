@@ -121,6 +121,7 @@ RCTDL_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle)
             }
             it->second->cb_objs.clear();
             delete it->second;
+            s_data_map.erase(it);
         }
         DecodeTree::DestroyDecodeTree((DecodeTree *)handle);
     }
