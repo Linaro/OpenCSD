@@ -27,7 +27,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 # 
 #################################################################################
-# RCTDL - makefile for main trace decode library
+# OpenCSD - makefile for main trace decode library
 #
 
 CPP := $(MASTER_CPP)
@@ -36,8 +36,9 @@ LIB := $(MASTER_LIB)
 
 CPP_FLAGS := $(MASTER_CPP_FLAGS) -fpic -Wno-switch
 LIB_FLAGS := $(MASTER_LIB_FLAGS)
+LINKER_FLAGS := $(MASTER_LINKER_FLAGS) -shared
 
-LIB_NAME = libref_trace_decoder
+LIB_NAME= lib$(LIB_BASE_NAME)
 
 BUILD_DIR=./$(PLAT_DIR)
 
@@ -92,15 +93,18 @@ OBJECTS=$(BUILD_DIR)/rctdl_dcd_tree.o \
 		$(BUILD_DIR)/trc_printable_elem.o \
 		$(ETMV3OBJ) \
 		$(ETMV4OBJ) \
-		$(PTMOBJ) \
 		$(IDECOBJ) \
 		$(MEMACCOBJ) \
 		$(STMOBJ)
+
+# not implmented correctly at present...
+#		$(PTMOBJ) \
 
 
 all: build_dir $(OBJECTS)
 	mkdir -p $(LIB_TARGET_DIR)
 	$(LIB) $(LIB_FLAGS) $(LIB_TARGET_DIR)/$(LIB_NAME).a $(OBJECTS)
+	$(LINKER) $(LINKER_FLAGS) -o $(LIB_TARGET_DIR)/$(LIB_NAME).so -Wl,-soname,$(LIB_NAME).so $(OBJECTS)
 
 build_dir:
 	mkdir -p $(BUILD_DIR)
@@ -115,3 +119,4 @@ $(BUILD_DIR)/%.o : %.cpp
 clean:
 	rm -f $(OBJECTS)
 	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).a
+	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).so

@@ -27,7 +27,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 # 
 #################################################################################
-# RCTDL - master makefile for libraries and tests
+# OpenCSD - master makefile for libraries and tests
 #
 # command line options
 # DEBUG=1 	    create a debug build
@@ -38,6 +38,13 @@ ifeq ($(RCTDL_ROOT),)
 RCTDL_ROOT := $(shell pwd | sed 's,/build/linux.*,,')
 export RCTDL_ROOT
 endif
+
+# library names
+LIB_BASE_NAME=arm_opencsd
+export LIB_BASE_NAME
+LIB_CAPI_NAME=$(LIB_BASE_NAME)_c_api
+export LIB_CAPI_NAME
+
 
 # source root directories
 export RCTDL_LIB_ROOT=$(RCTDL_ROOT)/lib
@@ -100,23 +107,42 @@ export BIN_TEST_TARGET_DIR=$(RCTDL_TESTS)/bin/$(PLAT_DIR)
 
 all: libs tests
 
-libs: ref_trace_decode_lib rctdl_c_api_lib
+libs: $(LIB_BASE_NAME)_lib $(LIB_BASE_NAME)_so $(LIB_CAPI_NAME)_lib $(LIB_CAPI_NAME)_so
 
 ################################
-# build reference trace decode library
+# build static OpenCSD trace decode library
 #
-ref_trace_decode_lib: $(LIB_TARGET_DIR)/libref_trace_decode.a
+$(LIB_BASE_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a
 
-$(LIB_TARGET_DIR)/libref_trace_decode.a:
+$(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a:
+	mkdir -p $(LIB_TARGET_DIR)
+	cd $(RCTDL_ROOT)/build/linux/ref_trace_decode_lib && make
+
+
+################################
+# build shared OpenCSD trace decode library
+#
+$(LIB_BASE_NAME)_so: $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so
+
+$(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so:
 	mkdir -p $(LIB_TARGET_DIR)
 	cd $(RCTDL_ROOT)/build/linux/ref_trace_decode_lib && make
 
 ################################
-# build reference trace decode library
+# build static OpenCSD trace decode C API library 
 #
-rctdl_c_api_lib: $(LIB_TARGET_DIR)/librctdl_c_api.a
+$(LIB_CAPI_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a
 
-$(LIB_TARGET_DIR)/librctdl_c_api.a:
+$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a:
+	mkdir -p $(LIB_TARGET_DIR)
+	cd $(RCTDL_ROOT)/build/linux/rctdl_c_api_lib && make
+
+################################
+# build shared OpenCSD trace decode C API library 
+#
+$(LIB_CAPI_NAME)_so: $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so
+
+$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so: $(LIB_BASE_NAME)_lib
 	mkdir -p $(LIB_TARGET_DIR)
 	cd $(RCTDL_ROOT)/build/linux/rctdl_c_api_lib && make
 

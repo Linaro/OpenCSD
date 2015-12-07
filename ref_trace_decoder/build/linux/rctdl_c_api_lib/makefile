@@ -27,7 +27,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 # 
 #################################################################################
-# RCTDL - makefile for C API wrapper library
+# OpenCSD - makefile for C API wrapper library
 #
 
 CPP := $(MASTER_CPP)
@@ -36,8 +36,10 @@ LIB := $(MASTER_LIB)
 
 CPP_FLAGS := $(MASTER_CPP_FLAGS) -fpic -Wno-switch
 LIB_FLAGS := $(MASTER_LIB_FLAGS)
+LINKER_FLAGS := $(MASTER_LINKER_FLAGS) -shared
 
-LIB_NAME = librctdl_c_api
+LIB_NAME = lib$(LIB_CAPI_NAME)
+SO_LIB_DEPS= -L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME)
 
 BUILD_DIR=./$(PLAT_DIR)
 
@@ -53,6 +55,7 @@ OBJECTS=$(BUILD_DIR)/rctdl_c_api.o
 all: build_dir $(OBJECTS)
 	mkdir -p $(LIB_TARGET_DIR)
 	$(LIB) $(LIB_FLAGS) $(LIB_TARGET_DIR)/$(LIB_NAME).a $(OBJECTS)
+	$(LINKER) $(LINKER_FLAGS) -o $(LIB_TARGET_DIR)/$(LIB_NAME).so -Wl,-soname,$(LIB_NAME).so $(OBJECTS) $(SO_LIB_DEPS)
 
 build_dir:
 	mkdir -p $(BUILD_DIR)
@@ -67,3 +70,4 @@ $(BUILD_DIR)/%.o : %.cpp
 clean:
 	rm -f $(OBJECTS)
 	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).a
+	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).so
