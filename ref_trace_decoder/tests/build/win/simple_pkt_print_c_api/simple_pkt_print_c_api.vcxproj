@@ -175,7 +175,8 @@
       <AdditionalDependencies>lib$(LIB_CAPI_NAME).lib;lib$(LIB_BASE_NAME).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy ..\..\..\..\lib\win32\dbg\*.dll ..\..\..\bin\win32\dbg\.</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-dll|Win32'">
