@@ -34,20 +34,12 @@
 #ifndef ARM_RCTDL_VERSION_H_INCLUDED
 #define ARM_RCTDL_VERSION_H_INCLUDED
 
-/* ensure C bindings  (expand later for DLL bindings) */
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
-const uint32_t rctdl_get_version();
-
-/** Get library version string */
-const char * rctdl_get_version_str();
-
-#ifdef __cplusplus
-}
-#endif
+class rctdlVersion
+{
+public:
+    static const uint32_t vers_num();
+    static const char *vers_str();
+};
 
 #endif // ARM_RCTDL_VERSION_H_INCLUDED
 

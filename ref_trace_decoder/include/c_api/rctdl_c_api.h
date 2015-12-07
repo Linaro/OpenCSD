@@ -45,18 +45,29 @@
 
 /* ensure C bindings */
 
-#ifdef WIN32    /* windows bindings */
+#if defined(WIN32)  /* windows bindings */
+    /** Building the C-API DLL **/
     #ifdef _RCTDL_C_API_DLL_EXPORT
         #ifdef __cplusplus
             #define RCTDL_C_API extern "C" __declspec(dllexport)
         #else
             #define RCTDL_C_API __declspec(dllexport)
         #endif
-    #else
-        #ifdef __cplusplus
-            #define RCTDL_C_API extern "C" __declspec(dllimport)
+    #else   
+        /** building or using the static C-API library **/
+        #if defined(_LIB) || defined(RCTDL_USE_STATIC_C_API)
+            #ifdef __cplusplus
+                #define RCTDL_C_API extern "C"
+            #else
+                #define RCTDL_C_API
+            #endif
         #else
-            #define RCTDL_C_API __declspec(dllimport)
+        /** using the C-API DLL **/
+            #ifdef __cplusplus
+                #define RCTDL_C_API extern "C" __declspec(dllimport)
+            #else
+                #define RCTDL_C_API __declspec(dllimport)
+            #endif
         #endif
     #endif
 #else           /* linux bindings */
@@ -68,6 +79,16 @@
 #endif
 
 #include "rctdl_c_api_types.h"
+
+/** @name Library Version API
+
+@{*/
+/** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
+RCTDL_C_API const uint32_t rctdl_get_version();
+
+/** Get library version string */
+RCTDL_C_API const char * rctdl_get_version_str();
+/** @}*/
 
 /** @name Library Decode Tree API
 @{*/
