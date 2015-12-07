@@ -60,3 +60,5 @@ ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/x64/Release/*
 *.manifest
 *.cache
 ref_trace_decoder/docs/html/*
+ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/Debug-dll/*
+ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/x64/Debug-dll/*

@@ -41,6 +41,15 @@
 #include "c_api/rctdl_c_api.h"
 #include "rctdl_c_api_obj.h"
 
+/** MSVC2010 unwanted export workaround */
+#ifdef WIN32
+#if (_MSC_VER == 1600)
+#include <new>
+namespace std { const nothrow_t nothrow = nothrow_t(); }
+#endif
+#endif
+
+
 /*******************************************************************************/
 /* C library data - additional data on top of the C++ library objects                                                             */
 /*******************************************************************************/
@@ -56,6 +65,19 @@ static std::map<dcd_tree_handle_t, lib_dt_data_list *> s_data_map;
 /*******************************************************************************/
 /* C API functions                                                             */
 /*******************************************************************************/
+
+/** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
+RCTDL_C_API const uint32_t rctdl_get_version() 
+{ 
+    return rctdlVersion::vers_num();
+}
+
+/** Get library version string */
+RCTDL_C_API const char * rctdl_get_version_str() 
+{ 
+    return rctdlVersion::vers_str();
+}
+
 
 RCTDL_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags)
 {

@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 
     moss << "Trace Packet Lister: CS Decode library testing\n";
     moss << "-----------------------------------------------\n\n";
-    moss << "** Library Version : " << rctdl_get_version_str() << "\n\n";
+    moss << "** Library Version : " << rctdlVersion::vers_str() << "\n\n";
     logger.LogMsg(moss.str());
 
 

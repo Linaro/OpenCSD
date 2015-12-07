@@ -33,18 +33,19 @@
  */ 
 
 #include "rctdl_if_types.h"
+#include "rctdl_version.h"
 
-/** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
- extern "C" const uint32_t rctdl_get_version() 
- { 
-     return ((uint32_t)RCTDL_VER_MAJOR << 16) | (uint32_t)RCTDL_VER_MINOR; 
- }
+const uint32_t rctdlVersion::vers_num()
+{
+    return ((uint32_t)RCTDL_VER_MAJOR << 16) | (uint32_t)RCTDL_VER_MINOR; 
+}
 
-/** Get library version string */
- extern "C" const char * rctdl_get_version_str() 
- { 
+const char *rctdlVersion::vers_str()
+{
      return RCTDL_VER_STRING; 
- }
+}
+
+
 
 
 /* End of File rctdl_version.cpp */
