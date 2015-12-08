@@ -56,7 +56,7 @@ e.g. `./lib/win64/rel` will contain the windows 64 bit release libraries.
 
 The solution contains four configurations:-
 - *Debug* : builds debug versions of static C++ main library and C-API libraries, test programs linked to the static library.
-- *Debug-dll : builds debug versions of static main library and C-API DLL. C-API statically linked to the main library. 
+- *Debug-dll* : builds debug versions of static main library and C-API DLL. C-API statically linked to the main library. 
 C-API test built as `simple_pkt_print_c_api-dl.exe` and linked against the DLL version of the C-API library.
 - *Release* : builds release static library versions, test programs linked to static libraries.
 - *Release-dll* : builds release C-API DLL, static main library.

@@ -31,6 +31,24 @@ _Current Version 0.001_
 - ETMv4 data trace - packet processing and decode.
 
 
+Documentation
+-------------
+
+API Documentation is provided inline in the source header files, which use the __doxygen__ standard mark-up.
+Run `doxygen` on the `./doxygen_config.dox` file located in the `./docs` directory..
+
+    doxygen ./doxygen_config.dox
+
+This will produce the documentation in the `./docs/html` directory. The doxygen configuration also includes
+the `*.md` files as part of the documentation.
+
+
+Building the Library
+--------------------
+
+See [build_libs.md](@ref build_lib) in the `./docs` directory for build details.
+
+
 Version and Modification Information
 ====================================
 
