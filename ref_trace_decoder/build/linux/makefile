@@ -40,7 +40,7 @@ export RCTDL_ROOT
 endif
 
 # library names
-LIB_BASE_NAME=arm_opencsd
+LIB_BASE_NAME=cstraced
 export LIB_BASE_NAME
 LIB_CAPI_NAME=$(LIB_BASE_NAME)_c_api
 export LIB_CAPI_NAME

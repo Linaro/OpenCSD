@@ -62,3 +62,7 @@ ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/x64/Release/*
 ref_trace_decoder/docs/html/*
 ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/Debug-dll/*
 ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/x64/Debug-dll/*
+ref_trace_decoder/tests/build/win/trc_pkt_lister/Debug-dll/*
+ref_trace_decoder/tests/build/win/trc_pkt_lister/Release-dll/*
+ref_trace_decoder/tests/build/win/trc_pkt_lister/x64/Debug-dll/*
+ref_trace_decoder/tests/build/win/trc_pkt_lister/x64/Release-dll/*
