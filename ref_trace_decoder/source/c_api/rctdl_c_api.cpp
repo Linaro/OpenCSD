@@ -396,7 +396,6 @@ RCTDL_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt
         return RCTDL_ERR_INVALID_PARAM_VAL;
     std::string str;
     trcPrintElemToString<RctdlTraceElement,rctdl_generic_trace_elem>(p_pkt,str);
-//    RctdlTraceElement::toString(p_pkt,str);
     if(str.size() > 0)
     {
         strncpy(buffer,str.c_str(),buffer_size -1);
@@ -417,13 +416,22 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t han
 
         if(err == RCTDL_OK)
         {
-            TrcMemAccessorFile *pAcc = 0;
+            TrcMemAccessorBase *p_accessor;
             std::string pathToFile = filepath;
-            err = TrcMemAccessorFile::createFileAccessor(&pAcc,pathToFile,address);
+            err = TrcMemAccFactory::CreateFileAccessor(&p_accessor,pathToFile,address);            
             if(err == RCTDL_OK)
             {
-                pAcc->setMemSpace(mem_space);
-                pDT->addMemAccessorToMap(pAcc,0);
+                TrcMemAccessorFile *pAcc = dynamic_cast<TrcMemAccessorFile *>(p_accessor);
+                if(pAcc)
+                {
+                    pAcc->setMemSpace(mem_space);
+                    err = pDT->addMemAccessorToMap(pAcc,0);
+                }
+                else
+                    err = RCTDL_ERR_MEM;    // wrong type of object - treat as mem error
+
+                if(err != RCTDL_OK)
+                    TrcMemAccFactory::DestroyAccessor(p_accessor);
             }
         }
     }
@@ -444,20 +452,81 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t hand
 
         if(err == RCTDL_OK)
         {
-            TrcMemAccBufPtr *pBuff = new (std::nothrow) TrcMemAccBufPtr(address,p_mem_buffer,mem_length);
-            if(pBuff)
+            TrcMemAccessorBase *p_accessor;
+            err = TrcMemAccFactory::CreateBufferAccessor(&p_accessor, address, p_mem_buffer, mem_length);
+            if(err == RCTDL_OK)
             {
-                pBuff->setMemSpace(mem_space);
-                pDT->addMemAccessorToMap(pBuff,0);
+                TrcMemAccBufPtr *pMBuffAcc = dynamic_cast<TrcMemAccBufPtr *>(p_accessor);
+                if(pMBuffAcc)
+                {
+                    pMBuffAcc->setMemSpace(mem_space);
+                    err = pDT->addMemAccessorToMap(p_accessor,0);
+                }
+                else
+                    err = RCTDL_ERR_MEM;    // wrong type of object - treat as mem error
+
+                if(err != RCTDL_OK)
+                    TrcMemAccFactory::DestroyAccessor(p_accessor);
             }
-            else 
-                err = RCTDL_ERR_MEM;
         }
     }
     else
         err = RCTDL_ERR_INVALID_PARAM_VAL;
     return err;
 }
+
+RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func)
+{
+    rctdl_err_t err = RCTDL_OK;
+
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+        if(!pDT->hasMemAccMapper())
+            err = pDT->createMemAccMapper();
+
+        if(err == RCTDL_OK)
+        {
+            TrcMemAccessorBase *p_accessor;
+            err = TrcMemAccFactory::CreateCBAccessor(&p_accessor, st_address, en_address, mem_space);
+            if(err == RCTDL_OK)
+            {
+                TrcMemAccCB *pCBAcc = dynamic_cast<TrcMemAccCB *>(p_accessor);
+                if(pCBAcc)
+                {
+                    pCBAcc->setCBIfFn(p_cb_func);
+                    err = pDT->addMemAccessorToMap(p_accessor,0);
+                }
+                else
+                    err = RCTDL_ERR_MEM;    // wrong type of object - treat as mem error
+
+                if(err != RCTDL_OK)
+                    TrcMemAccFactory::DestroyAccessor(p_accessor);
+            }
+        }
+    }
+    else
+        err = RCTDL_ERR_INVALID_PARAM_VAL;
+    return err;
+}
+
+RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space)
+{
+    rctdl_err_t err = RCTDL_OK;
+
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+        if(!pDT->hasMemAccMapper())
+            err = RCTDL_ERR_INVALID_PARAM_VAL; /* no mapper, no remove*/
+        else
+            err = pDT->removeMemAccessorByAddress(st_address,mem_space,0);
+    }
+    else
+        err = RCTDL_ERR_INVALID_PARAM_VAL;
+    return err;
+}
+
 
 /*******************************************************************************/
 /* C API Helper objects                                                        */

@@ -461,8 +461,6 @@ bool CreateDcdTreeFromSnapShot::getCoreProfile(const std::string &coreName, rctd
     return profileOK;
 }
 
-
-
 void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &dumps)
 {
     std::string dumpFilePathName;
@@ -474,14 +472,20 @@ void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &d
         dumpFilePathName = m_pReader->getSnapShotDir() + it->path;
         if(!TrcMemAccessorFile::isExistingFileAccessor(dumpFilePathName))
         {
-            TrcMemAccessorFile *p_acc;
+            TrcMemAccessorBase *p_acc;
             // not already a file accessor on this tree (n.b. assume only one tree in use)
-            rctdl_err_t err =  TrcMemAccessorFile::createFileAccessor(&p_acc,dumpFilePathName,it->address);
+            rctdl_err_t err = TrcMemAccFactory::CreateFileAccessor(&p_acc, dumpFilePathName,it->address);
+                
             if(err == RCTDL_OK)
             { 
                 err = m_pDecodeTree->addMemAccessorToMap(p_acc,0);
             }
-            // TBD: error handling
+            else
+            {                
+                std::ostringstream oss;
+                oss << "Failed to create memory accessor for file " << dumpFilePathName << ".";
+                LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,oss.str()));
+            }
         }
         it++;
     }

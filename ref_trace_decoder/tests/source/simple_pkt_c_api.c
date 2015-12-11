@@ -64,6 +64,8 @@ const char *stmtrace_data_filename = "cstraceitm.bin";
 const char *memory_dump_filename = "kernel_dump.bin";
 const rctdl_vaddr_t mem_dump_address=0xFFFFFFC000081000;
 
+static int using_mem_acc_cb = 0;
+
 /* trace configuration structures - contains programmed register values of trace hardware */
 static rctdl_etmv4_cfg trace_config;
 static rctdl_etmv3_cfg trace_config_etmv3;
@@ -150,6 +152,10 @@ static void process_cmd_line(int argc, char *argv[])
             test_protocol = RCTDL_PROTOCOL_STM;
             trace_data_filename = stmtrace_data_filename;
         }
+        else if(strcmp(argv[idx],"-test_cb") == 0)
+        {
+            using_mem_acc_cb = 1;
+        }
         else 
             printf("Ignored unknown argument %s\n", argv[idx]);
         idx++;
@@ -194,6 +200,83 @@ rctdl_datapath_resp_t packet_handler(const rctdl_datapath_op_t op, const rctdl_t
     }
 
     return resp;
+}
+
+/* decode memory access using a CB function 
+* tests CB API and add / remove mem acc API.
+*/
+static FILE *dump_file = NULL;
+static rctdl_mem_space_acc_t dump_file_mem_space = RCTDL_MEM_SPACE_ANY;
+static long mem_file_size = 0;
+static rctdl_vaddr_t mem_file_en_address = 0;  /* end address last inclusive address in file. */
+
+static uint32_t  mem_acc_cb(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
+{
+    uint32_t read_bytes = 0;
+    size_t file_read_bytes;
+
+    if(dump_file == NULL)
+        return 0;
+    
+    /* bitwise & the incoming mem space and supported mem space to confirm coverage */
+    if(((uint8_t)mem_space & (uint8_t)dump_file_mem_space ) == 0)   
+        return 0;
+
+    /* calculate the bytes that can be read */
+    if((address >= mem_dump_address) && (address <= mem_file_en_address))
+    {
+        /* some bytes in our range */
+        read_bytes = reqBytes;
+
+        if((address + reqBytes - 1) > mem_file_en_address)
+        {
+            /* more than are available - just read the available */
+            read_bytes = mem_file_en_address - (address - 1);
+        }
+    }
+
+    /* read some bytes if more than 0 to read. */ 
+    if(read_bytes != 0)
+    {
+        fseek(dump_file,address-mem_dump_address,SEEK_SET);
+        file_read_bytes = fread(byteBuffer,sizeof(uint8_t),read_bytes,dump_file);
+        if(file_read_bytes < read_bytes)
+            read_bytes = file_read_bytes;
+    }
+    return read_bytes;
+}
+
+static rctdl_err_t create_mem_acc_cb(dcd_tree_handle_t dcd_tree_h, const char *mem_file_path)
+{
+    rctdl_err_t err = RCTDL_OK;
+    dump_file = fopen(mem_file_path,"rb");
+    if(dump_file != NULL)
+    {
+        fseek(dump_file,0,SEEK_END);
+        mem_file_size = ftell(dump_file);
+        mem_file_en_address = mem_dump_address + mem_file_size - 1;
+
+        err = rctdl_dt_add_callback_mem_acc(dcd_tree_h,
+            mem_dump_address,mem_file_en_address,dump_file_mem_space,&mem_acc_cb);
+        if(err != RCTDL_OK)
+        {
+            fclose(dump_file);
+            dump_file = NULL;
+        }            
+    }
+    else
+        err = RCTDL_ERR_MEM_ACC_FILE_NOT_FOUND;
+    return err;
+}
+
+static void destroy_mem_acc_cb(dcd_tree_handle_t dcd_tree_h)
+{
+    if(dump_file != NULL)
+    {
+        rctdl_dt_remove_mem_acc(dcd_tree_h,mem_dump_address,dump_file_mem_space);
+        fclose(dump_file);
+        dump_file = NULL;
+    }
 }
 
 void packet_monitor(const rctdl_datapath_op_t op, 
@@ -341,8 +424,15 @@ static rctdl_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
 
         if(ret == RCTDL_OK)
         {
-            /* create a memory file accessor */
-            ret = rctdl_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,RCTDL_MEM_SPACE_ANY,mem_file_path);
+            if(using_mem_acc_cb)
+            {
+                ret = create_mem_acc_cb(dcd_tree_h,mem_file_path);
+            }
+            else
+            {
+                /* create a memory file accessor */
+                ret = rctdl_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,RCTDL_MEM_SPACE_ANY,mem_file_path);
+            }
         }
     }
     return ret;
@@ -622,6 +712,13 @@ int process_trace_data(FILE *pf)
         /* no errors - let the data path know we are at end of trace */
         if(ret == RCTDL_OK)
             rctdl_dt_process_data(dcdtree_handle, RCTDL_OP_EOT, 0,0,NULL,NULL);
+
+
+        /* shut down the mem acc CB if in use. */
+        if(using_mem_acc_cb)
+        {
+            destroy_mem_acc_cb(dcdtree_handle);
+        }
 
         /* dispose of the decode tree - which will dispose of any packet processors we created 
         */

@@ -326,6 +326,8 @@
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_base.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_bufptr.h" />
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb.h" />
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb_if.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_file.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_mapper.h" />
     <ClInclude Include="..\..\..\include\ptm\ptm_decoder.h" />
@@ -376,7 +378,9 @@
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.cpp" />
     <ClCompile Include="..\..\..\source\i_dec\trc_idec_arminst.cpp" />
     <ClCompile Include="..\..\..\source\i_dec\trc_i_decode.cpp" />
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_base.cpp" />
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_bufptr.cpp" />
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_cb.cpp" />
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_file.cpp" />
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_mapper.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp" />

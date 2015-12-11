@@ -275,11 +275,34 @@ void DecodeTree::destroyMemAccMapper()
 {
     if(m_default_mapper)
     {
-        m_default_mapper->DestroyAllAccessors();
+        m_default_mapper->RemoveAllAccessors();
         delete m_default_mapper;
         m_default_mapper = 0;
     }
 }
+
+rctdl_err_t DecodeTree::removeMemAccessor(TrcMemAccessorBase *p_accessor)
+{
+    rctdl_err_t err= RCTDL_ERR_NOT_INIT;
+    if(m_default_mapper)
+    {
+        err = m_default_mapper->RemoveAccessor(p_accessor);
+    }
+    return err;
+}
+
+rctdl_err_t DecodeTree::removeMemAccessorByAddress(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id)
+{
+    rctdl_err_t err= RCTDL_ERR_NOT_INIT;
+    if(m_default_mapper)
+    {
+        err = m_default_mapper->RemoveAccessorByAddress(address,mem_space,cs_trace_id);
+    }
+    return err;
+}
+
+
+
 
 /* create packet processing element only - attach to CSID in config */
 rctdl_err_t DecodeTree::createETMv3PktProcessor(EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout /*= 0*/)

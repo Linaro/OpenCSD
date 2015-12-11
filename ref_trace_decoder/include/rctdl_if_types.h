@@ -116,6 +116,7 @@ typedef enum _rctdl_err_t {
     RCTDL_ERR_MEM_ACC_OVERLAP,           /**< Attempted to set an overlapping range in memory access map */
     RCTDL_ERR_MEM_ACC_FILE_NOT_FOUND,    /**< Memory access file could not be opened */
     RCTDL_ERR_MEM_ACC_FILE_DIFF_RANGE,   /**< Attempt to re-use the same memory access file for a different address range */
+    RCTDL_ERR_MEM_ACC_RANGE_INVALID,     /**< Address range in accessor set to invalid values */
     /* test errors - errors generated only by the test code, not the library */
     RCTDL_ERR_TEST_SNAPSHOT_PARSE,       /**< test snapshot file parse error */
     RCTDL_ERR_TEST_SNAPSHOT_PARSE_INFO,  /**< test snapshot file parse information */
@@ -388,9 +389,12 @@ typedef struct _rctdl_pe_context {
 
 /** @}*/
 
-/** @name Opcode Memory Access Memory Spaces.
+/** @name Opcode Memory Access
+    Types used when accessing memory storage for traced opcodes..
 @{*/
 
+/** memory space bitfield enum for available security states and exception levels used 
+   when accessing memory. */
 typedef enum _rctdl_mem_space_acc_t {
     RCTDL_MEM_SPACE_EL1S = 0x1, /**<  S EL1/0 */
     RCTDL_MEM_SPACE_EL1N = 0x2, /**< NS EL1/0 */
@@ -400,6 +404,28 @@ typedef enum _rctdl_mem_space_acc_t {
     RCTDL_MEM_SPACE_N =    0x6, /**< Any NS   */
     RCTDL_MEM_SPACE_ANY =  0xF, /**< Any sec level / EL - live system use current EL + sec state */
 } rctdl_mem_space_acc_t;
+
+/**
+ * Callback function definition for callback memory accessor type.
+ *
+ * When using callback memory accessor, the decoder will call this function to obtain the 
+ * memory at teh address for the current opcodes. The memory space will represent the current 
+ * exception level and security context of the traced code.
+ *
+ * Return the number of bytes read, which can be less than the amount requested if this would take the
+ * access address outside the range of addresses defined when this callback was registered with the decoder.
+ *
+ * Return 0 bytes if start address out of covered range, or memory space is not one of those defined as supported
+ * when the callback was registered.
+ *
+ * @param address : start address of memory to be accessed
+ * @param mem_space : memory space of accessed memory (current EL & security state)
+ * @param reqBytes : number of bytes required
+ * @param *byteBuffer : buffer for data.
+ *
+ * @return uint32_t  : Number of bytes actually read, or 0 for access error.
+ */
+typedef uint32_t  (* Fn_MemAcc_CB)(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer);
 
 /** @}*/
 

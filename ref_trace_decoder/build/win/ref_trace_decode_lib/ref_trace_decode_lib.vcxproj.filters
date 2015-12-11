@@ -234,6 +234,12 @@
     <ClInclude Include="..\..\..\include\etmv3\trc_pkt_decode_etmv3.h">
       <Filter>Header Files\etmv3</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb_if.h">
+      <Filter>Header Files\mem_acc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb.h">
+      <Filter>Header Files\mem_acc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -327,6 +333,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\etmv3\trc_pkt_decode_etmv3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_cb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

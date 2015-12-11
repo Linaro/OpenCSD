@@ -36,6 +36,7 @@
 #define ARM_TRC_MEM_ACC_BASE_H_INCLUDED
 
 #include "rctdl_if_types.h"
+#include <string>
 
 /*!
  * @class TrcMemAccessorBase
@@ -52,10 +53,12 @@ class TrcMemAccessorBase
 {
 public:
 
+    /** Describes the storage type of the underlying memory accessor */
     enum MemAccTypes {
         MEMACC_UNKNOWN,
-        MEMACC_FILE,
-        MEMACC_BUFPTR
+        MEMACC_FILE,        //<! Binary data file accessor
+        MEMACC_BUFPTR,      //<! memory buffer accessor
+        MEMACC_CB_IF,       //<! callback interface accessor - use for live memory access
     };
 
     /** default constructor */
@@ -119,12 +122,21 @@ public:
      * Read bytes from via the accessor from the memory range. 
      *
      * @param s_address : Start address of the read.
+     * @param memSpace  : memory space for this access. 
      * @param reqBytes : Number of bytes required.
      * @param *byteBuffer : Buffer to copy the bytes into.
      *
-     * @return uint32_t : Number of bytes read, 0 if s_address out of range.
+     * @return uint32_t : Number of bytes read, 0 if s_address out of range, or mem space not accessible.
      */
-    virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const uint32_t reqBytes, uint8_t *byteBuffer) = 0;
+    virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const rctdl_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer) = 0;
+
+    /*!
+     * Validate the address range - ensure addresses aligned, different, st < en etc.
+     *
+     * @return bool : true if valid range.
+     */
+    const bool validateRange();
+
 
     const enum MemAccTypes getType() const { return m_type; };
 
@@ -133,11 +145,10 @@ public:
     const rctdl_mem_space_acc_t getMemSpace() const { return m_mem_space; };
     const bool inMemSpace(const rctdl_mem_space_acc_t mem_space) const { return (bool)(((uint8_t)m_mem_space & (uint8_t)mem_space) != 0); }; 
     
-
 protected:
-    rctdl_vaddr_t m_startAddress;   /**< Start address */
-    rctdl_vaddr_t m_endAddress;     /**< End address */
-    const MemAccTypes m_type;
+    rctdl_vaddr_t m_startAddress;   /**< accessible range start address */
+    rctdl_vaddr_t m_endAddress;     /**< accessible range end address */
+    const MemAccTypes m_type;       /**< memory accessor type */
     rctdl_mem_space_acc_t m_mem_space;
 };
 
@@ -195,6 +206,35 @@ inline const bool TrcMemAccessorBase::overLapRange(const TrcMemAccessorBase *p_t
         return true;
     return false;
 }
+
+inline const bool TrcMemAccessorBase::validateRange()
+{
+    if(m_startAddress & 0x1) // at least hword aligned for thumb
+        return false;
+    if((m_endAddress + 1) & 0x1)
+        return false;
+    if(m_startAddress == m_endAddress) // zero length range.
+        return false;   
+    if(m_startAddress > m_endAddress) // values bakcwards  /  invalid
+        return false;
+    return true;
+}
+
+
+class TrcMemAccFactory
+{
+public:
+    /** Accessor Creation */
+    static rctdl_err_t CreateBufferAccessor(TrcMemAccessorBase **pAccessor, const rctdl_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size);
+    static rctdl_err_t CreateFileAccessor(TrcMemAccessorBase **pAccessor, const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset = 0, size_t size = 0);
+    static rctdl_err_t CreateCBAccessor(TrcMemAccessorBase **pAccessor, const rctdl_vaddr_t s_address, const rctdl_vaddr_t e_address, const rctdl_mem_space_acc_t mem_space);
+    
+    /** Accessor Destruction */
+    static void DestroyAccessor(TrcMemAccessorBase *pAccessor);
+private:
+    TrcMemAccFactory() {};
+    ~TrcMemAccFactory() {};
+};
 
 #endif // ARM_TRC_MEM_ACC_BASE_H_INCLUDED
 

@@ -195,7 +195,7 @@ TrcMemAccessorFile * TrcMemAccessorFile::getExistingFileAccessor(const std::stri
 /***************************************************/
 /* accessor instance functions                     */
 /***************************************************/
-const uint32_t TrcMemAccessorFile::readBytes(const rctdl_vaddr_t address, const uint32_t reqBytes, uint8_t *byteBuffer)
+const uint32_t TrcMemAccessorFile::readBytes(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
 {
     if(!m_mem_file.is_open())
         return 0;

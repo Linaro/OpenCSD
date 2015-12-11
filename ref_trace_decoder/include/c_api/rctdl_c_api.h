@@ -260,8 +260,32 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t han
 RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length); 
 
 
-/** @}*/
-    
+/*!
+ * Add a memory access callback function. The decoder will call the function for opcode addresses in the 
+ * address range supplied for the memory spaces covered.
+ *
+ * @param handle : Handle to decode tree.
+ * @param st_address :  Start address of memory area covered by the callback.
+ * @param en_address :  End address of the memory area covered by the callback. (inclusive)
+ * @param mem_space : Memory space(s) covered by the callback.
+ * @param p_cb_func : Callback function
+ *
+ * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func); 
+
+/*!
+ * Remove a memory accessor by address and memory space.
+ *
+ * @param handle : Handle to decode tree.
+ * @param st_address : Start address of memory accessor. 
+ * @param mem_space : Memory space(s) covered by the accessor.
+ *
+ * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space);
+
+/** @}*/  
 
 /** @name Library Default Error Log Object API
     @brief Configure the default error logging object in the library.

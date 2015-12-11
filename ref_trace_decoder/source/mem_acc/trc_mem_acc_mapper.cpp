@@ -63,39 +63,40 @@ rctdl_err_t TrcMemAccMapper::ReadTargetMemory(const rctdl_vaddr_t address, const
     bool bReadFromCurr = true;
 
     /* see if the address is in any range we know */
-    if(!readFromCurrent(address, cs_trace_id))
-       bReadFromCurr = findAccessor(address, cs_trace_id);
+    if(!readFromCurrent(address,  mem_space, cs_trace_id))
+       bReadFromCurr = findAccessor(address,  mem_space, cs_trace_id);
 
     /* if bReadFromCurr then we know m_acc_curr is set */
     if(bReadFromCurr)
-        *num_bytes = m_acc_curr->readBytes(address,*num_bytes,p_buffer);
+        *num_bytes = m_acc_curr->readBytes(address,  mem_space, *num_bytes,p_buffer);
     else
         *num_bytes = 0;
     return RCTDL_OK;
 }
 
-void TrcMemAccMapper::DestroyAllAccessors()
+void TrcMemAccMapper::RemoveAllAccessors()
 {
     TrcMemAccessorBase *pAcc = 0;
     pAcc = getFirstAccessor();
     while(pAcc != 0)
     {
-        switch(pAcc->getType())
-        {
-        case TrcMemAccessorBase::MEMACC_FILE:
-            TrcMemAccessorFile::destroyFileAccessor(dynamic_cast<TrcMemAccessorFile *>(pAcc));
-            break;
-
-        case TrcMemAccessorBase::MEMACC_BUFPTR:
-            delete pAcc;
-            break;
-
-        default:
-            break;
-
-        }
+        TrcMemAccFactory::DestroyAccessor(pAcc);
+        pAcc = getNextAccessor();
     }
     clearAccessorList();
+}
+
+rctdl_err_t TrcMemAccMapper::RemoveAccessorByAddress(const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id /* = 0 */)
+{
+    rctdl_err_t err = RCTDL_OK;
+    if(findAccessor(st_address,mem_space,cs_trace_id))
+    {
+        err = RemoveAccessor(m_acc_curr);
+        m_acc_curr = 0;
+    }
+    else
+        err = RCTDL_ERR_INVALID_PARAM_VAL;
+    return err;
 }
 
 /************************************************************************************/
@@ -113,6 +114,10 @@ rctdl_err_t TrcMemAccMapGlobalSpace::AddAccessor(TrcMemAccessorBase *p_accessor,
 {
     rctdl_err_t err = RCTDL_OK;
     bool bOverLap = false;
+
+    if(!p_accessor->validateRange())
+        return RCTDL_ERR_MEM_ACC_RANGE_INVALID;
+
     std::vector<TrcMemAccessorBase *>::const_iterator it =  m_acc_global.begin();
     while((it != m_acc_global.end()) && !bOverLap)
     {
@@ -134,13 +139,14 @@ rctdl_err_t TrcMemAccMapGlobalSpace::AddAccessor(TrcMemAccessorBase *p_accessor,
     return err;
 }
 
-bool TrcMemAccMapGlobalSpace::findAccessor(const rctdl_vaddr_t address, const uint8_t /*cs_trace_id*/)
+bool TrcMemAccMapGlobalSpace::findAccessor(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t /*cs_trace_id*/)
 {
     bool bFound = false;
     std::vector<TrcMemAccessorBase *>::const_iterator it =  m_acc_global.begin();
     while((it != m_acc_global.end()) && !bFound)
     {
-        if((*it)->addrInRange(address))
+        if( (*it)->addrInRange(address) &&
+            (*it)->inMemSpace(mem_space))
         {
             bFound = true;
             m_acc_curr = *it;
@@ -150,28 +156,33 @@ bool TrcMemAccMapGlobalSpace::findAccessor(const rctdl_vaddr_t address, const ui
     return bFound;
 }
 
-bool TrcMemAccMapGlobalSpace::readFromCurrent(const rctdl_vaddr_t address, const uint8_t /*cs_trace_id*/)
+bool TrcMemAccMapGlobalSpace::readFromCurrent(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t /*cs_trace_id*/)
 {
     bool readFromCurr = false;
     if(m_acc_curr)
-        readFromCurr = m_acc_curr->addrInRange(address);
+        readFromCurr = (m_acc_curr->addrInRange(address) && m_acc_curr->inMemSpace(mem_space));
     return readFromCurr;
 }
 
 
 TrcMemAccessorBase * TrcMemAccMapGlobalSpace::getFirstAccessor()
 {
+    TrcMemAccessorBase *p_acc = 0;
     m_acc_it = m_acc_global.begin();
-    return getNextAccessor();
+    if(m_acc_it != m_acc_global.end())
+    {
+        p_acc = *m_acc_it;
+    }
+    return p_acc;
 }
 
 TrcMemAccessorBase *TrcMemAccMapGlobalSpace::getNextAccessor()
 {
     TrcMemAccessorBase *p_acc = 0;
+    m_acc_it++;
     if(m_acc_it != m_acc_global.end())
     {
         p_acc = *m_acc_it;
-        m_acc_it++;
     }
     return p_acc;
 }
@@ -181,5 +192,23 @@ void TrcMemAccMapGlobalSpace::clearAccessorList()
     m_acc_global.clear();
 }
 
+rctdl_err_t TrcMemAccMapGlobalSpace::RemoveAccessor(const TrcMemAccessorBase *p_accessor)
+{
+    bool bFound = false;
+    TrcMemAccessorBase *p_acc = getFirstAccessor();
+    while(p_acc != 0)
+    {
+        if(p_acc == p_accessor)
+        {
+            m_acc_global.erase(m_acc_it);
+            TrcMemAccFactory::DestroyAccessor(p_acc);
+            p_acc = 0;
+            bFound = true;
+        }
+        else
+            p_acc = getNextAccessor();
+    }
+    return bFound ? RCTDL_OK : RCTDL_ERR_INVALID_PARAM_VAL;
+}
 
 /* End of File trc_mem_acc_mapper.cpp */
