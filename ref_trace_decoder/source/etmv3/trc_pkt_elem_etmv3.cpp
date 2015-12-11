@@ -503,8 +503,8 @@ void EtmV3TrcPacket::getBranchAddressStr(std::string &valStr) const
     // S / NS etc if changed.
     if(context.updated)
     {
-        oss << context.curr_NS ? "NS; " : "S; ";
-        oss << context.curr_Hyp ? "Hyp; " : "";
+        oss << (context.curr_NS ? "NS; " : "S; ");
+        oss << (context.curr_Hyp ? "Hyp; " : "");
     }
     
     // exception? 

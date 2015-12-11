@@ -69,8 +69,8 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::processData(const rctdl_trc_index_t inde
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     m_bytesProcessed = 0;
 
-    while(((m_bytesProcessed < dataBlockSize) ||
-          (m_bytesProcessed == dataBlockSize) && (m_process_state == SEND_PKT))
+    while( ( (m_bytesProcessed < dataBlockSize) ||
+             ((m_bytesProcessed == dataBlockSize) && (m_process_state == SEND_PKT)) )
         && RCTDL_DATA_RESP_IS_CONT(resp))
     {
         try 
@@ -666,7 +666,7 @@ rctdl_err_t EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 				m_bytesExpectedThisPkt = 2 + ctxtIDBytes;
 			m_IsyncInfoIdx = 1 + cycCountBytes + ctxtIDBytes;
 		}
-		if(( m_currPacketData.size() - 1) == m_IsyncInfoIdx) {
+		if(( m_currPacketData.size() - 1) == (unsigned)m_IsyncInfoIdx) {
 			m_bIsync_get_LSiP_addr = ((m_currPacketData[m_IsyncInfoIdx] & 0x80) == 0x80);
 		}
 			

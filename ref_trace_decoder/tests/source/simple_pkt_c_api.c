@@ -670,7 +670,6 @@ int process_trace_data(FILE *pf)
 {
     rctdl_err_t ret = RCTDL_OK;
     dcd_tree_handle_t dcdtree_handle = C_API_INVALID_TREE_HANDLE;
-    int data_done = 0;
     uint8_t data_buffer[INPUT_BLOCK_SIZE];
     rctdl_trc_index_t index = 0;
     size_t data_read;

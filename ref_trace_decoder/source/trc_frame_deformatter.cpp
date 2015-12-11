@@ -292,7 +292,7 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::processTraceData(
 
 rctdl_err_t  TraceFmtDcdImpl::DecodeConfigure(uint32_t flags)
 {
-    char *pszErrMsg = "";
+    const char *pszErrMsg = "";
     rctdl_err_t err = RCTDL_OK;
 
     if((flags & ~RCTDL_DFRMTR_VALID_MASK) != 0)

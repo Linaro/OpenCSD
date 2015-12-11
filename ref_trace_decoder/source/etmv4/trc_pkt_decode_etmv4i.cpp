@@ -237,7 +237,6 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     Complete = true;
     bool is_addr = false;
-    bool is_ctxt = false;
     bool is_except = false;
     bool is_64L = false;
     
@@ -302,7 +301,6 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         }
         else
             bAllocErr = true;
-        is_ctxt = true;
         }
         break;
 
@@ -334,7 +332,6 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             }
             else
                 bAllocErr = true;
-            is_ctxt = true;
         }
     case ETM4_PKT_I_ADDR_L_32IS0:
     case ETM4_PKT_I_ADDR_L_32IS1:
@@ -530,13 +527,12 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     bool bPause = false;    // pause commit operation 
-    bool bDecodeFatalErr = false;   // bad sequencing or other issue.
     bool bPopElem = true;       // do we remove the element from the stack (multi atom elements may need to stay!)
     int num_commit_req = m_P0_commit;
 
     Complete = true; // assume we exit due to completion of commit operation
 
-    TrcStackElem *pElem;    // stacked element pointer
+    TrcStackElem *pElem = 0;    // stacked element pointer
 
     while(m_P0_commit && !bPause)
     {
@@ -706,9 +702,13 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
         }
         else
         {
-            // TBD: too few elements for commit operation - decode error.
+            // too few elements for commit operation - decode error.
+            rctdl_trc_index_t err_idx = 0;
+            if(pElem)
+                err_idx = pElem->getRootIndex();
+              
             resp = RCDTL_RESP_FATAL_INVALID_DATA;
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_COMMIT_PKT_OVERRUN,pElem->getRootIndex(),m_CSID,"Not enough elements to commit"));
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_COMMIT_PKT_OVERRUN,err_idx,m_CSID,"Not enough elements to commit"));
             bPause = true;
         }
     }
@@ -892,7 +892,6 @@ rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound)
 {
     uint32_t opcode;
     uint32_t bytesReq;
-    bool bIsThumb = m_instr_info.isa == rctdl_isa_thumb2;
     rctdl_err_t err = RCTDL_OK;
 
     // TBD: update mem space to allow for EL as well.

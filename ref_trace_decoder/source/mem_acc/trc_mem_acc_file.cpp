@@ -87,6 +87,8 @@ rctdl_err_t TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctd
     }
     else 
         err = RCTDL_ERR_MEM_ACC_FILE_NOT_FOUND;
+    if(!init)
+        err = RCTDL_ERR_NOT_INIT;
     return err;
 }
 

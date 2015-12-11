@@ -60,7 +60,7 @@ static struct _ap_map_elements {
 
 CoreArchProfileMap::CoreArchProfileMap()
 {
-    for(int i = 0; i < sizeof(ap_map_array)/sizeof(_ap_map_elements); i++)
+    for(unsigned i = 0; i < sizeof(ap_map_array)/sizeof(_ap_map_elements); i++)
     {
         core_profiles[ap_map_array[i].name] = ap_map_array[i].ap;
     }

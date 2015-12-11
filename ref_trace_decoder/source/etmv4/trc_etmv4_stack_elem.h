@@ -112,9 +112,9 @@ protected:
 };
 
 inline TrcStackElem::TrcStackElem(p0_elem_t p0_type, const bool isP0, rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index) :
-    m_P0_type(p0_type),
     m_root_pkt(root_pkt),
     m_root_idx(root_index),
+    m_P0_type(p0_type),
     m_is_P0(isP0)
 {
 }
