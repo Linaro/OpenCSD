@@ -92,8 +92,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
             {
                 doTraceInfoPacket();
                 m_curr_state = DECODE_PKTS;
-                bPktDone = true;
             }
+            bPktDone = true;
             break;
 
         case DECODE_PKTS:
