@@ -42,14 +42,16 @@
 TrcMemAccMapper::TrcMemAccMapper() :
     m_acc_curr(0),
     m_trace_id_curr(0),
-    m_using_trace_id(false)
+    m_using_trace_id(false),
+    m_err_log(0)
 {
 }
 
 TrcMemAccMapper::TrcMemAccMapper(bool using_trace_id) : 
     m_acc_curr(0),
     m_trace_id_curr(0),
-    m_using_trace_id(using_trace_id)
+    m_using_trace_id(using_trace_id),
+    m_err_log(0)
 {
 }
 
@@ -97,6 +99,12 @@ rctdl_err_t TrcMemAccMapper::RemoveAccessorByAddress(const rctdl_vaddr_t st_addr
     else
         err = RCTDL_ERR_INVALID_PARAM_VAL;
     return err;
+}
+
+void  TrcMemAccMapper::LogMessage(const std::string &msg)
+{
+    if(m_err_log)
+        m_err_log->LogMessage(ITraceErrorLog::HANDLE_GEN_INFO,RCTDL_ERR_SEV_INFO,msg);
 }
 
 /************************************************************************************/
@@ -209,6 +217,22 @@ rctdl_err_t TrcMemAccMapGlobalSpace::RemoveAccessor(const TrcMemAccessorBase *p_
             p_acc = getNextAccessor();
     }
     return bFound ? RCTDL_OK : RCTDL_ERR_INVALID_PARAM_VAL;
+}
+
+
+void TrcMemAccMapGlobalSpace::logMappedRanges()
+{
+    std::string accStr;
+    TrcMemAccessorBase *pAccessor = getFirstAccessor();
+    LogMessage("Mapped Memory Accessors\n");
+    while(pAccessor != 0)
+    {
+        pAccessor->getMemAccString(accStr);
+        accStr += "\n";
+        LogMessage(accStr);
+        pAccessor = getNextAccessor();
+    }
+    LogMessage("========================\n");
 }
 
 /* End of File trc_mem_acc_mapper.cpp */

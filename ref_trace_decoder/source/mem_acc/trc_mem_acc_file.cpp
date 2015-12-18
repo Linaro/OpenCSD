@@ -33,6 +33,9 @@
 
 #include "mem_acc/trc_mem_acc_file.h"
 
+#include <sstream>
+#include <iomanip>
+
 /***************************************************/
 /* protected construction and reference counting   */
 /***************************************************/
@@ -333,5 +336,30 @@ const bool TrcMemAccessorFile::overLapRange(const TrcMemAccessorBase *p_test_acc
     return bOverLapRange;
 }
 
+    /*! Override to handle ranges and offset accessors plus add in file name. */
+void TrcMemAccessorFile::getMemAccString(std::string &accStr) const
+{
+    std::ostringstream oss;
+    accStr = "";
+    if(m_base_range_set)
+    {
+        TrcMemAccessorBase::getMemAccString(accStr);
+    }
+
+    if(m_has_access_regions)
+    {
+        std::string addStr;
+        std::list<FileRegionMemAccessor *>::const_iterator it;
+        it = m_access_regions.begin();
+        while(it != m_access_regions.end())
+        {
+            (*it)->getMemAccString(addStr);
+            if(accStr.length())
+                accStr += "\n";
+            accStr += addStr;
+        }
+    }
+    accStr += (std::string)"\nFilename=" + m_file_path;
+}
 
 /* End of File trc_mem_acc_file.cpp */

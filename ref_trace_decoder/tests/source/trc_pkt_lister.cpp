@@ -500,6 +500,10 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
             logger.LogMsg(oss.str());
         }
 
+
+        if(decode)
+            dcd_tree->logMappedRanges();    // print out the mapped ranges
+
          // check if we have attached at least one printer
         if(decode || (printers.size() > 0))
         {

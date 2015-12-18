@@ -258,7 +258,10 @@ rctdl_err_t DecodeTree::createMemAccMapper(memacc_mapper_t type)
 
     // set the access interface
     if(m_default_mapper)
+    {
         setMemAccessI(m_default_mapper);
+        m_default_mapper->setErrorLog(s_i_error_logger);
+    }
 
     return (m_default_mapper != 0) ? RCTDL_OK : RCTDL_ERR_MEM;
 }
@@ -301,8 +304,11 @@ rctdl_err_t DecodeTree::removeMemAccessorByAddress(const rctdl_vaddr_t address, 
     return err;
 }
 
-
-
+void DecodeTree::logMappedRanges()
+{
+    if(m_default_mapper)
+        m_default_mapper->logMappedRanges();
+}
 
 /* create packet processing element only - attach to CSID in config */
 rctdl_err_t DecodeTree::createETMv3PktProcessor(EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout /*= 0*/)

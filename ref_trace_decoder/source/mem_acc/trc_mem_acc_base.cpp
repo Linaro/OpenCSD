@@ -38,6 +38,9 @@
 #include "mem_acc/trc_mem_acc_cb.h"
 #include "mem_acc/trc_mem_acc_bufptr.h"
 
+#include <sstream>
+#include <iomanip>
+
  /** Accessor Creation */
 rctdl_err_t TrcMemAccFactory::CreateBufferAccessor(TrcMemAccessorBase **pAccessor, const rctdl_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size)
 {
@@ -87,6 +90,60 @@ void TrcMemAccFactory::DestroyAccessor(TrcMemAccessorBase *pAccessor)
     default:
         break;
     }
+}
+
+
+/* memory access info logging */
+void TrcMemAccessorBase::getMemAccString(std::string &accStr) const
+{
+    std::ostringstream oss;
+    int printNibbles = RCTDL_MAX_VA_BITSIZE / 4;
+
+    switch(m_type)
+    {
+    case MEMACC_FILE:
+        oss << "FileAcc; Range::0x";
+        break;
+         
+    case MEMACC_BUFPTR:
+        oss << "BuffAcc; Range::0x";
+        break;
+
+    case MEMACC_CB_IF:
+        oss << "CB  Acc; Range::0x";
+        break;
+
+    default: 
+        oss << "UnknAcc; Range::0x";
+        break;
+    }
+    oss << std::hex << std::setw(2) << std::setfill('0') << m_startAddress << ":" << m_endAddress;
+    oss << "; Mem Space::";
+    switch(m_mem_space)
+    {
+    case RCTDL_MEM_SPACE_EL1S: oss << "EL1S"; break;
+    case RCTDL_MEM_SPACE_EL1N: oss << "EL1N"; break;
+    case RCTDL_MEM_SPACE_EL2: oss << "EL2"; break;
+    case RCTDL_MEM_SPACE_EL3: oss << "EL3"; break;
+    case RCTDL_MEM_SPACE_S: oss << "Any S"; break;
+    case RCTDL_MEM_SPACE_N: oss << "Any NS"; break;
+    case RCTDL_MEM_SPACE_ANY: oss << "Any"; break;
+
+    default:
+        {
+            uint8_t MSBits = (uint8_t)m_mem_space;
+            if(MSBits & (uint8_t)RCTDL_MEM_SPACE_EL1S)
+                oss << "EL1S,";
+            if(MSBits & (uint8_t)RCTDL_MEM_SPACE_EL1N)
+                oss << "EL1N,";
+            if(MSBits & (uint8_t)RCTDL_MEM_SPACE_EL2)
+                oss << "EL2,";
+            if(MSBits & (uint8_t)RCTDL_MEM_SPACE_EL3)
+                oss << "EL3,";
+        }
+        break;
+    }
+    accStr = oss.str();
 }
 
 /* End of File trc_mem_acc_base.cpp */

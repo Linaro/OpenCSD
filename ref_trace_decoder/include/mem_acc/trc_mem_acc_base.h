@@ -145,6 +145,9 @@ public:
     const rctdl_mem_space_acc_t getMemSpace() const { return m_mem_space; };
     const bool inMemSpace(const rctdl_mem_space_acc_t mem_space) const { return (bool)(((uint8_t)m_mem_space & (uint8_t)mem_space) != 0); }; 
     
+    /* memory access info logging */
+    virtual void getMemAccString(std::string &accStr) const;
+
 protected:
     rctdl_vaddr_t m_startAddress;   /**< accessible range start address */
     rctdl_vaddr_t m_endAddress;     /**< accessible range end address */

@@ -162,6 +162,8 @@ public:
      */
     virtual const bool overLapRange(const TrcMemAccessorBase *p_test_acc) const;
 
+    /*! Override to handle ranges and offset accessors plus add in file name. */
+    virtual void getMemAccString(std::string &accStr) const;
 
 
     /*!
@@ -208,6 +210,8 @@ public:
      * @return TrcMemAccessorFile * : none 0 if an accessor exists with this file path.
      */
     static TrcMemAccessorFile * getExistingFileAccessor(const std::string &pathToFile);
+
+
 
 
 private:
