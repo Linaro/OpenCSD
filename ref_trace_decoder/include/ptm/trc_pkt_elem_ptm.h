@@ -50,17 +50,116 @@ public:
     PtmTrcPacket();
     ~PtmTrcPacket();
 
+    PtmTrcPacket &operator =(const rctdl_ptm_pkt* p_pkt);
+
     // update interface - set packet values
+
+    void Clear();       //!< clear update data in packet ready for new one.
+    void ResetState();  //!< reset intra packet state data - on full decoder reset.
+
+    void SetType(const rctdl_ptm_pkt_type p_type);
+    void SetErrType(const rctdl_ptm_pkt_type e_type);
+
+    void SetException(  const rctdl_armv7_exception type, 
+                        const uint16_t number);
+    void UpdateAddress(const rctdl_vaddr_t partAddrVal, const int updateBits);
+    void UpdateNS(const int NS);
+    void UpdateAltISA(const int AltISA);
+    void UpdateHyp(const int Hyp);
+    void UpdateISA(const rctdl_isa isa);
+    void UpdateContextID(const uint32_t contextID);
+    void UpdateVMID(const uint8_t VMID);
+    void UpdateTimestamp(const uint64_t tsVal, const uint8_t updateBits);
+    void SetISyncReason(const ptm_isync_reason_t reason);
+    
+    bool UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccurate, const uint32_t cycleCount);  //!< Interpret P Hdr, return true if valid, false if not.
 
 
 
     // packet status interface - get packet info.
-
+    const bool isBadPacket() const;
+    const rctdl_ptm_pkt_type getType() const;
 
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const  uint32_t fmtFlags, std::string &str) const;
+
+private:
+
 };
+
+
+//*** update interface - set packet values
+inline void PtmTrcPacket::SetType(const rctdl_ptm_pkt_type p_type)
+{
+    type = p_type;
+}
+
+inline void PtmTrcPacket::SetErrType(const rctdl_ptm_pkt_type e_type)
+{
+    err_type = type;
+    type = e_type;
+}
+
+inline void PtmTrcPacket::UpdateNS(const int NS)
+{
+    context.curr_NS = NS;
+    context.updated = 1;
+};
+
+inline void PtmTrcPacket::UpdateAltISA(const int AltISA)
+{
+    context.curr_alt_isa = AltISA;
+    context.updated = 1;
+}
+
+inline void PtmTrcPacket::UpdateHyp(const int Hyp)
+{
+    context.curr_Hyp = Hyp;
+    context.updated = 1;
+}
+
+inline void PtmTrcPacket::UpdateISA(const rctdl_isa isa)
+{
+    prev_isa = curr_isa;
+    curr_isa = isa;
+}
+
+inline void PtmTrcPacket::UpdateContextID(const uint32_t contextID)
+{
+    context.ctxtID = contextID;
+    context.updated_c = 1;
+}
+
+inline void PtmTrcPacket::UpdateVMID(const uint8_t VMID)
+{
+    context.VMID = VMID;
+    context.updated_v = 1;
+}
+
+inline void PtmTrcPacket::SetException(  const rctdl_armv7_exception type, const uint16_t number)
+{
+    exception.bits.present = 1;
+    exception.number = number;
+    exception.type = type;
+}
+
+inline void PtmTrcPacket::SetISyncReason(const ptm_isync_reason_t reason)
+{
+    i_sync_reason = reason;
+}
+
+//*** packet status interface - get packet info.
+inline const bool PtmTrcPacket::isBadPacket() const
+{
+    return (bool)(type >= PTM_PKT_BAD_SEQUENCE);
+}
+
+inline const rctdl_ptm_pkt_type PtmTrcPacket::getType() const
+{
+    return type;
+}
+
 
 /** @}*/
 #endif // ARM_TRC_PKT_ELEM_PTM_H_INCLUDED

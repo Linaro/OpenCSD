@@ -38,8 +38,8 @@
 
 #include "trc_pkt_types_ptm.h"
 #include "trc_pkt_proc_base.h"
+#include "trc_pkt_elem_ptm.h"
 
-class PtmPktProcImpl;
 class PtmTrcPacket;
 class PtmConfig;
 
@@ -65,11 +65,98 @@ protected:
     virtual rctdl_datapath_resp_t onReset();
     virtual rctdl_datapath_resp_t onFlush();
     virtual rctdl_err_t onProtocolConfig();
+    virtual const bool isBadPacket() const;
 
-    friend class PtmPktProcImpl;
+    void InitPacketState();      // clear current packet state.
+    void InitProcessorState();   // clear all previous process state
 
-    PtmPktProcImpl *m_pProcessor;
+    rctdl_datapath_resp_t outputPacket();
+    rctdl_datapath_resp_t outputUnsyncData();
+
+    typedef enum _process_state {
+        PROC_HDR,
+        PROC_DATA,
+        SEND_PKT, 
+    } process_state;
+    
+    process_state m_process_state;  // process algorithm state.
+
+    std::vector<uint8_t> m_currPacketData;  // raw data
+    uint32_t m_currPktIdx;   // index into packet when expanding
+    PtmTrcPacket m_curr_packet;  // expanded packet
+    rctdl_trc_index_t m_curr_pkt_index; // trace index at start of packet.
+
+    const bool readByte(uint8_t &currByte);
+
+    uint8_t m_chanIDCopy;
+
+    // current data block being processed.
+    const uint8_t *m_pDataIn;
+    uint32_t m_dataInLen;
+    uint32_t m_dataInProcessed;
+    rctdl_trc_index_t m_block_idx; // index start for current block
+
+    const bool isSync() const;
+
+    void waitASync();       //!< look for first synchronisation point in the packet stream
+
+    // ** packet processing functions.
+    void pktASync();
+    void pktISync();
+    void pktTrigger();
+    void pktWPointUpdate();
+    void pktIgnore();
+    void pktCtxtID();
+    void pktVMID();
+    void pktAtom();
+    void pktTimeStamp();
+    void pktExceptionRet();
+    void pktBranchAddr();
+    void pktReserved();
+
+    // number of bytes required for a complete packet - used in some multi byte packets
+    int m_numPktBytesReq;
+
+    // packet processing state
+    bool m_needCycleCount;
+    bool m_gotCycleCount;
+    int m_numCtxtIDBytes;
+    int m_gotCtxtIDBytes;
+
+
+    // bad packets 
+    void throwMalformedPacketErr(const char *pszErrMsg);
+    void throwPacketHeaderErr(const char *pszErrMsg);
+
+
+    // packet processing function table
+    typedef void (TrcPktProcPtm::*PPKTFN)(void);
+    PPKTFN m_pIPktFn;
+
+    struct _pkt_i_table_t {
+        rctdl_ptm_pkt_type pkt_type;
+        PPKTFN pptkFn;
+    } m_i_table[256];
+
+    void BuildIPacketTable();    
+
 };
+
+inline const bool TrcPktProcPtm::isSync() const
+{
+    return (bool)(m_curr_packet.getType() == PTM_PKT_NOTSYNC);
+}
+
+inline void TrcPktProcPtm::throwMalformedPacketErr(const char *pszErrMsg)
+{
+    m_curr_packet.SetErrType(PTM_PKT_BAD_SEQUENCE);
+    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,m_curr_pkt_index,m_chanIDCopy,pszErrMsg);
+}
+
+inline void TrcPktProcPtm::throwPacketHeaderErr(const char *pszErrMsg)
+{
+    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PCKT_HDR,m_curr_pkt_index,m_chanIDCopy,pszErrMsg);
+}
 
 
 /** @}*/
