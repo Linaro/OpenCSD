@@ -49,9 +49,9 @@ CC_INCLUDES	=	\
 
 OBJECTS		=	$(BUILD_DIR)/simple_pkt_c_api.o 
 
-LIBS		=	-L$(LIB_TARGET_DIR) -lref_trace_decoder -lrctdl_c_api
+LIBS		=	-L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME) -l$(LIB_CAPI_NAME) 
 
-all:  build_dir test_app
+all:  build_dir test_app copy_libs
 
 test_app: 	$(OBJECTS) $(BIN_TEST_TARGET_DIR)/$(PROG)
 
@@ -59,9 +59,16 @@ test_app: 	$(OBJECTS) $(BIN_TEST_TARGET_DIR)/$(PROG)
  $(BIN_TEST_TARGET_DIR)/$(PROG):
 			mkdir -p  $(BIN_TEST_TARGET_DIR)
 			$(LINKER) $(LINKER_FLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
+			cp $(LIB_TARGET_DIR)/*.so .
 
 build_dir:
 	mkdir -p $(BUILD_DIR)
+
+.PHONY: copy_libs
+
+copy_libs:
+	cp $(LIB_TARGET_DIR)/*.so $(BIN_TEST_TARGET_DIR)/.
+
 
 #### build rules
 $(BUILD_DIR)/%.o : %.c

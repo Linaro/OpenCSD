@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 
     moss << "Trace Packet Lister: CS Decode library testing\n";
     moss << "-----------------------------------------------\n\n";
-    moss << "** Library Version : " << rctdl_get_version_str() << "\n\n";
+    moss << "** Library Version : " << rctdlVersion::vers_str() << "\n\n";
     logger.LogMsg(moss.str());
 
 
@@ -499,6 +499,10 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
             oss << "Trace Packet Lister : Set trace element decode printer\n";
             logger.LogMsg(oss.str());
         }
+
+
+        if(decode)
+            dcd_tree->logMappedRanges();    // print out the mapped ranges
 
          // check if we have attached at least one printer
         if(decode || (printers.size() > 0))

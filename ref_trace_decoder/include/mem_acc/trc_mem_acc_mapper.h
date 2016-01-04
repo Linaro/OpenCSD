@@ -39,6 +39,7 @@
 
 #include "rctdl_if_types.h"
 #include "interfaces/trc_tgt_mem_access_i.h"
+#include "interfaces/trc_error_log_i.h"
 #include "mem_acc/trc_mem_acc_base.h"
 
 typedef enum _memacc_mapper_t {
@@ -52,32 +53,47 @@ public:
     TrcMemAccMapper(bool using_trace_id);
     virtual ~TrcMemAccMapper();
 
-    // memory access interface
+// decoder memory access interface
     virtual rctdl_err_t ReadTargetMemory(   const rctdl_vaddr_t address, 
                                             const uint8_t cs_trace_id, 
                                             const rctdl_mem_space_acc_t mem_space, 
                                             uint32_t *num_bytes, 
                                             uint8_t *p_buffer);
-    //virtual rctdl_err_t ReadTargetMemory(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id, uint32_t *num_bytes, uint8_t *p_buffer);
 
-    // mapper configuration interface
+// mapper memory area configuration interface
+
+    // add an accessor to this map
     virtual rctdl_err_t AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id) = 0;
 
-    // destroy all attached accessors
-    void DestroyAllAccessors();
+    // remove a specific accessor
+    virtual rctdl_err_t RemoveAccessor(const TrcMemAccessorBase *p_accessor) = 0;
 
 
+    // clear all attached accessors from the map
+    void RemoveAllAccessors();
+
+    // remove a single accessor based on address.
+    rctdl_err_t RemoveAccessorByAddress(const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id = 0);
+    
+    // set the error log.
+    void setErrorLog(ITraceErrorLog *err_log_i) { m_err_log = err_log_i;  };
+
+    // print out the ranges in this mapper.
+    virtual void logMappedRanges() = 0;
 
 protected:
-    virtual bool findAccessor(const rctdl_vaddr_t address, const uint8_t cs_trace_id) = 0;     // set m_acc_curr if found valid range, leave unchanged if not.
-    virtual bool readFromCurrent(const rctdl_vaddr_t address, const uint8_t cs_trace_id) = 0;
+    virtual bool findAccessor(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id) = 0;     // set m_acc_curr if found valid range, leave unchanged if not.
+    virtual bool readFromCurrent(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id) = 0;
     virtual TrcMemAccessorBase *getFirstAccessor() = 0;
     virtual TrcMemAccessorBase *getNextAccessor() = 0;
     virtual void clearAccessorList() = 0;
 
+    void LogMessage(const std::string &msg);
+
     TrcMemAccessorBase *m_acc_curr;     // most recently used - try this first.
     uint8_t m_trace_id_curr;            // trace ID for the current accessor
     const bool m_using_trace_id;        // true if we are using separate memory spaces by TraceID.
+    ITraceErrorLog *m_err_log;          // error log to print out mappings on request.
 };
 
 
@@ -92,12 +108,16 @@ public:
     // mapper creation interface - prevent overlaps
     virtual rctdl_err_t AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id);
 
+    // print out the ranges in this mapper.
+    virtual void logMappedRanges();
+
 protected:
-    virtual bool findAccessor(const rctdl_vaddr_t address, const uint8_t cs_trace_id); 
-    virtual bool readFromCurrent(const rctdl_vaddr_t address, const uint8_t cs_trace_id);    
+    virtual bool findAccessor(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id); 
+    virtual bool readFromCurrent(const rctdl_vaddr_t address,const rctdl_mem_space_acc_t mem_space,  const uint8_t cs_trace_id);    
     virtual TrcMemAccessorBase *getFirstAccessor();
     virtual TrcMemAccessorBase *getNextAccessor();
     virtual void clearAccessorList();
+    virtual rctdl_err_t RemoveAccessor(const TrcMemAccessorBase *p_accessor);
 
     std::vector<TrcMemAccessorBase *> m_acc_global;
     std::vector<TrcMemAccessorBase *>::iterator m_acc_it;

@@ -56,7 +56,7 @@ public:
     bool operator<(const FileRegionMemAccessor& rhs) { return this->m_startAddress < rhs.m_startAddress; };
 
     // not going to use these objects to read bytes - defer to the file class for that.
-    virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const uint32_t reqBytes, uint8_t *byteBuffer) { return 0; };
+    virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const rctdl_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer) { return 0; };
 
     const rctdl_vaddr_t regionStartAddress() const { return m_startAddress; };
 
@@ -77,7 +77,7 @@ class TrcMemAccessorFile : public TrcMemAccessorBase
 {
 public:
     /** read bytes override - reads from file */
-    virtual const uint32_t readBytes(const rctdl_vaddr_t address, const uint32_t reqBytes, uint8_t *byteBuffer);
+    virtual const uint32_t readBytes(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer);
 
 protected:
     TrcMemAccessorFile();   /**< protected default constructor */
@@ -162,6 +162,8 @@ public:
      */
     virtual const bool overLapRange(const TrcMemAccessorBase *p_test_acc) const;
 
+    /*! Override to handle ranges and offset accessors plus add in file name. */
+    virtual void getMemAccString(std::string &accStr) const;
 
 
     /*!
@@ -208,6 +210,8 @@ public:
      * @return TrcMemAccessorFile * : none 0 if an accessor exists with this file path.
      */
     static TrcMemAccessorFile * getExistingFileAccessor(const std::string &pathToFile);
+
+
 
 
 private:

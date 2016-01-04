@@ -39,6 +39,7 @@
 #include "trc_mem_acc_bufptr.h"
 #include "trc_mem_acc_file.h"
 #include "trc_mem_acc_mapper.h"
+#include "trc_mem_acc_cb.h"
 
 
 #endif // ARM_TRC_MEM_ACC_H_INCLUDED

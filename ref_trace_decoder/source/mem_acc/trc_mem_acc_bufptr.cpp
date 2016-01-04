@@ -42,8 +42,9 @@ TrcMemAccBufPtr::TrcMemAccBufPtr(const rctdl_vaddr_t s_address, const uint8_t *p
 {
 }
 
-const uint32_t TrcMemAccBufPtr::readBytes(const rctdl_vaddr_t address, const uint32_t reqBytes, uint8_t *byteBuffer)
+const uint32_t TrcMemAccBufPtr::readBytes(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
 {
+    // mapper wlll filter memory spaces.
     uint32_t bytesRead = bytesInRange(address,reqBytes); // check bytes available
     if(bytesRead)
         memcpy(byteBuffer,m_p_buffer+address-m_startAddress,bytesRead);

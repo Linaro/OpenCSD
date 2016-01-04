@@ -33,6 +33,9 @@
 
 #include "mem_acc/trc_mem_acc_file.h"
 
+#include <sstream>
+#include <iomanip>
+
 /***************************************************/
 /* protected construction and reference counting   */
 /***************************************************/
@@ -87,6 +90,8 @@ rctdl_err_t TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctd
     }
     else 
         err = RCTDL_ERR_MEM_ACC_FILE_NOT_FOUND;
+    if(!init)
+        err = RCTDL_ERR_NOT_INIT;
     return err;
 }
 
@@ -195,7 +200,7 @@ TrcMemAccessorFile * TrcMemAccessorFile::getExistingFileAccessor(const std::stri
 /***************************************************/
 /* accessor instance functions                     */
 /***************************************************/
-const uint32_t TrcMemAccessorFile::readBytes(const rctdl_vaddr_t address, const uint32_t reqBytes, uint8_t *byteBuffer)
+const uint32_t TrcMemAccessorFile::readBytes(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
 {
     if(!m_mem_file.is_open())
         return 0;
@@ -331,5 +336,30 @@ const bool TrcMemAccessorFile::overLapRange(const TrcMemAccessorBase *p_test_acc
     return bOverLapRange;
 }
 
+    /*! Override to handle ranges and offset accessors plus add in file name. */
+void TrcMemAccessorFile::getMemAccString(std::string &accStr) const
+{
+    std::ostringstream oss;
+    accStr = "";
+    if(m_base_range_set)
+    {
+        TrcMemAccessorBase::getMemAccString(accStr);
+    }
+
+    if(m_has_access_regions)
+    {
+        std::string addStr;
+        std::list<FileRegionMemAccessor *>::const_iterator it;
+        it = m_access_regions.begin();
+        while(it != m_access_regions.end())
+        {
+            (*it)->getMemAccString(addStr);
+            if(accStr.length())
+                accStr += "\n";
+            accStr += addStr;
+        }
+    }
+    accStr += (std::string)"\nFilename=" + m_file_path;
+}
 
 /* End of File trc_mem_acc_file.cpp */

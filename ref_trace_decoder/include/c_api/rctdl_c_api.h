@@ -43,14 +43,52 @@
     Defines API, functions and callback types.
 @{*/
 
-/* ensure C bindings  (expand later for DLL bindings) */
-#ifdef __cplusplus
-#define RCTDL_C_API extern "C"
-#else
-#define RCTDL_C_API
+/* ensure C bindings */
+
+#if defined(WIN32)  /* windows bindings */
+    /** Building the C-API DLL **/
+    #ifdef _RCTDL_C_API_DLL_EXPORT
+        #ifdef __cplusplus
+            #define RCTDL_C_API extern "C" __declspec(dllexport)
+        #else
+            #define RCTDL_C_API __declspec(dllexport)
+        #endif
+    #else   
+        /** building or using the static C-API library **/
+        #if defined(_LIB) || defined(RCTDL_USE_STATIC_C_API)
+            #ifdef __cplusplus
+                #define RCTDL_C_API extern "C"
+            #else
+                #define RCTDL_C_API
+            #endif
+        #else
+        /** using the C-API DLL **/
+            #ifdef __cplusplus
+                #define RCTDL_C_API extern "C" __declspec(dllimport)
+            #else
+                #define RCTDL_C_API __declspec(dllimport)
+            #endif
+        #endif
+    #endif
+#else           /* linux bindings */
+    #ifdef __cplusplus
+        #define RCTDL_C_API extern "C"
+    #else
+        #define RCTDL_C_API
+    #endif
 #endif
 
 #include "rctdl_c_api_types.h"
+
+/** @name Library Version API
+
+@{*/
+/** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
+RCTDL_C_API const uint32_t rctdl_get_version();
+
+/** Get library version string */
+RCTDL_C_API const char * rctdl_get_version_str();
+/** @}*/
 
 /** @name Library Decode Tree API
 @{*/
@@ -222,8 +260,32 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t han
 RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length); 
 
 
-/** @}*/
-    
+/*!
+ * Add a memory access callback function. The decoder will call the function for opcode addresses in the 
+ * address range supplied for the memory spaces covered.
+ *
+ * @param handle : Handle to decode tree.
+ * @param st_address :  Start address of memory area covered by the callback.
+ * @param en_address :  End address of the memory area covered by the callback. (inclusive)
+ * @param mem_space : Memory space(s) covered by the callback.
+ * @param p_cb_func : Callback function
+ *
+ * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func); 
+
+/*!
+ * Remove a memory accessor by address and memory space.
+ *
+ * @param handle : Handle to decode tree.
+ * @param st_address : Start address of memory accessor. 
+ * @param mem_space : Memory space(s) covered by the accessor.
+ *
+ * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space);
+
+/** @}*/  
 
 /** @name Library Default Error Log Object API
     @brief Configure the default error logging object in the library.

@@ -238,14 +238,12 @@ inline void TrcPktProcStm::checkSyncNibble()
 
         if((m_nibble == 0) && (m_num_F_nibbles >= 21))
         {
-            m_is_sync = true;   //this nibble marks a sync sequence
+            m_is_sync = true;   //this nibble marks a sync sequence - keep the F nibble count
         }
         else
         {            
-            m_sync_start = false;
-            m_is_sync = false;
+            clearSyncCount();   // clear all sync counters
         }
-        m_num_F_nibbles=0;      // clear to start counting again
         return;
     }
 

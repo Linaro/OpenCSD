@@ -16,6 +16,7 @@ line parameters allow the test program to be controlled.
 based on the same "snapshots" used for the C++ library. Limited user control for this program. 
 
 These programs are both built at the same time as the library for the same set of platforms.
+See [build_libs.md](@ref build_lib) for build details.
 
 
 Trace "Snapshot" directory.

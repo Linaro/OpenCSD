@@ -92,11 +92,11 @@ void trcPrintableElem::getValStr(std::string &valStr, const int valTotalBitSize,
             valStr += "??";
         if(valValidBits > 32)
         {
-            sprintf(szStrBuffer,"%lld",value);
+            sprintf(szStrBuffer,"%llu",value);
         }
         else
         {
-            sprintf(szStrBuffer,"%ld",(uint32_t)value);
+            sprintf(szStrBuffer,"%lu",(uint32_t)value);
         }
         valStr +=  szStrBuffer;
         if(valValidBits < valTotalBitSize)

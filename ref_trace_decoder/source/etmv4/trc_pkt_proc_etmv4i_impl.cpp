@@ -36,8 +36,8 @@
 
 EtmV4IPktProcImpl::EtmV4IPktProcImpl() :
     m_isInit(false),
-    m_first_trace_info(false),
-    m_interface(0)
+    m_interface(0),
+    m_first_trace_info(false)
 {
     BuildIPacketTable();
 }
@@ -81,8 +81,8 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
     m_blockBytesProcessed = 0;
     m_blockIndex = index;
     uint8_t currByte;
-    while(  ((m_blockBytesProcessed < dataBlockSize) || 
-             (m_blockBytesProcessed == dataBlockSize) && (m_process_state == SEND_PKT)) && 
+    while(  ( (m_blockBytesProcessed < dataBlockSize) || 
+              ((m_blockBytesProcessed == dataBlockSize) && (m_process_state == SEND_PKT)) ) && 
             RCTDL_DATA_RESP_IS_CONT(resp))
     {
         currByte = pDataBlock[m_blockBytesProcessed];
@@ -508,7 +508,7 @@ void EtmV4IPktProcImpl::iPktException()
             break;
     }
 
-    if(m_currPacketData.size() ==  m_excep_size)
+    if(m_currPacketData.size() ==  (unsigned)m_excep_size)
     {
         uint16_t excep_type =  (m_currPacketData[1] >> 1) & 0x1F;
         uint8_t addr_interp = (m_currPacketData[1] & 0x40) >> 5 | (m_currPacketData[1] & 0x1);
@@ -547,7 +547,7 @@ void EtmV4IPktProcImpl::iPktCycleCntF123()
                 m_curr_packet.setCommitElements(((lastByte >> 2) & 0x3) + 1);
             }
             // TBD: warning of non-valid CC threshold here?
-            m_curr_packet.setCycleCount(m_curr_packet.getCCThreshold() + lastByte & 0x3);
+            m_curr_packet.setCycleCount(m_curr_packet.getCCThreshold() + (lastByte & 0x3));
             m_process_state = SEND_PKT;
         }
         else if(format == ETM4_PKT_I_CCNT_F1) 
@@ -571,7 +571,7 @@ void EtmV4IPktProcImpl::iPktCycleCntF123()
 
         // TBD: warning if commit elements < 0?
 
-        m_curr_packet.setCycleCount(m_curr_packet.getCCThreshold() + lastByte & 0xF);
+        m_curr_packet.setCycleCount(m_curr_packet.getCCThreshold() + (lastByte & 0xF));
         m_curr_packet.setCommitElements(commit_elements);
         m_process_state = SEND_PKT;
     }
@@ -665,7 +665,7 @@ void EtmV4IPktProcImpl::iPktCondInstr()
     {
         if(m_curr_packet.getType() == ETM4_PKT_I_COND_I_F3)   // f3 two bytes long
         {
-            uint8_t num_c_elem = ((lastByte >> 1) & 0x3F) + lastByte & 0x1;
+          uint8_t num_c_elem = ((lastByte >> 1) & 0x3F) + (lastByte & 0x1);
             m_curr_packet.setCondIF3(num_c_elem,(bool)((lastByte & 0x1) == 0x1));
             // TBD: check for 0 num_c_elem in here.
             m_process_state = SEND_PKT;
@@ -976,7 +976,7 @@ void EtmV4IPktProcImpl::iPktLongAddr()
             break;
         }
     }
-    if(m_currPacketData.size() == (1+m_addrBytes))
+    if(m_currPacketData.size() == (unsigned)(1+m_addrBytes))
     {
         int st_idx = 1;
         if(m_bAddr64bit)
