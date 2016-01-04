@@ -114,9 +114,6 @@
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\source\ptm\trc_pkt_proc_ptm_impl.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\rctdl.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -62,6 +62,11 @@ public:
 
     void SetException(  const rctdl_armv7_exception type, 
                         const uint16_t number);
+    void SetISyncReason(const ptm_isync_reason_t reason);
+    void SetCycleCount(const uint32_t cycleCount);
+    void SetAtomFromPHdr(const uint8_t pHdr);
+    void SetCycleAccAtomFromPHdr(const uint8_t pHdr);
+    
     void UpdateAddress(const rctdl_vaddr_t partAddrVal, const int updateBits);
     void UpdateNS(const int NS);
     void UpdateAltISA(const int AltISA);
@@ -70,11 +75,6 @@ public:
     void UpdateContextID(const uint32_t contextID);
     void UpdateVMID(const uint8_t VMID);
     void UpdateTimestamp(const uint64_t tsVal, const uint8_t updateBits);
-    void SetISyncReason(const ptm_isync_reason_t reason);
-    
-    bool UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccurate, const uint32_t cycleCount);  //!< Interpret P Hdr, return true if valid, false if not.
-
-
 
     // packet status interface - get packet info.
     const bool isBadPacket() const;
@@ -147,6 +147,12 @@ inline void PtmTrcPacket::SetException(  const rctdl_armv7_exception type, const
 inline void PtmTrcPacket::SetISyncReason(const ptm_isync_reason_t reason)
 {
     i_sync_reason = reason;
+}
+
+inline void PtmTrcPacket::SetCycleCount(const uint32_t cycleCount)
+{
+    cycle_count = cycleCount;
+    cc_valid = 1;
 }
 
 //*** packet status interface - get packet info.

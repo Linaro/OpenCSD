@@ -87,6 +87,7 @@ protected:
     rctdl_trc_index_t m_curr_pkt_index; // trace index at start of packet.
 
     const bool readByte(uint8_t &currByte);
+    const bool readByte(); // just read into buffer, don't need the value
 
     uint8_t m_chanIDCopy;
 
@@ -114,15 +115,24 @@ protected:
     void pktBranchAddr();
     void pktReserved();
 
+    // extraction sub-routines
+    void extractCtxtID(int idx, uint32_t &ctxtID);
+    void extractCycleCount(int idx, uint32_t &cycleCount);
+    int extractTS(uint64_t &tsVal, uint8_t &tsUpdateBits);
+
     // number of bytes required for a complete packet - used in some multi byte packets
     int m_numPktBytesReq;
 
     // packet processing state
     bool m_needCycleCount;
     bool m_gotCycleCount;
+    int m_gotCCBytes;           // number of CC bytes read so far
+
     int m_numCtxtIDBytes;
     int m_gotCtxtIDBytes;
 
+    bool m_gotTSBytes;      //!< got all TS bytes
+    int m_tsByteMax;        //!< max size for TS portion of TS packet.
 
     // bad packets 
     void throwMalformedPacketErr(const char *pszErrMsg);
@@ -158,6 +168,11 @@ inline void TrcPktProcPtm::throwPacketHeaderErr(const char *pszErrMsg)
     throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PCKT_HDR,m_curr_pkt_index,m_chanIDCopy,pszErrMsg);
 }
 
+inline const bool TrcPktProcPtm::readByte()
+{
+    uint8_t currByte;
+    return readByte(currByte);    
+}
 
 /** @}*/
 

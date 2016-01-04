@@ -33,7 +33,7 @@
  */ 
 
 #include "ptm/trc_pkt_proc_ptm.h"
-#include "trc_pkt_proc_ptm_impl.h"
+#include "ptm/trc_cmp_cfg_ptm.h"
 #include "rctdl_error.h"
 
 
@@ -256,7 +256,7 @@ void TrcPktProcPtm::pktISync()
 {
     uint8_t currByte = 0;
     int pktIndex = m_currPacketData.size() - 1;
-    bool bGotBytes = false;
+    bool bGotBytes = false, validByte = true;
 
     if(pktIndex == 0)
     {
@@ -267,64 +267,93 @@ void TrcPktProcPtm::pktISync()
         m_numPktBytesReq = 6 + m_numCtxtIDBytes;
     }
 
-    while(readByte(currByte) && !bGotBytes)
+    while(validByte && !bGotBytes)
     {
-        pktIndex = m_currPacketData.size() - 1;
-        if(pktIndex == 5)
-        {
-            // got the info byte  
-            int altISA = (currByte >> 2) & 0x1;
-            int reason = (currByte >> 5) & 0x3;
-            m_curr_packet.SetISyncReason((ptm_isync_reason_t)(reason));
-            m_curr_packet.UpdateNS((currByte >> 3) & 0x1);
-            m_curr_packet.UpdateAltISA((currByte >> 2) & 0x1);
-            m_curr_packet.UpdateHyp((currByte >> 1) & 0x1);
-
-            rctdl_isa isa = rctdl_isa_arm;
-            if(m_currPacketData[1] & 0x1)
-                isa = altISA ? rctdl_isa_tee : rctdl_isa_thumb2;
-            m_curr_packet.UpdateISA(isa);
-
-            // check cycle count required - not if reason == 0;
-            m_needCycleCount = (reason != 0) ? m_config->enaCycleAcc() : false;
-            m_gotCycleCount = false;
-            m_numPktBytesReq += (m_needCycleCount ? 1 : 0);
-
-        }
-        else if(pktIndex > 5)
-        {
-            if(m_needCycleCount && !m_gotCycleCount)
+        if(readByte(currByte))
+        {           
+            pktIndex = m_currPacketData.size() - 1;
+            if(pktIndex == 5)
             {
-                if(pktIndex == 6)
-                    m_gotCycleCount = (bool)((currByte & 0x40) == 0);   // no cont bit, got cycle count
-                else
-                    m_gotCycleCount = ((currByte & 0x80) == 0) || (pktIndex == 10);
+                // got the info byte  
+                int altISA = (currByte >> 2) & 0x1;
+                int reason = (currByte >> 5) & 0x3;
+                m_curr_packet.SetISyncReason((ptm_isync_reason_t)(reason));
+                m_curr_packet.UpdateNS((currByte >> 3) & 0x1);
+                m_curr_packet.UpdateAltISA((currByte >> 2) & 0x1);
+                m_curr_packet.UpdateHyp((currByte >> 1) & 0x1);
 
-                if(!m_gotCycleCount)    // need more cycle count bytes
-                    m_numPktBytesReq++;
+                rctdl_isa isa = rctdl_isa_arm;
+                if(m_currPacketData[1] & 0x1)
+                    isa = altISA ? rctdl_isa_tee : rctdl_isa_thumb2;
+                m_curr_packet.UpdateISA(isa);
+
+                // check cycle count required - not if reason == 0;
+                m_needCycleCount = (reason != 0) ? m_config->enaCycleAcc() : false;
+                m_gotCycleCount = false;
+                m_numPktBytesReq += (m_needCycleCount ? 1 : 0);
+                m_gotCCBytes = 0;
+
             }
-            else if( m_numCtxtIDBytes > m_gotCtxtIDBytes)
+            else if(pktIndex > 5)
             {
-                m_gotCtxtIDBytes++;
-            }
-        }
+                // cycle count appears first if present
+                if(m_needCycleCount && !m_gotCycleCount)
+                {
+                    if(pktIndex == 6)
+                        m_gotCycleCount = (bool)((currByte & 0x40) == 0);   // no cont bit, got cycle count
+                    else
+                        m_gotCycleCount = ((currByte & 0x80) == 0) || (pktIndex == 10);
 
-        // check if we have enough bytes
-        bGotBytes = (bool)(m_numPktBytesReq == m_currPacketData.size());
+                    m_gotCCBytes++;     // count the cycle count bytes for later use.
+                    if(!m_gotCycleCount)    // need more cycle count bytes
+                        m_numPktBytesReq++;
+                }
+                // then context ID if present.
+                else if( m_numCtxtIDBytes > m_gotCtxtIDBytes)
+                {
+                    m_gotCtxtIDBytes++;
+                }
+            }
+
+            // check if we have enough bytes
+            bGotBytes = (bool)(m_numPktBytesReq == m_currPacketData.size());
+        }
+        else 
+            validByte = false;  // no byte available, exit.
     }
 
     if(bGotBytes)
     {
         // extract address value, cycle count and ctxt id.
         uint32_t cycleCount = 0;
-        uint32_t ctxtID;
+        uint32_t ctxtID = 0;
+        int optIdx = 7; // start index for optional elements.
 
+        // address is always full fixed 32 bit value
+        uint32_t address = ((uint32_t)m_currPacketData[1]) & 0xFE;
+        address |= ((uint32_t)m_currPacketData[2]) << 8;
+        address |= ((uint32_t)m_currPacketData[3]) << 16;
+        address |= ((uint32_t)m_currPacketData[4]) << 24;
+        m_curr_packet.UpdateAddress(address,32);
 
+        if(m_needCycleCount)
+        {
+            extractCycleCount(optIdx,cycleCount);
+            m_curr_packet.SetCycleCount(cycleCount);
+            optIdx+=m_gotCCBytes;
+        }
+
+        if(m_numCtxtIDBytes)
+        {
+            extractCtxtID(optIdx,ctxtID);
+            m_curr_packet.UpdateContextID(ctxtID);
+        }
     }
 }
 
 void TrcPktProcPtm::pktTrigger()
 {
+    m_process_state == SEND_PKT;    // no payload
 }
 
 void TrcPktProcPtm::pktWPointUpdate()
@@ -333,69 +362,167 @@ void TrcPktProcPtm::pktWPointUpdate()
 
 void TrcPktProcPtm::pktIgnore()
 {
+    m_process_state == SEND_PKT;    // no payload
 }
 
 void TrcPktProcPtm::pktCtxtID()
 {
+    int pktIndex = m_currPacketData.size() - 1;
+
+    // if at the header, determine how many more bytes we need.
+    if(pktIndex == 0)
+    {
+        m_numCtxtIDBytes = m_config->CtxtIDBytes();
+        m_gotCtxtIDBytes = 0;
+    }
+
+    // read the necessary ctxtID bytes from the stream
+    bool bGotBytes = false, bytesAvail = true;
+    uint32_t ctxtID = 0;
+
+    bGotBytes = m_numCtxtIDBytes == m_gotCtxtIDBytes;
+    while(!bGotBytes & bytesAvail)
+    {
+        bytesAvail = readByte();
+        if(bytesAvail)
+            m_gotCtxtIDBytes++;
+        bGotBytes = m_numCtxtIDBytes == m_gotCtxtIDBytes;
+    }
+
+    if(bGotBytes)
+    {
+        if(m_numCtxtIDBytes)
+        {
+            extractCtxtID(1,ctxtID);
+        }
+        m_curr_packet.UpdateContextID(ctxtID);
+        m_process_state == SEND_PKT;
+    }
 }
 
 void TrcPktProcPtm::pktVMID()
 {
+    uint8_t currByte;
+    
+    // just need a single payload byte...
+    if(readByte(currByte))
+    {
+        m_curr_packet.UpdateVMID(currByte);
+        m_process_state == SEND_PKT;
+    }
 }
 
 void TrcPktProcPtm::pktAtom()
 {
     uint8_t pHdr = m_currPacketData[0];
-    uint32_t cycleCount = 0;
-    bool bCycleAccurate = m_config->enaCycleAcc();
-    bool bGotAllPktBytes = false;
-    uint8_t currByte = 0;
 
-    if(bCycleAccurate)    
-    {        
+    if(!m_config->enaCycleAcc())    
+    {
+        m_curr_packet.SetAtomFromPHdr(pHdr);
+        m_process_state == SEND_PKT;
+    }
+    else
+    {
+        bool bGotAllPktBytes = false, byteAvail = true;
+        uint8_t currByte = 0;        // cycle accurate tracing -> atom + cycle count       
+
         if(!(pHdr & 0x40))
         {
             // only the header byte present
-            cycleCount = (pHdr >> 2) & 0xF;
             bGotAllPktBytes = true;
         }
         else 
         {
             // up to 4 additional bytes of count data.
-            while(readByte(currByte) && !bGotAllPktBytes)
+            while(byteAvail && !bGotAllPktBytes)
             {
-                if(!(currByte & 0x80) || (m_currPacketData.size() == 5))
+                if(readByte(currByte))
                 {
-                    bGotAllPktBytes = true;
-                    cycleCount = (pHdr >> 2) & 0xF;
-                    int shift = 4;
-                    uint32_t data;
-                    for(int idx = 1; idx < m_currPacketData.size(); idx++)
-                    {
-                        data = (uint32_t)m_currPacketData[idx];
-                        cycleCount |= ((data & 0x7F) << shift);
-                        shift += 7;
-                    }
+                    if(!(currByte & 0x80) || (m_currPacketData.size() == 5))
+                        bGotAllPktBytes = true;
                 }
+                else
+                    byteAvail = false;
             }
         }
-    }
-    else
-        bGotAllPktBytes = true;
 
-    if(bGotAllPktBytes)
-    {
-        m_curr_packet.UpdateAtomFromPHdr(pHdr,bCycleAccurate,cycleCount);
-        m_process_state == SEND_PKT;
+        // we have all the bytes for a cycle accurate packet.
+        if(bGotAllPktBytes)
+        {
+            uint32_t cycleCount = 0;
+            extractCycleCount(0,cycleCount);
+            m_curr_packet.SetCycleCount(cycleCount);
+            m_curr_packet.SetCycleAccAtomFromPHdr(pHdr);
+            m_process_state == SEND_PKT;
+        }
     }
 }
 
 void TrcPktProcPtm::pktTimeStamp()
 {
+    uint8_t currByte = 0;
+    int pktIndex = m_currPacketData.size() - 1;
+    bool bGotBytes = false, byteAvail = true;
+
+    if(pktIndex == 0)
+    {
+        m_gotTSBytes = false;
+        m_needCycleCount = m_config->enaCycleAcc();        
+        m_gotCCBytes = 0;
+
+        // max byte buffer size for full ts packet
+        m_tsByteMax = m_config->TSPkt64() ? 9 : 7;
+    }
+
+    while(byteAvail && !bGotBytes)
+    {
+        if(readByte(currByte))
+        {
+            if(!m_gotTSBytes)
+            {
+                if(((currByte & 0x80) == 0) || (m_currPacketData.size() == m_tsByteMax))
+                {
+                    m_gotTSBytes = true;
+                    if(!m_needCycleCount)
+                        bGotBytes = true;
+                }
+            }
+            else
+            {
+                uint8_t cc_cont_mask = 0x80;
+                // got TS bytes, collect cycle count
+                if(m_gotCCBytes == 0)
+                    cc_cont_mask = 0x40;
+                if((currByte & cc_cont_mask) == 0)
+                    bGotBytes = true;
+                m_gotCCBytes++;
+                if(m_gotCCBytes == 5)
+                    bGotBytes = true;
+            }
+        }
+        else
+            byteAvail = false;
+    }
+
+    if(bGotBytes)
+    {
+        uint64_t tsVal = 0;
+        uint32_t cycleCount = 0;
+        uint8_t tsUpdateBits = 0;
+        int ts_end_idx = extractTS(tsVal,tsUpdateBits);
+        if(m_needCycleCount)
+        {
+            extractCycleCount(ts_end_idx,cycleCount);
+            m_curr_packet.SetCycleCount(cycleCount);
+        }
+        m_curr_packet.UpdateTimestamp(tsVal,tsUpdateBits); 
+        m_process_state == SEND_PKT;
+    }
 }
 
 void TrcPktProcPtm::pktExceptionRet()
 {
+     m_process_state == SEND_PKT;    // no payload
 }
 
 void TrcPktProcPtm::pktBranchAddr()
@@ -404,6 +531,106 @@ void TrcPktProcPtm::pktBranchAddr()
 
 void TrcPktProcPtm::pktReserved()
 {
+     m_process_state == SEND_PKT;    // no payload
+}
+
+void TrcPktProcPtm::extractCtxtID(int idx, uint32_t &ctxtID)
+{
+    ctxtID = 0;
+    int shift = 0;
+    for(int i=0; i < m_numCtxtIDBytes; i++)
+    {
+        if(idx+i >= m_currPacketData.size())
+            throwMalformedPacketErr("Insufficient packet bytes for Context ID value.");
+        ctxtID |= ((uint32_t)m_currPacketData[idx+i]) << shift;
+        shift+=8;
+    }
+}
+
+void TrcPktProcPtm::extractCycleCount(int offset, uint32_t &cycleCount)
+{
+    bool bCont = true;
+    cycleCount = 0;
+    int by_idx = 0;
+    uint8_t currByte;
+    int shift = 4;
+
+    while(bCont)
+    {
+        if(by_idx+offset >= m_currPacketData.size())
+            throwMalformedPacketErr("Insufficient packet bytes for Cycle Count value.");
+
+        currByte = m_currPacketData[offset+by_idx];
+        if(by_idx == 0)
+        {
+            bCont = (currByte & 0x40) != 0;
+            cycleCount = (currByte >> 2) & 0xF;
+        }
+        else
+        {
+                    
+            bCont = (currByte & 0x80) != 0;
+            if(by_idx == 4)
+                bCont = false;
+            cycleCount |= (((uint32_t)(currByte & 0x7F)) << shift);
+            shift += 7;
+        }
+        by_idx++;
+    }
+}
+
+int TrcPktProcPtm::extractTS(uint64_t &tsVal,uint8_t &tsUpdateBits)
+{
+    bool bCont = true;
+    int tsIdx = 1;  // start index;
+    uint8_t byteVal;
+    bool b64BitVal = m_config->TSPkt64();
+    int shift = 0;
+
+    tsVal = 0;
+    tsUpdateBits = 0;
+
+    while(bCont)
+    {
+        if(tsIdx >= m_currPacketData.size())
+            throwMalformedPacketErr("Insufficient packet bytes for Timestamp value.");
+        
+        byteVal = m_currPacketData[tsIdx];
+       
+        if(b64BitVal)
+        {
+            if(tsIdx < 9)
+            {
+                bCont = ((byteVal & 0x80) == 0x80);
+                byteVal &= 0x7F;
+                tsUpdateBits += 7;
+            }
+            else
+            {
+                bCont = false;
+                tsUpdateBits += 8;
+            }
+        }
+        else
+        {
+            if(tsIdx < 7)
+            {
+                bCont = ((byteVal & 0x80) == 0x80);
+                byteVal &= 0x7F;
+                tsUpdateBits += 7;
+            }
+            else
+            {
+                byteVal &=0x3F;
+                bCont = false;
+                tsUpdateBits += 6;
+            }
+        }
+        tsVal |= (((uint64_t)byteVal) << shift);
+        tsIdx++;
+        shift += 7;
+    }
+    return tsIdx;   // return next byte index in packet.
 }
 
 

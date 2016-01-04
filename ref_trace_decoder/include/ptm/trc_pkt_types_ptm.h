@@ -113,7 +113,9 @@ typedef struct _rctdl_ptm_pkt
 
     ptm_isync_reason_t i_sync_reason;   /**< reason for ISync Packet. */
 
-    uint32_t cycle_count;       /**< cycle count value associated with this packet. (0 if no cycle count) */
+    uint32_t cycle_count;       /**< cycle count value associated with this packet. */
+    uint8_t cc_valid;           /**< cycle count value valid. */
+    
     uint64_t timestamp;         /**< timestamp value. */
     uint8_t ts_update_bits;     /**< bits of ts updated this packet. (if TS packet) */
 

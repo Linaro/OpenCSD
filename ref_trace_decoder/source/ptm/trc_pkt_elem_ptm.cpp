@@ -46,6 +46,7 @@ void PtmTrcPacket::Clear()
 {
     err_type = PTM_PKT_NOERROR;
     cycle_count = 0;
+    cc_valid = 0;
     context.updated = 0;
     context.updated_c = 0;
     context.updated_v = 0;
@@ -94,50 +95,46 @@ void PtmTrcPacket::UpdateTimestamp(const uint64_t tsVal, const uint8_t updateBit
     ts_update_bits = updateBits;
 }
    
-bool PtmTrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccurate, const uint32_t cycleCount)
+void PtmTrcPacket::SetCycleAccAtomFromPHdr(const uint8_t pHdr)
 {
-    if(cycleAccurate)
+    atom.num = 1;
+    atom.En_bits = (pHdr & 0x2) ? 0x0 : 0x1;
+}
+
+void PtmTrcPacket::SetAtomFromPHdr(const uint8_t pHdr)
+{
+    // how many atoms
+    uint8_t atom_fmt_id = pHdr & 0xF0;
+    if(atom_fmt_id == 0x80)
     {
-        cycle_count = cycleCount;
-        atom.num = 1;
-        atom.En_bits = (pHdr & 0x2) ? 0x0 : 0x1;
+        // format 1 or 2
+        if((pHdr & 0x08) == 0x08)
+            atom.num = 2;
+        else
+            atom.num = 1;
+    }
+    else if(atom_fmt_id == 0x90)
+    {
+        atom.num = 3;
     }
     else
     {
-        // how many atoms
-        uint8_t atom_fmt_id = pHdr & 0xF0;
-        if(atom_fmt_id == 0x80)
-        {
-            // format 1 or 2
-            if((pHdr & 0x08) == 0x08)
-                atom.num = 2;
-            else
-                atom.num = 1;
-        }
-        else if(atom_fmt_id == 0x90)
-        {
-            atom.num = 3;
-        }
+        if((pHdr & 0xE0) == 0xA0)
+            atom.num = 4;
         else
-        {
-            if((pHdr & 0xE0) == 0xA0)
-                atom.num = 4;
-            else
-                atom.num = 5;
-        }
-        
-        // extract the E/N bits
-        uint8_t atom_mask = 0x2;    // start @ bit 1 - newest instruction 
-        atom.En_bits = 0;
-        for(int i = 0; i < atom.num; i++)
-        {
-            atom.En_bits <<= 1;
-            if(!(atom_mask & pHdr)) // 0 bit is an E in PTM -> a one in the standard atom bit type
-                atom.En_bits |= 0x1;
-            atom_mask <<= 1;
-        }
-        
+            atom.num = 5;
     }
+        
+    // extract the E/N bits
+    uint8_t atom_mask = 0x2;    // start @ bit 1 - newest instruction 
+    atom.En_bits = 0;
+    for(int i = 0; i < atom.num; i++)
+    {
+        atom.En_bits <<= 1;
+        if(!(atom_mask & pHdr)) // 0 bit is an E in PTM -> a one in the standard atom bit type
+            atom.En_bits |= 0x1;
+        atom_mask <<= 1;
+    }        
 }
 
     // printing

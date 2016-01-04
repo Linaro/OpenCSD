@@ -151,11 +151,13 @@ inline const bool PtmConfig::enaTS() const
 
 inline const bool PtmConfig::TSPkt64() const       
 {
+    if(MinorRev() == 0) return false;
     return (bool)((reg_ccer & CCER_TS_64BIT) != 0);
 }
 
 inline const bool PtmConfig::TSBinEnc() const      
 {
+    if(MinorRev() == 0) return false;
     return (bool)((reg_ccer & CCER_TS_ENC_NAT) != 0);
 }
 
