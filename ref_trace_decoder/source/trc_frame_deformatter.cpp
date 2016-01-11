@@ -655,7 +655,7 @@ bool TraceFmtDcdImpl::outputFrame()
 
                 // output to the connected packet process
                 CollateDataPathResp(pDataIn->TraceDataIn(RCTDL_OP_DATA,
-                    m_out_data[m_out_processed].index,
+                    m_out_data[m_out_processed].index + m_out_data[m_out_processed].used,
                     m_out_data[m_out_processed].valid - m_out_data[m_out_processed].used,
                     m_out_data[m_out_processed].data + m_out_data[m_out_processed].used,
                     &bytes_used));               
