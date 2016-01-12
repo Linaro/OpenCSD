@@ -782,19 +782,18 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
             resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
         }
 
-        if(m_mem_nacc_pending)
+        if(m_mem_nacc_pending && RCTDL_DATA_RESP_IS_CONT(resp))
         {
-            if(RCTDL_DATA_RESP_IS_CONT(resp))
-            {
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
-                m_output_elem.st_addr = m_nacc_addr;
-                resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
-                m_mem_nacc_pending = false;
-            }
-            else
-                bCont = false;
+            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
+            m_output_elem.st_addr = m_nacc_addr;
+            resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+            m_mem_nacc_pending = false;
         }
     }
+
+    if(!RCTDL_DATA_RESP_IS_CONT(resp))
+        bCont = false;
+
     return resp;
 }
 
