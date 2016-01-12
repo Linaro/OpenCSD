@@ -47,12 +47,19 @@ public:
     void setMessageLogger(rctdlMsgLogger *pMsgLogger) { m_pMsgLogger = pMsgLogger; };
     void itemPrintLine(const std::string &msg);
 
+    // return wait for the first N packets - test the wait mechanism.
+    void setTestWaits(const int num_waits);
+    const int getTestWaits() const;
+    void decTestWaits();
+
 protected:
-    rctdlMsgLogger *m_pMsgLogger;
+    rctdlMsgLogger *m_pMsgLogger;    
+    int m_test_waits;
 };
 
 inline ItemPrinter::ItemPrinter() :
-   m_pMsgLogger(0)
+   m_pMsgLogger(0),
+   m_test_waits(0)
 {
 }
 
@@ -67,6 +74,20 @@ inline void ItemPrinter::itemPrintLine(const std::string &msg)
         m_pMsgLogger->LogMsg(msg);
 }
 
+inline void ItemPrinter::setTestWaits(const int num_waits)
+{
+    m_test_waits = num_waits;
+}
+
+inline const int ItemPrinter::getTestWaits() const
+{
+    return m_test_waits;
+}
+
+inline void ItemPrinter::decTestWaits()
+{
+    m_test_waits--;
+}
 
 #endif // ARM_ITEM_PRINTER_H_INCLUDED
 
