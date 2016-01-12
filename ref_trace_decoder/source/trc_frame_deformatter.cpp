@@ -664,6 +664,8 @@ bool TraceFmtDcdImpl::outputFrame()
                 {
                     cont_processing = false;
                     m_out_data[m_out_processed].used += bytes_used;
+                    if(m_out_data[m_out_processed].used == m_out_data[m_out_processed].valid)
+                        m_out_processed++; // we have used up all this data.
                 }
                 else
                 {
