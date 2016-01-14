@@ -52,6 +52,7 @@
 static bool process_cmd_line_opts( int argc, char* argv[]);
 static void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name);
 static bool process_cmd_line_logger_opts(int argc, char* argv[]);
+static void log_cmd_line_opts(int argc, char* argv[]);
 
     // default path
 #ifdef WIN32
@@ -73,6 +74,7 @@ static bool ss_verbose = false;
 static bool decode = false;
 static bool no_undecoded_packets = false;
 static bool pkt_mon = false;
+static int test_waits = 0;
 
 int main(int argc, char* argv[])
 {
@@ -92,6 +94,7 @@ int main(int argc, char* argv[])
     moss << "** Library Version : " << rctdlVersion::vers_str() << "\n\n";
     logger.LogMsg(moss.str());
 
+    log_cmd_line_opts(argc,argv);
 
     rctdlDefaultErrorLogger err_log;
     err_log.initErrorLogger(RCTDL_ERR_SEV_INFO);
@@ -188,6 +191,20 @@ void print_help()
     oss << "-decode_only        Does not list the undecoded packets, just the trace decode.\n";
     oss << "-o_raw_packed       Output raw packed trace frames\n";
     oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
+    oss << "-test_waits <N>     Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder\n";
+    logger.LogMsg(oss.str());
+}
+
+void log_cmd_line_opts(int argc, char* argv[])
+{
+    std::ostringstream oss;
+    oss << "Test Command Line:-\n";
+    oss << argv[0] << "   ";
+    for(int i = 1; i < argc; i++)
+    {
+        oss << argv[i] << "  ";
+    }
+    oss << "\n\n";
     logger.LogMsg(oss.str());
 }
 
@@ -322,9 +339,25 @@ bool process_cmd_line_opts(int argc, char* argv[])
                     bOptsOK = false;
                 }
             }
+            else if(strcmp(argv[optIdx], "-test_waits") == 0)
+            {
+                options_to_process--;
+                optIdx++;
+                if(options_to_process)
+                {
+                    test_waits = (int)strtol(argv[optIdx],0,0);
+                    if(test_waits < 0)
+                        test_waits = 0;
+                }
+                else
+                {
+                    logger.LogMsg("Trace Packet Lister : Error: wait count value on -test_waits option\n");
+                    bOptsOK = false;
+                }
+            }
             else if(strcmp(argv[optIdx], "-o_raw_packed") == 0)
             {
-                outRawPacked = true;
+                outRawPacked = true;     
             }
             else if(strcmp(argv[optIdx], "-o_raw_unpacked") == 0)
             {
@@ -378,6 +411,38 @@ bool process_cmd_line_opts(int argc, char* argv[])
     return bOptsOK;
 }
 
+//
+// if decoding the gen elem printer will be injecting waits, but we may ge a cont from the packet processors if a complete packet is not available.
+// if packet processing only, then waits will be coming from there until the count is extinguished
+// wait testing with packet processor only really works correctly if we are doing a single source as there is no way at this 
+// point to know which source has sent the _WAIT. with multi packet processor waiting may get false warnings once the _WAITs run out.
+bool ExpectingPPrintWaitResp(std::vector<ItemPrinter *> &printers, TrcGenericElementPrinter &genElemPrinter)
+{
+    bool ExpectingWaits = false;
+    if(test_waits > 0)
+    {
+        // see if last response was from the Gen elem printer expecting a wait
+        ExpectingWaits = genElemPrinter.needAckWait();
+
+        // now see if any of the active packet printers are returing wait responses.
+        if(!ExpectingWaits)
+        {
+            std::vector<ItemPrinter *>::iterator it;
+            it = printers.begin();
+            while((it != printers.end()) && !ExpectingWaits)
+            {
+                ExpectingWaits = (bool)((*it)->getTestWaits() != 0);
+                it++;
+            }
+        }
+
+        // nothing waiting - and no outstanding wait cycles in the Gen elem printer.
+        if(!ExpectingWaits && (genElemPrinter.getTestWaits() == 0))
+            test_waits = 0;     // zero out the input value if none of the printers currently have waits scheduled.
+    }
+    return ExpectingWaits;
+}
+
 void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name)
 {
     CreateDcdTreeFromSnapShot tree_creator;
@@ -414,10 +479,13 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                             if(decode || pkt_mon)
                                 pElement->getEtmV4IPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
                             else
+                            {
                                 pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                                if(test_waits)
+                                    pPrinter->setTestWaits(test_waits);
+                            }
                             printers.push_back(pPrinter); // save printer to destroy it later
                         }
-                    
 
                         oss << "Trace Packet Lister : ETMv4 Instuction trace Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                         logger.LogMsg(oss.str());
@@ -434,7 +502,11 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                             if(decode || pkt_mon)
                                 pElement->getEtmV3PktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
                             else
+                            {
                                 pElement->getEtmV3PktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                                if(test_waits)
+                                    pPrinter->setTestWaits(test_waits);
+                            }
                             printers.push_back(pPrinter); // save printer to destroy it later
                         }                    
                         oss << "Trace Packet Lister : ETMv3 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
@@ -452,7 +524,12 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                             if(decode || pkt_mon)
                                 pElement->getStmPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
                             else
+                            {
                                 pElement->getStmPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                                if(test_waits)
+                                    pPrinter->setTestWaits(test_waits);
+                            }
+
                             printers.push_back(pPrinter); // save printer to destroy it later
                         }                    
                         oss << "Trace Packet Lister : STM Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
@@ -498,6 +575,7 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
             dcd_tree->setGenTraceElemOutI(&genElemPrinter);
             oss << "Trace Packet Lister : Set trace element decode printer\n";
             logger.LogMsg(oss.str());
+            genElemPrinter.setTestWaits(test_waits);
         }
 
 
@@ -546,9 +624,26 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
 
                             nBuffProcessed += nUsedThisTime;
                             trace_index += nUsedThisTime;
+
+                            // test printers can inject _WAIT responses - see if we are expecting one...
+                            if(ExpectingPPrintWaitResp(printers,genElemPrinter))
+                            {
+                                if(RCTDL_DATA_RESP_IS_CONT(dataPathResp))
+                                {
+                                    // not wait or fatal - log a warning here.
+                                    std::ostringstream oss;
+                                    oss << "Trace Packet Lister : WARNING : Data in; data Path expected WAIT response\n";
+                                    logger.LogMsg(oss.str());
+                                }
+                            }
                         }
-                        else
+                        else // last response was _WAIT
                         {
+                            // may need to acknowledge a wait from the gen elem printer
+                            if(genElemPrinter.needAckWait())
+                                genElemPrinter.ackWait();
+
+                            // dataPathResp not continue or fatal so must be wait...
                             dataPathResp = dcd_tree->TraceDataIn(RCTDL_OP_FLUSH,0,0,0,0);
                         }
                     }

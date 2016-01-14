@@ -253,6 +253,8 @@ void EtmV4IPktProcImpl::iNotSync()
     {
         m_dump_unsynced_bytes = m_currPacketData.size();
         m_process_state = SEND_UNSYNCED;
+        // outputting some data then update packet index after so output indexes accurate
+        m_update_on_unsync_packet_index = m_blockIndex + m_blockBytesProcessed;
     }
 }
 

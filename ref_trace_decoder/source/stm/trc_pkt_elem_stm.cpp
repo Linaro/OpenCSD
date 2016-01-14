@@ -297,16 +297,15 @@ void StmTrcPacket::pktTypeName(const rctdl_stm_pkt_type pkt_type, std::string &n
         if(isMarkerPkt())
         {
             oss_name << "M";
-            oss_desc << "; with marker";
+            oss_desc << " + marker";
         }
 
         if(isTSPkt())
         {
             oss_name << "TS";
-            oss_desc << "; with timestamp";
+            oss_desc << " + timestamp";
         }
     }
-    oss_desc << ".";
     desc = oss_desc.str();
     name =  oss_name.str();
 }

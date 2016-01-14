@@ -40,26 +40,55 @@
 class TrcGenericElementPrinter : public ItemPrinter, public ITrcGenElemIn
 {
 public:
-    TrcGenericElementPrinter() {};
+    TrcGenericElementPrinter();
     virtual ~TrcGenericElementPrinter() {};
 
     virtual rctdl_datapath_resp_t TraceElemIn(const rctdl_trc_index_t index_sop,
-                                              const uint8_t trc_chan_id,
+                                              const uint8_t trc_chan_id,         
                                               const RctdlTraceElement &elem);
+
+    // funtionality to test wait / flush mechanism
+    void ackWait() { m_needWaitAck = false; };
+    const bool needAckWait() const { return m_needWaitAck; };
+
+protected:
+    bool m_needWaitAck;
 };
 
+
+inline TrcGenericElementPrinter::TrcGenericElementPrinter() :
+    m_needWaitAck(false)
+{
+}
 
 inline rctdl_datapath_resp_t TrcGenericElementPrinter::TraceElemIn(const rctdl_trc_index_t index_sop,
                                               const uint8_t trc_chan_id,
                                               const RctdlTraceElement &elem)
 {
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     std::string elemStr;
     std::ostringstream oss;
     oss << "Idx:" << index_sop << "; ID:"<< std::hex << (uint32_t)trc_chan_id << "; ";
     elem.toString(elemStr);
     oss << elemStr << std::endl;
     itemPrintLine(oss.str());
-    return RCTDL_RESP_CONT; // always return continue.
+
+    // funtionality to test wait / flush mechanism
+    if(m_needWaitAck)
+    {
+        oss.str("");
+        oss << "WARNING: Generic Element Printer; New element without previous _WAIT acknowledged\n";
+        itemPrintLine(oss.str());
+        m_needWaitAck = false;
+    }
+    
+    if(getTestWaits())
+    {
+        resp = RCTDL_RESP_WAIT; // return _WAIT for the 1st N packets.
+        decTestWaits();
+        m_needWaitAck = true;
+    }
+    return resp; 
 }
 
 #endif // ARM_GEN_ELEM_PRINTER_H_INCLUDED
