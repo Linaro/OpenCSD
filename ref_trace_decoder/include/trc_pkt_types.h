@@ -124,6 +124,7 @@ typedef enum _rctdl_armv7_exception {
     Excp_CMBusFault,
     Excp_CMHardFault,
     Excp_CMIRQn,
+    Excp_ThumbEECheckFail,
 } rctdl_armv7_exception;
 
 /** @}*/

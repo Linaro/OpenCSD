@@ -146,8 +146,15 @@ protected:
 
     rctdl_datapath_resp_t outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> &pktdata);
 
+    rctdl_datapath_resp_t outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, const uint8_t *pktdata, uint32_t pktlen);
+
+    /*! Let the derived class figure out if it needs to collate and send raw data.
+        can improve wait for sync performance if we do not need to save and send unsynced data.    
+    */
+    const bool hasRawMon() const;   
+
     /* the protocol configuration */
-    const Pc *m_config;
+    const Pc *m_config; 
 
 private:
     /* decode control */
@@ -299,6 +306,11 @@ template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::outputRawPa
         m_pkt_raw_mon_i.first()->RawPacketDataMon(RCTDL_OP_DATA,index_sop,pkt,size,p_data);
 }
 
+template<class P,class Pt, class Pc> const bool void TrcPktProcBase<P, Pt, Pc>::hasRawMon() const
+{
+    return m_pkt_raw_mon_i.hasAttachedAndEnabled();
+}
+
 template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::indexPacket(const rctdl_trc_index_t index_sop, const Pt *packet_type)
 {
     // packet indexer - cannot return CONT / WAIT, just gets the current index and type.
@@ -311,6 +323,13 @@ template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt,
     indexPacket(index_sop,pkt_type);
     if(pktdata.size() > 0)  // prevent out of range errors for 0 length vector.
         outputRawPacketToMonitor(index_sop,pkt,(uint32_t)pktdata.size(),&pktdata[0]);
+    return outputDecodedPacket(index_sop,pkt);
+}
+
+template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, const uint8_t *pktdata, uint32_t pktlen)
+{
+    indexPacket(index_sop,pkt_type);
+    outputRawPacketToMonitor(index_sop,pkt,pktlen,pktdata);
     return outputDecodedPacket(index_sop,pkt);
 }
 

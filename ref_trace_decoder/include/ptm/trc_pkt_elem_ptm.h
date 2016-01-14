@@ -79,6 +79,7 @@ public:
     // packet status interface - get packet info.
     const bool isBadPacket() const;
     const rctdl_ptm_pkt_type getType() const;
+    const rctdl_isa getISA() const;
 
     // printing
     virtual void toString(std::string &str) const;
@@ -166,6 +167,10 @@ inline const rctdl_ptm_pkt_type PtmTrcPacket::getType() const
     return type;
 }
 
+inline const rctdl_isa PtmTrcPacket::getISA() const
+{
+    return curr_isa;
+}
 
 /** @}*/
 #endif // ARM_TRC_PKT_ELEM_PTM_H_INCLUDED

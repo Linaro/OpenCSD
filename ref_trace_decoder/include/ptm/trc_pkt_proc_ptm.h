@@ -71,9 +71,9 @@ protected:
     void InitProcessorState();   // clear all previous process state
 
     rctdl_datapath_resp_t outputPacket();
-    rctdl_datapath_resp_t outputUnsyncData();
 
     typedef enum _process_state {
+        WAIT_SYNC,
         PROC_HDR,
         PROC_DATA,
         SEND_PKT, 
@@ -85,9 +85,11 @@ protected:
     uint32_t m_currPktIdx;   // index into packet when expanding
     PtmTrcPacket m_curr_packet;  // expanded packet
     rctdl_trc_index_t m_curr_pkt_index; // trace index at start of packet.
+    
 
     const bool readByte(uint8_t &currByte);
     const bool readByte(); // just read into buffer, don't need the value
+    void unReadByte();  // remove last byte from the buffer.
 
     uint8_t m_chanIDCopy;
 
@@ -97,9 +99,11 @@ protected:
     uint32_t m_dataInProcessed;
     rctdl_trc_index_t m_block_idx; // index start for current block
 
+    // processor synchronisation
     const bool isSync() const;
-
-    void waitASync();       //!< look for first synchronisation point in the packet stream
+    rctdl_datapath_resp_t waitASync();       //!< look for first synchronisation point in the packet stream
+    bool m_waitASyncSOPkt;
+    bool m_bAsyncRawOp;
 
     // ** packet processing functions.
     void pktASync();
@@ -115,10 +119,31 @@ protected:
     void pktBranchAddr();
     void pktReserved();
 
+    // async finder
+    typedef enum _async_result {
+        ASYNC,      //!< pattern confirmed async 0x00 x 5, 0x80
+        NOT_ASYNC,  //!< pattern confirmed not async
+        ASYNC_EXTRA_0,  //!< pattern confirmed 0x00 x N + ASYNC
+        THROW_0,    //!< long pattern of 0x00 - throw some away.
+        ASYNC_INCOMPLETE, //!< not enough input data.
+    } async_result_t;
+
+    async_result_t findAsync();
+
+    int m_async_0;  // number of current consecutive async 0s
+
+    bool m_part_async;
+
+    // number of extra 0s before we throw 0 on async detect.
+    #define ASYNC_PAD_0_LIMIT 11
+    // number of 0s minimum to form an async
+    #define ASYNC_REQ_0 5
+
     // extraction sub-routines
     void extractCtxtID(int idx, uint32_t &ctxtID);
     void extractCycleCount(int idx, uint32_t &cycleCount);
     int extractTS(uint64_t &tsVal, uint8_t &tsUpdateBits);
+    uint32_t extractAddress(const int offset,uint8_t &total_bits);
 
     // number of bytes required for a complete packet - used in some multi byte packets
     int m_numPktBytesReq;
@@ -133,6 +158,14 @@ protected:
 
     bool m_gotTSBytes;      //!< got all TS bytes
     int m_tsByteMax;        //!< max size for TS portion of TS packet.
+
+    // branch address state
+    bool m_gotAddrBytes;    //!< got all Addr bytes in branch packet
+    int m_numAddrBytes;     //!< number of address bytes
+    bool m_gotExcepBytes;   //!< got all needed exception bytes
+    int m_numExcepBytes;          //!< got 1st exception byte
+    rctdl_isa m_addrPktIsa; //!< ISA of the branch address packet
+    int m_excepAltISA;      //!< Alt ISA bit iff exception bytes
 
     // bad packets 
     void throwMalformedPacketErr(const char *pszErrMsg);
