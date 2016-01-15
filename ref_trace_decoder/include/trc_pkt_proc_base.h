@@ -306,7 +306,7 @@ template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::outputRawPa
         m_pkt_raw_mon_i.first()->RawPacketDataMon(RCTDL_OP_DATA,index_sop,pkt,size,p_data);
 }
 
-template<class P,class Pt, class Pc> const bool void TrcPktProcBase<P, Pt, Pc>::hasRawMon() const
+template<class P,class Pt, class Pc> const bool TrcPktProcBase<P, Pt, Pc>::hasRawMon() const
 {
     return m_pkt_raw_mon_i.hasAttachedAndEnabled();
 }

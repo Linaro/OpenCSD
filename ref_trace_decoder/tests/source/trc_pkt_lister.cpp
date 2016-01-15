@@ -514,6 +514,29 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                     }
                     break;
 
+                case RCTDL_PROTOCOL_PTM:
+                    {
+                        std::ostringstream oss;
+                        PacketPrinter<PtmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<PtmTrcPacket>(elemID,&logger);
+                        if(pPrinter)
+                        {
+                            // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
+                            if(decode || pkt_mon)
+                                pElement->getPtmPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                            else
+                            {
+                                pElement->getPtmPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                                if(test_waits)
+                                    pPrinter->setTestWaits(test_waits);
+                            }
+                            printers.push_back(pPrinter); // save printer to destroy it later
+                        }                    
+                        oss << "Trace Packet Lister : PTM Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                        logger.LogMsg(oss.str());
+                    }
+                    break;
+
+
                 case RCTDL_PROTOCOL_STM:
                     {
                         std::ostringstream oss;

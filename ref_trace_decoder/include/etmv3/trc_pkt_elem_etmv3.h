@@ -86,7 +86,7 @@ public:
     void UpdateDataAddress(const uint32_t value, const uint8_t valid_bits);
     void UpdateDataEndian(const uint8_t BE_Val);
     void SetCycleCount(const uint32_t cycleCount);
-    void SetISyncReason(const etmv3_isync_reason_t reason);
+    void SetISyncReason(const rctdl_iSync_reason reason);
     void SetISyncHasCC();
     void SetISyncIsLSiP();
     void SetISyncNoAddr();
@@ -185,7 +185,7 @@ inline void EtmV3TrcPacket::SetCycleCount(const uint32_t cycleCount)
     cycle_count = cycleCount;
 }
 
-inline void EtmV3TrcPacket::SetISyncReason(const etmv3_isync_reason_t reason)
+inline void EtmV3TrcPacket::SetISyncReason(const rctdl_iSync_reason reason)
 {
     isync_info.reason = reason;
 }

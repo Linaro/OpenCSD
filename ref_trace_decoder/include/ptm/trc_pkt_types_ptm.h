@@ -84,13 +84,6 @@ typedef struct _ptm_context_t {
     uint8_t VMID;       /**< VMID */
 } ptm_context_t;
 
-typedef enum _ptm_isync_reason_t {
-    ISYNC_PERIODIC,
-    ISYNC_TRACE_ENABLE,
-    ISYNC_OVERFLOW,
-    ISYNC_DEBUG_EXIT
-} ptm_isync_reason_t;
-
 typedef struct _rctdl_ptm_excep {
     rctdl_armv7_exception type; /**<  exception type. */
     uint16_t number;    /**< exception as number */
@@ -111,7 +104,7 @@ typedef struct _rctdl_ptm_pkt
     ptm_context_t   context;    /**< current context. */
     rctdl_pkt_atom  atom;
 
-    ptm_isync_reason_t i_sync_reason;   /**< reason for ISync Packet. */
+    rctdl_iSync_reason i_sync_reason;   /**< reason for ISync Packet. */
 
     uint32_t cycle_count;       /**< cycle count value associated with this packet. */
     uint8_t cc_valid;           /**< cycle count value valid. */

@@ -32,6 +32,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
+
+#include <sstream>
+#include <iomanip>
+
 #include "ptm/trc_pkt_elem_ptm.h"
 
 PtmTrcPacket::PtmTrcPacket()
@@ -140,10 +144,314 @@ void PtmTrcPacket::SetAtomFromPHdr(const uint8_t pHdr)
     // printing
 void PtmTrcPacket::toString(std::string &str) const
 {
+    std::string temp1, temp2;
+    std::ostringstream oss;
+
+    packetTypeName(type, temp1,temp2);
+    oss << temp1 << " : " << temp2 << "; ";
+
+    // some packets require additional data.
+    switch(type)
+    {
+    case PTM_PKT_BAD_SEQUENCE:
+        packetTypeName(err_type, temp1,temp2);
+        oss << "[" << temp1 << "]; ";
+        break;
+
+    case PTM_PKT_ATOM:
+        getAtomStr(temp1);
+        oss << temp1 << "; " ;
+        break;
+
+    case PTM_PKT_CONTEXT_ID:
+        oss << "CtxtID=0x" << std::hex << std::setw(8) << std::setfill('0') << context.ctxtID << "; ";
+        break;
+
+    case PTM_PKT_VMID:
+        oss << "VMID=0x" << std::hex << std::setw(2) << std::setfill('0') << context.VMID << "; ";
+        break;
+
+    case PTM_PKT_WPOINT_UPDATE:
+    case PTM_PKT_BRANCH_ADDRESS:
+        getBranchAddressStr(temp1);
+        oss << temp1;
+        break;
+
+    case PTM_PKT_I_SYNC:
+        getISyncStr(temp1);
+        oss << temp1;
+        break;
+
+    case PTM_PKT_TIMESTAMP:
+        getTSStr(temp1);
+        oss << temp1;
+        break;
+    }
+
+    str = oss.str();
 }
 
 void PtmTrcPacket::toStringFmt(const uint32_t fmtFlags, std::string &str) const
 {
+    toString(str);
+}
+
+void PtmTrcPacket::getAtomStr(std::string &valStr) const
+{   
+    std::ostringstream oss;
+    uint32_t bitpattern = atom.En_bits; // arranged LSBit oldest, MSbit newest
+
+    if(cc_valid)    // cycle accurate trace - single atom
+    {
+        std::string subStr;
+        oss << ((bitpattern & 0x1) ? "E" : "N"); // in spec read L->R, oldest->newest
+        oss << "; ";
+        getCycleCountStr(subStr);
+        oss << subStr;
+    }
+    else
+    {
+        // none cycle count
+        for(int i = 0; i < atom.num; i++)
+        {
+            oss << ((bitpattern & 0x1) ? "E" : "N"); // in spec read L->R, oldest->newest
+            bitpattern >>= 1;
+        } 
+        oss << "; ";
+    }
+    valStr = oss.str();
+}
+
+void PtmTrcPacket::getBranchAddressStr(std::string &valStr) const
+{
+    std::ostringstream oss;
+    std::string subStr;
+
+    // print address.
+    trcPrintableElem::getValStr(subStr,32,addr.valid_bits,addr.val,true,addr.pkt_bits);
+    oss << "Addr=" << subStr << "; ";
+
+    // current ISA if changed.
+    if(curr_isa != prev_isa)
+    {
+        getISAStr(subStr);
+        oss << subStr;
+    }
+
+    // S / NS etc if changed.
+    if(context.updated)
+    {
+        oss << (context.curr_NS ? "NS; " : "S; ");
+        oss << (context.curr_Hyp ? "Hyp; " : "");
+    }
+    
+    // exception? 
+    if(exception.bits.present)
+    {
+        getExcepStr(subStr);
+        oss << subStr;
+    }
+
+    if(cc_valid)
+    {
+        getCycleCountStr(subStr);
+        oss << subStr;
+    }
+    valStr = oss.str();
+}
+
+void PtmTrcPacket::getISAStr(std::string &isaStr) const
+{
+    std::ostringstream oss;
+    oss << "ISA=";
+    switch(curr_isa)
+    {
+    case rctdl_isa_arm: 
+        oss << "ARM(32); ";
+        break;
+
+    case rctdl_isa_thumb2:
+        oss << "Thumb2; ";
+        break;
+
+    case rctdl_isa_aarch64:
+        oss << "AArch64; ";
+        break;
+
+    case rctdl_isa_tee:
+        oss << "ThumbEE; ";
+        break;
+
+    case rctdl_isa_jazelle:
+        oss << "Jazelle; ";
+        break;
+
+    default:
+    case rctdl_isa_unknown:
+        oss << "Unknown; ";
+        break;
+    }
+    isaStr = oss.str();
+}
+
+void PtmTrcPacket::getExcepStr(std::string &excepStr) const
+{
+    static const char *ARv7Excep[] = {
+        "No Exception", "Debug Halt", "SMC", "Hyp", 
+        "Async Data Abort", "Jazelle", "Reserved", "Reserved",
+        "PE Reset", "Undefined Instr", "SVC", "Prefetch Abort", 
+        "Data Fault", "Generic", "IRQ", "FIQ"
+    };
+
+    std::ostringstream oss;
+    oss << "Excep=";
+    if(exception.number < 16)
+        oss << ARv7Excep[exception.number];
+    else
+        oss << "Unknown";
+    oss << " [" << std::hex << std::setw(2) << std::setfill('0') << exception.number << "]; ";
+    excepStr = oss.str();
+}
+
+void PtmTrcPacket::getISyncStr(std::string &valStr) const
+{
+    std::ostringstream oss;
+    std::string tmpStr;
+    static const char *reason[] = { "Periodic", "Trace Enable", "Restart Overflow", "Debug Exit" };
+    
+    // reason.
+    oss << "(" << reason[(int)i_sync_reason] << "); ";
+
+    // full address.
+    oss << "Addr=0x" << std::hex << std::setfill('0') << std::setw(8) << (uint32_t)addr.val << "; ";
+        
+    oss << (context.curr_NS ? "NS; " : "S; ");
+    oss << (context.curr_Hyp ? "Hyp; " : " ");
+    
+    if(context.updated_c)
+    {
+        oss << "CtxtID=" << std::hex  << std::setw(8) << std::setfill('0') << context.ctxtID << "; ";
+    }
+    
+    getISAStr(tmpStr);
+    oss << tmpStr;
+
+    if(cc_valid)
+    {
+        getCycleCountStr(tmpStr);
+        oss << tmpStr;
+    } 
+    valStr = oss.str();
+}
+
+void PtmTrcPacket::getTSStr(std::string &valStr) const
+{
+    std::string tmpStr;
+    trcPrintableElem::getValStr(tmpStr,64,64,timestamp,true,ts_update_bits);
+    valStr = "TS=" + tmpStr + "; ";
+}
+
+
+void PtmTrcPacket::getCycleCountStr(std::string &subStr) const
+{
+    std::ostringstream oss;
+    oss << "Cycles=" << std::dec << cycle_count << "; ";
+    subStr = oss.str();
+}
+
+
+void PtmTrcPacket::packetTypeName(const rctdl_ptm_pkt_type pkt_type, std::string &name, std::string &desc) const
+{
+    switch(pkt_type)
+    {
+    case PTM_PKT_NOTSYNC:        //!< no sync found yet
+        name = "NOTSYNC";
+        desc = "PTM Not Synchronised";
+        break;
+
+    case PTM_PKT_INCOMPLETE_EOT:
+        name = "INCOMPLETE_EOT";
+        desc = "Incomplete packet flushed at end of trace";
+        break;
+
+    case PTM_PKT_NOERROR:
+        name = "NO_ERROR";
+        desc = "Error type not set";
+        break;
+
+    case PTM_PKT_BAD_SEQUENCE:
+        name = "BAD_SEQUENCE";
+        desc = "Invalid sequence in packet";
+        break;
+
+    case PTM_PKT_RESERVED:
+        name = "RESERVED";
+        desc = "Reserved Packet Header";
+        break;
+
+    case PTM_PKT_BRANCH_ADDRESS:
+        name = "BRANCH_ADDRESS";
+        desc = "Branch address packet";
+        break;
+
+    case PTM_PKT_A_SYNC:
+        name = "ASYNC";
+        desc = "Alignment Synchronisation Packet";
+        break;
+
+	case PTM_PKT_I_SYNC:
+        name = "ISYNC";
+        desc = "Instruction Synchronisation packet";
+        break;
+
+    case PTM_PKT_TRIGGER:
+        name = "TRIGGER";
+        desc = "Trigger Event packet";
+        break;
+
+	case PTM_PKT_WPOINT_UPDATE:
+        name = "WP_UPDATE";
+        desc = "Waypoint update packet";
+        break;
+
+	case PTM_PKT_IGNORE:
+        name = "IGNORE";
+        desc = "Ignore packet";
+        break;
+
+	case PTM_PKT_CONTEXT_ID:
+        name = "CTXTID";
+        desc = "Context ID packet";
+        break;
+
+    case PTM_PKT_VMID:
+        name = "VMID";
+        desc = "VM ID packet";
+        break;
+
+	case PTM_PKT_ATOM:
+        name = "ATOM";
+        desc = "Atom packet";
+        break;
+
+	case PTM_PKT_TIMESTAMP:
+        name = "TIMESTAMP";
+        desc = "Timestamp packet";
+        break;
+
+	case PTM_PKT_EXCEPTION_RET:
+        name = "ERET";
+        desc = "Exception return packet";
+        break;
+
+    default:
+        name = "UNKNOWN";
+        desc = "Unknown packet type";
+        break;
+
+	//PTM_PKT_BRANCH_OR_BYPASS_EOT, 
+    //PTM_PKT_TPIU_PAD_EOB,  
+    }
 }
 
 /* End of File trc_pkt_elem_ptm.cpp */

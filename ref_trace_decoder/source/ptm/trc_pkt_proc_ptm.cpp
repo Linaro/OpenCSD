@@ -48,11 +48,13 @@
 TrcPktProcPtm::TrcPktProcPtm() : TrcPktProcBase(PTM_PKTS_NAME)
 {
     InitProcessorState();
+    BuildIPacketTable();
 }
 
 TrcPktProcPtm::TrcPktProcPtm(int instIDNum) : TrcPktProcBase(PTM_PKTS_NAME, instIDNum)
 {
     InitProcessorState();
+    BuildIPacketTable();
 }
 
 TrcPktProcPtm::~TrcPktProcPtm()
@@ -82,7 +84,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index
     
     m_dataInProcessed = 0;
     
-    if(m_config != 0)
+    if(m_config == 0)
     {
         resp = RCTDL_RESP_FATAL_NOT_INIT;
     }
@@ -169,7 +171,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index
 rctdl_datapath_resp_t TrcPktProcPtm::onEOT()
 {
     rctdl_datapath_resp_t err = RCTDL_RESP_FATAL_NOT_INIT;
-    if(m_config != 0)
+    if(m_config == 0)
     {
         err = RCTDL_RESP_CONT;
         if(m_currPacketData.size() > 0)
@@ -184,7 +186,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::onEOT()
 rctdl_datapath_resp_t TrcPktProcPtm::onReset()
 {
     rctdl_datapath_resp_t err = RCTDL_RESP_FATAL_NOT_INIT;
-    if(m_config != 0)
+    if(m_config == 0)
     {
         InitProcessorState();
         err = RCTDL_RESP_CONT;
@@ -195,7 +197,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::onReset()
 rctdl_datapath_resp_t TrcPktProcPtm::onFlush()
 {
     rctdl_datapath_resp_t err = RCTDL_RESP_FATAL_NOT_INIT;
-    if(m_config != 0)
+    if(m_config == 0)
     {
          err = RCTDL_RESP_CONT;
     }
@@ -286,7 +288,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::waitASync()
             {
             case ASYNC:
             case ASYNC_EXTRA_0:
-                m_process_state == SEND_PKT; 
+                m_process_state = SEND_PKT; 
                 m_waitASyncSOPkt = false;
                 bSendUnsyncedData = true;
                 bHaveASync = true;
@@ -375,7 +377,7 @@ void TrcPktProcPtm::pktASync()
     {
     case ASYNC:
     case ASYNC_EXTRA_0:
-        m_process_state == SEND_PKT; 
+        m_process_state = SEND_PKT; 
         break;
 
     case THROW_0:
@@ -455,7 +457,7 @@ void TrcPktProcPtm::pktISync()
                 // got the info byte  
                 int altISA = (currByte >> 2) & 0x1;
                 int reason = (currByte >> 5) & 0x3;
-                m_curr_packet.SetISyncReason((ptm_isync_reason_t)(reason));
+                m_curr_packet.SetISyncReason((rctdl_iSync_reason)(reason));
                 m_curr_packet.UpdateNS((currByte >> 3) & 0x1);
                 m_curr_packet.UpdateAltISA((currByte >> 2) & 0x1);
                 m_curr_packet.UpdateHyp((currByte >> 1) & 0x1);
@@ -526,13 +528,13 @@ void TrcPktProcPtm::pktISync()
             extractCtxtID(optIdx,ctxtID);
             m_curr_packet.UpdateContextID(ctxtID);
         }
-        m_process_state == SEND_PKT;
+        m_process_state = SEND_PKT;
     }
 }
 
 void TrcPktProcPtm::pktTrigger()
 {
-    m_process_state == SEND_PKT;    // no payload
+    m_process_state = SEND_PKT;    // no payload
 }
 
 void TrcPktProcPtm::pktWPointUpdate()
@@ -612,22 +614,22 @@ void TrcPktProcPtm::pktWPointUpdate()
         if(m_gotExcepBytes) // may adjust according to alt ISA in exception packet
         {
             if((m_addrPktIsa == rctdl_isa_tee)  && (m_excepAltISA == 0))
-                m_addrPktIsa == rctdl_isa_thumb2;
+                m_addrPktIsa = rctdl_isa_thumb2;
             else if((m_addrPktIsa == rctdl_isa_thumb2) && (m_excepAltISA == 1))
-                m_addrPktIsa == rctdl_isa_tee;
+                m_addrPktIsa = rctdl_isa_tee;
         }
         m_curr_packet.UpdateISA(m_addrPktIsa); // mark ISA in packet (update changes current and prev to dectect an ISA change).
 
         uint8_t total_bits = 0;
         uint32_t addr_val = extractAddress(1,total_bits);
         m_curr_packet.UpdateAddress(addr_val,total_bits);
-        m_process_state == SEND_PKT;
+        m_process_state = SEND_PKT;
     }
 }
 
 void TrcPktProcPtm::pktIgnore()
 {
-    m_process_state == SEND_PKT;    // no payload
+    m_process_state = SEND_PKT;    // no payload
 }
 
 void TrcPktProcPtm::pktCtxtID()
@@ -661,7 +663,7 @@ void TrcPktProcPtm::pktCtxtID()
             extractCtxtID(1,ctxtID);
         }
         m_curr_packet.UpdateContextID(ctxtID);
-        m_process_state == SEND_PKT;
+        m_process_state = SEND_PKT;
     }
 }
 
@@ -673,7 +675,7 @@ void TrcPktProcPtm::pktVMID()
     if(readByte(currByte))
     {
         m_curr_packet.UpdateVMID(currByte);
-        m_process_state == SEND_PKT;
+        m_process_state = SEND_PKT;
     }
 }
 
@@ -684,7 +686,7 @@ void TrcPktProcPtm::pktAtom()
     if(!m_config->enaCycleAcc())    
     {
         m_curr_packet.SetAtomFromPHdr(pHdr);
-        m_process_state == SEND_PKT;
+        m_process_state = SEND_PKT;
     }
     else
     {
@@ -718,7 +720,7 @@ void TrcPktProcPtm::pktAtom()
             extractCycleCount(0,cycleCount);
             m_curr_packet.SetCycleCount(cycleCount);
             m_curr_packet.SetCycleAccAtomFromPHdr(pHdr);
-            m_process_state == SEND_PKT;
+            m_process_state = SEND_PKT;
         }
     }
 }
@@ -781,13 +783,13 @@ void TrcPktProcPtm::pktTimeStamp()
             m_curr_packet.SetCycleCount(cycleCount);
         }
         m_curr_packet.UpdateTimestamp(tsVal,tsUpdateBits); 
-        m_process_state == SEND_PKT;
+        m_process_state = SEND_PKT;
     }
 }
 
 void TrcPktProcPtm::pktExceptionRet()
 {
-     m_process_state == SEND_PKT;    // no payload
+     m_process_state = SEND_PKT;    // no payload
 }
 
 void TrcPktProcPtm::pktBranchAddr()
@@ -907,9 +909,9 @@ void TrcPktProcPtm::pktBranchAddr()
         if(m_gotExcepBytes) // may adjust according to alt ISA in exception packet
         {
             if((m_addrPktIsa == rctdl_isa_tee)  && (m_excepAltISA == 0))
-                m_addrPktIsa == rctdl_isa_thumb2;
+                m_addrPktIsa = rctdl_isa_thumb2;
             else if((m_addrPktIsa == rctdl_isa_thumb2) && (m_excepAltISA == 1))
-                m_addrPktIsa == rctdl_isa_tee;
+                m_addrPktIsa = rctdl_isa_tee;
         }
         m_curr_packet.UpdateISA(m_addrPktIsa); // mark ISA in packet (update changes current and prev to dectect an ISA change).
 
@@ -954,13 +956,13 @@ void TrcPktProcPtm::pktBranchAddr()
             extractCycleCount(countIdx,cycleCount);
             m_curr_packet.SetCycleCount(cycleCount);
         }
-        m_process_state == SEND_PKT;
+        m_process_state = SEND_PKT;
     }
 }
 
 void TrcPktProcPtm::pktReserved()
 {
-     m_process_state == SEND_PKT;    // no payload
+     m_process_state = SEND_PKT;    // no payload
 }
 
 void TrcPktProcPtm::extractCtxtID(int idx, uint32_t &ctxtID)
@@ -969,7 +971,7 @@ void TrcPktProcPtm::extractCtxtID(int idx, uint32_t &ctxtID)
     int shift = 0;
     for(int i=0; i < m_numCtxtIDBytes; i++)
     {
-        if(idx+i >= m_currPacketData.size())
+        if((size_t)idx+i >= m_currPacketData.size())
             throwMalformedPacketErr("Insufficient packet bytes for Context ID value.");
         ctxtID |= ((uint32_t)m_currPacketData[idx+i]) << shift;
         shift+=8;
@@ -986,7 +988,7 @@ void TrcPktProcPtm::extractCycleCount(int offset, uint32_t &cycleCount)
 
     while(bCont)
     {
-        if(by_idx+offset >= m_currPacketData.size())
+        if((size_t)by_idx+offset >= m_currPacketData.size())
             throwMalformedPacketErr("Insufficient packet bytes for Cycle Count value.");
 
         currByte = m_currPacketData[offset+by_idx];
@@ -1021,7 +1023,7 @@ int TrcPktProcPtm::extractTS(uint64_t &tsVal,uint8_t &tsUpdateBits)
 
     while(bCont)
     {
-        if(tsIdx >= m_currPacketData.size())
+        if((size_t)tsIdx >= m_currPacketData.size())
             throwMalformedPacketErr("Insufficient packet bytes for Timestamp value.");
         
         byteVal = m_currPacketData[tsIdx];
@@ -1062,7 +1064,7 @@ int TrcPktProcPtm::extractTS(uint64_t &tsVal,uint8_t &tsUpdateBits)
     return tsIdx;   // return next byte index in packet.
 }
 
-uint32_t TrcPktProcPtm::extractAddress(const int offset, uint8_t &total_bits);
+uint32_t TrcPktProcPtm::extractAddress(const int offset, uint8_t &total_bits)
 {
     // we know the ISA, we can correctly interpret the address.   
     uint32_t addr_val = 0;
@@ -1169,8 +1171,8 @@ void TrcPktProcPtm::BuildIPacketTable()
     m_i_table[0x00].pptkFn = &TrcPktProcPtm::pktASync;
 
     // I-sync           8'b00001000
-    m_i_table[0x04].pkt_type = PTM_PKT_I_SYNC;
-    m_i_table[0x04].pptkFn = &TrcPktProcPtm::pktISync;
+    m_i_table[0x08].pkt_type = PTM_PKT_I_SYNC;
+    m_i_table[0x08].pptkFn = &TrcPktProcPtm::pktISync;
 
     // waypoint update  8'b01110010
     m_i_table[0x72].pkt_type = PTM_PKT_WPOINT_UPDATE;

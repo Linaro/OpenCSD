@@ -1178,7 +1178,7 @@ void EtmV3PktProcImpl::OnISyncPacket()
 
     // extract context info 
     iSyncInfoByte = m_currPacketData[m_currPktIdx++];
-    m_curr_packet.SetISyncReason((etmv3_isync_reason_t)((iSyncInfoByte >> 5) & 0x3));
+    m_curr_packet.SetISyncReason((rctdl_iSync_reason)((iSyncInfoByte >> 5) & 0x3));
     J = (iSyncInfoByte >> 4) & 0x1;
     AltISA = m_config.MinorRev() >= 3 ? (iSyncInfoByte >> 2) & 0x1 : 0;
     m_curr_packet.UpdateNS((iSyncInfoByte >> 3) & 0x1);

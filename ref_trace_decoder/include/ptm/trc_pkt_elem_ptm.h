@@ -62,7 +62,7 @@ public:
 
     void SetException(  const rctdl_armv7_exception type, 
                         const uint16_t number);
-    void SetISyncReason(const ptm_isync_reason_t reason);
+    void SetISyncReason(const rctdl_iSync_reason reason);
     void SetCycleCount(const uint32_t cycleCount);
     void SetAtomFromPHdr(const uint8_t pHdr);
     void SetCycleAccAtomFromPHdr(const uint8_t pHdr);
@@ -86,7 +86,14 @@ public:
     virtual void toStringFmt(const  uint32_t fmtFlags, std::string &str) const;
 
 private:
-
+    void packetTypeName(const rctdl_ptm_pkt_type pkt_type, std::string &name, std::string &desc) const;
+    void getAtomStr(std::string &valStr) const;
+    void getBranchAddressStr(std::string &valStr) const;
+    void getExcepStr(std::string &excepStr) const;
+    void getISAStr(std::string &isaStr) const;
+    void getCycleCountStr(std::string &subStr) const;
+    void getISyncStr(std::string &valStr) const;
+    void getTSStr(std::string &valStr) const;
 };
 
 
@@ -145,7 +152,7 @@ inline void PtmTrcPacket::SetException(  const rctdl_armv7_exception type, const
     exception.type = type;
 }
 
-inline void PtmTrcPacket::SetISyncReason(const ptm_isync_reason_t reason)
+inline void PtmTrcPacket::SetISyncReason(const rctdl_iSync_reason reason)
 {
     i_sync_reason = reason;
 }
