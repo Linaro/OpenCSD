@@ -39,6 +39,7 @@
 #include "trc_pkt_types_ptm.h"
 #include "trc_pkt_proc_base.h"
 #include "trc_pkt_elem_ptm.h"
+#include "trc_cmp_cfg_ptm.h"
 
 class PtmTrcPacket;
 class PtmConfig;
@@ -91,7 +92,9 @@ protected:
     const bool readByte(); // just read into buffer, don't need the value
     void unReadByte();  // remove last byte from the buffer.
 
+    PtmConfig m_config_inst;
     uint8_t m_chanIDCopy;
+    bool m_b_configInit;
 
     // current data block being processed.
     const uint8_t *m_pDataIn;

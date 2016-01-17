@@ -160,7 +160,7 @@ void PtmTrcPacket::toString(std::string &str) const
 
     case PTM_PKT_ATOM:
         getAtomStr(temp1);
-        oss << temp1 << "; " ;
+        oss << temp1;
         break;
 
     case PTM_PKT_CONTEXT_ID:
@@ -347,8 +347,16 @@ void PtmTrcPacket::getISyncStr(std::string &valStr) const
 void PtmTrcPacket::getTSStr(std::string &valStr) const
 {
     std::string tmpStr;
+    std::ostringstream oss;
+
     trcPrintableElem::getValStr(tmpStr,64,64,timestamp,true,ts_update_bits);
-    valStr = "TS=" + tmpStr + "; ";
+    oss << "TS=" << tmpStr + "(" << std::dec << timestamp << "); ";
+    if(cc_valid)
+    {
+        getCycleCountStr(tmpStr);
+        oss << tmpStr;
+    } 
+    valStr = oss.str();
 }
 
 
