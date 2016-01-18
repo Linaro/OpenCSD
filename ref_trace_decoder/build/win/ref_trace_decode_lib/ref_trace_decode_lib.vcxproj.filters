@@ -102,9 +102,6 @@
     <ClInclude Include="..\..\..\include\trc_printable_elem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\trc_gen_elem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -236,6 +233,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb.h">
       <Filter>Header Files\mem_acc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\trc_gen_elem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\ptm\trc_pkt_decode_ptm.h">
+      <Filter>Header Files\ptm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

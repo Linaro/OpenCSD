@@ -1,8 +1,8 @@
 /*
- * \file       ptm_decoder.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \file       trc_pkt_decode_ptm.h
+ * \brief      Reference CoreSight Trace Decoder : PTM packet decoder.
  * 
- * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
+ * \copyright  Copyright (c) 2016, ARM Limited. All Rights Reserved.
  */
 
 /* 
@@ -31,16 +31,41 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
+#ifndef ARM_TRC_PKT_DECODE_PTM_H_INCLUDED
+#define ARM_TRC_PKT_DECODE_PTM_H_INCLUDED
 
-#ifndef ARM_PTM_DECODER_H_INCLUDED
-#define ARM_PTM_DECODER_H_INCLUDED
+#include "trc_pkt_decode_base.h"
+#include "ptm/trc_pkt_elem_ptm.h"
+#include "ptm/trc_cmp_cfg_ptm.h"
+#include "trc_gen_elem.h"
 
-#include "trc_cmp_cfg_ptm.h"
-#include "trc_pkt_elem_ptm.h"
-#include "trc_pkt_proc_ptm.h"
-#include "trc_pkt_types_ptm.h"
-#include "trc_pkt_decode_ptm.h"
+class TrcPktDecodePtm : public TrcPktDecodeBase<PtmTrcPacket, PtmConfig>
+{
+public:
+    TrcPktDecodePtm();
+    TrcPktDecodePtm(int instIDNum);
+    virtual ~TrcPktDecodePtm();
 
-#endif // ARM_PTM_DECODER_H_INCLUDED
+protected:
+    /* implementation packet decoding interface */
+    virtual rctdl_datapath_resp_t processPacket();
+    virtual rctdl_datapath_resp_t onEOT();
+    virtual rctdl_datapath_resp_t onReset();
+    virtual rctdl_datapath_resp_t onFlush();
+    virtual rctdl_err_t onProtocolConfig();
+    virtual const uint8_t getCoreSightTraceID() { return m_CSID; };
 
-/* End of File ptm_decoder.h */
+    /* local decode methods */
+
+private:
+
+
+    uint8_t m_CSID; //!< Coresight trace ID for this decoder.
+
+//** output element
+    RctdlTraceElement m_output_elem;
+};
+
+#endif // ARM_TRC_PKT_DECODE_PTM_H_INCLUDED
+
+/* End of File trc_pkt_decode_ptm.h */
