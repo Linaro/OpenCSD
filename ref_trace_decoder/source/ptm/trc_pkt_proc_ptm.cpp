@@ -48,15 +48,13 @@
 TrcPktProcPtm::TrcPktProcPtm() : TrcPktProcBase(PTM_PKTS_NAME)
 {
     InitProcessorState();
-    BuildIPacketTable();
-    m_b_configInit = false;
+    BuildIPacketTable();    
 }
 
 TrcPktProcPtm::TrcPktProcPtm(int instIDNum) : TrcPktProcBase(PTM_PKTS_NAME, instIDNum)
 {
     InitProcessorState();
     BuildIPacketTable();
-    m_b_configInit = false;
 }
 
 TrcPktProcPtm::~TrcPktProcPtm()
@@ -69,10 +67,8 @@ rctdl_err_t TrcPktProcPtm::onProtocolConfig()
     rctdl_err_t err = RCTDL_ERR_NOT_INIT;
 
     if(m_config != 0)
-    {
-        m_config_inst = *m_config;
-        m_chanIDCopy = m_config_inst.getTraceID();
-        m_b_configInit = true;
+    {       
+        m_chanIDCopy = m_config->getTraceID();        
         err = RCTDL_OK;
     }
     return err;
@@ -88,7 +84,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index
     
     m_dataInProcessed = 0;
     
-    if(!m_b_configInit)
+    if(!checkInit())
     {
         resp = RCTDL_RESP_FATAL_NOT_INIT;
     }
@@ -175,7 +171,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index
 rctdl_datapath_resp_t TrcPktProcPtm::onEOT()
 {
     rctdl_datapath_resp_t err = RCTDL_RESP_FATAL_NOT_INIT;
-    if(!m_b_configInit)
+    if(!checkInit())
     {
         err = RCTDL_RESP_CONT;
         if(m_currPacketData.size() > 0)
@@ -190,7 +186,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::onEOT()
 rctdl_datapath_resp_t TrcPktProcPtm::onReset()
 {
     rctdl_datapath_resp_t err = RCTDL_RESP_FATAL_NOT_INIT;
-    if(!m_b_configInit)
+    if(!checkInit())
     {
         InitProcessorState();
         err = RCTDL_RESP_CONT;
@@ -201,7 +197,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::onReset()
 rctdl_datapath_resp_t TrcPktProcPtm::onFlush()
 {
     rctdl_datapath_resp_t err = RCTDL_RESP_FATAL_NOT_INIT;
-    if(!m_b_configInit)
+    if(!checkInit())
     {
          err = RCTDL_RESP_CONT;
     }
@@ -444,7 +440,7 @@ void TrcPktProcPtm::pktISync()
 
     if(pktIndex == 0)
     {
-        m_numCtxtIDBytes = m_config_inst.CtxtIDBytes();
+        m_numCtxtIDBytes = m_config->CtxtIDBytes();
         m_gotCtxtIDBytes = 0;
 
         // total bytes = 6 + ctxtID; (perhaps more later)
@@ -472,7 +468,7 @@ void TrcPktProcPtm::pktISync()
                 m_curr_packet.UpdateISA(isa);
 
                 // check cycle count required - not if reason == 0;
-                m_needCycleCount = (reason != 0) ? m_config_inst.enaCycleAcc() : false;
+                m_needCycleCount = (reason != 0) ? m_config->enaCycleAcc() : false;
                 m_gotCycleCount = false;
                 m_numPktBytesReq += (m_needCycleCount ? 1 : 0);
                 m_gotCCBytes = 0;
@@ -643,7 +639,7 @@ void TrcPktProcPtm::pktCtxtID()
     // if at the header, determine how many more bytes we need.
     if(pktIndex == 0)
     {
-        m_numCtxtIDBytes = m_config_inst.CtxtIDBytes();
+        m_numCtxtIDBytes = m_config->CtxtIDBytes();
         m_gotCtxtIDBytes = 0;
     }
 
@@ -687,7 +683,7 @@ void TrcPktProcPtm::pktAtom()
 {
     uint8_t pHdr = m_currPacketData[0];
 
-    if(!m_config_inst.enaCycleAcc())    
+    if(!m_config->enaCycleAcc())    
     {
         m_curr_packet.SetAtomFromPHdr(pHdr);
         m_process_state = SEND_PKT;
@@ -738,11 +734,11 @@ void TrcPktProcPtm::pktTimeStamp()
     if(pktIndex == 0)
     {
         m_gotTSBytes = false;
-        m_needCycleCount = m_config_inst.enaCycleAcc();        
+        m_needCycleCount = m_config->enaCycleAcc();        
         m_gotCCBytes = 0;
 
         // max byte buffer size for full ts packet
-        m_tsByteMax = m_config_inst.TSPkt64() ? 10 : 8;
+        m_tsByteMax = m_config->TSPkt64() ? 10 : 8;
     }
 
     while(byteAvail && !bGotBytes)
@@ -808,7 +804,7 @@ void TrcPktProcPtm::pktBranchAddr()
         m_gotAddrBytes = false;    // flag to indicate got all needed address bytes
         m_numAddrBytes = 1;        // number of address bytes so far
         
-        m_needCycleCount = m_config_inst.enaCycleAcc();  // check if we have a cycle count
+        m_needCycleCount = m_config->enaCycleAcc();  // check if we have a cycle count
         m_gotCCBytes = 0;                            // number of cc bytes read in so far.
         
         m_gotExcepBytes = false;    // mark as not got all required exception bytes thus far
@@ -1019,7 +1015,7 @@ int TrcPktProcPtm::extractTS(uint64_t &tsVal,uint8_t &tsUpdateBits)
     bool bCont = true;
     int tsIdx = 1;  // start index;
     uint8_t byteVal;
-    bool b64BitVal = m_config_inst.TSPkt64();
+    bool b64BitVal = m_config->TSPkt64();
     int shift = 0;
 
     tsVal = 0;

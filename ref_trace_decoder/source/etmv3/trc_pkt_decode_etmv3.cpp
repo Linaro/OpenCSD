@@ -85,17 +85,21 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV3::onFlush()
 rctdl_err_t TrcPktDecodeEtmV3::onProtocolConfig()
 {
     rctdl_err_t err = RCTDL_OK;
-    
-    // set some static config elements
-    m_CSID = m_config->getTraceID();
-
-    // check config compatible with current decoder support level.
-    // at present no data trace;
-    if(m_config->GetTraceMode() != EtmV3Config::TM_INSTR_ONLY)
+    if(m_config)
     {
-        err = RCTDL_ERR_HW_CFG_UNSUPP;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,"ETMv3 trace decoder : data trace decode not yet supported"));
+        // set some static config elements
+        m_CSID = m_config->getTraceID();
+
+        // check config compatible with current decoder support level.
+        // at present no data trace;
+        if(m_config->GetTraceMode() != EtmV3Config::TM_INSTR_ONLY)
+        {
+            err = RCTDL_ERR_HW_CFG_UNSUPP;
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,"ETMv3 trace decoder : data trace decode not yet supported"));
+        }
     }
+    else
+        err = RCTDL_ERR_NOT_INIT;
     return err;
 }
 

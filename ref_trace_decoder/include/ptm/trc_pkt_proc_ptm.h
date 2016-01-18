@@ -87,14 +87,11 @@ protected:
     PtmTrcPacket m_curr_packet;  // expanded packet
     rctdl_trc_index_t m_curr_pkt_index; // trace index at start of packet.
     
-
     const bool readByte(uint8_t &currByte);
     const bool readByte(); // just read into buffer, don't need the value
     void unReadByte();  // remove last byte from the buffer.
 
-    PtmConfig m_config_inst;
     uint8_t m_chanIDCopy;
-    bool m_b_configInit;
 
     // current data block being processed.
     const uint8_t *m_pDataIn;
