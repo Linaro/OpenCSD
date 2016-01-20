@@ -384,6 +384,7 @@
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_file.cpp" />
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_mapper.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp" />
+    <ClCompile Include="..\..\..\source\ptm\trc_pkt_decode_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_elem_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_proc_ptm.cpp" />
     <ClCompile Include="..\..\..\source\rctdl_dcd_tree.cpp" />

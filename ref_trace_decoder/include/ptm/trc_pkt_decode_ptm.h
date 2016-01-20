@@ -39,6 +39,7 @@
 #include "ptm/trc_cmp_cfg_ptm.h"
 #include "trc_gen_elem.h"
 
+
 class TrcPktDecodePtm : public TrcPktDecodeBase<PtmTrcPacket, PtmConfig>
 {
 public:
@@ -58,9 +59,44 @@ protected:
     /* local decode methods */
 
 private:
+    void initDecoder();
+    void resetDecoder();
 
+    rctdl_datapath_resp_t decodePacket();
+    rctdl_err_t traceInstrToWP(bool &bWPFound);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
 
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.
+
+//** Other processor state;
+
+    // trace decode FSM
+    typedef enum {
+        NO_SYNC,        //!< pre start trace - init state or after reset or overflow, loss of sync.
+        WAIT_SYNC,      //!< waiting for sync packet.
+        WAIT_ISYNC,     //!< waiting for isync packet after 1st ASYNC.
+        DECODE_PKTS,    //!< processing packets 
+        OUTPUT_PKT,     //!< need to output any available packet.
+    } processor_state_t;
+
+    processor_state_t m_curr_state;
+
+    typedef struct _ptm_decode_state {
+    } ptm_decode_state;
+
+
+    // packet decode state
+    bool m_need_isync;   //!< need context to continue
+    bool m_need_addr;   //!< need an address to continue
+    bool m_except_pending_addr;    //!< next address packet is part of exception.
+    
+    rctdl_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
+
+    bool m_mem_nacc_pending;    //!< need to output a memory access failure packet
+    rctdl_vaddr_t m_nacc_addr;  //!< 
+    bool m_is_secure;           //!< current secure state
+
+    rctdl_pe_context m_pe_context;  //!< current context information
+
 
 //** output element
     RctdlTraceElement m_output_elem;

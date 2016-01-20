@@ -341,5 +341,8 @@
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\ptm\trc_pkt_decode_ptm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
