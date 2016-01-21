@@ -63,6 +63,10 @@ private:
     void resetDecoder();
 
     rctdl_datapath_resp_t decodePacket();
+    rctdl_datapath_resp_t processIsync();
+    rctdl_datapath_resp_t processBranch();
+    rctdl_datapath_resp_t processWPUpdate();
+    rctdl_datapath_resp_t processAtom();
     rctdl_err_t traceInstrToWP(bool &bWPFound);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
 
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.

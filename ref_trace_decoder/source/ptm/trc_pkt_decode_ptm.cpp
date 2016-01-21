@@ -153,6 +153,128 @@ void TrcPktDecodePtm::resetDecoder()
 rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    switch(m_curr_packet_in->getType())
+    {
+        // ignore these from trace o/p point of veiw
+    case PTM_PKT_NOTSYNC:   
+    case PTM_PKT_INCOMPLETE_EOT:
+    case PTM_PKT_NOERROR:
+        break;
+
+        // bad / reserved packet - need to wait for next sync point
+    case PTM_PKT_BAD_SEQUENCE:
+    case PTM_PKT_RESERVED:
+        m_curr_state = WAIT_SYNC;
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_NO_SYNC);
+        resp = outputTraceElement(m_output_elem);
+        break;
+
+        // packets we can ignore if in sync
+    case PTM_PKT_A_SYNC:
+    case PTM_PKT_IGNORE:
+        break;
+
+        // 
+    case PTM_PKT_I_SYNC:
+        resp = processIsync();
+        break;
+
+    case PTM_PKT_BRANCH_ADDRESS:
+        resp = processBranch();
+        break;
+
+    case PTM_PKT_TRIGGER:
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EVENT);
+        m_output_elem.setEvent(EVENT_TRIGGER, 0);
+        resp = outputTraceElement(m_output_elem);
+        break;
+
+    case PTM_PKT_WPOINT_UPDATE:
+        resp = processWPUpdate();
+        break;
+
+    case PTM_PKT_CONTEXT_ID:
+        {
+            bool bUpdate = true;  
+            // see if this is a change
+            if((m_pe_context.ctxt_id_valid) && (m_pe_context.context_id == m_curr_packet_in->context.ctxtID))
+                bUpdate = false;
+            if(bUpdate)
+            {
+                m_pe_context.context_id = m_curr_packet_in->context.ctxtID;
+                m_pe_context.ctxt_id_valid = 1;
+                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_PE_CONTEXT);
+                m_output_elem.setContext(m_pe_context);
+                resp = outputTraceElement(m_output_elem);
+            }
+        }        
+        break;
+
+    case PTM_PKT_VMID:
+        {
+            bool bUpdate = true;  
+            // see if this is a change
+            if((m_pe_context.vmid_valid) && (m_pe_context.vmid == m_curr_packet_in->context.VMID))
+                bUpdate = false;
+            if(bUpdate)
+            {
+                m_pe_context.vmid = m_curr_packet_in->context.VMID;
+                m_pe_context.vmid_valid = 1;
+                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_PE_CONTEXT);
+                m_output_elem.setContext(m_pe_context);
+                resp = outputTraceElement(m_output_elem);
+            }
+        }   
+        break;
+
+    case PTM_PKT_ATOM:
+        if(!m_need_addr)
+            resp = processAtom();
+        break;
+
+    case PTM_PKT_TIMESTAMP:
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TIMESTAMP);
+        m_output_elem.timestamp = m_curr_packet_in->timestamp;
+        if(m_curr_packet_in->cc_valid)
+            m_output_elem.setCycleCount(m_curr_packet_in->cycle_count);
+        resp = outputTraceElement(m_output_elem);
+        break;
+
+    case PTM_PKT_EXCEPTION_RET:
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION_RET);
+        resp = outputTraceElement(m_output_elem);
+        break;
+
+    }
+    return resp;
+}
+
+rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+
+    return resp;
+}
+
+
+rctdl_datapath_resp_t TrcPktDecodePtm::processBranch()
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+
+    return resp;
+}
+
+rctdl_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+
+    return resp;
+}
+
+rctdl_datapath_resp_t TrcPktDecodePtm::processAtom()
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+
     return resp;
 }
 

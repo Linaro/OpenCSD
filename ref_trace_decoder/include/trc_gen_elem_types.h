@@ -58,7 +58,6 @@ typedef enum _rctdl_gen_trc_elem_t
     RCTDL_GEN_TRC_ELEM_EXCEPTION_RET,   /*!< expection return */
     RCTDL_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
     RCTDL_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count - cycles since last cycle count value - associated with a preceding instruction range. */
-    RCTDL_GEN_TRC_ELEM_TS_WITH_CC,      /*!< Timestamp with Cycle count - preceding elements happened before timestamp, cycle count associated with the timestamp, cycle count is associated with TS and since last cycle count value */
     RCTDL_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */
 #if 0
     RCTDL_GEN_TRC_ELEM_DATA_VAL,        /*!< Data value - associated with prev instr (if same stream) + daddr, or data assoc key if supplied.  */
@@ -77,18 +76,31 @@ typedef struct _rctdl_generic_trace_elem {
     rctdl_pe_context    context;      /**< PE Context */
     uint64_t            timestamp;    /**< timestamp value for TS element type */
     uint32_t            cycle_count;  /**< cycle count for cycle count element (if none 0 with TS, cycle count for this element also). */
-    uint32_t            gen_value;    /**< general value for simpler types of element. */
-    
-    struct exception_t {
-        uint16_t ex_type;         /**< exception type */
-        uint16_t ex_num;          /**< exception number (CM3 numbered IRQ ) */
-    } exception;
 
-    struct trace_event_t {
-            uint16_t ev_type;          /**< event type - trigger, numbered event */
+    // per element flags
+    struct {
+        uint32_t last_instr_exec:1;     /**< 1 if last instruction in range was executed; */
+        uint32_t has_cc:1;              /**< 1 if this packet has a valid cycle count included (e.g. cycle count included as part of instruction range packet, always 1 for pure cycle count packet.*/
+        uint32_t cpu_freq_change:1;     /**< 1 if this packet indicates a change in CPU frequency */
+    };
+
+    union {
+        uint32_t gen_value;    /**< general value for simpler types of element. */    
+        uint32_t exception_number; /**< exception number for exception type packets */
+        struct trace_event_t {
+            uint16_t ev_type;          /**< event type - unknown (0) trigger (1), numbered event (2)*/
             uint16_t ev_number;        /**< event number if numbered event type */
-    } trace_event;
+        } trace_event;
+    };
+
 } rctdl_generic_trace_elem;
+
+
+typedef enum _event_t {
+    EVENT_UNKNOWN = 0,
+    EVENT_TRIGGER,
+    EVENT_NUMBERED
+} event_t;
 
 /** @}*/
 #endif // ARM_TRC_GEN_ELEM_TYPES_H_INCLUDED

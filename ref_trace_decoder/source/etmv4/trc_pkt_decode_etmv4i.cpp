@@ -642,9 +642,9 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
                 if(pParamElem)
                 {
-                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TS_WITH_CC);
+                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TIMESTAMP);
                     m_output_elem.timestamp = (uint64_t)(pParamElem->getParam(0)) | (((uint64_t)pParamElem->getParam(1)) << 32);
-                    m_output_elem.cycle_count = pParamElem->getParam(2);
+                    m_output_elem.setCycleCount(pParamElem->getParam(2));
                     resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                 }
                 }
