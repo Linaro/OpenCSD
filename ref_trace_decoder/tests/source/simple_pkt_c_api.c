@@ -210,7 +210,7 @@ static rctdl_mem_space_acc_t dump_file_mem_space = RCTDL_MEM_SPACE_ANY;
 static long mem_file_size = 0;
 static rctdl_vaddr_t mem_file_en_address = 0;  /* end address last inclusive address in file. */
 
-static uint32_t  mem_acc_cb(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
+static uint32_t  mem_acc_cb(const void *p_context, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
 {
     uint32_t read_bytes = 0;
     size_t file_read_bytes;
@@ -257,7 +257,7 @@ static rctdl_err_t create_mem_acc_cb(dcd_tree_handle_t dcd_tree_h, const char *m
         mem_file_en_address = mem_dump_address + mem_file_size - 1;
 
         err = rctdl_dt_add_callback_mem_acc(dcd_tree_h,
-            mem_dump_address,mem_file_en_address,dump_file_mem_space,&mem_acc_cb);
+            mem_dump_address,mem_file_en_address,dump_file_mem_space,&mem_acc_cb,0);
         if(err != RCTDL_OK)
         {
             fclose(dump_file);
@@ -316,7 +316,7 @@ void packet_monitor(const rctdl_datapath_op_t op,
     }
 }
 
-rctdl_datapath_resp_t gen_trace_elem_print(const rctdl_trc_index_t index_sop, const uint8_t trc_chan_id, const rctdl_generic_trace_elem *elem)
+rctdl_datapath_resp_t gen_trace_elem_print(const void *p_context, const rctdl_trc_index_t index_sop, const uint8_t trc_chan_id, const rctdl_generic_trace_elem *elem)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     int offset = 0;
@@ -372,13 +372,14 @@ void set_config_struct_etmv4()
     trace_config.reg_idr13  = 0x0;
 }
 
-rctdl_datapath_resp_t etm_v4i_packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv4_i_pkt *p_packet_in)
+rctdl_datapath_resp_t etm_v4i_packet_handler(const void *p_context, const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv4_i_pkt *p_packet_in)
 {
     return packet_handler(op,index_sop,(const void *)p_packet_in);
 }
 
 
-void etm_v4i_packet_monitor(  const rctdl_datapath_op_t op, 
+void etm_v4i_packet_monitor(  const void *p_context,
+                              const rctdl_datapath_op_t op, 
                               const rctdl_trc_index_t index_sop, 
                               const rctdl_etmv4_i_pkt *p_packet_in,
                               const uint32_t size,
@@ -401,7 +402,7 @@ static rctdl_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
         /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
             We need to supply the configuration, and a packet handling callback.
         */
-        ret = rctdl_dt_create_etmv4i_pkt_proc(dcd_tree_h,&trace_config,&etm_v4i_packet_handler);
+        ret = rctdl_dt_create_etmv4i_pkt_proc(dcd_tree_h,&trace_config,&etm_v4i_packet_handler,0);
     }
     else
     {
@@ -414,7 +415,7 @@ static rctdl_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
             if((op != TEST_PKT_DECODEONLY) && (ret == RCTDL_OK))
             {
                     /* print the packets as well as the decode. */
-                    ret = rctdl_dt_attach_etmv4i_pkt_mon(dcd_tree_h, (uint8_t)(trace_config.reg_traceidr & 0xFF), etm_v4i_packet_monitor);
+                    ret = rctdl_dt_attach_etmv4i_pkt_mon(dcd_tree_h, (uint8_t)(trace_config.reg_traceidr & 0xFF), etm_v4i_packet_monitor,0);
             }
         }
 
@@ -456,7 +457,7 @@ static void set_config_struct_etmv3()
     }
 }
 
-rctdl_datapath_resp_t etm_v3_packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv3_pkt *p_packet_in)
+rctdl_datapath_resp_t etm_v3_packet_handler(const void *p_context, const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv3_pkt *p_packet_in)
 {
     return packet_handler(op,index_sop,(const void *)p_packet_in);
 }
@@ -484,7 +485,7 @@ static rctdl_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
         /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
             We need to supply the configuration, and a packet handling callback.
         */
-        ret = rctdl_dt_create_etmv3_pkt_proc(dcd_tree_h,&trace_config_etmv3,&etm_v3_packet_handler);
+        ret = rctdl_dt_create_etmv3_pkt_proc(dcd_tree_h,&trace_config_etmv3,&etm_v3_packet_handler,0);
     }
     else
     {
@@ -542,7 +543,7 @@ static void set_config_struct_stm()
     trace_config_stm.hw_event = HwEvent_Unknown_Disabled;
 }
 
-rctdl_datapath_resp_t stm_packet_handler(const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_stm_pkt *p_packet_in)
+rctdl_datapath_resp_t stm_packet_handler(const void *p_context, const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_stm_pkt *p_packet_in)
 {
     return packet_handler(op,index_sop,(const void *)p_packet_in);
 }
@@ -570,7 +571,7 @@ static rctdl_err_t create_decoder_stm(dcd_tree_handle_t dcd_tree_h)
         /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
             We need to supply the configuration, and a packet handling callback.
         */
-        ret = rctdl_dt_create_stm_pkt_proc(dcd_tree_h,&trace_config_stm,&stm_packet_handler);
+        ret = rctdl_dt_create_stm_pkt_proc(dcd_tree_h,&trace_config_stm,&stm_packet_handler,0);
     }
     else
     {
@@ -686,7 +687,7 @@ int process_trace_data(FILE *pf)
 
         if(ret == RCTDL_OK)
             /* attach the generic trace element output callback */
-            ret = rctdl_dt_set_gen_elem_outfn(dcdtree_handle,gen_trace_elem_print);
+            ret = rctdl_dt_set_gen_elem_outfn(dcdtree_handle,gen_trace_elem_print,0);
 
         /* now push the trace data through the packet processor */
         while(!feof(pf) && (ret == RCTDL_OK))

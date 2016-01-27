@@ -406,10 +406,10 @@ typedef enum _rctdl_mem_space_acc_t {
 } rctdl_mem_space_acc_t;
 
 /**
- * Callback function definition for callback memory accessor type.
+ * Callback function definition for callback function memory accessor type.
  *
  * When using callback memory accessor, the decoder will call this function to obtain the 
- * memory at teh address for the current opcodes. The memory space will represent the current 
+ * memory at the address for the current opcodes. The memory space will represent the current 
  * exception level and security context of the traced code.
  *
  * Return the number of bytes read, which can be less than the amount requested if this would take the
@@ -418,6 +418,7 @@ typedef enum _rctdl_mem_space_acc_t {
  * Return 0 bytes if start address out of covered range, or memory space is not one of those defined as supported
  * when the callback was registered.
  *
+ * @param p_context : opaque context pointer set by callback client.
  * @param address : start address of memory to be accessed
  * @param mem_space : memory space of accessed memory (current EL & security state)
  * @param reqBytes : number of bytes required
@@ -425,7 +426,7 @@ typedef enum _rctdl_mem_space_acc_t {
  *
  * @return uint32_t  : Number of bytes actually read, or 0 for access error.
  */
-typedef uint32_t  (* Fn_MemAcc_CB)(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer);
+typedef uint32_t  (* Fn_MemAcc_CB)(const void *p_context, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer);
 
 /** @}*/
 

@@ -52,22 +52,25 @@ public:
     virtual const uint32_t readBytes(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer);
     
     void setCBIfClass(TrcMemAccCBIF *p_if);
-    void setCBIfFn(Fn_MemAcc_CB p_fn);
+    void setCBIfFn(Fn_MemAcc_CB p_fn, const void *p_context);
 
 private:
-    TrcMemAccCBIF *m_p_CBclass;
-    Fn_MemAcc_CB m_p_CBfn;
+    TrcMemAccCBIF *m_p_CBclass;     //<! callback class.
+    Fn_MemAcc_CB m_p_CBfn;          //<! callback function.
+    const void *m_p_cbfn_context;   //<! context pointer for callback function.
 };
 
 inline void TrcMemAccCB::setCBIfClass(TrcMemAccCBIF *p_if) 
 { 
     m_p_CBclass = p_if; 
     m_p_CBfn = 0;       // only one callback type per accessor.
+    m_p_cbfn_context = 0;
 }
 
-inline void TrcMemAccCB::setCBIfFn(Fn_MemAcc_CB p_fn) 
+inline void TrcMemAccCB::setCBIfFn(Fn_MemAcc_CB p_fn, const void *p_context) 
 { 
-    m_p_CBfn = p_fn; 
+    m_p_CBfn = p_fn;
+    m_p_cbfn_context = p_context;
     m_p_CBclass = 0;  // only one callback type per accessor.
 }
 

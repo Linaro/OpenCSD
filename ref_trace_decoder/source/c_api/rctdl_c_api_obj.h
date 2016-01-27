@@ -22,7 +22,7 @@ public:
 class GenTraceElemCBObj : public ITrcGenElemIn, public TraceElemCBBase
 {
 public:
-    GenTraceElemCBObj(FnTraceElemIn pCBFn);
+    GenTraceElemCBObj(FnTraceElemIn pCBFn, const void *p_context);
     virtual ~GenTraceElemCBObj() {};
 
     virtual rctdl_datapath_resp_t TraceElemIn(const rctdl_trc_index_t index_sop,
@@ -31,6 +31,7 @@ public:
 
 private:
     FnTraceElemIn m_c_api_cb_fn;
+    const void *m_p_cb_context;
 };
 
 /************************************************************************/
@@ -40,7 +41,7 @@ private:
 class EtmV4ICBObj : public IPktDataIn<EtmV4ITrcPacket>, public TraceElemCBBase
 {
 public:
-    EtmV4ICBObj(FnEtmv4IPacketDataIn pCBFn);
+    EtmV4ICBObj(FnEtmv4IPacketDataIn pCBFn, const void *p_context);
     virtual ~EtmV4ICBObj() {};
     
     virtual rctdl_datapath_resp_t PacketDataIn( const rctdl_datapath_op_t op,
@@ -50,13 +51,14 @@ public:
 private:
 
     FnEtmv4IPacketDataIn m_c_api_cb_fn;
+    const void *m_p_cb_context;
 };
 
 
 class EtmV4IPktMonCBObj : public IPktRawDataMon<EtmV4ITrcPacket>, public TraceElemCBBase
 {
 public:
-    EtmV4IPktMonCBObj(FnEtmv4IPktMonDataIn pCBFn);
+    EtmV4IPktMonCBObj(FnEtmv4IPktMonDataIn pCBFn, const void *p_context);
     virtual ~EtmV4IPktMonCBObj() {};
     
     virtual void RawPacketDataMon( const rctdl_datapath_op_t op,
@@ -67,6 +69,7 @@ public:
                                    
 private:
     FnEtmv4IPktMonDataIn m_c_api_cb_fn;
+    const void *m_p_cb_context;
 };
 
 /************************************************************************/
@@ -76,7 +79,7 @@ private:
 class EtmV3CBObj : public IPktDataIn<EtmV3TrcPacket>, public TraceElemCBBase
 {
 public:
-    EtmV3CBObj(FnEtmv3PacketDataIn pCBFn);
+    EtmV3CBObj(FnEtmv3PacketDataIn pCBFn, const void *p_context);
     virtual ~EtmV3CBObj() {};
     
     virtual rctdl_datapath_resp_t PacketDataIn( const rctdl_datapath_op_t op,
@@ -86,12 +89,13 @@ public:
 private:
 
     FnEtmv3PacketDataIn m_c_api_cb_fn;
+    const void *m_p_cb_context;
 };
 
 class EtmV3PktMonCBObj : public IPktRawDataMon<EtmV3TrcPacket>, public TraceElemCBBase
 {
 public:
-    EtmV3PktMonCBObj(FnEtmv3PktMonDataIn pCBFn);
+    EtmV3PktMonCBObj(FnEtmv3PktMonDataIn pCBFn, const void *p_context);
     virtual ~EtmV3PktMonCBObj() {};
     
     virtual void RawPacketDataMon( const rctdl_datapath_op_t op,
@@ -102,6 +106,7 @@ public:
                                    
 private:
     FnEtmv3PktMonDataIn m_c_api_cb_fn;
+    const void *m_p_cb_context;
 };
 
 /************************************************************************/
@@ -111,7 +116,7 @@ private:
 class StmCBObj : public IPktDataIn<StmTrcPacket>, public TraceElemCBBase
 {
 public:
-    StmCBObj(FnStmPacketDataIn pCBFn);
+    StmCBObj(FnStmPacketDataIn pCBFn, const void *p_context);
     virtual ~StmCBObj() {};
     
     virtual rctdl_datapath_resp_t PacketDataIn( const rctdl_datapath_op_t op,
@@ -120,12 +125,13 @@ public:
 
 private:
     FnStmPacketDataIn m_c_api_cb_fn;
+    const void *m_p_cb_context;
 };
 
 class StmPktMonCBObj : public IPktRawDataMon<StmTrcPacket>, public TraceElemCBBase
 {
 public:
-    StmPktMonCBObj(FnStmPktMonDataIn pCBFn);
+    StmPktMonCBObj(FnStmPktMonDataIn pCBFn, const void *p_context);
     virtual ~StmPktMonCBObj() {};
     
     virtual void RawPacketDataMon( const rctdl_datapath_op_t op,
@@ -136,6 +142,7 @@ public:
                                    
 private:
     FnStmPktMonDataIn m_c_api_cb_fn;
+    const void *m_p_cb_context;
 };
 
 #endif // ARM_RCTDL_C_API_OBJ_H_INCLUDED
