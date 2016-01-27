@@ -70,13 +70,11 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
         switch (m_curr_state)
         {
         case NO_SYNC:
-            {
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_NO_SYNC);
-                resp = outputTraceElement(m_output_elem);
-                m_curr_state = WAIT_SYNC;
-                if(!RCTDL_DATA_RESP_IS_CONT(resp))
-                    bPktDone = true;
-            }
+            // output the initial not synced packet to the sink
+            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_NO_SYNC);
+            resp = outputTraceElement(m_output_elem);
+            m_curr_state = WAIT_SYNC;
+            // fall through to check if the current packet is the async we are waiting for.
             break;
 
         case WAIT_SYNC:
@@ -127,8 +125,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onReset()
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onFlush()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    if((m_curr_state == NO_SYNC) || (m_curr_state == COMMIT_ELEM))
-        resp = processPacket(); // continue ongoing operation
+    if(m_curr_state == COMMIT_ELEM)
+        resp = processPacket(); // continue ongoing output operation
     return resp;
 }
 

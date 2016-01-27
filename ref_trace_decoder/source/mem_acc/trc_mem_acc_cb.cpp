@@ -12,7 +12,8 @@ TrcMemAccCB::TrcMemAccCB(const rctdl_vaddr_t s_address,
                 const rctdl_mem_space_acc_t mem_space) : 
     TrcMemAccessorBase(MEMACC_CB_IF, s_address, e_address),
     m_p_CBclass(0),
-    m_p_CBfn(0)
+    m_p_CBfn(0),
+    m_p_cbfn_context(0)
 {
     setMemSpace(mem_space);    
 }
@@ -24,7 +25,7 @@ const uint32_t TrcMemAccCB::readBytes(const rctdl_vaddr_t address, const rctdl_m
     if(m_p_CBclass)
         return m_p_CBclass->readBytes(address,memSpace,reqBytes,byteBuffer);
     if(m_p_CBfn)
-        return m_p_CBfn(address,memSpace,reqBytes,byteBuffer);
+        return m_p_CBfn(m_p_cbfn_context, address,memSpace,reqBytes,byteBuffer);
     return 0;
 }
 

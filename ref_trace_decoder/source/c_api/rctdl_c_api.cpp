@@ -51,7 +51,7 @@ namespace std { const nothrow_t nothrow = nothrow_t(); }
 
 
 /*******************************************************************************/
-/* C library data - additional data on top of the C++ library objects                                                             */
+/* C library data - additional data on top of the C++ library objects          */
 /*******************************************************************************/
 
 /* keep a list of interface objects for a decode tree for later disposal */
@@ -140,14 +140,14 @@ RCTDL_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t 
     return resp;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn)
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
         EtmV4Config cfg;
         cfg = static_cast<const rctdl_etmv4_cfg *>(etmv4_cfg);
-        EtmV4ICBObj *p_CBObj = new (std::nothrow) EtmV4ICBObj(pPktFn);
+        EtmV4ICBObj *p_CBObj = new (std::nothrow) EtmV4ICBObj(pPktFn,p_context);
 
         if(p_CBObj == 0)
             err =  RCTDL_ERR_MEM;
@@ -188,7 +188,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t h
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn)
+RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
@@ -197,7 +197,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t h
         DecodeTreeElement *pDTElem = pDT->getDecoderElement(trc_chan_id);
         if((pDTElem != 0) && (pDTElem->getProtocol() == RCTDL_PROTOCOL_ETMV4I))
         {
-            EtmV4IPktMonCBObj *pktMonObj = new (std::nothrow) EtmV4IPktMonCBObj(pPktFn);
+            EtmV4IPktMonCBObj *pktMonObj = new (std::nothrow) EtmV4IPktMonCBObj(pPktFn, p_context);
             if(pktMonObj != 0)
             {
                 pDTElem->getEtmV4IPktProc()->getRawPacketMonAttachPt()->attach(pktMonObj);
@@ -219,14 +219,14 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t h
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn)
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
         EtmV3Config cfg;
         cfg = static_cast<const rctdl_etmv3_cfg *>(etmv3_cfg);
-        EtmV3CBObj *p_CBObj = new (std::nothrow) EtmV3CBObj(pPktFn);
+        EtmV3CBObj *p_CBObj = new (std::nothrow) EtmV3CBObj(pPktFn, p_context);
 
         if(p_CBObj == 0)
             err =  RCTDL_ERR_MEM;
@@ -249,7 +249,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t h
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn)
+RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
@@ -258,7 +258,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t ha
         DecodeTreeElement *pDTElem = pDT->getDecoderElement(trc_chan_id);
         if((pDTElem != 0) && (pDTElem->getProtocol() == RCTDL_PROTOCOL_ETMV3))
         {
-            EtmV3PktMonCBObj *pktMonObj = new (std::nothrow) EtmV3PktMonCBObj(pPktFn);
+            EtmV3PktMonCBObj *pktMonObj = new (std::nothrow) EtmV3PktMonCBObj(pPktFn, p_context);
             if(pktMonObj != 0)
             {
                 pDTElem->getEtmV3PktProc()->getRawPacketMonAttachPt()->attach(pktMonObj);
@@ -280,14 +280,14 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t ha
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn)
+RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
         STMConfig cfg;
         cfg = static_cast<const rctdl_stm_cfg *>(stm_cfg);
-        StmCBObj *p_CBObj = new (std::nothrow) StmCBObj(pPktFn);
+        StmCBObj *p_CBObj = new (std::nothrow) StmCBObj(pPktFn, p_context);
 
         if(p_CBObj == 0)
             err =  RCTDL_ERR_MEM;
@@ -310,10 +310,10 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t han
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn)
+RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context)
 {
 
-    GenTraceElemCBObj * pCBObj = new (std::nothrow)GenTraceElemCBObj(pFn);
+    GenTraceElemCBObj * pCBObj = new (std::nothrow)GenTraceElemCBObj(pFn, p_context);
     if(pCBObj)
     {
         ((DecodeTree *)handle)->setGenTraceElemOutI(pCBObj);
@@ -475,7 +475,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t hand
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func)
+RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
 
@@ -494,7 +494,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t ha
                 TrcMemAccCB *pCBAcc = dynamic_cast<TrcMemAccCB *>(p_accessor);
                 if(pCBAcc)
                 {
-                    pCBAcc->setCBIfFn(p_cb_func);
+                    pCBAcc->setCBIfFn(p_cb_func, p_context);
                     err = pDT->addMemAccessorToMap(p_accessor,0);
                 }
                 else
@@ -533,8 +533,9 @@ RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, 
 /*******************************************************************************/
 
 /****************** Generic trace element output callback function  ************/
-GenTraceElemCBObj::GenTraceElemCBObj(FnTraceElemIn pCBFn) :
-    m_c_api_cb_fn(pCBFn)
+GenTraceElemCBObj::GenTraceElemCBObj(FnTraceElemIn pCBFn, const void *p_context) :
+    m_c_api_cb_fn(pCBFn),
+    m_p_cb_context(p_context)
 {
 }
 
@@ -542,12 +543,13 @@ rctdl_datapath_resp_t GenTraceElemCBObj::TraceElemIn(const rctdl_trc_index_t ind
                                               const uint8_t trc_chan_id,
                                               const RctdlTraceElement &elem)
 {
-    return m_c_api_cb_fn(index_sop, trc_chan_id, &elem);
+    return m_c_api_cb_fn(m_p_cb_context, index_sop, trc_chan_id, &elem);
 }
 
 /****************** Etmv4 packet processor output callback function  ************/
-EtmV4ICBObj::EtmV4ICBObj(FnEtmv4IPacketDataIn pCBFn) :
-    m_c_api_cb_fn(pCBFn)
+EtmV4ICBObj::EtmV4ICBObj(FnEtmv4IPacketDataIn pCBFn, const void *p_context) :
+    m_c_api_cb_fn(pCBFn),
+    m_p_cb_context(p_context)
 {
 }
 
@@ -555,12 +557,13 @@ rctdl_datapath_resp_t EtmV4ICBObj::PacketDataIn( const rctdl_datapath_op_t op,
                                                  const rctdl_trc_index_t index_sop,
                                                  const EtmV4ITrcPacket *p_packet_in)
 {
-    return m_c_api_cb_fn(op,index_sop,p_packet_in);
+    return m_c_api_cb_fn(m_p_cb_context, op,index_sop,p_packet_in);
 }
 
 /****************** Etmv4 packet processor monitor callback function  ***********/
-EtmV4IPktMonCBObj::EtmV4IPktMonCBObj(FnEtmv4IPktMonDataIn pCBFn) :
-    m_c_api_cb_fn(pCBFn)
+EtmV4IPktMonCBObj::EtmV4IPktMonCBObj(FnEtmv4IPktMonDataIn pCBFn, const void *p_context) :
+    m_c_api_cb_fn(pCBFn),
+    m_p_cb_context(p_context)
 {
 }
     
@@ -570,12 +573,13 @@ void EtmV4IPktMonCBObj::RawPacketDataMon( const rctdl_datapath_op_t op,
                                    const uint32_t size,
                                    const uint8_t *p_data)
 {
-    return m_c_api_cb_fn(op, index_sop, p_packet_in, size, p_data);
+    return m_c_api_cb_fn(m_p_cb_context, op, index_sop, p_packet_in, size, p_data);
 }
 
 /****************** Etmv3 packet processor output callback function  ************/
-EtmV3CBObj::EtmV3CBObj(FnEtmv3PacketDataIn pCBFn) :
-    m_c_api_cb_fn(pCBFn)
+EtmV3CBObj::EtmV3CBObj(FnEtmv3PacketDataIn pCBFn, const void *p_context) :
+    m_c_api_cb_fn(pCBFn),
+    m_p_cb_context(p_context)
 {
 }
 
@@ -583,12 +587,13 @@ rctdl_datapath_resp_t EtmV3CBObj::PacketDataIn( const rctdl_datapath_op_t op,
                                                  const rctdl_trc_index_t index_sop,
                                                  const EtmV3TrcPacket *p_packet_in)
 {
-    return m_c_api_cb_fn(op,index_sop,p_packet_in);
+    return m_c_api_cb_fn(m_p_cb_context, op,index_sop,p_packet_in);
 }
 
 /****************** Etmv3 packet processor monitor callback function  ***********/
-EtmV3PktMonCBObj::EtmV3PktMonCBObj(FnEtmv3PktMonDataIn pCBFn) :
-    m_c_api_cb_fn(pCBFn)
+EtmV3PktMonCBObj::EtmV3PktMonCBObj(FnEtmv3PktMonDataIn pCBFn, const void *p_context) :
+    m_c_api_cb_fn(pCBFn),
+    m_p_cb_context(p_context)
 {
 }
     
@@ -598,12 +603,13 @@ void EtmV3PktMonCBObj::RawPacketDataMon( const rctdl_datapath_op_t op,
                                    const uint32_t size,
                                    const uint8_t *p_data)
 {
-    return m_c_api_cb_fn(op, index_sop, p_packet_in, size, p_data);
+    return m_c_api_cb_fn(m_p_cb_context, op, index_sop, p_packet_in, size, p_data);
 }
 
 /****************** Stm packet processor output callback function  ************/
-StmCBObj::StmCBObj(FnStmPacketDataIn pCBFn) :
-    m_c_api_cb_fn(pCBFn)
+StmCBObj::StmCBObj(FnStmPacketDataIn pCBFn, const void *p_context) :
+    m_c_api_cb_fn(pCBFn),
+    m_p_cb_context(p_context)
 {
 }
 
@@ -611,12 +617,13 @@ rctdl_datapath_resp_t StmCBObj::PacketDataIn( const rctdl_datapath_op_t op,
                                                  const rctdl_trc_index_t index_sop,
                                                  const StmTrcPacket *p_packet_in)
 {
-    return m_c_api_cb_fn(op,index_sop,p_packet_in);
+    return m_c_api_cb_fn(m_p_cb_context, op,index_sop,p_packet_in);
 }
 
 /****************** Stm packet processor monitor callback function  ***********/
-StmPktMonCBObj::StmPktMonCBObj(FnStmPktMonDataIn pCBFn) :
-    m_c_api_cb_fn(pCBFn)
+StmPktMonCBObj::StmPktMonCBObj(FnStmPktMonDataIn pCBFn, const void *p_context) :
+    m_c_api_cb_fn(pCBFn),
+    m_p_cb_context(p_context)
 {
 }
     
@@ -626,7 +633,7 @@ void StmPktMonCBObj::RawPacketDataMon( const rctdl_datapath_op_t op,
                                    const uint32_t size,
                                    const uint8_t *p_data)
 {
-    return m_c_api_cb_fn(op, index_sop, p_packet_in, size, p_data);
+    return m_c_api_cb_fn(m_p_cb_context, op, index_sop, p_packet_in, size, p_data);
 }
 
 

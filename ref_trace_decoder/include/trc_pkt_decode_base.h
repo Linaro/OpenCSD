@@ -105,6 +105,7 @@ protected:
 
 inline TrcPktDecodeI::TrcPktDecodeI(const char *component_name) : 
     TraceComponent(component_name),
+    m_index_curr_pkt(0),
     m_decode_init_ok(false),
     m_config_init_ok(false)
 {
@@ -112,6 +113,7 @@ inline TrcPktDecodeI::TrcPktDecodeI(const char *component_name) :
 
 inline TrcPktDecodeI::TrcPktDecodeI(const char *component_name, int instIDNum) :
     TraceComponent(component_name, instIDNum),
+    m_index_curr_pkt(0),
     m_decode_init_ok(false),
     m_config_init_ok(false)
 {

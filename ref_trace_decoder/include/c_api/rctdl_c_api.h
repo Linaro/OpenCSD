@@ -143,10 +143,11 @@ RCTDL_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t 
  *
  * @param handle : Handle to decode tree.
  * @param pFn : Pointer to the callback functions.
+ * @param p_context : opaque context pointer value used in callback function.
  *
  * @return  rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn);
+RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context);
 
 /*!
  * Create an ETMv4 instruction trace packet processor only for the supplied configuration. 
@@ -155,10 +156,11 @@ RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t hand
  * @param handle : handle a decode tree to create the packet processsor.
  * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.
  * @param pPktFn : pointer to a packet handling callback function.
+ * @param p_context : opaque context pointer value used in callback function..
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn);
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn, const void *p_context);
 
 /*!
  * Creates a packet processor + packet decoder pair for the supplied configuration structure.
@@ -177,10 +179,11 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t h
  * @param handle : Handle to decode tree.
  * @param trc_chan_id : CoreSight Trace ID for packet processor 
  * @param pPktFn : Function to attach to monitor point.
+ * @param p_context : opaque context pointer value used in callback function.
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn); 
+RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context); 
 
 
 /*!
@@ -190,10 +193,11 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t h
  * @param handle : handle a decode tree to create the packet processsor.
  * @param *etmv3_cfg : pointer to valid Etmv3 configuration structure.
  * @param pPktFn : pointer to a packet handling callback function.
+ * @param p_context : opaque context pointer value used in callback function.
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn);
+RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn, const void *p_context);
 
 
 /*!
@@ -203,10 +207,11 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t h
  * @param handle : Handle to decode tree.
  * @param trc_chan_id : CoreSight Trace ID for packet processor 
  * @param pPktFn : Function to attach to monitor point.
+ * @param p_context : opaque context pointer value used in callback function.
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn); 
+RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context); 
 
 
 /*!
@@ -216,10 +221,11 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t ha
  * @param handle : handle a decode tree to create the packet processsor.
  * @param *stm_cfg : pointer to valid Stm configuration structure.
  * @param pPktFn : pointer to a packet handling callback function.
+ * @param p_context : opaque context pointer value used in callback function.
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn);
+RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context);
 
 
 /** TBD : more C API functions to be added here */    
@@ -269,10 +275,11 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t hand
  * @param en_address :  End address of the memory area covered by the callback. (inclusive)
  * @param mem_space : Memory space(s) covered by the callback.
  * @param p_cb_func : Callback function
+ * @param p_context : opaque context pointer value used in callback function.
  *
  * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func); 
+RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context); 
 
 /*!
  * Remove a memory accessor by address and memory space.
