@@ -263,6 +263,7 @@ bool process_cmd_line_logger_opts(int argc, char* argv[])
                 {
                     logfileName = argv[optIdx];
                     newlogOpts |= rctdlMsgLogger::OUT_FILE;
+                    bChangingOptFlags = true;
                 }
                 else
                 {

@@ -73,7 +73,7 @@ rctdl_err_t TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctd
     m_mem_file.open(pathToFile.c_str(), std::ifstream::binary | std::ifstream::ate);
     if(m_mem_file.is_open())
     {
-        m_file_size = (rctdl_vaddr_t)m_mem_file.tellg();
+        m_file_size = (rctdl_vaddr_t)m_mem_file.tellg() & ((rctdl_vaddr_t)~0x1);
         m_mem_file.seekg(0, m_mem_file.beg);
         // adding an offset of 0, sets the base range.
         if(offset == 0)

@@ -448,6 +448,18 @@ typedef uint32_t  (* Fn_MemAcc_CB)(const void *p_context, const rctdl_vaddr_t ad
 
 /** @}*/
 
+/** @name Packet Decoder Operation Control Flags
+    common operational flags - bottom 16 bits,
+    component specific - top 16 bits.
+@{*/
+
+#define RCTDL_OPFLG_PKTDEC_ERROR_BAD_PKTS  0x00000001  /**< throw error on bad packets input (default is to unsync and wait) */
+
+/** mask to combine all common packet processor operational control flags */
+#define RCTDL_OPFLG_PKTDEC_COMMON (RCTDL_OPFLG_PKTDEC_ERROR_BAD_PKTS)
+
+/** @}*/
+
 
 /** @}*/
 #endif // ARM_RCTDL_IF_TYPES_H_INCLUDED

@@ -41,6 +41,8 @@
 
 #define DCD_NAME "DCD_ETMV4"
 
+static const uint32_t ETMV4_SUPPORTED_DECODE_OP_FLAGS = RCTDL_OPFLG_PKTDEC_COMMON;
+
 TrcPktDecodeEtmV4I::TrcPktDecodeEtmV4I()
     : TrcPktDecodeBase(DCD_NAME)
 {
@@ -187,18 +189,21 @@ rctdl_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
 /************* local decode methods */
 void TrcPktDecodeEtmV4I::initDecoder()
 {
-     /* init elements that get set by config */
-     m_max_spec_depth = 0;
-     m_p0_key_max = 0;
-     m_CSID = 0;
-     m_cond_key_max_incr = 0;
-     m_IASize64 = false;
+    // set the operational modes supported.
+    m_supported_op_flags = ETMV4_SUPPORTED_DECODE_OP_FLAGS;
 
-     // set up the broadcast address stack
-     m_pAddrRegs = new (std::nothrow) AddrValStack();
+    /* init elements that get set by config */
+    m_max_spec_depth = 0;
+    m_p0_key_max = 0;
+    m_CSID = 0;
+    m_cond_key_max_incr = 0;
+    m_IASize64 = false;
 
-     // reset decoder state to unsynced
-     resetDecoder();
+    // set up the broadcast address stack
+    m_pAddrRegs = new (std::nothrow) AddrValStack();
+
+    // reset decoder state to unsynced
+    resetDecoder();
 }
 
 void TrcPktDecodeEtmV4I::resetDecoder()
@@ -222,7 +227,9 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     etmv4_addr_val_t addr;
     addr.isa = 0;
     addr.val = 0;
+    
     m_pAddrRegs->push(addr);    // preload first value with 0x0
+    m_P0_stack.clear();
 
 }
 
@@ -441,6 +448,18 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
                 bAllocErr = true;
 
         }
+        break;
+
+    case ETM4_PKT_I_BAD_SEQUENCE:
+        resp = handleBadPacket("Bad byte sequence in packet.");
+        break;
+
+    case ETM4_PKT_I_BAD_TRACEMODE:
+        resp = handleBadPacket("Invalid packet type for trace mode.");
+        break;
+
+    case ETM4_PKT_I_RESERVED:
+        resp = handleBadPacket("Reserved packet header");
         break;
 
     /*** presently unsupported packets ***/
@@ -951,5 +970,25 @@ void TrcPktDecodeEtmV4I::updateContext(TrcStackElemCtxt *pCtxtElem)
     m_need_ctxt = false;
 }
 
+rctdl_datapath_resp_t TrcPktDecodeEtmV4I::handleBadPacket(const char *reason)
+{
+    rctdl_datapath_resp_t resp  = RCTDL_RESP_CONT;   
+
+    if(getComponentOpMode() && RCTDL_OPFLG_PKTDEC_ERROR_BAD_PKTS)
+    {
+        // error out - stop decoding
+        resp = RCDTL_RESP_FATAL_INVALID_DATA;
+        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_DECODE_PKT,reason));
+    }
+    else
+    {
+        // switch to unsync - clear decode state
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_NO_SYNC);
+        resp = outputTraceElement(m_output_elem);
+        resetDecoder();
+        m_curr_state = WAIT_SYNC;
+    }
+    return resp;
+}
 
 /* End of File trc_pkt_decode_etmv4i.cpp */
