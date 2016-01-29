@@ -83,10 +83,11 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
             /* make a note of the trace binary file name + path to ss directory */            
             m_BufferFileName = m_pReader->getSnapShotDir() + tree.buffer_info.dataFileName;
 
+            rctdl_dcd_tree_src_t src_format = tree.buffer_info.dataFormat == "source_data" ? RCTDL_TRC_SRC_SINGLE : RCTDL_TRC_SRC_FRAME_FORMATTED;
+
             /* create the initial device tree */
-            // TBD: handle raw input with no formatted frame data.
-            //      handle syncs / hsyncs data from TPIU
-            m_pDecodeTree = DecodeTree::CreateDecodeTree(RCTDL_TRC_SRC_FRAME_FORMATTED,RCTDL_DFRMTR_FRAME_MEM_ALIGN); 
+            // TBD:     handle syncs / hsyncs data from TPIU
+            m_pDecodeTree = DecodeTree::CreateDecodeTree(src_format,RCTDL_DFRMTR_FRAME_MEM_ALIGN); 
             if(m_pDecodeTree == 0)
             {
                 LogError("Failed to create decode tree object\n");
@@ -103,6 +104,7 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
 
             /* run through each protocol source to this buffer... */
             std::map<std::string, std::string>::iterator it = tree.source_core_assoc.begin();
+
             while(it != tree.source_core_assoc.end())
             {
                 Parser::Parsed *etm_dev, *core_dev;
@@ -163,7 +165,10 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
                     oss << "Failed to find device data for source " << it->first << ".\n";
                     LogError(oss.str());
                 }
-                it++;
+                if(src_format == RCTDL_TRC_SRC_SINGLE)
+                    it = tree.source_core_assoc.end();
+                else
+                    it++;
             }
 
             if(numDecodersCreated == 0)
