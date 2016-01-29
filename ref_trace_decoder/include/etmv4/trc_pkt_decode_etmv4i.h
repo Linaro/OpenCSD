@@ -78,6 +78,9 @@ protected:
     // process an exception element - output instruction trace + exception generic type.
     rctdl_datapath_resp_t processException(); 
 
+    // process a bad packet
+    rctdl_datapath_resp_t handleBadPacket(const char *reason);
+     
 private:
     void SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, const uint8_t isa); 
 
