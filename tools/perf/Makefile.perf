@@ -86,6 +86,9 @@ include ../scripts/utilities.mak
 #
 # Define FEATURES_DUMP to provide features detection dump file
 # and bypass the feature detection
+#
+# Define NO_CSTRACE if you do not want CoreSight trace decoding support
+#
 
 # As per kernel Makefile, avoid funny character set dependencies
 unexport LC_ALL
