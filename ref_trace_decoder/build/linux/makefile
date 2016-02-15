@@ -45,6 +45,9 @@ export LIB_BASE_NAME
 LIB_CAPI_NAME=$(LIB_BASE_NAME)_c_api
 export LIB_CAPI_NAME
 
+# determine base architecture, heavily borrowed from the Linux kernel v4.4's
+# tools/perf/config/Makefile.arch
+ARCH := $(shell uname -m 2>/dev/null || echo not)
 
 # source root directories
 export RCTDL_LIB_ROOT=$(RCTDL_ROOT)/lib
@@ -78,17 +81,17 @@ BUILD_VARIANT=rel
 endif
 
 # platform bit size variant
-ifdef LINUX64
-MASTER_CC_FLAGS += -m64
-MASTER_CPP_FLAGS += -m64
-MASTER_LINKER_FLAGS += -m64
-BIT_VARIANT=64
-else
-MASTER_CC_FLAGS += -m32
-MASTER_CPP_FLAGS += -m32
-MASTER_LINKER_FLAGS += -m32
-BIT_VARIANT=32
+ifeq ($(ARCH),x86)
+   MFLAG:="-m32"
+   BIT_VARIANT=32
+else ifeq ($(ARCH),x86_64)
+   MFLAG:="-m64"
+   BIT_VARIANT=64
 endif
+
+MASTER_CC_FLAGS += $(MFLAG)
+MASTER_CPP_FLAGS += $(MFLAG)
+MASTER_LINKER_FLAGS += $(MFLAG)
 
 # export build flags
 export MASTER_CC_FLAGS
