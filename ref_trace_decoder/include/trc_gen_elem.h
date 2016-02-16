@@ -5,7 +5,6 @@
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
 
-
 /* 
  * Redistribution and use in source and binary forms, with or without modification, 
  * are permitted provided that the following conditions are met:
@@ -52,16 +51,18 @@ public:
     RctdlTraceElement(rctdl_gen_trc_elem_t type);
     virtual ~RctdlTraceElement() {};
 
-    const rctdl_gen_trc_elem_t getType() const { return elem_type; };
-    void setType(const rctdl_gen_trc_elem_t type) { elem_type = type; };
+    void init();
 
+    const rctdl_gen_trc_elem_t getType() const { return elem_type; };
+    void setType(const rctdl_gen_trc_elem_t type);
     void setContext(const rctdl_pe_context &new_context) { context = new_context; };
+    void setCycleCount(const uint32_t cycleCount);
+    void setEvent(const event_t ev_type, const uint16_t number);
 
     virtual void toString(std::string &str) const;
 
     RctdlTraceElement &operator =(const rctdl_generic_trace_elem* p_elem);
 
-    //static void toString(const rctdl_generic_trace_elem *p_elem, std::string &str);
 };
 
 inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)    
@@ -72,6 +73,40 @@ inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)
 inline RctdlTraceElement::RctdlTraceElement()    
 {
     elem_type = RCTDL_GEN_TRC_ELEM_UNKNOWN;
+}
+
+inline void RctdlTraceElement::setCycleCount(const uint32_t cycleCount)
+{
+    cycle_count = cycleCount;
+    has_cc = 1;
+}
+
+inline void RctdlTraceElement::setEvent(const event_t ev_type, const uint16_t number)
+{
+    trace_event.ev_type = (uint16_t)ev_type;
+    trace_event.ev_number = ev_type == EVENT_NUMBERED ? number : 0;
+}
+
+inline void RctdlTraceElement::setType(const rctdl_gen_trc_elem_t type) 
+{ 
+    // set the type and clear down the per element flags
+    elem_type = type;
+    has_cc = 0;
+    last_instr_exec = 0;
+    last_i_type = RCTDL_INSTR_OTHER;
+    i_type_with_link = 0;
+}
+
+inline void RctdlTraceElement::init()
+{
+    context.ctxt_id_valid = 0;
+    context.vmid_valid = 0;
+    context.el_valid = 0;
+
+    cpu_freq_change = 0;
+    has_cc = 0;
+    last_instr_exec = 0;
+    i_type_with_link = 0;
 }
 
 /** @}*/

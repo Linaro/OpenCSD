@@ -43,7 +43,6 @@ static const char *s_elem_descs[][2] =
     {"RCTDL_GEN_TRC_ELEM_UNKNOWN","Unknown trace element - default value or indicate error in stream to client."},
     {"RCTDL_GEN_TRC_ELEM_NO_SYNC","Waiting for sync - either at start of decode, or after overflow / bad packet"},
     {"RCTDL_GEN_TRC_ELEM_TRACE_ON","Start of trace - beginning of elements or restart after discontinuity (overflow, trace filtering)."},
-    {"RCTDL_GEN_TRC_ELEM_TRACE_OVERFLOW","Trace overflow - indicates discontinuity due to too much trace - normally followed by trace on."},
     {"RCTDL_GEN_TRC_ELEM_EO_TRACE","End of the available trace in the buffer."},
     {"RCTDL_GEN_TRC_ELEM_PE_CONTEXT","PE status update / change (arch, ctxtid, vmid etc)."},
     {"RCTDL_GEN_TRC_ELEM_INSTR_RANGE","Traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key"},
@@ -52,8 +51,21 @@ static const char *s_elem_descs[][2] =
     {"RCTDL_GEN_TRC_ELEM_EXCEPTION_RET","Expection return"},
     {"RCTDL_GEN_TRC_ELEM_TIMESTAMP","Timestamp - preceding elements happeded before this time."},
     {"RCTDL_GEN_TRC_ELEM_CYCLE_COUNT","Cycle count - cycles since last cycle count value - associated with a preceding instruction range."},
-    {"RCTDL_GEN_TRC_ELEM_TS_WITH_CC","Timestamp with Cycle count - preceding elements happened before timestamp, cycle count associated with the timestamp, cycle count is associated with TS and since last cycle count value"},
     {"RCTDL_GEN_TRC_ELEM_EVENT","Event - numbered event or trigger"}
+};
+
+static const char *instr_type[] = {
+    "--- ",
+    "BR  ",
+    "iBR ",
+    "ISB ",
+    "DSB.DMB"
+};
+
+static const char *s_trace_on_reason[] = {
+    "begin or filter",
+    "overflow",
+    "debug restart"
 };
 
 void RctdlTraceElement::toString(std::string &str) const
@@ -68,6 +80,8 @@ void RctdlTraceElement::toString(std::string &str) const
         {
         case RCTDL_GEN_TRC_ELEM_INSTR_RANGE:
             oss << "exec range=0x" << std::hex << st_addr << ":[0x" << en_addr << "] ";
+            oss << ((last_instr_exec == 1) ? "E " : "N ");
+            oss << instr_type[last_i_type];
             break;
 
         case RCTDL_GEN_TRC_ELEM_ADDR_NACC:
@@ -88,6 +102,10 @@ void RctdlTraceElement::toString(std::string &str) const
                 oss << "VMID=0x" << std::hex << context.vmid << "; ";
             if(context.ctxt_id_valid)
                 oss << "CTXTID=0x" << std::hex << context.context_id << "; ";
+            break;
+
+        case  RCTDL_GEN_TRC_ELEM_TRACE_ON:
+            oss << " [" << s_trace_on_reason[trace_on_reason] << "]";
             break;
 
         default: break;
