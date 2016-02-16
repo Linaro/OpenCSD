@@ -112,7 +112,7 @@ class TrcPktProcBase : public TrcPktProcI
 public:
     TrcPktProcBase(const char *component_name);
     TrcPktProcBase(const char *component_name, int instIDNum);
-    virtual ~TrcPktProcBase() {}; 
+    virtual ~TrcPktProcBase(); 
 
         /* generic trace data input interface */
     virtual rctdl_datapath_resp_t TraceDataIn(  const rctdl_datapath_op_t op,
@@ -146,8 +146,19 @@ protected:
 
     rctdl_datapath_resp_t outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, std::vector<uint8_t> &pktdata);
 
+    rctdl_datapath_resp_t outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, const uint8_t *pktdata, uint32_t pktlen);
+
+    /*! Let the derived class figure out if it needs to collate and send raw data.
+        can improve wait for sync performance if we do not need to save and send unsynced data.    
+    */
+    const bool hasRawMon() const;   
+
     /* the protocol configuration */
-    const Pc *m_config;
+    const Pc *m_config; 
+
+    void ClearConfigObj();  // remove our copy of the config 
+
+    const bool checkInit(); // return true if init (configured and at least one output sink attached), false otherwise.
 
 private:
     /* decode control */
@@ -159,18 +170,27 @@ private:
     componentAttachPt<IPktRawDataMon<P>> m_pkt_raw_mon_i;
 
     componentAttachPt<ITrcPktIndexer<Pt>> m_pkt_indexer_i;
+
+    bool m_b_is_init;
 };
 
 template<class P,class Pt, class Pc> TrcPktProcBase<P, Pt, Pc>::TrcPktProcBase(const char *component_name) : 
     TrcPktProcI(component_name),
-    m_config(0)
+    m_config(0),
+    m_b_is_init(false)
 {
 }
 
 template<class P,class Pt, class Pc> TrcPktProcBase<P, Pt, Pc>::TrcPktProcBase(const char *component_name, int instIDNum) : 
     TrcPktProcI(component_name, instIDNum),
-    m_config(0)
+    m_config(0),
+    m_b_is_init(false)
 {
+}
+
+template<class P,class Pt, class Pc> TrcPktProcBase<P, Pt, Pc>::~TrcPktProcBase()
+{
+    ClearConfigObj();
 }
 
 template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::TraceDataIn(  const rctdl_datapath_op_t op,
@@ -299,6 +319,11 @@ template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::outputRawPa
         m_pkt_raw_mon_i.first()->RawPacketDataMon(RCTDL_OP_DATA,index_sop,pkt,size,p_data);
 }
 
+template<class P,class Pt, class Pc> const bool TrcPktProcBase<P, Pt, Pc>::hasRawMon() const
+{
+    return m_pkt_raw_mon_i.hasAttachedAndEnabled();
+}
+
 template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::indexPacket(const rctdl_trc_index_t index_sop, const Pt *packet_type)
 {
     // packet indexer - cannot return CONT / WAIT, just gets the current index and type.
@@ -314,15 +339,47 @@ template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt,
     return outputDecodedPacket(index_sop,pkt);
 }
 
+template<class P,class Pt, class Pc> rctdl_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::outputOnAllInterfaces(const rctdl_trc_index_t index_sop, const P *pkt, const Pt *pkt_type, const uint8_t *pktdata, uint32_t pktlen)
+{
+    indexPacket(index_sop,pkt_type);
+    outputRawPacketToMonitor(index_sop,pkt,pktlen,pktdata);
+    return outputDecodedPacket(index_sop,pkt);
+}
+
 template<class P,class Pt, class Pc> rctdl_err_t TrcPktProcBase<P, Pt, Pc>::setProtocolConfig(const Pc *config)
 {
     rctdl_err_t err = RCTDL_ERR_INVALID_PARAM_VAL;
     if(config != 0)
     {
-        m_config = config;
-        err = onProtocolConfig();
+        ClearConfigObj();
+        m_config = new (std::nothrow) Pc(*config);
+        if(m_config != 0)
+            err = onProtocolConfig();
+        else
+            err = RCTDL_ERR_MEM;
     }
     return err;
+}
+
+template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::ClearConfigObj()
+{
+    if(m_config)
+    {
+        delete m_config;
+        m_config = 0;
+    }
+}
+
+template<class P,class Pt, class Pc> const bool TrcPktProcBase<P, Pt, Pc>::checkInit()
+{
+    if(!m_b_is_init)
+    {
+        if( (m_config != 0) &&
+            (m_pkt_out_i.hasAttached() || m_pkt_raw_mon_i.hasAttached())
+          )
+            m_b_is_init = true;
+    }
+    return m_b_is_init;
 }
 
 /** @}*/

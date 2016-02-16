@@ -91,6 +91,7 @@ typedef struct _rctdl_pkt_atom
     uint8_t num;                /**< number of atoms represented */
 } rctdl_pkt_atom;
 
+/** Isync Reason - common to PTM and ETMv3 **/
 typedef enum _rctdl_iSync_reason {
     iSync_Periodic,
     iSync_TraceEnable,
@@ -124,6 +125,7 @@ typedef enum _rctdl_armv7_exception {
     Excp_CMBusFault,
     Excp_CMHardFault,
     Excp_CMIRQn,
+    Excp_ThumbEECheckFail,
 } rctdl_armv7_exception;
 
 /** @}*/

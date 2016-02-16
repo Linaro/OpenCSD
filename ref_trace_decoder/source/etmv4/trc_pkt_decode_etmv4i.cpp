@@ -223,6 +223,7 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_need_addr = true;
     m_except_pending_addr = false;
     m_mem_nacc_pending = false;
+    m_prev_overflow = false;
 
     etmv4_addr_val_t addr;
     addr.isa = 0;
@@ -230,9 +231,8 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     
     m_pAddrRegs->push(addr);    // preload first value with 0x0
     m_P0_stack.clear();
-
+    m_output_elem.init();
 }
-
 
 // this function can output an immediate generic element if this covers the complete packet decode, 
 // or stack P0 and other elements for later processing on commit or cancel.
@@ -562,6 +562,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
             // indicates a trace restart - beginning of trace or discontinuiuty
             case P0_TRC_ON:
                 m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_ON);
+                m_output_elem.trace_on_reason = m_prev_overflow ? TRACE_ON_OVERFLOW : TRACE_ON_NORMAL;
+                m_prev_overflow = false;
                 resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                 break;
 
@@ -659,17 +661,16 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
                 if(pParamElem)
                 {
-                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TS_WITH_CC);
+                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TIMESTAMP);
                     m_output_elem.timestamp = (uint64_t)(pParamElem->getParam(0)) | (((uint64_t)pParamElem->getParam(1)) << 32);
-                    m_output_elem.cycle_count = pParamElem->getParam(2);
+                    m_output_elem.setCycleCount(pParamElem->getParam(2));
                     resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                 }
                 }
                 break;
 
             case P0_OVERFLOW:
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_OVERFLOW);
-                resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                m_prev_overflow = true;
                 break;
 
             case P0_ATOM:
@@ -784,6 +785,9 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
             break;
         }
         m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+        m_output_elem.last_instr_exec = (atom == ATOM_E) ? 1 : 0;
+        m_output_elem.last_i_type = m_instr_info.type;
+        m_output_elem.i_type_with_link = m_instr_info.is_link;
         resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
 
     }
@@ -957,6 +961,7 @@ void TrcPktDecodeEtmV4I::updateContext(TrcStackElemCtxt *pCtxtElem)
     m_is_secure = (ctxt.NS == 0);
     m_output_elem.context.security_level = ctxt.NS ? rctdl_sec_nonsecure : rctdl_sec_secure;
     m_output_elem.context.exception_level = (rctdl_ex_level)ctxt.EL;
+    m_output_elem.context.el_valid = 1;
     if(ctxt.updated_c)
     {
         m_output_elem.context.ctxt_id_valid = 1;

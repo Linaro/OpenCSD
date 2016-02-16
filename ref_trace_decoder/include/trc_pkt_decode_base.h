@@ -160,7 +160,7 @@ class TrcPktDecodeBase : public TrcPktDecodeI, public IPktDataIn<P>
 public:
     TrcPktDecodeBase(const char *component_name);
     TrcPktDecodeBase(const char *component_name, int instIDNum);
-    virtual ~TrcPktDecodeBase() {};
+    virtual ~TrcPktDecodeBase();
 
     virtual rctdl_datapath_resp_t PacketDataIn( const rctdl_datapath_op_t op,
                                                 const rctdl_trc_index_t index_sop,
@@ -172,6 +172,7 @@ public:
     const Pc *  getProtocolConfig() const { return  m_config; };
     
 protected:
+    void ClearConfigObj();
 
     /* the protocol configuration */
     Pc *          m_config;
@@ -191,6 +192,11 @@ template <class P, class Pc> TrcPktDecodeBase<P, Pc>::TrcPktDecodeBase(const cha
     TrcPktDecodeI(component_name,instIDNum),
     m_config(0)
 {
+}
+
+template <class P, class Pc> TrcPktDecodeBase<P, Pc>::~TrcPktDecodeBase() 
+{
+    ClearConfigObj();
 }
 
 template <class P, class Pc> rctdl_datapath_resp_t TrcPktDecodeBase<P, Pc>::PacketDataIn( const rctdl_datapath_op_t op,
@@ -246,12 +252,27 @@ template <class P, class Pc>  rctdl_err_t TrcPktDecodeBase<P, Pc>::setProtocolCo
     rctdl_err_t err = RCTDL_ERR_INVALID_PARAM_VAL;
     if(config != 0)
     {
-        m_config = config;
-        err = onProtocolConfig();
-        if(err == RCTDL_OK)
-            m_config_init_ok = true;
+        ClearConfigObj(); // remove any current config
+        m_config = new (std::nothrow) Pc(*config); // make a copy of the config - don't rely on the object passed in being valid outside the context of the call.
+        if(m_config != 0)
+        {
+            err = onProtocolConfig();
+            if(err == RCTDL_OK)
+                m_config_init_ok = true;
+        }
+        else
+            err = RCTDL_ERR_MEM;
     }
     return err;
+}
+
+template <class P, class Pc> void TrcPktDecodeBase<P, Pc>::ClearConfigObj()
+{
+    if(m_config)
+    {
+        delete m_config;
+        m_config = 0;
+    }
 }
 
 /** @}*/

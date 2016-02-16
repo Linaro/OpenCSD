@@ -231,14 +231,14 @@ static uint32_t  mem_acc_cb(const void *p_context, const rctdl_vaddr_t address, 
         if((address + reqBytes - 1) > mem_file_en_address)
         {
             /* more than are available - just read the available */
-            read_bytes = mem_file_en_address - (address - 1);
+            read_bytes = (uint32_t)(mem_file_en_address - (address - 1));
         }
     }
 
     /* read some bytes if more than 0 to read. */ 
     if(read_bytes != 0)
     {
-        fseek(dump_file,address-mem_dump_address,SEEK_SET);
+        fseek(dump_file,(long)(address-mem_dump_address),SEEK_SET);
         file_read_bytes = fread(byteBuffer,sizeof(uint8_t),read_bytes,dump_file);
         if(file_read_bytes < read_bytes)
             read_bytes = file_read_bytes;
