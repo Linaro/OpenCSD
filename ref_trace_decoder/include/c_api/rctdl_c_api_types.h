@@ -107,6 +107,14 @@ typedef void (* FnStmPktMonDataIn)(     const void *p_context,
                                         const uint8_t *p_data);
 
 
+/** memory region type for adding multi-region binary files to memory access interface */
+typedef struct _file_mem_region {
+    size_t                  file_offset;    /**< Offset from start of file for memory region */
+    rctdl_vaddr_t           start_address;  /**< Start address of memory region */
+    size_t                  region_size;    /**< size in bytes of memory region */
+    struct _file_mem_region *next;          /**< next in list of file regions */
+} file_mem_region_t;
+
 /** @}*/
 
 #endif // ARM_RCTDL_C_API_TYPES_H_INCLUDED

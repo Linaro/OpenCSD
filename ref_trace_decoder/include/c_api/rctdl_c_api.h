@@ -84,10 +84,10 @@
 
 @{*/
 /** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
-RCTDL_C_API const uint32_t rctdl_get_version();
+RCTDL_C_API const uint32_t rctdl_get_version(void);
 
 /** Get library version string */
-RCTDL_C_API const char * rctdl_get_version_str();
+RCTDL_C_API const char * rctdl_get_version_str(void);
 /** @}*/
 
 /** @name Library Decode Tree API
@@ -243,6 +243,8 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t han
 /*!
  * Add a binary file based memory range accessor to the decode tree.
  *
+ * Adds the entire binary file as a memory space to be accessed
+ *
  * @param handle : Handle to decode tree.
  * @param address : Start address of memory area.
  * @param mem_space : Associated memory space.
@@ -251,6 +253,24 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t han
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
 RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
+
+/*!
+ * Add a binary file based memory range accessor to the decode tree.
+ * 
+ * Add a binary file that contains multiple regions of memory with differing 
+ * offsets wihtin the file.
+ * 
+ * A linked list of file_mem_region_t structures is supplied. Each structure contains an
+ * offset into the binary file, the start address for this offset and the size of the region.
+ * 
+ * @param handle : Handle to decode tree.
+ * @param region_list : Start of list of memory regions in the file.
+ * @param mem_space : Associated memory space.
+ * @param *filepath : Path to binary data file.
+ *
+ * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_list, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
 
 /*!
  * Add a memory buffer based memory range accessor to the decode tree.
@@ -291,6 +311,13 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t ha
  * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
 RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space);
+
+/*
+ *  Print the mapped memory accessor ranges to the configured logger.
+ *
+ * @param handle : Handle to decode tree.
+ */
+RCTDL_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
 
 /** @}*/  
 

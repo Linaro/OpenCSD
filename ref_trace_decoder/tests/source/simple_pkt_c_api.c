@@ -65,6 +65,10 @@ const char *memory_dump_filename = "kernel_dump.bin";
 const rctdl_vaddr_t mem_dump_address=0xFFFFFFC000081000;
 
 static int using_mem_acc_cb = 0;
+static int use_region_file = 0;
+
+/* region list to test region file API */
+file_mem_region_t region_list[4];
 
 /* trace configuration structures - contains programmed register values of trace hardware */
 static rctdl_etmv4_cfg trace_config;
@@ -155,6 +159,10 @@ static void process_cmd_line(int argc, char *argv[])
         else if(strcmp(argv[idx],"-test_cb") == 0)
         {
             using_mem_acc_cb = 1;
+        }
+        else if(strcmp(argv[idx],"-test_region_file") == 0)
+        {
+            use_region_file = 1;
         }
         else 
             printf("Ignored unknown argument %s\n", argv[idx]);
@@ -392,10 +400,10 @@ static rctdl_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
 {
     rctdl_err_t ret = RCTDL_OK;
     char mem_file_path[512];
+    int i;
 
     /* populate the ETMv4 configuration structure */
     set_config_struct_etmv4();
-
 
     if(op == TEST_PKT_PRINT) /* packet printing only */
     {
@@ -431,8 +439,38 @@ static rctdl_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
             }
             else
             {
-                /* create a memory file accessor */
-                ret = rctdl_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,RCTDL_MEM_SPACE_ANY,mem_file_path);
+                if(use_region_file)
+                {
+                    dump_file = fopen(mem_file_path,"rb");
+                    if(dump_file != NULL)
+                    {
+                        fseek(dump_file,0,SEEK_END);
+                        mem_file_size = ftell(dump_file);
+                        fclose(dump_file);
+
+                        /* populate the region list - split existing file into four regions */
+                        for(i = 0; i < 4; i++)
+                        {
+                            region_list[i].next = 0;
+                            region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4);
+                            region_list[i].region_size = mem_file_size/4;
+                            region_list[i].file_offset = i * mem_file_size/4;
+                            if(i > 0)
+                                region_list[i-1].next = &region_list[i];
+                        }
+
+                        /* create a memory file accessor - full binary file */
+                        ret = rctdl_dt_add_binfile_region_mem_acc(dcd_tree_h,&region_list[0],RCTDL_MEM_SPACE_ANY,mem_file_path);
+
+                    }
+                    else 
+                        ret  = RCTDL_ERR_MEM_ACC_FILE_NOT_FOUND;
+                }
+                else
+                {
+                    /* create a memory file accessor - full binary file */
+                    ret = rctdl_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,RCTDL_MEM_SPACE_ANY,mem_file_path);
+                }
             }
         }
     }
@@ -683,7 +721,9 @@ int process_trace_data(FILE *pf)
 
     if(dcdtree_handle != C_API_INVALID_TREE_HANDLE)
     {
+
         ret = create_decoder(dcdtree_handle);
+        rctdl_tl_log_mapped_mem_ranges(dcdtree_handle);
 
         if(ret == RCTDL_OK)
             /* attach the generic trace element output callback */
@@ -759,6 +799,7 @@ int main(int argc, char *argv[])
         /* print sign-on message in log */
         sprintf(message, "C-API packet print test\nLibrary Version %s\n\n",rctdl_get_version_str());
         rctdl_def_errlog_msgout(message);
+        
 
         /* process the trace data */
         if(ret == 0)

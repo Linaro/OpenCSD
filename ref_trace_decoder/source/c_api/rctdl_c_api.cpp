@@ -440,6 +440,48 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t han
     return err;
 }
 
+RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_list, const rctdl_mem_space_acc_t mem_space, const char *filepath)
+{
+    rctdl_err_t err = RCTDL_OK;
+
+    if((handle != C_API_INVALID_TREE_HANDLE) && (region_list != 0))
+    {
+        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+        if(!pDT->hasMemAccMapper())
+            err = pDT->createMemAccMapper();
+
+        if(err == RCTDL_OK)
+        {
+            TrcMemAccessorBase *p_accessor;
+            std::string pathToFile = filepath;
+            const file_mem_region_t *curr_region = region_list;
+            err = TrcMemAccFactory::CreateFileAccessor(&p_accessor,pathToFile,curr_region->start_address,curr_region->file_offset, curr_region->region_size);            
+            if(err == RCTDL_OK)
+            {
+                TrcMemAccessorFile *pAcc = dynamic_cast<TrcMemAccessorFile *>(p_accessor);
+                if(pAcc)
+                {
+                    while(curr_region->next != NULL)
+                    {
+                        curr_region = curr_region->next;
+                        pAcc->AddOffsetRange(curr_region->start_address, curr_region->region_size, curr_region->file_offset);
+                    }
+                    pAcc->setMemSpace(mem_space);
+                    err = pDT->addMemAccessorToMap(pAcc,0);
+                }
+                else
+                    err = RCTDL_ERR_MEM;    // wrong type of object - treat as mem error
+
+                if(err != RCTDL_OK)
+                    TrcMemAccFactory::DestroyAccessor(p_accessor);
+            }
+        }
+    }
+    else
+        err = RCTDL_ERR_INVALID_PARAM_VAL;
+    return err;
+}
+
 RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length)
 {
     rctdl_err_t err = RCTDL_OK;
@@ -527,6 +569,14 @@ RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, 
     return err;
 }
 
+RCTDL_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle)
+{
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+        pDT->logMappedRanges();
+    }
+}
 
 /*******************************************************************************/
 /* C API Helper objects                                                        */
