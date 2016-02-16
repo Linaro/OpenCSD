@@ -74,6 +74,11 @@ typedef enum _trace_on_reason_t {
     TRACE_ON_EX_DEBUG,      /**< Trace restarted due to debug exit */
 } trace_on_reason_t;
 
+typedef struct _trace_event_t {
+    uint16_t ev_type;          /**< event type - unknown (0) trigger (1), numbered event (2)*/
+    uint16_t ev_number;        /**< event number if numbered event type */
+} trace_event_t;
+
 
 typedef struct _rctdl_generic_trace_elem {
     rctdl_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
@@ -96,10 +101,7 @@ typedef struct _rctdl_generic_trace_elem {
     union {
         uint32_t gen_value;    /**< general value for simpler types of element. */    
         uint32_t exception_number; /**< exception number for exception type packets */
-        struct trace_event_t {
-            uint16_t ev_type;          /**< event type - unknown (0) trigger (1), numbered event (2)*/
-            uint16_t ev_number;        /**< event number if numbered event type */
-        } trace_event;
+        trace_event_t  trace_event;  /**< Trace event - trigger etc */
         trace_on_reason_t trace_on_reason;  /**< reason for the trace on packet */
     };
 
