@@ -112,7 +112,6 @@ typedef struct _file_mem_region {
     size_t                  file_offset;    /**< Offset from start of file for memory region */
     rctdl_vaddr_t           start_address;  /**< Start address of memory region */
     size_t                  region_size;    /**< size in bytes of memory region */
-    struct _file_mem_region *next;          /**< next in list of file regions */
 } file_mem_region_t;
 
 /** @}*/

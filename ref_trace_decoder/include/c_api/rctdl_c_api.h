@@ -264,13 +264,14 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t han
  * offset into the binary file, the start address for this offset and the size of the region.
  * 
  * @param handle : Handle to decode tree.
- * @param region_list : Start of list of memory regions in the file.
+ * @param region_list : Array of memory regions in the file.
+ * @param num_regions : Size of region array
  * @param mem_space : Associated memory space.
  * @param *filepath : Path to binary data file.
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_list, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
+RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
 
 /*!
  * Add a memory buffer based memory range accessor to the decode tree.

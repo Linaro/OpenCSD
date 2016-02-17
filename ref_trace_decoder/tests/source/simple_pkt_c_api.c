@@ -451,16 +451,13 @@ static rctdl_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
                         /* populate the region list - split existing file into four regions */
                         for(i = 0; i < 4; i++)
                         {
-                            region_list[i].next = 0;
                             region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4);
                             region_list[i].region_size = mem_file_size/4;
                             region_list[i].file_offset = i * mem_file_size/4;
-                            if(i > 0)
-                                region_list[i-1].next = &region_list[i];
                         }
 
                         /* create a memory file accessor - full binary file */
-                        ret = rctdl_dt_add_binfile_region_mem_acc(dcd_tree_h,&region_list[0],RCTDL_MEM_SPACE_ANY,mem_file_path);
+                        ret = rctdl_dt_add_binfile_region_mem_acc(dcd_tree_h,&region_list[0],4,RCTDL_MEM_SPACE_ANY,mem_file_path);
 
                     }
                     else 

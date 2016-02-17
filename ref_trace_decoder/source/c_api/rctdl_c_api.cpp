@@ -440,11 +440,11 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t han
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_list, const rctdl_mem_space_acc_t mem_space, const char *filepath)
+RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const rctdl_mem_space_acc_t mem_space, const char *filepath)
 {
     rctdl_err_t err = RCTDL_OK;
 
-    if((handle != C_API_INVALID_TREE_HANDLE) && (region_list != 0))
+    if((handle != C_API_INVALID_TREE_HANDLE) && (region_array != 0) && (num_regions != 0))
     {
         DecodeTree *pDT = static_cast<DecodeTree *>(handle);
         if(!pDT->hasMemAccMapper())
@@ -454,17 +454,20 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handl
         {
             TrcMemAccessorBase *p_accessor;
             std::string pathToFile = filepath;
-            const file_mem_region_t *curr_region = region_list;
-            err = TrcMemAccFactory::CreateFileAccessor(&p_accessor,pathToFile,curr_region->start_address,curr_region->file_offset, curr_region->region_size);            
+            int curr_region_idx = 0;
+            err = TrcMemAccFactory::CreateFileAccessor(&p_accessor,pathToFile,region_array[curr_region_idx].start_address,region_array[curr_region_idx].file_offset, region_array[curr_region_idx].region_size);            
             if(err == RCTDL_OK)
             {
                 TrcMemAccessorFile *pAcc = dynamic_cast<TrcMemAccessorFile *>(p_accessor);
                 if(pAcc)
                 {
-                    while(curr_region->next != NULL)
+                    curr_region_idx++;
+                    while(curr_region_idx < num_regions)
                     {
-                        curr_region = curr_region->next;
-                        pAcc->AddOffsetRange(curr_region->start_address, curr_region->region_size, curr_region->file_offset);
+                        pAcc->AddOffsetRange(region_array[curr_region_idx].start_address, 
+                                             region_array[curr_region_idx].region_size,
+                                             region_array[curr_region_idx].file_offset);
+                        curr_region_idx++;
                     }
                     pAcc->setMemSpace(mem_space);
                     err = pDT->addMemAccessorToMap(pAcc,0);
