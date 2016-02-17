@@ -1460,6 +1460,7 @@ int dso__load(struct dso *dso, struct map *map)
 	 * DSO_BINARY_TYPE__BUILDID_DEBUGINFO to work
 	 */
 	if (is_regular_file(dso->long_name) &&
+	    (!dso->has_build_id) &&
 	    filename__read_build_id(dso->long_name, build_id, BUILD_ID_SIZE) > 0)
 		dso__set_build_id(dso, build_id);
 
