@@ -67,13 +67,13 @@ static std::map<dcd_tree_handle_t, lib_dt_data_list *> s_data_map;
 /*******************************************************************************/
 
 /** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
-RCTDL_C_API const uint32_t rctdl_get_version() 
+RCTDL_C_API uint32_t rctdl_get_version(void) 
 { 
     return rctdlVersion::vers_num();
 }
 
 /** Get library version string */
-RCTDL_C_API const char * rctdl_get_version_str() 
+RCTDL_C_API const char * rctdl_get_version_str(void) 
 { 
     return rctdlVersion::vers_str();
 }
@@ -212,7 +212,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t h
                 err = RCTDL_ERR_MEM;
         }
         else
-            RCTDL_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
+            err = RCTDL_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
     }
     else
         err = RCTDL_ERR_INVALID_PARAM_VAL;
@@ -273,7 +273,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t ha
                 err = RCTDL_ERR_MEM;
         }
         else
-            RCTDL_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
+            err = RCTDL_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
     }
     else
         err = RCTDL_ERR_INVALID_PARAM_VAL;

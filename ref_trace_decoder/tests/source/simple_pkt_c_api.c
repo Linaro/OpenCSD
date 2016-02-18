@@ -401,6 +401,7 @@ static rctdl_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
     rctdl_err_t ret = RCTDL_OK;
     char mem_file_path[512];
     int i;
+    uint32_t i0adjust = 0x100;
 
     /* populate the ETMv4 configuration structure */
     set_config_struct_etmv4();
@@ -447,13 +448,16 @@ static rctdl_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
                         fseek(dump_file,0,SEEK_END);
                         mem_file_size = ftell(dump_file);
                         fclose(dump_file);
+                        
 
                         /* populate the region list - split existing file into four regions */
                         for(i = 0; i < 4; i++)
                         {
-                            region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4);
-                            region_list[i].region_size = mem_file_size/4;
-                            region_list[i].file_offset = i * mem_file_size/4;
+                            if(i != 0)
+                                i0adjust = 0;
+                            region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4) + i0adjust;
+                            region_list[i].region_size = (mem_file_size/4) - i0adjust;
+                            region_list[i].file_offset = (i * mem_file_size/4) +  i0adjust;
                         }
 
                         /* create a memory file accessor - full binary file */

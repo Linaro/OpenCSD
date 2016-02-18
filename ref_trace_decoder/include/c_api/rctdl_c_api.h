@@ -84,7 +84,7 @@
 
 @{*/
 /** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
-RCTDL_C_API const uint32_t rctdl_get_version(void);
+RCTDL_C_API uint32_t rctdl_get_version(void);
 
 /** Get library version string */
 RCTDL_C_API const char * rctdl_get_version_str(void);

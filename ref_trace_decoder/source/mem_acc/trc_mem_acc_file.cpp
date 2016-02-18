@@ -306,6 +306,29 @@ const bool TrcMemAccessorFile::addrStartOfRange(const rctdl_vaddr_t s_address) c
     return bInRange;
 }
 
+
+    /* validate ranges */
+const bool TrcMemAccessorFile::validateRange()
+{
+    bool bRangeValid = true;
+    if(m_base_range_set)
+        bRangeValid = TrcMemAccessorBase::validateRange();
+
+    if(m_has_access_regions && bRangeValid)
+    {
+        std::list<FileRegionMemAccessor *>::const_iterator it;
+        it = m_access_regions.begin();
+        while((it != m_access_regions.end()) && bRangeValid)
+        {
+            bRangeValid = (*it)->validateRange();
+            it++;
+        }
+    }
+    return bRangeValid;
+}
+
+
+
 const uint32_t TrcMemAccessorFile::bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const
 {
     uint32_t bytesInRange = 0;

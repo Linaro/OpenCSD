@@ -135,7 +135,7 @@ public:
      *
      * @return bool : true if valid range.
      */
-    const bool validateRange();
+    virtual const bool validateRange();
 
 
     const enum MemAccTypes getType() const { return m_type; };
