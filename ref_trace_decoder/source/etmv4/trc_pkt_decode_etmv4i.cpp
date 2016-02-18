@@ -112,8 +112,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onEOT()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EO_TRACE);
-    resp = outputTraceElement(m_output_elem);
+    m_flush_EOT = true;
+    resp = flushEOT();
     return resp;
 }
 
@@ -127,8 +127,16 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onReset()
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onFlush()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    if(m_curr_state == COMMIT_ELEM)
-        resp = processPacket(); // continue ongoing output operation
+
+    // continue exception processing (can't go through processPacket as elements no longer on stack)
+    if(m_excep_proc != EXCEP_POP)
+        resp = processException();
+    // continue ongoing output operations on comitted elements.
+    else if(m_curr_state == COMMIT_ELEM)
+        resp = processPacket(); 
+    // continue flushing at end of trace
+    else if(m_flush_EOT)
+        resp = flushEOT();
     return resp;
 }
 
@@ -232,6 +240,8 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_pAddrRegs->push(addr);    // preload first value with 0x0
     m_P0_stack.clear();
     m_output_elem.init();
+    m_excep_proc = EXCEP_POP;
+    m_flush_EOT = false;
 }
 
 // this function can output an immediate generic element if this covers the complete packet decode, 
@@ -292,7 +302,6 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             }
             else
                 bAllocErr = true;
-
         }
         break;
 
@@ -370,7 +379,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             TrcStackElemExcept *pElem = new (std::nothrow) TrcStackElemExcept(m_curr_packet_in->getType(), m_index_curr_pkt);
             if(pElem)
             {
-                pElem->setPrevSame(m_curr_packet_in->exception_info.addr_interp == 0x1);
+                pElem->setPrevSame(m_curr_packet_in->exception_info.addr_interp == 0x2);
                 m_P0_stack.push_front(pElem);
                 m_except_pending_addr = true;  // wait for following packets before marking for commit.
                 is_except = true;
@@ -508,7 +517,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         }
         else
         {
-            // TBD: error out here on none address 
+            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_DECODE_PKT,"Expected Address packet to follow exception packet."));
         }
     }
 
@@ -569,13 +579,17 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
 
             case P0_ADDR:
                 {
+                etmv4_addr_val_t new_addr;
                 TrcStackElemAddr *pAddrElem = dynamic_cast<TrcStackElemAddr *>(pElem);
                 if(pAddrElem)
                 {
                     int match_idx = 0;
                     if(pAddrElem->isAddrMatch(match_idx))
                     {
+                        new_addr.val = m_pAddrRegs->get(match_idx).val;
+                        new_addr.isa = m_pAddrRegs->get(match_idx).isa;
                         SetInstrInfoInAddrISA(m_pAddrRegs->get(match_idx).val,m_pAddrRegs->get(match_idx).isa);
+                        m_pAddrRegs->push(new_addr);
                     }
                     else
                     {
@@ -589,7 +603,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                         else
                         {
                             // otherwise 32 bit values must add in the top 32 from the stack
-                            etmv4_addr_val_t new_addr = m_pAddrRegs->get(0);
+                            new_addr = m_pAddrRegs->get(0);
                             new_addr.val &= ~((rctdl_vaddr_t)0xFFFFFFFF);
                             new_addr.val |= (pAddrElem->getAddr().val & 0xFFFFFFFF);
                             new_addr.isa = pAddrElem->getAddr().isa;
@@ -624,11 +638,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 {
                 TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
                 if(pParamElem)
-                {
-                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EVENT);
-                    m_output_elem.gen_value = pParamElem->getParam(0);
-                    resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
-                }
+                    resp = this->outputEvent(pParamElem);
                 }
                 break;
 
@@ -636,11 +646,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 {
                 TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
                 if(pParamElem)
-                {
-                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TIMESTAMP);
-                    m_output_elem.timestamp = (uint64_t)(pParamElem->getParam(0)) | (((uint64_t)pParamElem->getParam(1)) << 32);
-                    resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
-                }
+                    resp = outputTS(pParamElem,false);
                 }
                 break;
 
@@ -648,11 +654,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 {
                 TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
                 if(pParamElem)
-                {
-                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_CYCLE_COUNT);
-                    m_output_elem.cycle_count = pParamElem->getParam(0);
-                    resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
-                }
+                    resp = outputCC(pParamElem);
                 }
                 break;
 
@@ -660,12 +662,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 {
                 TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
                 if(pParamElem)
-                {
-                    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TIMESTAMP);
-                    m_output_elem.timestamp = (uint64_t)(pParamElem->getParam(0)) | (((uint64_t)pParamElem->getParam(1)) << 32);
-                    m_output_elem.setCycleCount(pParamElem->getParam(2));
-                    resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
-                }
+                    resp = outputTS(pParamElem,true);
                 }
                 break;
 
@@ -697,6 +694,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 break;
 
             case P0_EXCEP:
+                m_excep_proc = EXCEP_POP;   // set state in case we need to stop part way through
                 resp = processException();  // output trace + exception elements.
                 m_P0_commit--;
                 break;
@@ -741,6 +739,106 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
     return resp;
 }
 
+rctdl_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    if(m_flush_EOT)
+    {
+        TrcStackElem *pElem = 0;
+        bool bClearStack = false;
+        while(RCTDL_DATA_RESP_IS_CONT(resp) && (m_P0_stack.size() > 0))
+        {
+            // scan for outstanding events, TS and CC, before any outstanding
+            // P0 commit elements.
+            pElem = m_P0_stack.back();
+            m_P0_stack.pop_back();
+            switch(pElem->getP0Type())
+            {
+                // clear stack and stop
+            case P0_UNKNOWN:
+            case P0_ATOM:
+            case P0_TRC_ON:
+            case P0_EXCEP:
+            case P0_EXCEP_RET:
+            case P0_OVERFLOW:
+                m_P0_stack.clear();
+                break;
+
+                //skip
+            case P0_ADDR:
+            case P0_CTXT:
+                break;
+
+                // output
+            case P0_EVENT:
+                {
+                TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
+                if(pParamElem)
+                    resp = this->outputEvent(pParamElem);
+                }
+                break;
+
+            case P0_TS:
+                {
+                TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
+                if(pParamElem)
+                    resp = outputTS(pParamElem,false);
+                }
+                break;
+
+            case P0_CC:
+                {
+                TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
+                if(pParamElem)
+                    resp = outputCC(pParamElem);
+                }
+                break;
+
+            case P0_TS_CC:
+                {
+                TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
+                if(pParamElem)
+                    resp = outputTS(pParamElem,true);
+                }
+                break;
+            }
+
+        }
+
+        if(RCTDL_DATA_RESP_IS_CONT(resp) && (m_P0_stack.size() == 0))
+        {
+            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EO_TRACE);
+            resp = outputTraceElement(m_output_elem);
+            m_flush_EOT = false;
+        }
+    }
+    return resp;
+}
+
+rctdl_datapath_resp_t TrcPktDecodeEtmV4I::outputCC(TrcStackElemParam *pParamElem)
+{
+    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_CYCLE_COUNT);
+    m_output_elem.cycle_count = pParamElem->getParam(0);
+    return outputTraceElementIdx(pParamElem->getRootIndex(),m_output_elem);
+}
+
+rctdl_datapath_resp_t TrcPktDecodeEtmV4I::outputTS(TrcStackElemParam *pParamElem, bool withCC)
+{
+    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TIMESTAMP);
+    m_output_elem.timestamp = (uint64_t)(pParamElem->getParam(0)) | (((uint64_t)pParamElem->getParam(1)) << 32);
+    if(withCC)
+        m_output_elem.setCycleCount(pParamElem->getParam(2));
+    return outputTraceElementIdx(pParamElem->getRootIndex(),m_output_elem);
+}
+
+rctdl_datapath_resp_t TrcPktDecodeEtmV4I::outputEvent(TrcStackElemParam *pParamElem)
+{
+    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EVENT);
+    m_output_elem.trace_event.ev_type = EVENT_NUMBERED;
+    m_output_elem.trace_event.ev_number = pParamElem->getParam(0);
+    return outputTraceElementIdx(pParamElem->getRootIndex(),m_output_elem);
+}
+
 rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, bool &bCont)
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
@@ -752,11 +850,11 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
     err = traceInstrToWP(bWPFound);
     if(err != RCTDL_OK)
     {
-        // TBD: set up error handling
         if(err == RCTDL_ERR_UNSUPPORTED_ISA)
         {
              m_need_addr = true;
              m_need_ctxt = true;
+             LogError(rctdlError(RCTDL_ERR_SEV_WARN,err,pElem->getRootIndex(),m_CSID,"Warning: unsupported instruction set processing atom packet."));  
              // wait for next context
              return resp;
         }
@@ -787,7 +885,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
         m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
         m_output_elem.last_instr_exec = (atom == ATOM_E) ? 1 : 0;
         m_output_elem.last_i_type = m_instr_info.type;
-        m_output_elem.i_type_with_link = m_instr_info.is_link;
+        m_output_elem.last_i_subtype = m_instr_info.sub_type;
         resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
 
     }
@@ -818,82 +916,170 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
     return resp;
 }
 
+// Exception processor
 rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;   
-    TrcStackElemExcept *pExceptElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack.back());  // get the exception element
-    TrcStackElemAddr *pAddressElem = 0;
-    TrcStackElemCtxt *pCtxtElem = 0;
-    TrcStackElem *pElem = 0;
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT; 
+    bool excep_implied_P0 = false;          //!< exception implies P0
 
-    m_P0_stack.pop_back(); // remove the exception element
-    pElem = m_P0_stack.back();  // look at next element.
-    if(pElem->getP0Type() == P0_CTXT)
+    if(m_excep_proc == EXCEP_POP)
     {
-        pCtxtElem = dynamic_cast<TrcStackElemCtxt *>(pElem);
-        m_P0_stack.pop_back(); // remove the context element
-        pElem = m_P0_stack.back();  // next one should be an address element
-    }
-   
-    if(pElem->getP0Type() != P0_ADDR)
-    {
-        // no following address element - indicate processing error.
-        resp = RCDTL_RESP_FATAL_INVALID_DATA;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,pExceptElem->getRootIndex(),m_CSID,"Address missing in exception packet."));  
-    }
-    else
-    {
-        // extract address
-        pAddressElem = static_cast<TrcStackElemAddr *>(pElem);
-        etmv4_addr_val_t addr;
-        int match_idx;
-        if(pAddressElem->isAddrMatch(match_idx))
+        TrcStackElemExcept *pExceptElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack.back());  // get the exception element
+        TrcStackElemAddr *pAddressElem = 0;
+        TrcStackElemCtxt *pCtxtElem = 0;
+        TrcStackElem *pElem = 0;
+    
+        m_P0_stack.pop_back(); // remove the exception element
+        pElem = m_P0_stack.back();  // look at next element.
+        if(pElem->getP0Type() == P0_CTXT)
         {
-            addr = m_pAddrRegs->get(match_idx);
+            pCtxtElem = dynamic_cast<TrcStackElemCtxt *>(pElem);
+            m_P0_stack.pop_back(); // remove the context element
+            pElem = m_P0_stack.back();  // next one should be an address element
+        }
+   
+        if(pElem->getP0Type() != P0_ADDR)
+        {
+            // no following address element - indicate processing error.
+            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,pExceptElem->getRootIndex(),m_CSID,"Address missing in exception packet."));  
         }
         else
         {
-            // if 64 bit value, or IAsize is 32 bit only...
-            if(!m_IASize64 || pAddressElem->is64bit())
+            // extract address
+            pAddressElem = static_cast<TrcStackElemAddr *>(pElem);
+            int match_idx;
+            if(pAddressElem->isAddrMatch(match_idx))
             {
-                // use value immediately
-                addr = pAddressElem->getAddr();                
+                m_excep_addr = m_pAddrRegs->get(match_idx);
             }
             else
             {
-                // otherwise 32 bit values must add in the top 32 from the stack
-                addr = m_pAddrRegs->get(0);
-                addr.val &= ~((rctdl_vaddr_t)0xFFFFFFFF);
-                addr.val |= (pAddressElem->getAddr().val & 0xFFFFFFFF);
-                addr.isa = pAddressElem->getAddr().isa;
-            }                                                                                                
+                // if 64 bit value, or IAsize is 32 bit only...
+                if(!m_IASize64 || pAddressElem->is64bit())
+                {
+                    // use value immediately
+                    m_excep_addr = pAddressElem->getAddr();                
+                }
+                else
+                {
+                    // otherwise 32 bit values must add in the top 32 from the stack
+                    m_excep_addr = m_pAddrRegs->get(0);
+                    m_excep_addr.val &= ~((rctdl_vaddr_t)0xFFFFFFFF);
+                    m_excep_addr.val |= (pAddressElem->getAddr().val & 0xFFFFFFFF);
+                    m_excep_addr.isa = pAddressElem->getAddr().isa;
+                }                                                                                                
+            }
+
+            // if we have context, get that.
+            if(pCtxtElem)
+                 updateContext(pCtxtElem);
+
+            // record the exception number
+            m_output_elem.exception_number = pExceptElem->getExcepNum();
+
+            // see if there is an implied P0 element on the exception.
+            excep_implied_P0 = pExceptElem->getPrevSame();
+
+            // save the address.
+            m_pAddrRegs->push(m_excep_addr);
+
+            // save the trace index.
+            m_excep_index = pExceptElem->getRootIndex();
+
+            // figure out next move
+            if(m_excep_addr.val == m_instr_info.instr_addr)
+                m_excep_proc = EXCEP_EXCEP;
+            else
+                m_excep_proc = EXCEP_RANGE;
         }
+    }
 
-        // if we have context, get that.
-        if(pCtxtElem)
-             updateContext(pCtxtElem);
+    // output a range element
+    if(m_excep_proc == EXCEP_RANGE) 
+    {
+        bool bWPFound = false;
+        rctdl_err_t err;
 
-        // if implied same as previous P0 target then add to instruction start address,
-        if(pExceptElem->getPrevSame())
-        {
-            SetInstrInfoInAddrISA(addr.val,addr.isa);
-            m_output_elem.isa = m_instr_info.isa;
-        }
-
-        // last instr_info address is the start address - which may now also be the pref ret addr.
+        // last instr_info address is the start address
         m_output_elem.st_addr = m_instr_info.instr_addr;
 
-        // add end address as preferred return address to end addr in element
-        m_output_elem.en_addr = addr.val;
+        // look for either a WP or match to return address.
+        err = traceInstrToWP(bWPFound,!excep_implied_P0,m_excep_addr.val);
 
-        if(!pAddressElem->isAddrMatch(match_idx))
-            m_pAddrRegs->push(addr);
-        
-        m_output_elem.gen_value = pExceptElem->getExcepNum();
+        if(err != RCTDL_OK)
+        {
+            if(err == RCTDL_ERR_UNSUPPORTED_ISA)
+            {
+                m_need_addr = true;
+                m_need_ctxt = true;
+                LogError(rctdlError(RCTDL_ERR_SEV_WARN,err,m_excep_index,m_CSID,"Warning: unsupported instruction set processing exception packet."));  
+            }
+            else
+            {
+                resp = RCDTL_RESP_FATAL_INVALID_DATA;
+                LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,m_excep_index,m_CSID,"Error processing exception packet."));  
+                m_excep_proc = EXCEP_POP;  // nothing more to do, reset to start of exception handling
+            }
+        }
 
+        if(bWPFound)
+        {
+            // action according to waypoint type and atom value
+            if(excep_implied_P0)
+            {
+                switch(m_instr_info.type)
+                {
+                case RCTDL_INSTR_BR:
+                m_instr_info.instr_addr = m_instr_info.branch_addr;
+                break;
+
+                case RCTDL_INSTR_BR_INDIRECT:
+                m_instr_info.instr_addr = m_excep_addr.val;
+                break;
+                }
+            }
+            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+            m_output_elem.last_instr_exec = 1;
+            m_output_elem.last_i_type = m_instr_info.type;
+            m_output_elem.last_i_subtype = m_instr_info.sub_type;
+            resp = outputTraceElementIdx(m_excep_index, m_output_elem);
+            m_excep_proc = EXCEP_EXCEP;
+        }
+        else
+        {
+            // no waypoint - likely inaccessible memory range.
+            m_need_addr = true; // need an address update 
+            
+            if(m_output_elem.st_addr != m_output_elem.en_addr)
+            {
+                // some trace before we were out of memory access range
+                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+                resp = outputTraceElementIdx(m_excep_index,m_output_elem);
+            }
+
+            m_excep_proc = m_mem_nacc_pending ? EXCEP_NACC : EXCEP_EXCEP;
+        }
+    }  
+    
+    if((m_excep_proc == EXCEP_NACC) && RCTDL_DATA_RESP_IS_CONT(resp))
+    {
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
+        m_output_elem.st_addr = m_nacc_addr;
+        resp = outputTraceElementIdx(m_excep_index,m_output_elem);
+        m_excep_proc = EXCEP_EXCEP;
+        m_mem_nacc_pending = false;
+    }
+    
+    if((m_excep_proc == EXCEP_EXCEP) && RCTDL_DATA_RESP_IS_CONT(resp))
+    {
         // output element.
         m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION);
-        resp = outputTraceElementIdx(pExceptElem->getRootIndex(),m_output_elem);        
+        // add end address as preferred return address to end addr in element
+        m_output_elem.en_addr = m_excep_addr.val;
+        m_output_elem.excep_ret_addr = 1;
+        resp = outputTraceElementIdx(m_excep_index,m_output_elem);  
+        m_excep_proc = EXCEP_POP;
     }   
     return resp;
 }
@@ -908,13 +1094,13 @@ void TrcPktDecodeEtmV4I::SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, con
 }
 
 // trace an instruction range to a waypoint - and set next address to restart from.
-rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound)
+rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceToAddrNext /*= false*/, const rctdl_vaddr_t nextAddrMatch /*= 0*/)
 {
     uint32_t opcode;
     uint32_t bytesReq;
     rctdl_err_t err = RCTDL_OK;
 
-    // TBD: update mem space to allow for EL as well.
+    // TBD?: update mem space to allow for EL as well.
     rctdl_mem_space_acc_t mem_space = m_is_secure ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N;
 
     m_output_elem.st_addr = m_output_elem.en_addr = m_instr_info.instr_addr;
@@ -940,7 +1126,11 @@ rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound)
             // update the range decoded address in the output packet.
             m_output_elem.en_addr = m_instr_info.instr_addr;
 
-            bWPFound = (m_instr_info.type != RCTDL_INSTR_OTHER);
+            // either walking to match the next instruction address or a real watchpoint
+            if(traceToAddrNext)
+                bWPFound = (m_output_elem.en_addr == nextAddrMatch);
+            else
+                bWPFound = (m_instr_info.type != RCTDL_INSTR_OTHER);
         }
         else
         {

@@ -156,6 +156,11 @@ typedef struct _etmv4_context_t {
     uint32_t VMID;     //!< current VMID
 } etmv4_context_t;
 
+/** a broadcast address value. */
+typedef struct _etmv4_addr_val_t {
+    rctdl_vaddr_t val;  //!< Address value.
+    uint8_t isa;        //!< instruction set.
+} etmv4_addr_val_t;
 
 typedef struct _rctdl_etmv4_i_pkt
 {

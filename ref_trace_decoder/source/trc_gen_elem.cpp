@@ -62,6 +62,17 @@ static const char *instr_type[] = {
     "DSB.DMB"
 };
 
+#define T_SIZE (sizeof(instr_type) / sizeof(const char *))
+
+static const char *instr_sub_type[] = {
+    "--- ",
+    "b+link ",
+    "A64:ret ",
+    "A64:eret "
+};
+
+#define ST_SIZE (sizeof(instr_sub_type) / sizeof(const char *))
+
 static const char *s_trace_on_reason[] = {
     "begin or filter",
     "overflow",
@@ -81,7 +92,10 @@ void RctdlTraceElement::toString(std::string &str) const
         case RCTDL_GEN_TRC_ELEM_INSTR_RANGE:
             oss << "exec range=0x" << std::hex << st_addr << ":[0x" << en_addr << "] ";
             oss << ((last_instr_exec == 1) ? "E " : "N ");
-            oss << instr_type[last_i_type];
+            if((int)last_i_type < T_SIZE)
+                oss << instr_type[last_i_type];
+            if((last_i_subtype != RCTDL_S_INSTR_NONE) && ((int)last_i_subtype < ST_SIZE))
+                oss << instr_sub_type[last_i_type];
             break;
 
         case RCTDL_GEN_TRC_ELEM_ADDR_NACC:
@@ -89,11 +103,11 @@ void RctdlTraceElement::toString(std::string &str) const
             break;
 
         case RCTDL_GEN_TRC_ELEM_EXCEPTION:
-            if(en_addr != st_addr)
+            if(excep_ret_addr == 1)
             {
-                oss << "exec range=0x" << std::hex << st_addr << ":[0x" << en_addr << "]; ";
+                oss << "pref ret addr:0x" << std::hex << en_addr << "; ";
             }
-            oss << "pref ret addr:0x" << std::hex << en_addr << "; excep num (0x" << std::setfill('0') << std::setw(2) << gen_value;
+            oss << "excep num (0x" << std::setfill('0') << std::setw(2) << std::hex << exception_number;
             break;
 
         case RCTDL_GEN_TRC_ELEM_PE_CONTEXT:
@@ -108,8 +122,14 @@ void RctdlTraceElement::toString(std::string &str) const
             oss << " [" << s_trace_on_reason[trace_on_reason] << "]";
             break;
 
+        case RCTDL_GEN_TRC_ELEM_TIMESTAMP:
+            oss << " [ TS=0x" << std::setfill('0') << std::setw(12) << std::hex << timestamp << "]; "; 
+            break;
+
         default: break;
         }
+        if(has_cc)
+            oss << " {CC=" << cycle_count << "]; ";
         oss << ")";
     }
     else

@@ -327,8 +327,6 @@ const bool TrcMemAccessorFile::validateRange()
     return bRangeValid;
 }
 
-
-
 const uint32_t TrcMemAccessorFile::bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const
 {
     uint32_t bytesInRange = 0;

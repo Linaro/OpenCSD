@@ -39,6 +39,7 @@
 rctdl_err_t TrcIDecode::DecodeInstruction(rctdl_instr_info *instr_info)
 {
     rctdl_err_t err = RCTDL_OK;
+    clear_instr_subtype();
     switch(instr_info->isa)
     {
     case rctdl_isa_arm:
@@ -60,6 +61,7 @@ rctdl_err_t TrcIDecode::DecodeInstruction(rctdl_instr_info *instr_info)
         err = RCTDL_ERR_UNSUPPORTED_ISA;
         break;
     }
+    instr_info->sub_type = get_instr_subtype();
     return err;
 }
 
