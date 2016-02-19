@@ -74,34 +74,38 @@ typedef enum _trace_on_reason_t {
     TRACE_ON_EX_DEBUG,      /**< Trace restarted due to debug exit */
 } trace_on_reason_t;
 
+typedef struct _trace_event_t {
+    uint16_t ev_type;          /**< event type - unknown (0) trigger (1), numbered event (2)*/
+    uint16_t ev_number;        /**< event number if numbered event type */
+} trace_event_t;
+
 
 typedef struct _rctdl_generic_trace_elem {
     rctdl_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
     rctdl_isa           isa;          /**< instruction set for executed instructions */
     rctdl_vaddr_t       st_addr;      /**< start address for instruction execution range / inaccessible code address / data address */
-    rctdl_vaddr_t       en_addr;      /**< end address (exclusive) for instruction execution range. */
-    rctdl_pe_context    context;      /**< PE Context */
-    uint64_t            timestamp;    /**< timestamp value for TS element type */
-    uint32_t            cycle_count;  /**< cycle count for explicit cycle count element, or count for element with associated cycle count */
-    rctdl_instr_type    last_i_type;  /**< Last instruction type if instruction execution range */
+    rctdl_vaddr_t       en_addr;        /**< end address (exclusive) for instruction execution range. */
+    rctdl_pe_context    context;        /**< PE Context */
+    uint64_t            timestamp;      /**< timestamp value for TS element type */
+    uint32_t            cycle_count;    /**< cycle count for explicit cycle count element, or count for element with associated cycle count */
+    rctdl_instr_type    last_i_type;    /**< Last instruction type if instruction execution range */
+    rctdl_instr_subtype last_i_subtype; /**< sub type for last instruction in range */
  
     // per element flags
     struct {
         uint32_t last_instr_exec:1;     /**< 1 if last instruction in range was executed; */
         uint32_t has_cc:1;              /**< 1 if this packet has a valid cycle count included (e.g. cycle count included as part of instruction range packet, always 1 for pure cycle count packet.*/
         uint32_t cpu_freq_change:1;     /**< 1 if this packet indicates a change in CPU frequency */
-        uint32_t i_type_with_link:1;    /**< 1 if last_i_type branch is branch with link */
+        uint32_t excep_ret_addr:1;      /**< 1 if en_addr is the preferred exception return address on exception packet type */
     };
 
-    union {
-        uint32_t gen_value;    /**< general value for simpler types of element. */    
+    // packet specific payloads
+    union {  
         uint32_t exception_number; /**< exception number for exception type packets */
-        struct trace_event_t {
-            uint16_t ev_type;          /**< event type - unknown (0) trigger (1), numbered event (2)*/
-            uint16_t ev_number;        /**< event number if numbered event type */
-        } trace_event;
+        trace_event_t  trace_event;  /**< Trace event - trigger etc */
         trace_on_reason_t trace_on_reason;  /**< reason for the trace on packet */
     };
+
 
 } rctdl_generic_trace_elem;
 

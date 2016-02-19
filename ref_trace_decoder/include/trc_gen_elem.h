@@ -94,7 +94,7 @@ inline void RctdlTraceElement::setType(const rctdl_gen_trc_elem_t type)
     has_cc = 0;
     last_instr_exec = 0;
     last_i_type = RCTDL_INSTR_OTHER;
-    i_type_with_link = 0;
+    excep_ret_addr = 0;
 }
 
 inline void RctdlTraceElement::init()
@@ -106,7 +106,7 @@ inline void RctdlTraceElement::init()
     cpu_freq_change = 0;
     has_cc = 0;
     last_instr_exec = 0;
-    i_type_with_link = 0;
+    excep_ret_addr = 0;
 }
 
 /** @}*/

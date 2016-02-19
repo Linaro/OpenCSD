@@ -337,7 +337,7 @@ typedef enum _rctdl_ex_level
 } rctdl_ex_level;
 
 
-/** instruction types */
+/** instruction types - significant for waypoint calculaitons */
 typedef enum _rctdl_instr_type {
     RCTDL_INSTR_OTHER,          /**< Other instruction - not significant for waypoints. */
     RCTDL_INSTR_BR,             /**< Immediate Branch instruction */
@@ -345,6 +345,16 @@ typedef enum _rctdl_instr_type {
     RCTDL_INSTR_ISB,            /**< Barrier : ISB instruction */
     RCTDL_INSTR_DSB_DMB         /**< Barrier : DSB or DMB instruction */
 } rctdl_instr_type;
+
+/** instruction sub types - addiitonal information passed to the output packets
+    for trace analysis tools.
+ */
+typedef enum _rctdl_instr_subtype {
+    RCTDL_S_INSTR_NONE,         /**< no subtype set */
+    RCTDL_S_INSTR_BR_LINK,      /**< branch with link */
+    RCTDL_S_INSTR_V8_RET,       /**< v8 ret instruction - subtype of BR_INDIRECT  */
+    RCTDL_S_INSTR_V8_ERET,      /**< v8 eret instruction - subtype of BR_INDIRECT */
+} rctdl_instr_subtype;
 
 /** Instruction decode request structure. 
  *
@@ -368,6 +378,7 @@ typedef struct _rctdl_instr_info {
     uint8_t is_conditional;         /**< Decoder : set to 1 if this instruction is conditional */
     uint8_t is_link;                /**< Decoder : is a branch with link instruction */
     uint8_t thumb_it_conditions;    /**< Decoder : return number of following instructions set with conditions by this Thumb IT instruction */
+    rctdl_instr_subtype sub_type;   /**< Decoder : current instruction sub-type if known */
 } rctdl_instr_info;
 
 

@@ -40,9 +40,22 @@ block identification and trace decode.
 
 #include "i_dec/trc_idec_arminst.h"
 
+
 #include <stddef.h>  /* for NULL */
 #include <assert.h>
 
+
+static rctdl_instr_subtype instr_sub_type = RCTDL_S_INSTR_NONE;
+
+rctdl_instr_subtype get_instr_subtype()
+{
+    return instr_sub_type;
+}
+
+void clear_instr_subtype()
+{
+    instr_sub_type = RCTDL_S_INSTR_NONE;
+}
 
 int inst_ARM_is_direct_branch(uint32_t inst)
 {
@@ -194,9 +207,11 @@ int inst_A64_is_indirect_branch(uint32_t inst)
     if ((inst & 0xffdffc1f) == 0xd61f0000) {
         /* BR, BLR */
     } else if ((inst & 0xfffffc1f) == 0xd65f0000) {
+        instr_sub_type = RCTDL_S_INSTR_V8_RET;
         /* RET */
     } else if ((inst & 0xffffffff) == 0xd69f03e0) {
         /* ERET */
+        instr_sub_type = RCTDL_S_INSTR_V8_ERET;
     } else {
         is_indirect_branch = 0;
     }
@@ -355,13 +370,16 @@ int inst_ARM_is_branch_and_link(uint32_t inst)
     int is_branch = 1;
     if ((inst & 0xf0000000) == 0xf0000000) {
         if ((inst & 0xfe000000) == 0xfa000000){
+            instr_sub_type = RCTDL_S_INSTR_BR_LINK;
             /* BLX (imm) */
         } else {
             is_branch = 0;
         }
     } else if ((inst & 0x0f000000) == 0x0b000000) {
+        instr_sub_type = RCTDL_S_INSTR_BR_LINK;
         /* BL */
     } else if ((inst & 0x0ff000f0) == 0x01200030) {
+        instr_sub_type = RCTDL_S_INSTR_BR_LINK;
         /* BLX (reg) */
     } else {
         is_branch = 0;
@@ -374,8 +392,10 @@ int inst_Thumb_is_branch_and_link(uint32_t inst)
 {
     int is_branch = 1;
     if ((inst & 0xff800000) == 0x47800000) {
+        instr_sub_type = RCTDL_S_INSTR_BR_LINK;
         /* BLX (reg) */
     } else if ((inst & 0xf800c000) == 0xf000c000) {
+        instr_sub_type = RCTDL_S_INSTR_BR_LINK;
         /* BL, BLX (imm) */
     } else {
         is_branch = 0;
@@ -389,8 +409,10 @@ int inst_A64_is_branch_and_link(uint32_t inst)
     int is_branch = 1;
     if ((inst & 0xfffffc1f) == 0xd63f0000) {
         /* BLR */
+        instr_sub_type = RCTDL_S_INSTR_BR_LINK;
     } else if ((inst & 0xfc000000) == 0x94000000) {
         /* BL */
+        instr_sub_type = RCTDL_S_INSTR_BR_LINK;
     } else {
         is_branch = 0;
     }

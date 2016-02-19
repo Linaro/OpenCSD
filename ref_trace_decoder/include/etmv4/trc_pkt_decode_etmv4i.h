@@ -44,6 +44,7 @@
 
 class AddrValStack;
 class TrcStackElem;
+class TrcStackElemParam;
 class TrcStackElemCtxt;
 
 class TrcPktDecodeEtmV4I : public TrcPktDecodeBase<EtmV4ITrcPacket, EtmV4Config>
@@ -68,6 +69,7 @@ protected:
 
     rctdl_datapath_resp_t decodePacket(bool &Complete);    // return true to indicate decode complete - can change FSM to commit state - return is false.
     rctdl_datapath_resp_t commitElements(bool &Complete);   // commit elements - may get wait response, or flag completion.
+    rctdl_datapath_resp_t flushEOT();
 
     void doTraceInfoPacket();
     void updateContext(TrcStackElemCtxt *pCtxtElem);
@@ -80,11 +82,15 @@ protected:
 
     // process a bad packet
     rctdl_datapath_resp_t handleBadPacket(const char *reason);
+
+    rctdl_datapath_resp_t outputCC(TrcStackElemParam *pParamElem);
+    rctdl_datapath_resp_t outputTS(TrcStackElemParam *pParamElem, bool withCC);
+    rctdl_datapath_resp_t outputEvent(TrcStackElemParam *pParamElem);
      
 private:
     void SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, const uint8_t isa); 
 
-    rctdl_err_t traceInstrToWP(bool &bWPFound);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
+    rctdl_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const rctdl_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
 
 //** intra packet state (see ETMv4 spec 6.2.1);
 
@@ -143,7 +149,18 @@ private:
     bool m_need_addr;   //!< need an address to continue
     bool m_except_pending_addr;    //!< next address packet is part of exception.
 
-    
+    // exception packet processing state (may need excep elem only, range+excep, range+
+    typedef enum {
+        EXCEP_POP, // start of processing read exception packets off the stack and analyze
+        EXCEP_RANGE, // output a range element
+        EXCEP_NACC,  // output a nacc element
+        EXCEP_EXCEP, // output an ecxeption element.
+    } excep_proc_state_t;
+
+    excep_proc_state_t m_excep_proc;  //!< state of exception processing
+    etmv4_addr_val_t m_excep_addr;    //!< excepiton return address.
+    rctdl_trc_index_t m_excep_index;  //!< trace index for exception element
+
     rctdl_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
 
     bool m_mem_nacc_pending;    //!< need to output a memory access failure packet
@@ -153,6 +170,8 @@ private:
     etmv4_trace_info_t m_trace_info; //!< trace info for this trace run.
 
     bool m_prev_overflow;
+
+    bool m_flush_EOT;           //!< true if doing an end of trace flush - cleans up lingering events / TS / CC
 
 //** output element
     RctdlTraceElement m_output_elem;

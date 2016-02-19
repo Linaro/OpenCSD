@@ -67,13 +67,13 @@ static std::map<dcd_tree_handle_t, lib_dt_data_list *> s_data_map;
 /*******************************************************************************/
 
 /** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
-RCTDL_C_API const uint32_t rctdl_get_version() 
+RCTDL_C_API uint32_t rctdl_get_version(void) 
 { 
     return rctdlVersion::vers_num();
 }
 
 /** Get library version string */
-RCTDL_C_API const char * rctdl_get_version_str() 
+RCTDL_C_API const char * rctdl_get_version_str(void) 
 { 
     return rctdlVersion::vers_str();
 }
@@ -212,7 +212,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t h
                 err = RCTDL_ERR_MEM;
         }
         else
-            RCTDL_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
+            err = RCTDL_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
     }
     else
         err = RCTDL_ERR_INVALID_PARAM_VAL;
@@ -273,7 +273,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t ha
                 err = RCTDL_ERR_MEM;
         }
         else
-            RCTDL_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
+            err = RCTDL_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
     }
     else
         err = RCTDL_ERR_INVALID_PARAM_VAL;
@@ -440,6 +440,51 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t han
     return err;
 }
 
+RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const rctdl_mem_space_acc_t mem_space, const char *filepath)
+{
+    rctdl_err_t err = RCTDL_OK;
+
+    if((handle != C_API_INVALID_TREE_HANDLE) && (region_array != 0) && (num_regions != 0))
+    {
+        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+        if(!pDT->hasMemAccMapper())
+            err = pDT->createMemAccMapper();
+
+        if(err == RCTDL_OK)
+        {
+            TrcMemAccessorBase *p_accessor;
+            std::string pathToFile = filepath;
+            int curr_region_idx = 0;
+            err = TrcMemAccFactory::CreateFileAccessor(&p_accessor,pathToFile,region_array[curr_region_idx].start_address,region_array[curr_region_idx].file_offset, region_array[curr_region_idx].region_size);            
+            if(err == RCTDL_OK)
+            {
+                TrcMemAccessorFile *pAcc = dynamic_cast<TrcMemAccessorFile *>(p_accessor);
+                if(pAcc)
+                {
+                    curr_region_idx++;
+                    while(curr_region_idx < num_regions)
+                    {
+                        pAcc->AddOffsetRange(region_array[curr_region_idx].start_address, 
+                                             region_array[curr_region_idx].region_size,
+                                             region_array[curr_region_idx].file_offset);
+                        curr_region_idx++;
+                    }
+                    pAcc->setMemSpace(mem_space);
+                    err = pDT->addMemAccessorToMap(pAcc,0);
+                }
+                else
+                    err = RCTDL_ERR_MEM;    // wrong type of object - treat as mem error
+
+                if(err != RCTDL_OK)
+                    TrcMemAccFactory::DestroyAccessor(p_accessor);
+            }
+        }
+    }
+    else
+        err = RCTDL_ERR_INVALID_PARAM_VAL;
+    return err;
+}
+
 RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length)
 {
     rctdl_err_t err = RCTDL_OK;
@@ -527,6 +572,14 @@ RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, 
     return err;
 }
 
+RCTDL_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle)
+{
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+        pDT->logMappedRanges();
+    }
+}
 
 /*******************************************************************************/
 /* C API Helper objects                                                        */

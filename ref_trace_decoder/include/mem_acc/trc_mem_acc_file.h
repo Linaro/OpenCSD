@@ -109,6 +109,8 @@ protected:
     /** get an offset region if extant for the address */
     FileRegionMemAccessor *getRegionForAddress(const rctdl_vaddr_t startAddr) const;
 
+    /* validate ranges */
+    virtual const bool validateRange();
 
 public:
 

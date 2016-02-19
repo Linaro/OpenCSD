@@ -76,16 +76,15 @@ rctdl_err_t TrcMemAccessorFile::initAccessor(const std::string &pathToFile, rctd
         m_file_size = (rctdl_vaddr_t)m_mem_file.tellg() & ((rctdl_vaddr_t)~0x1);
         m_mem_file.seekg(0, m_mem_file.beg);
         // adding an offset of 0, sets the base range.
-        if(offset == 0)
+        if((offset == 0) && (size == 0))
         {
             init = AddOffsetRange(startAddr, ((size_t)m_file_size)-offset, offset);
         }
-        else if((offset != 0) && (size != 0) && ((offset + size) <= m_file_size))
+        else if((offset + size) <= m_file_size)
         {
             // if offset != 0, size must by != 0
             init = AddOffsetRange(startAddr, size, offset);
         }
-
         m_file_path = pathToFile;
     }
     else 
@@ -236,8 +235,12 @@ const uint32_t TrcMemAccessorFile::readBytes(const rctdl_vaddr_t address, const 
 bool TrcMemAccessorFile::AddOffsetRange(const rctdl_vaddr_t startAddr, const size_t size, const size_t offset)
 {
     bool addOK = false;
-    if(m_file_size == 0)
+    if(m_file_size == 0)    // must have set the file size
         return false;
+    if(addrInRange(startAddr) || addrInRange(startAddr+size-1))  // cannot be overlapping
+        return false;
+
+    // now either set the base range or an offset range
     if(offset == 0)
     {
         if(!m_base_range_set)
@@ -268,6 +271,7 @@ bool TrcMemAccessorFile::AddOffsetRange(const rctdl_vaddr_t startAddr, const siz
                         m_endAddress = m_startAddress + first_range_offset - 1;
                 }
                 addOK = true;
+                m_has_access_regions = true;
             }        
         }
     }
@@ -300,6 +304,27 @@ const bool TrcMemAccessorFile::addrStartOfRange(const rctdl_vaddr_t s_address) c
             bInRange = (pRegion->regionStartAddress() == s_address);
     }
     return bInRange;
+}
+
+
+    /* validate ranges */
+const bool TrcMemAccessorFile::validateRange()
+{
+    bool bRangeValid = true;
+    if(m_base_range_set)
+        bRangeValid = TrcMemAccessorBase::validateRange();
+
+    if(m_has_access_regions && bRangeValid)
+    {
+        std::list<FileRegionMemAccessor *>::const_iterator it;
+        it = m_access_regions.begin();
+        while((it != m_access_regions.end()) && bRangeValid)
+        {
+            bRangeValid = (*it)->validateRange();
+            it++;
+        }
+    }
+    return bRangeValid;
 }
 
 const uint32_t TrcMemAccessorFile::bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const
@@ -357,6 +382,7 @@ void TrcMemAccessorFile::getMemAccString(std::string &accStr) const
             if(accStr.length())
                 accStr += "\n";
             accStr += addStr;
+            it++;
         }
     }
     accStr += (std::string)"\nFilename=" + m_file_path;

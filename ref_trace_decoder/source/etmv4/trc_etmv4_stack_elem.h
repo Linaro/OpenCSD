@@ -36,11 +36,7 @@
 #include "etmv4/trc_pkt_types_etmv4.h"
 
 
-// a broadcast address value.
-typedef struct _etmv4_addr_val_t {
-    rctdl_vaddr_t val;
-    uint8_t isa;
-} etmv4_addr_val_t;
+
 
 // decoder must maintain stack of last 3 broadcast addresses.
 // used in "same address" packets.

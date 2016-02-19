@@ -39,6 +39,7 @@
 #define __STDC_CONSTANT_MACROS 1
 #endif
 
+#include "rctdl_if_types.h"
 #include <cstdint>
 
 /*
@@ -118,6 +119,11 @@ intended to be helpful in 'runaway decode' prevention.
 int inst_ARM_is_UDF(uint32_t inst);
 int inst_Thumb_is_UDF(uint32_t inst);
 int inst_A64_is_UDF(uint32_t inst);
+
+
+/* access sub-type information */
+rctdl_instr_subtype get_instr_subtype();
+void clear_instr_subtype();
 
 #endif // ARM_TRC_IDEC_ARMINST_H_INCLUDED
 
