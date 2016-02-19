@@ -85,6 +85,9 @@ private:
     processor_state_t m_curr_state;
 
     typedef struct _ptm_decode_state {
+            rctdl_isa isa;
+            rctdl_vaddr_t instr_addr; 
+            bool valid;
     } ptm_decode_state;
 
 
@@ -100,7 +103,11 @@ private:
     bool m_is_secure;           //!< current secure state
 
     rctdl_pe_context m_pe_context;  //!< current context information
+    ptm_decode_state m_current_state;   //!< current instruction state for PTM decode.
+    ptm_decode_state m_last_state;      //!< last instruction state for PTM decode.
 
+    bool m_b_part_isync;        //!< isync processing can generate multiple generic packets.
+    bool m_b_i_sync_pe_context; //1< isync needs pe context.
 
 //** output element
     RctdlTraceElement m_output_elem;

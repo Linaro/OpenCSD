@@ -57,6 +57,7 @@ void PtmTrcPacket::Clear()
     ts_update_bits = 0;
     atom.En_bits = 0;
     exception.bits.present = 0;
+    prev_isa = curr_isa;    // mark ISA as not changed
 }
 
 void PtmTrcPacket::ResetState()

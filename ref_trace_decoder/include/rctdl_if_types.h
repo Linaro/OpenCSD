@@ -383,6 +383,7 @@ typedef struct _rctdl_pe_context {
         uint32_t bits64:1;              /**< 1 if 64 bit operation */
         uint32_t ctxt_id_valid:1;       /**< 1 if context ID value valid */
         uint32_t vmid_valid:1;          /**< 1 if VMID value is valid */
+        uint32_t el_valid:1;            /**< 1 if EL value is valid (ETMv4 traces EL, other protocols do not) */
     };
 } rctdl_pe_context;
 

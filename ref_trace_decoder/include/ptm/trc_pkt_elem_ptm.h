@@ -76,10 +76,26 @@ public:
     void UpdateVMID(const uint8_t VMID);
     void UpdateTimestamp(const uint64_t tsVal, const uint8_t updateBits);
 
-    // packet status interface - get packet info.
+    // packet status interface 
+    
+    //  get packet info.
     const bool isBadPacket() const;
     const rctdl_ptm_pkt_type getType() const;
+
+    // isa
     const rctdl_isa getISA() const;
+    const bool ISAChanged() const { return (bool)(curr_isa != prev_isa); };
+    const uint8_t getAltISA() const { return context.curr_alt_isa; };
+    const uint8_t getNS() const { return context.curr_NS; };
+    const uint8_t getHyp() const { return context.curr_Hyp; };
+
+
+    // pe context information
+    const bool CtxtIDUpdated() const { return (bool)(context.updated_c == 1); };
+    const bool VMIDUpdated() const { return (bool)(context.updated_v == 1); };
+    const uint32_t getCtxtID() const { return context.ctxtID; };
+    const uint8_t getVMID() const { return context.VMID; };
+    const bool PEContextUpdated() const { return context.updated; };
 
     // printing
     virtual void toString(std::string &str) const;

@@ -152,6 +152,7 @@ private:
     rctdl_pe_context m_pe_context;  //!< current context information
     etmv4_trace_info_t m_trace_info; //!< trace info for this trace run.
 
+    bool m_prev_overflow;
 
 //** output element
     RctdlTraceElement m_output_elem;

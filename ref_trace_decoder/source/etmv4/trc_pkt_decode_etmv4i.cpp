@@ -223,6 +223,7 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_need_addr = true;
     m_except_pending_addr = false;
     m_mem_nacc_pending = false;
+    m_prev_overflow = false;
 
     etmv4_addr_val_t addr;
     addr.isa = 0;
@@ -230,9 +231,8 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     
     m_pAddrRegs->push(addr);    // preload first value with 0x0
     m_P0_stack.clear();
-
+    m_output_elem.init();
 }
-
 
 // this function can output an immediate generic element if this covers the complete packet decode, 
 // or stack P0 and other elements for later processing on commit or cancel.
@@ -562,6 +562,8 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
             // indicates a trace restart - beginning of trace or discontinuiuty
             case P0_TRC_ON:
                 m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_ON);
+                m_output_elem.trace_on_reason = m_prev_overflow ? TRACE_ON_OVERFLOW : TRACE_ON_NORMAL;
+                m_prev_overflow = false;
                 resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                 break;
 
@@ -668,8 +670,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 break;
 
             case P0_OVERFLOW:
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_OVERFLOW);
-                resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                m_prev_overflow = true;
                 break;
 
             case P0_ATOM:
@@ -957,6 +958,7 @@ void TrcPktDecodeEtmV4I::updateContext(TrcStackElemCtxt *pCtxtElem)
     m_is_secure = (ctxt.NS == 0);
     m_output_elem.context.security_level = ctxt.NS ? rctdl_sec_nonsecure : rctdl_sec_secure;
     m_output_elem.context.exception_level = (rctdl_ex_level)ctxt.EL;
+    m_output_elem.context.el_valid = 1;
     if(ctxt.updated_c)
     {
         m_output_elem.context.ctxt_id_valid = 1;

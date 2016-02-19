@@ -5,7 +5,6 @@
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
 
-
 /* 
  * Redistribution and use in source and binary forms, with or without modification, 
  * are permitted provided that the following conditions are met:
@@ -52,6 +51,8 @@ public:
     RctdlTraceElement(rctdl_gen_trc_elem_t type);
     virtual ~RctdlTraceElement() {};
 
+    void init();
+
     const rctdl_gen_trc_elem_t getType() const { return elem_type; };
     void setType(const rctdl_gen_trc_elem_t type);
     void setContext(const rctdl_pe_context &new_context) { context = new_context; };
@@ -62,7 +63,6 @@ public:
 
     RctdlTraceElement &operator =(const rctdl_generic_trace_elem* p_elem);
 
-    //static void toString(const rctdl_generic_trace_elem *p_elem, std::string &str);
 };
 
 inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)    
@@ -93,6 +93,20 @@ inline void RctdlTraceElement::setType(const rctdl_gen_trc_elem_t type)
     elem_type = type;
     has_cc = 0;
     last_instr_exec = 0;
+    last_i_type = RCTDL_INSTR_OTHER;
+    i_type_with_link = 0;
+}
+
+inline void RctdlTraceElement::init()
+{
+    context.ctxt_id_valid = 0;
+    context.vmid_valid = 0;
+    context.el_valid = 0;
+
+    cpu_freq_change = 0;
+    has_cc = 0;
+    last_instr_exec = 0;
+    i_type_with_link = 0;
 }
 
 /** @}*/

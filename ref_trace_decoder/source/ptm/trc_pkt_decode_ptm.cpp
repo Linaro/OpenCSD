@@ -148,6 +148,18 @@ void TrcPktDecodePtm::resetDecoder()
     m_instr_info.isa = rctdl_isa_unknown;
     m_is_secure = true;
     m_mem_nacc_pending = false;
+
+    m_pe_context.ctxt_id_valid = 0;
+    m_pe_context.bits64 = 0;
+    m_pe_context.vmid_valid = 0;
+    m_pe_context.exception_level = rctdl_EL3;
+    m_pe_context.security_level = rctdl_sec_secure;
+    m_pe_context.el_valid = 0;
+    
+    m_last_state.instr_addr = 0x0;
+    m_last_state.isa = rctdl_isa_unknown;
+    m_last_state.valid = false;
+    m_current_state = m_last_state;
 }
 
 rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
@@ -253,9 +265,38 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
 
+    if(!m_b_part_isync)
+    {
+
+        m_b_part_isync = true;  // part i-sync;
+
+        m_last_state.instr_addr = m_curr_packet_in->addr.val;
+        m_last_state.isa = m_curr_packet_in->getISA();
+        m_last_state.valid = true;
+
+        m_current_state = m_last_state;
+
+
+        m_b_i_sync_pe_context = m_curr_packet_in->ISAChanged();
+        if(m_curr_packet_in->CtxtIDUpdated())
+        {
+            m_pe_context.context_id = m_curr_packet_in->getCtxtID();
+            m_pe_context.ctxt_id_valid = 1;
+            m_b_i_sync_pe_context = true;
+        }
+
+        if(m_curr_packet_in->VMIDUpdated())
+        {
+            m_pe_context.vmid = m_curr_packet_in->getVMID();
+            m_pe_context.vmid_valid = 1;
+            m_b_i_sync_pe_context = true;
+        }
+
+        m_pe_context.security_level = m_curr_packet_in->getNS() ? rctdl_sec_nonsecure : rctdl_sec_secure;
+    }
+
     return resp;
 }
-
 
 rctdl_datapath_resp_t TrcPktDecodePtm::processBranch()
 {
@@ -284,7 +325,7 @@ rctdl_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound)
     uint32_t bytesReq;
     rctdl_err_t err = RCTDL_OK;
 
-    // TBD: update mem space to allow for EL as well.
+    // 
     rctdl_mem_space_acc_t mem_space = m_is_secure ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N;
 
     m_output_elem.st_addr = m_output_elem.en_addr = m_instr_info.instr_addr;
@@ -309,6 +350,8 @@ rctdl_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound)
 
             // update the range decoded address in the output packet.
             m_output_elem.en_addr = m_instr_info.instr_addr;
+
+            m_output_elem.last_i_type = m_instr_info.type;
 
             bWPFound = (m_instr_info.type != RCTDL_INSTR_OTHER);
         }
