@@ -39,7 +39,64 @@
 #include "ptm/trc_cmp_cfg_ptm.h"
 #include "trc_gen_elem.h"
 
+/**************** Atom handling class **************************************/
+class PtmAtoms
+{
+public:
+    PtmAtoms() {};
+    ~PtmAtoms() {};
 
+    //! initialise the atom and index values
+    void initAtomPkt(const rctdl_pkt_atom &atom, const rctdl_trc_index_t &root_index);
+    
+    const rctdl_atm_val getCurrAtomVal() const;
+    const int numAtoms() const; //!< number of atoms
+    const rctdl_trc_index_t pktIndex() const; //!< originating packet index
+
+    void clearAtom();   //!<  clear the current atom, set the next.
+    void clearAll(); //!< clear all
+
+private:
+    rctdl_pkt_atom m_atom;
+    rctdl_trc_index_t m_root_index; //!< root index for the atom packet
+};
+
+inline void PtmAtoms::initAtomPkt(const rctdl_pkt_atom &atom, const rctdl_trc_index_t &root_index)
+{
+    m_atom = atom;
+    m_root_index = root_index;
+}
+    
+inline const rctdl_atm_val PtmAtoms::getCurrAtomVal() const
+{
+    return (m_atom.En_bits & 0x1) ?  ATOM_E : ATOM_N;
+}
+
+inline const int PtmAtoms::numAtoms() const
+{
+    return m_atom.num;
+}
+
+inline const rctdl_trc_index_t PtmAtoms::pktIndex() const
+{
+    return m_root_index;
+}
+
+inline void PtmAtoms::clearAtom()
+{
+    if(m_atom.num)
+    {
+        m_atom.num--;
+        m_atom.En_bits >>=1;
+    }
+}
+
+inline void PtmAtoms::clearAll()
+{
+    m_atom.num = 0;
+}
+
+/********** Main decode class ****************************************************/
 class TrcPktDecodePtm : public TrcPktDecodeBase<PtmTrcPacket, PtmConfig>
 {
 public:
@@ -63,6 +120,7 @@ private:
     void resetDecoder();
 
     rctdl_datapath_resp_t decodePacket();
+    rctdl_datapath_resp_t contProcess(); 
     rctdl_datapath_resp_t processIsync();
     rctdl_datapath_resp_t processBranch();
     rctdl_datapath_resp_t processWPUpdate();
@@ -78,7 +136,9 @@ private:
         NO_SYNC,        //!< pre start trace - init state or after reset or overflow, loss of sync.
         WAIT_SYNC,      //!< waiting for sync packet.
         WAIT_ISYNC,     //!< waiting for isync packet after 1st ASYNC.
-        DECODE_PKTS,    //!< processing packets 
+        DECODE_PKTS,    //!< processing input packet
+        CONT_ISYNC,     //!< continue processing isync packet 
+        CONT_ATOM,      //!< continue processing atom packet
         OUTPUT_PKT,     //!< need to output any available packet.
     } processor_state_t;
 
@@ -107,11 +167,15 @@ private:
     ptm_decode_state m_last_state;      //!< last instruction state for PTM decode.
 
     bool m_b_part_isync;        //!< isync processing can generate multiple generic packets.
-    bool m_b_i_sync_pe_context; //1< isync needs pe context.
+    bool m_b_i_sync_pe_context; //!< isync has pe context.
+
+    PtmAtoms m_atoms;           //!< atoms to process in an atom packet
 
 //** output element
     RctdlTraceElement m_output_elem;
 };
+
+
 
 #endif // ARM_TRC_PKT_DECODE_PTM_H_INCLUDED
 

@@ -84,6 +84,14 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processPacket()
             resp = decodePacket();
             bPktDone = true;
             break;
+
+        default:
+             // should only see these after a _WAIT resp - in flush handler 
+        case CONT_ISYNC: 
+        case CONT_ATOM:
+            bPktDone = true;
+            // throw a decoder error
+            break;
         }
     }
     return resp;
@@ -92,21 +100,39 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processPacket()
 rctdl_datapath_resp_t TrcPktDecodePtm::onEOT()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-
+    resp = contProcess();
     return resp;
 }
 
 rctdl_datapath_resp_t TrcPktDecodePtm::onReset()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-
+    resetDecoder();
     return resp;
 }
 
 rctdl_datapath_resp_t TrcPktDecodePtm::onFlush()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    resp = contProcess();
+    return resp;
+}
 
+// atom and isync packets can have multiple ouput packets that can be _WAITed mid stream.
+rctdl_datapath_resp_t TrcPktDecodePtm::contProcess()
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    switch(m_curr_state)
+    {
+    default: break; 
+    case CONT_ISYNC:
+        resp = processIsync();
+        break;
+
+    case CONT_ATOM:
+        resp = processAtom();
+        break;
+    }
     return resp;
 }
 
@@ -123,9 +149,6 @@ rctdl_err_t TrcPktDecodePtm::onProtocolConfig()
     m_instr_info.pe_type.profile = m_config->core_prof;
     m_instr_info.pe_type.arch = m_config->arch_ver;
     m_instr_info.dsb_dmb_waypoints = m_config->dmsbWayPt() ? 1 : 0;
-
-
-
     return err;
 }
 
@@ -160,6 +183,8 @@ void TrcPktDecodePtm::resetDecoder()
     m_last_state.isa = rctdl_isa_unknown;
     m_last_state.valid = false;
     m_current_state = m_last_state;
+
+    m_atoms.clearAll();
 }
 
 rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
@@ -241,7 +266,10 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
 
     case PTM_PKT_ATOM:
         if(!m_need_addr)
+        {
+            m_atoms.initAtomPkt(m_curr_packet_in->getAtom(),m_index_curr_pkt);
             resp = processAtom();
+        }
         break;
 
     case PTM_PKT_TIMESTAMP:
@@ -265,6 +293,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
 
+    // extract the I-Sync data
     if(!m_b_part_isync)
     {
 
@@ -295,6 +324,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
         m_pe_context.security_level = m_curr_packet_in->getNS() ? rctdl_sec_nonsecure : rctdl_sec_secure;
     }
 
+
     return resp;
 }
 
@@ -312,9 +342,13 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
     return resp;
 }
 
+// a single atom packet can result in multiple range outputs...need to be re-entrant in case we get a wait response.
+// also need to handle nacc response from instruction walking routine
+// 
 rctdl_datapath_resp_t TrcPktDecodePtm::processAtom()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+
 
     return resp;
 }

@@ -97,6 +97,9 @@ public:
     const uint8_t getVMID() const { return context.VMID; };
     const bool PEContextUpdated() const { return context.updated; };
 
+    // atom info
+    const rctdl_pkt_atom &getAtom() const { return atom; };
+
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const  uint32_t fmtFlags, std::string &str) const;
