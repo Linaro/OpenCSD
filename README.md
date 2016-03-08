@@ -64,7 +64,7 @@ Version and Modification Information
 Version 0.001
 -------------
 
-Library initial development phase.
+Library development - tested with `perf` tools integration - BKK16, 8th March 2016
 
 
 Licence Information
