@@ -34,9 +34,30 @@
     <Filter Include="Header Files\stm">
       <UniqueIdentifier>{2c796b59-81f6-49c9-88cf-e90ed2e741a3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="docs-files">
+      <UniqueIdentifier>{5ea7e02d-0667-4d2d-8c3d-039daf112edc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
+    <None Include="..\..\..\..\HOWTO">
+      <Filter>docs-files</Filter>
+    </None>
+    <None Include="..\..\..\..\LICENSE">
+      <Filter>docs-files</Filter>
+    </None>
+    <None Include="..\..\..\..\README.md">
+      <Filter>docs-files</Filter>
+    </None>
+    <None Include="..\..\..\..\TODO">
+      <Filter>docs-files</Filter>
+    </None>
+    <None Include="..\..\..\docs\build_libs.md">
+      <Filter>docs-files</Filter>
+    </None>
+    <None Include="..\..\..\docs\test_progs.md">
+      <Filter>docs-files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\comp_attach_pt_t.h">
