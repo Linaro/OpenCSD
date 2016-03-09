@@ -293,6 +293,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\HOWTO" />
+    <None Include="..\..\..\..\HOWTO.md" />
+    <None Include="..\..\..\..\LICENSE" />
+    <None Include="..\..\..\..\README.md" />
+    <None Include="..\..\..\..\TODO" />
+    <None Include="..\..\..\docs\build_libs.md" />
+    <None Include="..\..\..\docs\test_progs.md" />
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
