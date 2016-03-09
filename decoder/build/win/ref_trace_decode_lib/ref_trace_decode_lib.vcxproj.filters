@@ -58,6 +58,7 @@
     <None Include="..\..\..\docs\test_progs.md">
       <Filter>docs-files</Filter>
     </None>
+    <None Include="..\..\..\..\HOWTO.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\comp_attach_pt_t.h">

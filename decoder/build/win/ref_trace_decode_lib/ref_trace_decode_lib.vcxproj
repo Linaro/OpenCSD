@@ -294,6 +294,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\..\..\..\HOWTO" />
+    <None Include="..\..\..\..\HOWTO.md" />
     <None Include="..\..\..\..\LICENSE" />
     <None Include="..\..\..\..\README.md" />
     <None Include="..\..\..\..\TODO" />
