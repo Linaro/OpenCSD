@@ -492,11 +492,11 @@ arm_barrier_t inst_ARM_barrier(uint32_t inst)
 {
     if ((inst & 0xfff00000) == 0xf5700000) {
         switch (inst & 0xf0) {
-        case 0x4:
+        case 0x40:
             return ARM_BARRIER_DSB;
-        case 0x5:
+        case 0x50:
             return ARM_BARRIER_DMB;
-        case 0x6:
+        case 0x60:
             return ARM_BARRIER_ISB;
         default:
             return ARM_BARRIER_NONE;
@@ -522,11 +522,11 @@ arm_barrier_t inst_Thumb_barrier(uint32_t inst)
 {
     if ((inst & 0xffffff00) == 0xf3bf8f00) {
         switch (inst & 0xf0) {
-        case 0x4:
+        case 0x40:
             return ARM_BARRIER_DSB;
-        case 0x5:
+        case 0x50:
             return ARM_BARRIER_DMB;
-        case 0x6:
+        case 0x60:
             return ARM_BARRIER_ISB;
         default:
             return ARM_BARRIER_NONE;
