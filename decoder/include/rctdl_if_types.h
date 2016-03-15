@@ -48,8 +48,8 @@
 /** @name Library Versioning
 @{*/
 #define RCTDL_VER_MAJOR 0x0 /**< Library Major Version */
-#define RCTDL_VER_MINOR 0x1 /**< Library Minor Version */
-#define RCTDL_VER_STRING "0.001"    /**< Library Version string */
+#define RCTDL_VER_MINOR 0x2 /**< Library Minor Version */
+#define RCTDL_VER_STRING "0.002"    /**< Library Version string */
 #define RCTDL_LIB_NAME "Reference CoreSight Trace Decoder Library"  /**< Library name string */
 #define RCTDL_LIB_SHORT_NAME "RCTDL"    /**< Library Short name string */
 /** @}*/

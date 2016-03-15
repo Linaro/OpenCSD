@@ -32,6 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
+#include <sstream>
 #include "ptm/trc_pkt_decode_ptm.h"
 
 #define DCD_NAME "DCD_PTM"
@@ -127,10 +128,14 @@ rctdl_datapath_resp_t TrcPktDecodePtm::contProcess()
     default: break; 
     case CONT_ISYNC:
         resp = processIsync();
+        if(RCTDL_DATA_RESP_IS_CONT(resp))
+            m_curr_state = DECODE_PKTS;
         break;
 
     case CONT_ATOM:
         resp = processAtom();
+        if(RCTDL_DATA_RESP_IS_CONT(resp))
+            m_curr_state = DECODE_PKTS;
         break;
     }
     return resp;
@@ -328,16 +333,37 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
     return resp;
 }
 
+// change of address and/or exception in program flow.
+// implies E atom before the branch if none exception.
 rctdl_datapath_resp_t TrcPktDecodePtm::processBranch()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    
+
 
     return resp;
 }
 
+// effectively completes a range prior to exception or after many bytes of trace (>4096)
+//
 rctdl_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+
+    // if we need an address to run from then the WPUpdate will not form a range as 
+    // we do not have a start point - still waiting for branch or other address packet
+    if(!m_need_addr)
+    {
+        // WP update implies E atom - though it doesn't really matter.
+        resp = processAtomRange(ATOM_E,"WP update",true,m_curr_packet_in->getAddrVal());
+    }
+
+    // atom range may return with NACC pending 
+    checkPendingNacc(resp);
+
+    // if wait and still stuff to process....
+    if(RCTDL_DATA_RESP_IS_WAIT(resp) && ( m_mem_nacc_pending))
+        m_curr_state = CONT_WPUP;
 
     return resp;
 }
@@ -348,18 +374,116 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
 rctdl_datapath_resp_t TrcPktDecodePtm::processAtom()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    bool bWPFound = false;
 
+    // loop to process all the atoms in the packet
+    while(m_atoms.numAtoms() && !m_need_addr && RCTDL_DATA_RESP_IS_CONT(resp))
+    {
+        resp = processAtomRange(m_atoms.getCurrAtomVal(),"atom");
+        if(m_need_addr)
+            m_atoms.clearAll();
+        else
+            m_atoms.clearAtom();
+    }
+
+    // bad address may mean a nacc needs sending
+    checkPendingNacc(resp);
+
+    // if wait and still stuff to process....
+    if(RCTDL_DATA_RESP_IS_WAIT(resp) && ( m_mem_nacc_pending || m_atoms.numAtoms()))
+        m_curr_state = CONT_ATOM;
 
     return resp;
 }
 
-rctdl_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound)
+ void TrcPktDecodePtm::checkPendingNacc(rctdl_datapath_resp_t &resp)
+ {
+    if(m_mem_nacc_pending && RCTDL_DATA_RESP_IS_CONT(resp))
+    {
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
+        m_output_elem.st_addr = m_nacc_addr;
+        resp = outputTraceElementIdx(m_index_curr_pkt,m_output_elem);
+        m_mem_nacc_pending = false;
+    }
+ }
+
+// given an atom element - walk the code and output a range or mark nacc.
+rctdl_datapath_resp_t TrcPktDecodePtm::processAtomRange(const rctdl_atm_val A, const char *pkt_msg,  const bool traceToAddrNext /*= false*/, const rctdl_vaddr_t nextAddrMatch /*= 0*/)
+{
+    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    bool bWPFound = false;
+    std::ostringstream oss;
+
+    m_instr_info.instr_addr = m_current_state.instr_addr;
+    m_instr_info.isa = m_current_state.isa;
+
+    rctdl_err_t err = traceInstrToWP(bWPFound);
+    if(err != RCTDL_OK)
+    {
+        if(err == RCTDL_ERR_UNSUPPORTED_ISA)
+        {
+                m_need_addr = true;
+                oss << "Warning: unsupported instruction set processing " << pkt_msg << " packet.";
+                LogError(rctdlError(RCTDL_ERR_SEV_WARN,err,m_index_curr_pkt,m_CSID,oss.str()));  
+                // wait for next address
+                return resp;
+        }
+        else
+        {
+            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            oss << "Error processing " << pkt_msg << " packet.";
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,m_index_curr_pkt,m_CSID,oss.str()));  
+            return resp;
+        }
+    }
+    
+    if(bWPFound)
+    {
+        // action according to waypoint type and atom value
+        switch(m_instr_info.type)
+        {
+        case RCTDL_INSTR_BR:
+            if(A == ATOM_E)
+                m_instr_info.instr_addr = m_instr_info.branch_addr;
+            break;
+
+            // TBD: is this valid for PTM -> branch addresses imply E atom, N atom does not need address (return stack will require this)
+        case RCTDL_INSTR_BR_INDIRECT:
+            if(A == ATOM_E)
+                m_need_addr = true; // indirect branch taken - need new address.
+            break;
+        }
+            
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+        m_output_elem.last_instr_exec = (A == ATOM_E) ? 1 : 0;
+        m_output_elem.last_i_type = m_instr_info.type;
+        m_output_elem.last_i_subtype = m_instr_info.sub_type;
+        resp = outputTraceElementIdx(m_index_curr_pkt,m_output_elem);
+
+        m_current_state.instr_addr = m_instr_info.instr_addr;
+        m_current_state.isa = m_instr_info.next_isa;
+    }
+    else
+    {
+        // no waypoint - likely inaccessible memory range.
+        m_need_addr = true; // need an address update 
+
+        if(m_output_elem.st_addr != m_output_elem.en_addr)
+        {
+            // some trace before we were out of memory access range
+            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+            resp = outputTraceElementIdx(m_index_curr_pkt,m_output_elem);
+        }
+    }
+    return resp;
+}
+
+rctdl_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const bool traceToAddrNext /*= false*/, const rctdl_vaddr_t nextAddrMatch /*= 0*/)
 {
     uint32_t opcode;
     uint32_t bytesReq;
     rctdl_err_t err = RCTDL_OK;
 
-    // 
     rctdl_mem_space_acc_t mem_space = m_is_secure ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N;
 
     m_output_elem.st_addr = m_output_elem.en_addr = m_instr_info.instr_addr;
@@ -386,8 +510,11 @@ rctdl_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound)
             m_output_elem.en_addr = m_instr_info.instr_addr;
 
             m_output_elem.last_i_type = m_instr_info.type;
-
-            bWPFound = (m_instr_info.type != RCTDL_INSTR_OTHER);
+            // either walking to match the next instruction address or a real watchpoint
+            if(traceToAddrNext)
+                bWPFound = (m_output_elem.en_addr == nextAddrMatch);
+            else
+                bWPFound = (m_instr_info.type != RCTDL_INSTR_OTHER);
         }
         else
         {

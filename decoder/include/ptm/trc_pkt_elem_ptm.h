@@ -89,6 +89,8 @@ public:
     const uint8_t getNS() const { return context.curr_NS; };
     const uint8_t getHyp() const { return context.curr_Hyp; };
 
+    // address 
+    const rctdl_vaddr_t getAddrVal() const { return addr.val; }; 
 
     // pe context information
     const bool CtxtIDUpdated() const { return (bool)(context.updated_c == 1); };

@@ -125,7 +125,9 @@ private:
     rctdl_datapath_resp_t processBranch();
     rctdl_datapath_resp_t processWPUpdate();
     rctdl_datapath_resp_t processAtom();
-    rctdl_err_t traceInstrToWP(bool &bWPFound);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
+    rctdl_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const rctdl_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
+    rctdl_datapath_resp_t processAtomRange(const rctdl_atm_val A, const char *pkt_msg,  const bool traceToAddrNext = false, const rctdl_vaddr_t nextAddrMatch = 0);
+    void checkPendingNacc(rctdl_datapath_resp_t &resp);
 
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.
 
@@ -137,8 +139,9 @@ private:
         WAIT_SYNC,      //!< waiting for sync packet.
         WAIT_ISYNC,     //!< waiting for isync packet after 1st ASYNC.
         DECODE_PKTS,    //!< processing input packet
-        CONT_ISYNC,     //!< continue processing isync packet 
-        CONT_ATOM,      //!< continue processing atom packet
+        CONT_ISYNC,     //!< continue processing isync packet. 
+        CONT_ATOM,      //!< continue processing atom packet.
+        CONT_WPUP,      //!< continue processing WP update packet.
         OUTPUT_PKT,     //!< need to output any available packet.
     } processor_state_t;
 
