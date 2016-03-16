@@ -101,7 +101,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processPacket()
 rctdl_datapath_resp_t TrcPktDecodePtm::onEOT()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    resp = contProcess();
+    resp = contProcess();   // complete any part processes packets
     return resp;
 }
 
@@ -124,20 +124,29 @@ rctdl_datapath_resp_t TrcPktDecodePtm::contProcess()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     switch(m_curr_state)
-    {
-    default: break; 
+    { 
     case CONT_ISYNC:
         resp = processIsync();
-        if(RCTDL_DATA_RESP_IS_CONT(resp))
-            m_curr_state = DECODE_PKTS;
         break;
 
     case CONT_ATOM:
         resp = processAtom();
-        if(RCTDL_DATA_RESP_IS_CONT(resp))
-            m_curr_state = DECODE_PKTS;
         break;
+
+    case CONT_WPUP:
+        resp = processWPUpdate();
+        break;        
+
+    case CONT_BRANCH:
+        resp = processBranch();
+        break;
+
+    default: break; // not a state that requires further processing
     }
+
+    if(RCTDL_DATA_RESP_IS_CONT(resp) && processStateIsCont())
+        m_curr_state = DECODE_PKTS; // continue packet processing - assuming we have not degraded into an unsynced state.
+
     return resp;
 }
 
@@ -172,9 +181,8 @@ void TrcPktDecodePtm::resetDecoder()
 {
     m_curr_state = NO_SYNC;
     m_need_isync = true;    // need context to start.
-    m_need_addr = true;     // need an initial address.
+
     m_instr_info.isa = rctdl_isa_unknown;
-    m_is_secure = true;
     m_mem_nacc_pending = false;
 
     m_pe_context.ctxt_id_valid = 0;
@@ -184,10 +192,9 @@ void TrcPktDecodePtm::resetDecoder()
     m_pe_context.security_level = rctdl_sec_secure;
     m_pe_context.el_valid = 0;
     
-    m_last_state.instr_addr = 0x0;
-    m_last_state.isa = rctdl_isa_unknown;
-    m_last_state.valid = false;
-    m_current_state = m_last_state;
+    m_curr_pe_state.instr_addr = 0x0;
+    m_curr_pe_state.isa = rctdl_isa_unknown;
+    m_curr_pe_state.valid = false;
 
     m_atoms.clearAll();
 }
@@ -270,7 +277,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
         break;
 
     case PTM_PKT_ATOM:
-        if(!m_need_addr)
+        if(m_curr_pe_state.valid)
         {
             m_atoms.initAtomPkt(m_curr_packet_in->getAtom(),m_index_curr_pkt);
             resp = processAtom();
@@ -298,36 +305,30 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
 
-    // extract the I-Sync data
-    if(!m_b_part_isync)
-    {
-
-        m_b_part_isync = true;  // part i-sync;
-
-        m_last_state.instr_addr = m_curr_packet_in->addr.val;
-        m_last_state.isa = m_curr_packet_in->getISA();
-        m_last_state.valid = true;
-
-        m_current_state = m_last_state;
-
-
-        m_b_i_sync_pe_context = m_curr_packet_in->ISAChanged();
+    // extract the I-Sync data if not re-entering after a _WAIT
+    if(m_curr_state == DECODE_PKTS)
+    {        
+        m_curr_pe_state.instr_addr = m_curr_packet_in->getAddrVal();
+        m_curr_pe_state.isa = m_curr_packet_in->getISA();
+        m_curr_pe_state.valid = true;
+        
+        m_i_sync_pe_ctxt = m_curr_packet_in->ISAChanged();
         if(m_curr_packet_in->CtxtIDUpdated())
         {
             m_pe_context.context_id = m_curr_packet_in->getCtxtID();
             m_pe_context.ctxt_id_valid = 1;
-            m_b_i_sync_pe_context = true;
+            m_i_sync_pe_ctxt = true;
         }
 
         if(m_curr_packet_in->VMIDUpdated())
         {
             m_pe_context.vmid = m_curr_packet_in->getVMID();
             m_pe_context.vmid_valid = 1;
-            m_b_i_sync_pe_context = true;
+            m_i_sync_pe_ctxt = true;
         }
-
         m_pe_context.security_level = m_curr_packet_in->getNS() ? rctdl_sec_nonsecure : rctdl_sec_secure;
     }
+    
 
 
     return resp;
@@ -338,8 +339,44 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
 rctdl_datapath_resp_t TrcPktDecodePtm::processBranch()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    
 
+    // initial pass - decoding packet.
+    if(m_curr_state == DECODE_PKTS)
+    {
+        // behaviour predicated on if this is an exception packet.
+        if(m_curr_packet_in->isBranchExcepPacket())
+        {
+            // exception - record address and output exception packet.
+            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION);
+            m_output_elem.exception_number = m_curr_packet_in->excepNum();
+            m_output_elem.excep_ret_addr = 0;
+            if(m_curr_pe_state.valid)
+            {
+                m_output_elem.excep_ret_addr = 1;
+                m_output_elem.en_addr = m_curr_pe_state.instr_addr;
+            }
+
+            resp = outputTraceElement(m_output_elem);
+        }
+        else
+        {
+            // branch address only - implies E atom - need to output a range.
+            if(m_curr_pe_state.valid)
+                resp = processAtomRange(ATOM_E,"BranchAddr");
+        }
+
+        // now set the branch address for the next time.
+        m_curr_pe_state.isa = m_curr_packet_in->getISA();
+        m_curr_pe_state.instr_addr = m_curr_packet_in->getAddrVal();
+        m_curr_pe_state.valid = true;
+    }
+
+    // atom range may return with NACC pending 
+    checkPendingNacc(resp);
+
+    // if wait and still stuff to process....
+    if(RCTDL_DATA_RESP_IS_WAIT(resp) && ( m_mem_nacc_pending))
+        m_curr_state = CONT_BRANCH;
 
     return resp;
 }
@@ -352,9 +389,9 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
 
     // if we need an address to run from then the WPUpdate will not form a range as 
     // we do not have a start point - still waiting for branch or other address packet
-    if(!m_need_addr)
+    if(m_curr_pe_state.valid)
     {
-        // WP update implies E atom - though it doesn't really matter.
+        // WP update implies atom - use E, we cannot be sure if the instruction passed its condition codes - though it doesn't really matter.
         resp = processAtomRange(ATOM_E,"WP update",true,m_curr_packet_in->getAddrVal());
     }
 
@@ -377,10 +414,10 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processAtom()
     bool bWPFound = false;
 
     // loop to process all the atoms in the packet
-    while(m_atoms.numAtoms() && !m_need_addr && RCTDL_DATA_RESP_IS_CONT(resp))
+    while(m_atoms.numAtoms() && m_curr_pe_state.valid && RCTDL_DATA_RESP_IS_CONT(resp))
     {
         resp = processAtomRange(m_atoms.getCurrAtomVal(),"atom");
-        if(m_need_addr)
+        if(!m_curr_pe_state.valid)
             m_atoms.clearAll();
         else
             m_atoms.clearAtom();
@@ -414,19 +451,19 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processAtomRange(const rctdl_atm_val A, c
     bool bWPFound = false;
     std::ostringstream oss;
 
-    m_instr_info.instr_addr = m_current_state.instr_addr;
-    m_instr_info.isa = m_current_state.isa;
+    m_instr_info.instr_addr = m_curr_pe_state.instr_addr;
+    m_instr_info.isa = m_curr_pe_state.isa;
 
-    rctdl_err_t err = traceInstrToWP(bWPFound);
+    rctdl_err_t err = traceInstrToWP(bWPFound,traceToAddrNext,nextAddrMatch);
     if(err != RCTDL_OK)
     {
         if(err == RCTDL_ERR_UNSUPPORTED_ISA)
         {
-                m_need_addr = true;
+                m_curr_pe_state.valid = false; // need a new address packet
                 oss << "Warning: unsupported instruction set processing " << pkt_msg << " packet.";
                 LogError(rctdlError(RCTDL_ERR_SEV_WARN,err,m_index_curr_pkt,m_CSID,oss.str()));  
                 // wait for next address
-                return resp;
+                return RCTDL_RESP_WARN_CONT;
         }
         else
         {
@@ -450,7 +487,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processAtomRange(const rctdl_atm_val A, c
             // TBD: is this valid for PTM -> branch addresses imply E atom, N atom does not need address (return stack will require this)
         case RCTDL_INSTR_BR_INDIRECT:
             if(A == ATOM_E)
-                m_need_addr = true; // indirect branch taken - need new address.
+                m_curr_pe_state.valid = false; // indirect branch taken - need new address.
             break;
         }
             
@@ -460,13 +497,13 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processAtomRange(const rctdl_atm_val A, c
         m_output_elem.last_i_subtype = m_instr_info.sub_type;
         resp = outputTraceElementIdx(m_index_curr_pkt,m_output_elem);
 
-        m_current_state.instr_addr = m_instr_info.instr_addr;
-        m_current_state.isa = m_instr_info.next_isa;
+        m_curr_pe_state.instr_addr = m_instr_info.instr_addr;
+        m_curr_pe_state.isa = m_instr_info.next_isa;
     }
     else
     {
         // no waypoint - likely inaccessible memory range.
-        m_need_addr = true; // need an address update 
+        m_curr_pe_state.valid = false; // need an address update 
 
         if(m_output_elem.st_addr != m_output_elem.en_addr)
         {
@@ -484,7 +521,7 @@ rctdl_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const bool traceToAd
     uint32_t bytesReq;
     rctdl_err_t err = RCTDL_OK;
 
-    rctdl_mem_space_acc_t mem_space = m_is_secure ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N;
+    rctdl_mem_space_acc_t mem_space = (m_pe_context.security_level == rctdl_sec_secure) ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N;
 
     m_output_elem.st_addr = m_output_elem.en_addr = m_instr_info.instr_addr;
 

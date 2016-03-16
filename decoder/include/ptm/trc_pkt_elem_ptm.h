@@ -102,6 +102,11 @@ public:
     // atom info
     const rctdl_pkt_atom &getAtom() const { return atom; };
 
+    // branch address info
+    const bool isBranchExcepPacket() const { return (exception.bits.present == 1); };
+    const rctdl_armv7_exception excepType() const { return exception.type; };
+    const uint16_t excepNum() const { return exception.number;  };
+
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const  uint32_t fmtFlags, std::string &str) const;

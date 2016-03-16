@@ -139,38 +139,38 @@ private:
         WAIT_SYNC,      //!< waiting for sync packet.
         WAIT_ISYNC,     //!< waiting for isync packet after 1st ASYNC.
         DECODE_PKTS,    //!< processing input packet
-        CONT_ISYNC,     //!< continue processing isync packet. 
-        CONT_ATOM,      //!< continue processing atom packet.
-        CONT_WPUP,      //!< continue processing WP update packet.
         OUTPUT_PKT,     //!< need to output any available packet.
+        CONT_ISYNC,     //!< continue processing isync packet after WAIT. 
+        CONT_ATOM,      //!< continue processing atom packet after WAIT.
+        CONT_WPUP,      //!< continue processing WP update packet after WAIT.
+        CONT_BRANCH,    //!< continue processing Branch packet after WAIT.
     } processor_state_t;
 
     processor_state_t m_curr_state;
 
-    typedef struct _ptm_decode_state {
-            rctdl_isa isa;
-            rctdl_vaddr_t instr_addr; 
-            bool valid;
-    } ptm_decode_state;
+    const bool processStateIsCont() const;
 
+    // PE decode state - address and isa
+
+    //! Structure to contain the PE addr and ISA state.
+    typedef struct _ptm_pe_addr_state {
+            rctdl_isa isa;              //!< current isa.
+            rctdl_vaddr_t instr_addr;   //!< current address.
+            bool valid;     //!< address valid - false if we need an address to continue decode.
+    } ptm_pe_addr_state;
+
+    ptm_pe_addr_state m_curr_pe_state;  //!< current instruction state for PTM decode.
+    rctdl_pe_context m_pe_context;      //!< current context information
 
     // packet decode state
     bool m_need_isync;   //!< need context to continue
-    bool m_need_addr;   //!< need an address to continue
-    bool m_except_pending_addr;    //!< next address packet is part of exception.
     
     rctdl_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
 
     bool m_mem_nacc_pending;    //!< need to output a memory access failure packet
-    rctdl_vaddr_t m_nacc_addr;  //!< 
-    bool m_is_secure;           //!< current secure state
-
-    rctdl_pe_context m_pe_context;  //!< current context information
-    ptm_decode_state m_current_state;   //!< current instruction state for PTM decode.
-    ptm_decode_state m_last_state;      //!< last instruction state for PTM decode.
-
-    bool m_b_part_isync;        //!< isync processing can generate multiple generic packets.
-    bool m_b_i_sync_pe_context; //!< isync has pe context.
+    rctdl_vaddr_t m_nacc_addr;  //!< address of memory access failure
+   
+    bool m_i_sync_pe_ctxt;  //!< isync has pe context.
 
     PtmAtoms m_atoms;           //!< atoms to process in an atom packet
 
@@ -178,7 +178,10 @@ private:
     RctdlTraceElement m_output_elem;
 };
 
-
+const bool TrcPktDecodePtm::processStateIsCont() const
+{
+    return (bool)(m_curr_state >= CONT_ISYNC);
+}
 
 #endif // ARM_TRC_PKT_DECODE_PTM_H_INCLUDED
 
