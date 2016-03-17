@@ -106,6 +106,7 @@ typedef struct _rctdl_generic_trace_elem {
         trace_on_reason_t trace_on_reason;  /**< reason for the trace on packet */
     };
 
+
 } rctdl_generic_trace_elem;
 
 

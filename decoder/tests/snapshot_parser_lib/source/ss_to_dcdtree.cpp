@@ -230,9 +230,9 @@ bool CreateDcdTreeFromSnapShot::createPEDecoder(const std::string &coreName, Par
     }
     else if(devTypeName == PTMProtocol)
     {
+        bCreatedDecoder = createPTMDecoder(coreName,devSrc);
     }
 
-    // TBD create other protocols here.
     return bCreatedDecoder;
 }
 
@@ -330,6 +330,45 @@ bool CreateDcdTreeFromSnapShot::createETMv3Decoder(const std::string &coreName, 
     return createdDecoder;
 }
 
+bool CreateDcdTreeFromSnapShot::createPTMDecoder(const std::string &coreName, Parser::Parsed *devSrc)
+{
+    bool createdDecoder = false;
+    bool configOK = true;
+    
+    // generate the config data from the device data.
+    PtmConfig config;
+
+    regs_to_access_t regs_to_access[] = {
+        { ETMv3PTMRegIDR, true, &config.reg_idr, 0 },
+        { ETMv3PTMRegCR, true, &config.reg_ctrl, 0 },
+        { ETMv3PTMRegCCER, true, &config.reg_ccer, 0 },
+        { ETMv3PTMRegTraceIDR, true, &config.reg_trc_id, 0}
+    };
+
+    // extract registers
+    configOK = getRegisters(devSrc->regDefs,sizeof(regs_to_access)/sizeof(regs_to_access_t), regs_to_access);
+
+    // extract core profile
+    if(configOK)
+        configOK = getCoreProfile(coreName,config.arch_ver,config.core_prof);
+
+    // good config - generate the decoder on the tree.
+    if(configOK)
+    {
+        rctdl_err_t err = RCTDL_OK;
+        if(m_bPacketProcOnly)
+            err = m_pDecodeTree->createPTMPktProcessor(&config);
+        else
+            err = m_pDecodeTree->createPTMDecoder(&config);
+
+        if(err ==  RCTDL_OK)
+            createdDecoder = true;
+        else
+            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
+    }
+    return createdDecoder;
+
+}
 
 bool CreateDcdTreeFromSnapShot::createSTDecoder(Parser::Parsed *devSrc)
 {

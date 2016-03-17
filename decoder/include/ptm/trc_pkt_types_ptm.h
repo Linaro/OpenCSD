@@ -45,12 +45,11 @@
 
 typedef enum _rctdl_ptm_pkt_type
 {
-// markers for unknown / bad packets
+// markers for unknown packets
 	PTM_PKT_NOTSYNC,        //!< no sync found yet
-   	PTM_PKT_BAD_SEQUENCE,   //!< invalid sequence for packet type
-	PTM_PKT_RESERVED,		//!< Reserved packet encoding	
     PTM_PKT_INCOMPLETE_EOT, //!< flushing incomplete packet at end of trace.
     PTM_PKT_NOERROR,        //!< no error base type packet.
+
 // markers for valid packets
     PTM_PKT_BRANCH_ADDRESS, //!< Branch address with optional exception.	 
     PTM_PKT_A_SYNC,			//!< Alignment Synchronisation.
@@ -59,24 +58,63 @@ typedef enum _rctdl_ptm_pkt_type
 	PTM_PKT_WPOINT_UPDATE,  //!< Waypoint update. 
 	PTM_PKT_IGNORE,			//!< ignore packet.
 	PTM_PKT_CONTEXT_ID,		//!< context id packet.
+    PTM_PKT_VMID,           //!< VMID packet
 	PTM_PKT_ATOM,			//!< atom waypoint packet.
 	PTM_PKT_TIMESTAMP,		//!< timestamp packet.
 	PTM_PKT_EXCEPTION_RET,	//!< exception return.
 	PTM_PKT_BRANCH_OR_BYPASS_EOT, // interpreter FSM 'state' : unsure if branch 0 packet or bypass flush end of trace
     PTM_PKT_TPIU_PAD_EOB,   // pad end of a buffer - no valid trace at this point
+
+// markers for bad packets
+   	PTM_PKT_BAD_SEQUENCE,   //!< invalid sequence for packet type
+	PTM_PKT_RESERVED,		//!< Reserved packet encoding	
+
 } rctdl_ptm_pkt_type;
+
+typedef struct _ptm_context_t {
+    struct {
+        uint32_t curr_alt_isa:1;     /**< current Alt ISA flag for Tee / T32 (used if not in present packet) */
+        uint32_t curr_NS:1;          /**< current NS flag  (used if not in present packet) */
+        uint32_t curr_Hyp:1;         /**< current Hyp flag  (used if not in present packet) */
+        uint32_t updated:1;          /**< context updated */
+        uint32_t updated_c:1;        /**< updated CtxtID */
+        uint32_t updated_v:1;        /**< updated VMID */
+    };
+    uint32_t ctxtID;    /**< Context ID */
+    uint8_t VMID;       /**< VMID */
+} ptm_context_t;
+
+typedef struct _rctdl_ptm_excep {
+    rctdl_armv7_exception type; /**<  exception type. */
+    uint16_t number;    /**< exception as number */
+    struct {
+        uint32_t present:1;      /**< exception present in packet */
+    } bits;
+} rctdl_ptm_excep;
+
 
 typedef struct _rctdl_ptm_pkt
 {
-    rctdl_ptm_pkt_type type;  /**< Primary packet type. */
-    rctdl_ptm_pkt_type err_type;  /**< Basic packet type if primary type indicates error or incomplete. */
+    rctdl_ptm_pkt_type type;        /**< Primary packet type. */
 
-    rctdl_pkt_vaddr addr;
-    rctdl_pkt_byte_sz_val by_sz_val;
+    rctdl_isa curr_isa;         /**< current ISA. */
+    rctdl_isa prev_isa;         /**< previous ISA */
+
+    rctdl_pkt_vaddr addr;       /**< current address. */
+    ptm_context_t   context;    /**< current context. */
     rctdl_pkt_atom  atom;
 
-    uint32_t cycle_count;
-    uint64_t timestamp;
+    rctdl_iSync_reason i_sync_reason;   /**< reason for ISync Packet. */
+
+    uint32_t cycle_count;       /**< cycle count value associated with this packet. */
+    uint8_t cc_valid;           /**< cycle count value valid. */
+    
+    uint64_t timestamp;         /**< timestamp value. */
+    uint8_t ts_update_bits;     /**< bits of ts updated this packet. (if TS packet) */
+
+    rctdl_ptm_excep exception;  /**< exception information in packet */
+
+    rctdl_ptm_pkt_type err_type;    /**< Basic packet type if primary type indicates error or incomplete. */
 
 } rctdl_ptm_pkt;
 

@@ -37,6 +37,24 @@
     <Filter Include="docs-files">
       <UniqueIdentifier>{5ea7e02d-0667-4d2d-8c3d-039daf112edc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ptm">
+      <UniqueIdentifier>{2aa8a97b-13da-4bd1-bdb5-02f3e1cf030b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\etmv4">
+      <UniqueIdentifier>{ff9157b6-ef07-41e4-8ff4-322c50ea6665}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\etmv3">
+      <UniqueIdentifier>{0c2ba881-cc82-4567-ab59-d2363b4c3d1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\stm">
+      <UniqueIdentifier>{73a56760-b7ff-4d56-88f0-13249201081c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\i_dec">
+      <UniqueIdentifier>{cb3682ee-abbd-44c3-a175-4522d76e2d68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mem_acc">
+      <UniqueIdentifier>{eb9beab1-99c6-4eaa-88c0-893b05b2e673}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -123,21 +141,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\trc_printable_elem.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\trc_gen_elem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4d_impl.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\source\ptm\trc_pkt_proc_ptm_impl.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\rctdl.h">
       <Filter>Header Files</Filter>
@@ -262,6 +265,21 @@
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb.h">
       <Filter>Header Files\mem_acc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\trc_gen_elem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\ptm\trc_pkt_decode_ptm.h">
+      <Filter>Header Files\ptm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4d_impl.h">
+      <Filter>Source Files\etmv4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.h">
+      <Filter>Source Files\etmv4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.h">
+      <Filter>Source Files\etmv3</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -271,39 +289,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\trc_frame_deformatter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv3\trc_cmp_cfg_etmv3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_elem_etmv3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv4\trc_cmp_cfg_etmv4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4d.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4i.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\ptm\trc_pkt_elem_ptm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\ptm\trc_pkt_proc_ptm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\rctdl_dcd_tree.cpp">
@@ -321,47 +306,83 @@
     <ClCompile Include="..\..\..\source\trc_printable_elem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_file.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_bufptr.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_mapper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\i_dec\trc_idec_arminst.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\i_dec\trc_i_decode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_decode_etmv4i.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\trc_gen_elem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\stm\trc_pkt_elem_stm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\stm\trc_pkt_proc_stm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\rctdl_version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_decode_etmv3.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\source\ptm\trc_pkt_decode_ptm.cpp">
+      <Filter>Source Files\ptm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_cb.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\..\source\ptm\trc_pkt_elem_ptm.cpp">
+      <Filter>Source Files\ptm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ptm\trc_pkt_proc_ptm.cpp">
+      <Filter>Source Files\ptm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4d.cpp">
+      <Filter>Source Files\etmv4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4i.cpp">
+      <Filter>Source Files\etmv4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4.cpp">
+      <Filter>Source Files\etmv4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.cpp">
+      <Filter>Source Files\etmv4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_decode_etmv4i.cpp">
+      <Filter>Source Files\etmv4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_elem_etmv3.cpp">
+      <Filter>Source Files\etmv3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_decode_etmv3.cpp">
+      <Filter>Source Files\etmv3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv3\trc_cmp_cfg_etmv3.cpp">
+      <Filter>Source Files\etmv3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3.cpp">
+      <Filter>Source Files\etmv3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.cpp">
+      <Filter>Source Files\etmv3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv4\trc_cmp_cfg_etmv4.cpp">
+      <Filter>Source Files\etmv4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp">
+      <Filter>Source Files\ptm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\stm\trc_pkt_proc_stm.cpp">
+      <Filter>Source Files\stm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\stm\trc_pkt_elem_stm.cpp">
+      <Filter>Source Files\stm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\i_dec\trc_i_decode.cpp">
+      <Filter>Source Files\i_dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\i_dec\trc_idec_arminst.cpp">
+      <Filter>Source Files\i_dec</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_base.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\mem_acc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_mapper.cpp">
+      <Filter>Source Files\mem_acc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_bufptr.cpp">
+      <Filter>Source Files\mem_acc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_cb.cpp">
+      <Filter>Source Files\mem_acc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_file.cpp">
+      <Filter>Source Files\mem_acc</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

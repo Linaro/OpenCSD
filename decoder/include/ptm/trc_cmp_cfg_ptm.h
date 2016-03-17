@@ -88,7 +88,7 @@ public:
     const bool enaRetStack() const;  //!< return stack enabled. 
     const bool hasRetStack() const;  //!< return stack implemented.
 
-    const int  MinorRev() const;    //!< return X revision in 3.X
+    const int  MinorRev() const;    //!< return X revision in 1.X
 
     const bool hasTS() const;       //!< Timestamps implemented in trace.
     const bool enaTS() const; //!< Timestamp trace is enabled. 
@@ -151,11 +151,13 @@ inline const bool PtmConfig::enaTS() const
 
 inline const bool PtmConfig::TSPkt64() const       
 {
+    if(MinorRev() == 0) return false;
     return (bool)((reg_ccer & CCER_TS_64BIT) != 0);
 }
 
 inline const bool PtmConfig::TSBinEnc() const      
 {
+    if(MinorRev() == 0) return false;
     return (bool)((reg_ccer & CCER_TS_ENC_NAT) != 0);
 }
 

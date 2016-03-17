@@ -1,0 +1,187 @@
+/*
+ * \file       trc_pkt_decode_ptm.h
+ * \brief      Reference CoreSight Trace Decoder : PTM packet decoder.
+ * 
+ * \copyright  Copyright (c) 2016, ARM Limited. All Rights Reserved.
+ */
+
+/* 
+ * Redistribution and use in source and binary forms, with or without modification, 
+ * are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution. 
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors 
+ * may be used to endorse or promote products derived from this software without 
+ * specific prior written permission. 
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND 
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */ 
+#ifndef ARM_TRC_PKT_DECODE_PTM_H_INCLUDED
+#define ARM_TRC_PKT_DECODE_PTM_H_INCLUDED
+
+#include "trc_pkt_decode_base.h"
+#include "ptm/trc_pkt_elem_ptm.h"
+#include "ptm/trc_cmp_cfg_ptm.h"
+#include "trc_gen_elem.h"
+
+/**************** Atom handling class **************************************/
+class PtmAtoms
+{
+public:
+    PtmAtoms() {};
+    ~PtmAtoms() {};
+
+    //! initialise the atom and index values
+    void initAtomPkt(const rctdl_pkt_atom &atom, const rctdl_trc_index_t &root_index);
+    
+    const rctdl_atm_val getCurrAtomVal() const;
+    const int numAtoms() const; //!< number of atoms
+    const rctdl_trc_index_t pktIndex() const; //!< originating packet index
+
+    void clearAtom();   //!<  clear the current atom, set the next.
+    void clearAll(); //!< clear all
+
+private:
+    rctdl_pkt_atom m_atom;
+    rctdl_trc_index_t m_root_index; //!< root index for the atom packet
+};
+
+inline void PtmAtoms::initAtomPkt(const rctdl_pkt_atom &atom, const rctdl_trc_index_t &root_index)
+{
+    m_atom = atom;
+    m_root_index = root_index;
+}
+    
+inline const rctdl_atm_val PtmAtoms::getCurrAtomVal() const
+{
+    return (m_atom.En_bits & 0x1) ?  ATOM_E : ATOM_N;
+}
+
+inline const int PtmAtoms::numAtoms() const
+{
+    return m_atom.num;
+}
+
+inline const rctdl_trc_index_t PtmAtoms::pktIndex() const
+{
+    return m_root_index;
+}
+
+inline void PtmAtoms::clearAtom()
+{
+    if(m_atom.num)
+    {
+        m_atom.num--;
+        m_atom.En_bits >>=1;
+    }
+}
+
+inline void PtmAtoms::clearAll()
+{
+    m_atom.num = 0;
+}
+
+/********** Main decode class ****************************************************/
+class TrcPktDecodePtm : public TrcPktDecodeBase<PtmTrcPacket, PtmConfig>
+{
+public:
+    TrcPktDecodePtm();
+    TrcPktDecodePtm(int instIDNum);
+    virtual ~TrcPktDecodePtm();
+
+protected:
+    /* implementation packet decoding interface */
+    virtual rctdl_datapath_resp_t processPacket();
+    virtual rctdl_datapath_resp_t onEOT();
+    virtual rctdl_datapath_resp_t onReset();
+    virtual rctdl_datapath_resp_t onFlush();
+    virtual rctdl_err_t onProtocolConfig();
+    virtual const uint8_t getCoreSightTraceID() { return m_CSID; };
+
+    /* local decode methods */
+
+private:
+    void initDecoder();
+    void resetDecoder();
+
+    rctdl_datapath_resp_t decodePacket();
+    rctdl_datapath_resp_t contProcess(); 
+    rctdl_datapath_resp_t processIsync();
+    rctdl_datapath_resp_t processBranch();
+    rctdl_datapath_resp_t processWPUpdate();
+    rctdl_datapath_resp_t processAtom();
+    rctdl_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const rctdl_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
+    rctdl_datapath_resp_t processAtomRange(const rctdl_atm_val A, const char *pkt_msg,  const bool traceToAddrNext = false, const rctdl_vaddr_t nextAddrMatch = 0);
+    void checkPendingNacc(rctdl_datapath_resp_t &resp);
+
+    uint8_t m_CSID; //!< Coresight trace ID for this decoder.
+
+//** Other processor state;
+
+    // trace decode FSM
+    typedef enum {
+        NO_SYNC,        //!< pre start trace - init state or after reset or overflow, loss of sync.
+        WAIT_SYNC,      //!< waiting for sync packet.
+        WAIT_ISYNC,     //!< waiting for isync packet after 1st ASYNC.
+        DECODE_PKTS,    //!< processing input packet
+        CONT_ISYNC,     //!< continue processing isync packet after WAIT. 
+        CONT_ATOM,      //!< continue processing atom packet after WAIT.
+        CONT_WPUP,      //!< continue processing WP update packet after WAIT.
+        CONT_BRANCH,    //!< continue processing Branch packet after WAIT.
+    } processor_state_t;
+
+    processor_state_t m_curr_state;
+
+    const bool processStateIsCont() const;
+
+    // PE decode state - address and isa
+
+    //! Structure to contain the PE addr and ISA state.
+    typedef struct _ptm_pe_addr_state {
+            rctdl_isa isa;              //!< current isa.
+            rctdl_vaddr_t instr_addr;   //!< current address.
+            bool valid;     //!< address valid - false if we need an address to continue decode.
+    } ptm_pe_addr_state;
+
+    ptm_pe_addr_state m_curr_pe_state;  //!< current instruction state for PTM decode.
+    rctdl_pe_context m_pe_context;      //!< current context information
+
+    // packet decode state
+    bool m_need_isync;   //!< need context to continue
+    
+    rctdl_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
+
+    bool m_mem_nacc_pending;    //!< need to output a memory access failure packet
+    rctdl_vaddr_t m_nacc_addr;  //!< address of memory access failure
+   
+    bool m_i_sync_pe_ctxt;  //!< isync has pe context.
+
+    PtmAtoms m_atoms;           //!< atoms to process in an atom packet
+
+//** output element
+    RctdlTraceElement m_output_elem;
+};
+
+inline const bool TrcPktDecodePtm::processStateIsCont() const
+{
+    return (bool)(m_curr_state >= CONT_ISYNC);
+}
+
+#endif // ARM_TRC_PKT_DECODE_PTM_H_INCLUDED
+
+/* End of File trc_pkt_decode_ptm.h */

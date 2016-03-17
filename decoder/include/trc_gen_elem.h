@@ -95,6 +95,7 @@ inline void RctdlTraceElement::setType(const rctdl_gen_trc_elem_t type)
     last_instr_exec = 0;
     last_i_type = RCTDL_INSTR_OTHER;
     excep_ret_addr = 0;
+    exception_number = 0;
 }
 
 inline void RctdlTraceElement::init()

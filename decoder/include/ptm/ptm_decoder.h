@@ -39,6 +39,7 @@
 #include "trc_pkt_elem_ptm.h"
 #include "trc_pkt_proc_ptm.h"
 #include "trc_pkt_types_ptm.h"
+#include "trc_pkt_decode_ptm.h"
 
 #endif // ARM_PTM_DECODER_H_INCLUDED
 

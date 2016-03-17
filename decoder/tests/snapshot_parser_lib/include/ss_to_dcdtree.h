@@ -60,11 +60,17 @@ public:
     // TBD: add in filters for ID list, first ID found.
 
 private:
+    // create a decoder related to a core source (ETM, PTM)
     bool createPEDecoder(const std::string &coreName, Parser::Parsed *devSrc);
+    // protocol specific core source decoders
     bool createETMv4Decoder(const std::string &coreName, Parser::Parsed *devSrc, const bool bDataChannel = false);
     bool createETMv3Decoder(const std::string &coreName, Parser::Parsed *devSrc);
-    // TBD add etmv4d, stm, itm
+    bool createPTMDecoder(const std::string &coreName, Parser::Parsed *devSrc);
+    // TBD add etmv4d
+
+    // create a decoder related to a software trace source (ITM, STM)
     bool createSTDecoder(Parser::Parsed *devSrc);
+    // protocol specific decoders
     bool createSTMDecoder(Parser::Parsed *devSrc);
 
     typedef struct _regs_to_access {

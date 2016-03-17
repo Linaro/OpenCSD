@@ -339,6 +339,7 @@
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_mapper.h" />
     <ClInclude Include="..\..\..\include\ptm\ptm_decoder.h" />
     <ClInclude Include="..\..\..\include\ptm\trc_cmp_cfg_ptm.h" />
+    <ClInclude Include="..\..\..\include\ptm\trc_pkt_decode_ptm.h" />
     <ClInclude Include="..\..\..\include\ptm\trc_pkt_elem_ptm.h" />
     <ClInclude Include="..\..\..\include\ptm\trc_pkt_proc_ptm.h" />
     <ClInclude Include="..\..\..\include\ptm\trc_pkt_types_ptm.h" />
@@ -368,7 +369,6 @@
     <ClInclude Include="..\..\..\source\etmv4\trc_etmv4_stack_elem.h" />
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4d_impl.h" />
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.h" />
-    <ClInclude Include="..\..\..\source\ptm\trc_pkt_proc_ptm_impl.h" />
     <ClInclude Include="..\..\..\source\trc_frame_deformatter_impl.h" />
   </ItemGroup>
   <ItemGroup>
@@ -391,6 +391,7 @@
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_file.cpp" />
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_mapper.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp" />
+    <ClCompile Include="..\..\..\source\ptm\trc_pkt_decode_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_elem_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_proc_ptm.cpp" />
     <ClCompile Include="..\..\..\source\rctdl_dcd_tree.cpp" />

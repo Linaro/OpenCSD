@@ -122,15 +122,8 @@ typedef struct _etmv3_data_t {
     };
 } etmv3_data_t;
 
-typedef enum _etmv3_isync_reason_t {
-    ISYNC_PERIODIC,
-    ISYNC_TRACE_ENABLE,
-    ISYNC_OVERFLOW,
-    ISYNC_DEBUG_EXIT
-} etmv3_isync_reason_t;
-
 typedef struct _etmv3_isync_t {
-    etmv3_isync_reason_t reason;
+    rctdl_iSync_reason reason;
     struct {
         uint32_t has_cycle_count:1; /**< updated cycle count */
         uint32_t has_LSipAddress:1; /**< main address is load-store instuction, data address is overlapping instruction @ start of trace */

@@ -158,6 +158,13 @@ rctdl_err_t TrcIDecode::DecodeT32(rctdl_instr_info *instr_info)
     uint32_t branchAddr = 0;
     arm_barrier_t barrier;
 
+    // need to align the 32 bit opcode as 2 16 bit, with LS 16 as in top 16 bit of 
+    // 32 bit word - T2 routines assume 16 bit in top 16 bit of 32 bit opcode.
+    uint32_t op_temp = (instr_info->opcode >> 16) & 0xFFFF;
+    op_temp |= ((instr_info->opcode & 0xFFFF) << 16);
+    instr_info->opcode = op_temp;
+
+
     instr_info->instr_size = is_wide_thumb((uint16_t)(instr_info->opcode >> 16)) ? 4 : 2;
     instr_info->type =  RCTDL_INSTR_OTHER;  // default type
     instr_info->next_isa = instr_info->isa; // assume same ISA 
@@ -172,7 +179,7 @@ rctdl_err_t TrcIDecode::DecodeT32(rctdl_instr_info *instr_info)
     {
         inst_Thumb_branch_destination((uint32_t)instr_info->instr_addr,instr_info->opcode,&branchAddr);
         instr_info->type = RCTDL_INSTR_BR;
-        instr_info->branch_addr = (rctdl_vaddr_t)branchAddr;
+        instr_info->branch_addr = (rctdl_vaddr_t)(branchAddr & ~0x1);
         if((branchAddr & 0x1) == 0)
             instr_info->next_isa = rctdl_isa_arm;
         instr_info->is_link = inst_Thumb_is_branch_and_link(instr_info->opcode);

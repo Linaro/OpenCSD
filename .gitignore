@@ -67,5 +67,6 @@ ref_trace_decoder/tests/build/win/trc_pkt_lister/Release-dll/*
 ref_trace_decoder/tests/build/win/trc_pkt_lister/x64/Debug-dll/*
 ref_trace_decoder/tests/build/win/trc_pkt_lister/x64/Release-dll/*
 *.bak
+*.orig
 decoder/docs/html/*
 *.orig
