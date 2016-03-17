@@ -107,6 +107,9 @@ public:
     const rctdl_armv7_exception excepType() const { return exception.type; };
     const uint16_t excepNum() const { return exception.number;  };
 
+    // isync 
+    const rctdl_iSync_reason iSyncReason() const { return i_sync_reason; };
+
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const  uint32_t fmtFlags, std::string &str) const;

@@ -327,9 +327,35 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
             m_i_sync_pe_ctxt = true;
         }
         m_pe_context.security_level = m_curr_packet_in->getNS() ? rctdl_sec_nonsecure : rctdl_sec_secure;
+        
+        if(m_curr_packet_in->iSyncReason() != iSync_Periodic)
+        {
+            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_ON);
+            m_output_elem.trace_on_reason = TRACE_ON_NORMAL;
+            if(m_curr_packet_in->iSyncReason() == iSync_TraceRestartAfterOverflow)
+                m_output_elem.trace_on_reason = TRACE_ON_OVERFLOW;
+            else if(m_curr_packet_in->iSyncReason() == iSync_DebugExit)
+                m_output_elem.trace_on_reason = TRACE_ON_EX_DEBUG;
+            resp = outputTraceElement(m_output_elem);           
+        }
+        else
+        {
+            // periodic - no output
+            m_i_sync_pe_ctxt = false;
+        }
     }
     
+    if(m_i_sync_pe_ctxt && RCTDL_DATA_RESP_IS_CONT(resp))
+    {
+        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_PE_CONTEXT);
+        m_output_elem.setContext(m_pe_context);
+        resp = outputTraceElement(m_output_elem); 
+        m_i_sync_pe_ctxt = false;
+    }
 
+    // if wait and still stuff to process....
+    if(RCTDL_DATA_RESP_IS_WAIT(resp) && ( m_i_sync_pe_ctxt))
+        m_curr_state = CONT_ISYNC;
 
     return resp;
 }
