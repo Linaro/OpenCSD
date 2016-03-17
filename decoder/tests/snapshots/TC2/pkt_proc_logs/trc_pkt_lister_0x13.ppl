@@ -1,10 +1,10 @@
 Trace Packet Lister: CS Decode library testing
 -----------------------------------------------
 
-** Library Version : 0.001
+** Library Version : 0.002
 
 Test Command Line:-
-D:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\ref_trace_decoder\tests\build\win\trc_pkt_lister\..\..\..\bin\win32\dbg\trc_pkt_lister.exe   -ss_dir  ..\..\..\snapshots\TC2  -id  0x13  
+D:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\build\win\trc_pkt_lister\..\..\..\bin\win32\dbg\trc_pkt_lister.exe   -ss_dir  ..\..\..\snapshots\TC2  -id  0x13  
 
 Trace Packet Lister : reading snapshot from path ..\..\..\snapshots\TC2
 Using ETB_0 as trace source

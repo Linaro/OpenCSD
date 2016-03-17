@@ -110,6 +110,10 @@ public:
     // isync 
     const rctdl_iSync_reason iSyncReason() const { return i_sync_reason; };
 
+    // cycle count 
+    const bool hasCC() const { return (cc_valid == 1); };
+    const uint32_t getCCVal() const { return cycle_count; };
+
     // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const  uint32_t fmtFlags, std::string &str) const;

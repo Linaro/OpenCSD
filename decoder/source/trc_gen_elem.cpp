@@ -129,7 +129,7 @@ void RctdlTraceElement::toString(std::string &str) const
         default: break;
         }
         if(has_cc)
-            oss << " {CC=" << cycle_count << "]; ";
+            oss << std::dec << " [CC=" << cycle_count << "]; ";
         oss << ")";
     }
     else

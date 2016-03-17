@@ -40,11 +40,13 @@
 TrcPktDecodePtm::TrcPktDecodePtm()
     : TrcPktDecodeBase(DCD_NAME)
 {
+    initDecoder();
 }
 
 TrcPktDecodePtm::TrcPktDecodePtm(int instIDNum)
     : TrcPktDecodeBase(DCD_NAME,instIDNum)
 {
+    initDecoder();
 }
 
 TrcPktDecodePtm::~TrcPktDecodePtm()
@@ -217,6 +219,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
     case PTM_PKT_BAD_SEQUENCE:
     case PTM_PKT_RESERVED:
         m_curr_state = WAIT_SYNC;
+        m_need_isync = true;    // need context to re-start.
         m_output_elem.setType(RCTDL_GEN_TRC_ELEM_NO_SYNC);
         resp = outputTraceElement(m_output_elem);
         break;
@@ -331,7 +334,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
         }
         m_pe_context.security_level = m_curr_packet_in->getNS() ? rctdl_sec_nonsecure : rctdl_sec_secure;
         
-        if(m_curr_packet_in->iSyncReason() != iSync_Periodic)
+        if(m_need_isync || (m_curr_packet_in->iSyncReason() != iSync_Periodic))
         {
             m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_ON);
             m_output_elem.trace_on_reason = TRACE_ON_NORMAL;
@@ -339,6 +342,8 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
                 m_output_elem.trace_on_reason = TRACE_ON_OVERFLOW;
             else if(m_curr_packet_in->iSyncReason() == iSync_DebugExit)
                 m_output_elem.trace_on_reason = TRACE_ON_EX_DEBUG;
+            if(m_curr_packet_in->hasCC())
+                m_output_elem.setCycleCount(m_curr_packet_in->getCCVal());
             resp = outputTraceElement(m_output_elem);           
         }
         else
@@ -346,6 +351,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
             // periodic - no output
             m_i_sync_pe_ctxt = false;
         }
+        m_need_isync = false;   // got 1st Isync - can continue to process data.
     }
     
     if(m_i_sync_pe_ctxt && RCTDL_DATA_RESP_IS_CONT(resp))
@@ -372,6 +378,10 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processBranch()
     // initial pass - decoding packet.
     if(m_curr_state == DECODE_PKTS)
     {
+        // could be an associated cycle count
+        if(m_curr_packet_in->hasCC())
+            m_output_elem.setCycleCount(m_curr_packet_in->getCCVal());
+
         // behaviour predicated on if this is an exception packet.
         if(m_curr_packet_in->isBranchExcepPacket())
         {
@@ -524,6 +534,8 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processAtomRange(const rctdl_atm_val A, c
         m_output_elem.last_instr_exec = (A == ATOM_E) ? 1 : 0;
         m_output_elem.last_i_type = m_instr_info.type;
         m_output_elem.last_i_subtype = m_instr_info.sub_type;
+        if(m_curr_packet_in->hasCC())
+            m_output_elem.setCycleCount(m_curr_packet_in->getCCVal());
         resp = outputTraceElementIdx(m_index_curr_pkt,m_output_elem);
 
         m_curr_pe_state.instr_addr = m_instr_info.instr_addr;

@@ -101,6 +101,8 @@ protected:
     bool m_decode_init_ok;  //!< set true if all attachments in place for decode. (remove checks in main throughput paths)
     bool m_config_init_ok;  //!< set true if config set.
 
+    std::string init_err_msg;    //!< error message for init error
+
 };
 
 inline TrcPktDecodeI::TrcPktDecodeI(const char *component_name) : 
@@ -123,10 +125,16 @@ inline const bool TrcPktDecodeI::checkInit()
 {
     if(!m_decode_init_ok)
     {
-        m_decode_init_ok =  m_config_init_ok &&
-                            m_trace_elem_out.hasAttachedAndEnabled() &&
-                            m_mem_access.hasAttachedAndEnabled() &&
-                            m_instr_decode.hasAttachedAndEnabled();
+        if(!m_config_init_ok)
+            init_err_msg = "No decoder configuration information";
+        else if(!m_trace_elem_out.hasAttachedAndEnabled())
+            init_err_msg = "No element output interface attached and enabled";
+        else if(!m_mem_access.hasAttachedAndEnabled())
+            init_err_msg = "No memory access interface attached and enabled";
+        else if(!m_instr_decode.hasAttachedAndEnabled())
+            init_err_msg = "No instruction decoder interface attached and enabled";
+        else
+            m_decode_init_ok = true;
     }
     return m_decode_init_ok;
 }
@@ -206,7 +214,7 @@ template <class P, class Pc> rctdl_datapath_resp_t TrcPktDecodeBase<P, Pc>::Pack
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
     if(!checkInit())
     {
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_NOT_INIT));
+        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_NOT_INIT,init_err_msg));
         return RCTDL_RESP_FATAL_NOT_INIT;
     }
 

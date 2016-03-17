@@ -72,6 +72,7 @@ void PtmTrcPacket::ResetState()
 
     addr.valid_bits = 0;
     addr.size = VA_32BIT;
+    addr.val = 0;
 
     prev_isa = curr_isa = rctdl_isa_unknown;
 

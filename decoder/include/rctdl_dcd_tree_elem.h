@@ -154,8 +154,23 @@ public:
         TrcPktDecodeI *pDecoder = 0;
         switch(protocol) 
         {
+        case RCTDL_PROTOCOL_ETMV3:
+            //pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv3.dcd);
+            break;
         case RCTDL_PROTOCOL_ETMV4I:
             pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv4i.dcd);
+            break;
+        case RCTDL_PROTOCOL_ETMV4D:
+            //pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv4d.dcd);
+            break;
+        case RCTDL_PROTOCOL_PTM:
+            pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.ptm.dcd);
+            break;
+        case RCTDL_PROTOCOL_STM:
+            //pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.stm.dcd);
+            break;
+        case RCTDL_PROTOCOL_EXTERN:
+            pDecoder = static_cast<TrcPktDecodeI *>(decoder.extern_custom.dcd);
             break;
         }
         return pDecoder;
