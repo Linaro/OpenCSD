@@ -69,7 +69,8 @@ ETMV4OBJ=	$(BUILD_DIR)/trc_cmp_cfg_etmv4.o \
 
 PTMOBJ=		$(BUILD_DIR)/trc_cmp_cfg_ptm.o \
 			$(BUILD_DIR)/trc_pkt_elem_ptm.o \
-			$(BUILD_DIR)/trc_pkt_proc_ptm.o
+			$(BUILD_DIR)/trc_pkt_proc_ptm.o \
+			$(BUILD_DIR)/trc_pkt_decode_ptm.o
 
 IDECOBJ=	$(BUILD_DIR)/trc_i_decode.o \
 			$(BUILD_DIR)/trc_idec_arminst.o
@@ -97,11 +98,8 @@ OBJECTS=$(BUILD_DIR)/rctdl_dcd_tree.o \
 		$(ETMV4OBJ) \
 		$(IDECOBJ) \
 		$(MEMACCOBJ) \
-		$(STMOBJ)
-
-# not implmented correctly at present...
-#		$(PTMOBJ) \
-
+		$(STMOBJ) \
+		$(PTMOBJ)
 
 all: build_dir $(OBJECTS)
 	mkdir -p $(LIB_TARGET_DIR)
