@@ -61,7 +61,7 @@ typedef struct _decoder_elements
         } etmv4d;
         struct {
             TrcPktProcPtm *proc;
-            void * /*TrcPktDecodePtm **/ dcd; //** TBD
+            TrcPktDecodePtm *dcd;
         } ptm;
         struct {
             TrcPktProcStm *proc;
@@ -125,6 +125,13 @@ public:
     {
         if(protocol == RCTDL_PROTOCOL_PTM)
             return decoder.ptm.proc;
+        return 0;
+    }
+    
+    TrcPktDecodePtm *   getPtmPktDecoder() const
+    {
+        if(protocol == RCTDL_PROTOCOL_PTM)
+            return decoder.ptm.dcd;
         return 0;
     }
 

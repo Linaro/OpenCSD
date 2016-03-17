@@ -101,7 +101,10 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processPacket()
 rctdl_datapath_resp_t TrcPktDecodePtm::onEOT()
 {
     rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
-    resp = contProcess();   // complete any part processes packets
+    // shouldn't be any packets left to be processed - flush shoudl have done this.
+    // just output the end of trace marker
+    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EO_TRACE);
+    resp = outputTraceElement(m_output_elem);
     return resp;
 }
 

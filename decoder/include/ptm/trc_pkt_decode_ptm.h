@@ -139,7 +139,6 @@ private:
         WAIT_SYNC,      //!< waiting for sync packet.
         WAIT_ISYNC,     //!< waiting for isync packet after 1st ASYNC.
         DECODE_PKTS,    //!< processing input packet
-        OUTPUT_PKT,     //!< need to output any available packet.
         CONT_ISYNC,     //!< continue processing isync packet after WAIT. 
         CONT_ATOM,      //!< continue processing atom packet after WAIT.
         CONT_WPUP,      //!< continue processing WP update packet after WAIT.
@@ -178,7 +177,7 @@ private:
     RctdlTraceElement m_output_elem;
 };
 
-const bool TrcPktDecodePtm::processStateIsCont() const
+inline const bool TrcPktDecodePtm::processStateIsCont() const
 {
     return (bool)(m_curr_state >= CONT_ISYNC);
 }

@@ -444,6 +444,144 @@ bool ExpectingPPrintWaitResp(std::vector<ItemPrinter *> &printers, TrcGenericEle
     return ExpectingWaits;
 }
 
+void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &printers)
+{
+    uint8_t elemID;
+    // attach packet printers to each trace source in the tree
+    DecodeTreeElement *pElement = dcd_tree->getFirstElement(elemID);
+    while(pElement && !no_undecoded_packets)
+    {
+        if(!element_filtered(elemID))
+        {
+            switch(pElement->getProtocol())
+            {
+            case RCTDL_PROTOCOL_ETMV4I:
+                {
+                    std::ostringstream oss;
+                    PacketPrinter<EtmV4ITrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV4ITrcPacket>(elemID,&logger);
+                    if(pPrinter)
+                    {
+                        // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
+                        if(decode || pkt_mon)
+                            pElement->getEtmV4IPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                        else
+                        {
+                            pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            if(test_waits)
+                                pPrinter->setTestWaits(test_waits);
+                        }
+                        printers.push_back(pPrinter); // save printer to destroy it later
+                    }
+
+                    oss << "Trace Packet Lister : ETMv4 Instuction trace Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                    logger.LogMsg(oss.str());
+                }
+                break;
+
+            case RCTDL_PROTOCOL_ETMV3:
+                {
+                    std::ostringstream oss;
+                    PacketPrinter<EtmV3TrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV3TrcPacket>(elemID,&logger);
+                    if(pPrinter)
+                    {
+                        // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
+                        if(decode || pkt_mon)
+                            pElement->getEtmV3PktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                        else
+                        {
+                            pElement->getEtmV3PktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            if(test_waits)
+                                pPrinter->setTestWaits(test_waits);
+                        }
+                        printers.push_back(pPrinter); // save printer to destroy it later
+                    }                    
+                    oss << "Trace Packet Lister : ETMv3 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                    logger.LogMsg(oss.str());
+                }
+                break;
+
+            case RCTDL_PROTOCOL_PTM:
+                {
+                    std::ostringstream oss;
+                    PacketPrinter<PtmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<PtmTrcPacket>(elemID,&logger);
+                    if(pPrinter)
+                    {
+                        // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
+                        if(decode || pkt_mon)
+                            pElement->getPtmPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                        else
+                        {
+                            pElement->getPtmPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            if(test_waits)
+                                pPrinter->setTestWaits(test_waits);
+                        }
+                        printers.push_back(pPrinter); // save printer to destroy it later
+                    }                    
+                    oss << "Trace Packet Lister : PTM Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                    logger.LogMsg(oss.str());
+                }
+                break;
+
+
+            case RCTDL_PROTOCOL_STM:
+                {
+                    std::ostringstream oss;
+                    PacketPrinter<StmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<StmTrcPacket>(elemID,&logger);
+                    if(pPrinter)
+                    {
+                        // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
+                        if(decode || pkt_mon)
+                            pElement->getStmPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                        else
+                        {
+                            pElement->getStmPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            if(test_waits)
+                                pPrinter->setTestWaits(test_waits);
+                        }
+
+                        printers.push_back(pPrinter); // save printer to destroy it later
+                    }                    
+                    oss << "Trace Packet Lister : STM Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                    logger.LogMsg(oss.str());
+                }
+                break;
+
+            default:
+                {
+                    std::ostringstream oss;
+                    oss << "Trace Packet Lister : Unsupported Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                    logger.LogMsg(oss.str());
+                }
+                break;
+
+                // TBD : handle other protocol types.
+            }                
+        }
+        pElement = dcd_tree->getNextElement(elemID);
+    }
+
+}
+
+void ConfigureFrameDeMux(DecodeTree *dcd_tree, RawFramePrinter &framePrinter)
+{
+    // configure the frame deformatter, and attach a frame printer to the frame deformatter if needed
+    TraceFormatterFrameDecoder *pDeformatter = dcd_tree->getFrameDeformatter();
+    if(pDeformatter != 0)
+    {
+        // configuration - memory alinged buffer
+        uint32_t configFlags = RCTDL_DFRMTR_FRAME_MEM_ALIGN;
+
+        // if we want the raw frames output
+        if(outRawPacked || outRawUnpacked)
+        {
+            pDeformatter->getTrcRawFrameAttachPt()->attach(&framePrinter);
+            if(outRawPacked) configFlags |= RCTDL_DFRMTR_PACKED_RAW_OUT;
+            if(outRawUnpacked) configFlags |= RCTDL_DFRMTR_UNPACKED_RAW_OUT;
+        }
+        pDeformatter->Configure(configFlags);
+    }
+}
+
 void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name)
 {
     CreateDcdTreeFromSnapShot tree_creator;
@@ -458,139 +596,11 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
     if(tree_creator.createDecodeTree(trace_buffer_name, (decode == false)))
     {
         std::vector<ItemPrinter *> printers;
-        DecodeTreeElement *pElement;
         DecodeTree *dcd_tree = tree_creator.getDecodeTree();
-        uint8_t elemID;
-        
-        // attach packet printers to each trace source in the tree
-        pElement = dcd_tree->getFirstElement(elemID);
-        while(pElement && !no_undecoded_packets)
-        {
-            if(!element_filtered(elemID))
-            {
-                switch(pElement->getProtocol())
-                {
-                case RCTDL_PROTOCOL_ETMV4I:
-                    {
-                        std::ostringstream oss;
-                        PacketPrinter<EtmV4ITrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV4ITrcPacket>(elemID,&logger);
-                        if(pPrinter)
-                        {
-                            // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
-                            if(decode || pkt_mon)
-                                pElement->getEtmV4IPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
-                            else
-                            {
-                                pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
-                                if(test_waits)
-                                    pPrinter->setTestWaits(test_waits);
-                            }
-                            printers.push_back(pPrinter); // save printer to destroy it later
-                        }
 
-                        oss << "Trace Packet Lister : ETMv4 Instuction trace Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
-                        logger.LogMsg(oss.str());
-                    }
-                    break;
+        AttachPacketPrinters(dcd_tree, printers);
 
-                case RCTDL_PROTOCOL_ETMV3:
-                    {
-                        std::ostringstream oss;
-                        PacketPrinter<EtmV3TrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV3TrcPacket>(elemID,&logger);
-                        if(pPrinter)
-                        {
-                            // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
-                            if(decode || pkt_mon)
-                                pElement->getEtmV3PktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
-                            else
-                            {
-                                pElement->getEtmV3PktProc()->getPacketOutAttachPt()->attach(pPrinter);
-                                if(test_waits)
-                                    pPrinter->setTestWaits(test_waits);
-                            }
-                            printers.push_back(pPrinter); // save printer to destroy it later
-                        }                    
-                        oss << "Trace Packet Lister : ETMv3 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
-                        logger.LogMsg(oss.str());
-                    }
-                    break;
-
-                case RCTDL_PROTOCOL_PTM:
-                    {
-                        std::ostringstream oss;
-                        PacketPrinter<PtmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<PtmTrcPacket>(elemID,&logger);
-                        if(pPrinter)
-                        {
-                            // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
-                            if(decode || pkt_mon)
-                                pElement->getPtmPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
-                            else
-                            {
-                                pElement->getPtmPktProc()->getPacketOutAttachPt()->attach(pPrinter);
-                                if(test_waits)
-                                    pPrinter->setTestWaits(test_waits);
-                            }
-                            printers.push_back(pPrinter); // save printer to destroy it later
-                        }                    
-                        oss << "Trace Packet Lister : PTM Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
-                        logger.LogMsg(oss.str());
-                    }
-                    break;
-
-
-                case RCTDL_PROTOCOL_STM:
-                    {
-                        std::ostringstream oss;
-                        PacketPrinter<StmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<StmTrcPacket>(elemID,&logger);
-                        if(pPrinter)
-                        {
-                            // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
-                            if(decode || pkt_mon)
-                                pElement->getStmPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
-                            else
-                            {
-                                pElement->getStmPktProc()->getPacketOutAttachPt()->attach(pPrinter);
-                                if(test_waits)
-                                    pPrinter->setTestWaits(test_waits);
-                            }
-
-                            printers.push_back(pPrinter); // save printer to destroy it later
-                        }                    
-                        oss << "Trace Packet Lister : STM Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
-                        logger.LogMsg(oss.str());
-                    }
-                    break;
-
-                default:
-                    {
-                        std::ostringstream oss;
-                        oss << "Trace Packet Lister : Unsupported Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
-                        logger.LogMsg(oss.str());
-                    }
-                    break;
-
-                    // TBD : handle other protocol types.
-                }                
-            }
-            pElement = dcd_tree->getNextElement(elemID);
-        }
-
-        // configure the frame deformatter, and attach a frame printer to the frame deformatter if needed
-        TraceFormatterFrameDecoder *pDeformatter = dcd_tree->getFrameDeformatter();
-        if(pDeformatter != 0)
-        {
-            // configuration - memory alinged buffer
-            uint32_t configFlags = RCTDL_DFRMTR_FRAME_MEM_ALIGN;
-
-            // if we want the raw frames output
-            if(outRawPacked || outRawUnpacked)
-            {
-                pDeformatter->getTrcRawFrameAttachPt()->attach(&framePrinter);
-                if(outRawPacked) configFlags |= RCTDL_DFRMTR_PACKED_RAW_OUT;
-                if(outRawUnpacked) configFlags |= RCTDL_DFRMTR_UNPACKED_RAW_OUT;
-            }
-            pDeformatter->Configure(configFlags);
-        }
+        ConfigureFrameDeMux(dcd_tree, framePrinter);
 
         // if decoding set the generic element printer to the output interface on the tree.
         if(decode)
