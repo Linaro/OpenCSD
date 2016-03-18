@@ -60,7 +60,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
     <None Include="..\..\..\..\HOWTO">
       <Filter>docs-files</Filter>
     </None>
@@ -79,7 +78,9 @@
     <None Include="..\..\..\docs\test_progs.md">
       <Filter>docs-files</Filter>
     </None>
-    <None Include="..\..\..\..\HOWTO.md" />
+    <None Include="..\..\..\..\HOWTO.md">
+      <Filter>docs-files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\source\trc_frame_deformatter_impl.h">
@@ -288,19 +289,7 @@
     <ClCompile Include="..\..\..\source\trc_component.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\rctdl_error.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\trc_frame_deformatter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\rctdl_dcd_tree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\rctdl_error_logger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\rctdl_msg_logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\trc_core_arch_map.cpp">
@@ -310,9 +299,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\trc_gen_elem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\rctdl_version.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_decode_ptm.cpp">
@@ -386,6 +372,21 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_file.cpp">
       <Filter>Source Files\mem_acc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ocsd_dcd_tree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ocsd_error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ocsd_error_logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ocsd_msg_logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ocsd_version.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

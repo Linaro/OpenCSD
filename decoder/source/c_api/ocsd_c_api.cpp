@@ -1,6 +1,6 @@
 /*
- * \file       rctdl_c_api.cpp
- * \brief      Reference CoreSight Trace Decoder : "C" API libary implementation.
+ * \file       ocsd_c_api.cpp
+ * \brief      OpenCSD : "C" API libary implementation.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -690,4 +690,4 @@ void StmPktMonCBObj::RawPacketDataMon( const rctdl_datapath_op_t op,
 }
 
 
-/* End of File rctdl_c_api.cpp */
+/* End of File ocsd_c_api.cpp */

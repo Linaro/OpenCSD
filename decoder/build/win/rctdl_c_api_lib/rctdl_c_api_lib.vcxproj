@@ -297,15 +297,15 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_types.h" />
     <ClInclude Include="..\..\..\include\c_api\opencsd_c_api.h" />
-    <ClInclude Include="..\..\..\source\c_api\rctdl_c_api_obj.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\source\c_api\rctdl_c_api.cpp" />
+    <ClInclude Include="..\..\..\source\c_api\ocsd_c_api_obj.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ref_trace_decode_lib\ref_trace_decode_lib.vcxproj">
       <Project>{7f500891-cc76-405f-933f-f682bc39f923}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\source\c_api\ocsd_c_api.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

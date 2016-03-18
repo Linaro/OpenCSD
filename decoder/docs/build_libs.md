@@ -77,7 +77,7 @@ This is the `snapshot_parser_lib.lib` library, delivered to the `./tests/lib/win
 
 __Library Virtual Address Size__
 
-The rctdl_if_types.h file includes a #define that controls the size of the virtual addresses 
+The ocsd_if_types.h file includes a #define that controls the size of the virtual addresses 
 used within the library. By default this is a 64 bit `uint64_t` value.
 
 When building for ARM architectures that have only a 32 bit Virtual Address, and building on 
@@ -90,8 +90,8 @@ Including the Library in an Application
 
 The user source code includes a header according to the API to be used:-
 
-- Main C++ decoder library - include `rctdl.h`. Link to C++ library. 
-- C-API library - include `rctdl_c_api.h`. Link to C-API library.
+- Main C++ decoder library - include `opencsd.h`. Link to C++ library. 
+- C-API library - include `opencsd_c_api.h`. Link to C-API library.
 
 ### Linux build ###
 
@@ -106,7 +106,7 @@ To use the static versions use appropriate linker options.
 To link against the C-API DLL, include the .DLL name as a dependency in the application project options.
 
 To link against the C-API static library, include the library name in the dependency list, and define the macro 
-`RCTDL_USE_STATIC_C_API` in the preprocessor definitions. This ensures that the correct static bindings are declared in
+`OCSD_USE_STATIC_C_API` in the preprocessor definitions. This ensures that the correct static bindings are declared in
 the header file. Also link against the main C++ library.
 
 To link against the main C++ library include the library name in the dependency list.

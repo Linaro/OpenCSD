@@ -15,18 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\source\c_api\rctdl_c_api_obj.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\c_api\opencsd_c_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\source\c_api\ocsd_c_api_obj.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\source\c_api\rctdl_c_api.cpp">
+    <ClCompile Include="..\..\..\source\c_api\ocsd_c_api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
