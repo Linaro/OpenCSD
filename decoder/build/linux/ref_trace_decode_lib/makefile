@@ -42,18 +42,18 @@ LIB_NAME= lib$(LIB_BASE_NAME)
 
 BUILD_DIR=./$(PLAT_DIR)
 
-VPATH=	$(RCTDL_SOURCE) \
-		$(RCTDL_SOURCE)/etmv3 \
-		$(RCTDL_SOURCE)/etmv4 \
-		$(RCTDL_SOURCE)/ptm \
-		$(RCTDL_SOURCE)/i_dec \
-		$(RCTDL_SOURCE)/mem_acc \
-		$(RCTDL_SOURCE)/stm
+VPATH=	$(OCSD_SOURCE) \
+		$(OCSD_SOURCE)/etmv3 \
+		$(OCSD_SOURCE)/etmv4 \
+		$(OCSD_SOURCE)/ptm \
+		$(OCSD_SOURCE)/i_dec \
+		$(OCSD_SOURCE)/mem_acc \
+		$(OCSD_SOURCE)/stm
 
 
 CPP_INCLUDES= \
-				-I$(RCTDL_INCLUDE) \
-				-I$(RCTDL_SOURCE)
+				-I$(OCSD_INCLUDE) \
+				-I$(OCSD_SOURCE)
 
 ETMV3OBJ=	$(BUILD_DIR)/trc_cmp_cfg_etmv3.o \
 			$(BUILD_DIR)/trc_pkt_elem_etmv3.o \
@@ -84,11 +84,11 @@ MEMACCOBJ=	$(BUILD_DIR)/trc_mem_acc_mapper.o \
 STMOBJ=		$(BUILD_DIR)/trc_pkt_elem_stm.o \
 			$(BUILD_DIR)/trc_pkt_proc_stm.o
 
-OBJECTS=$(BUILD_DIR)/rctdl_dcd_tree.o \
-		$(BUILD_DIR)/rctdl_error.o \
-		$(BUILD_DIR)/rctdl_error_logger.o \
-		$(BUILD_DIR)/rctdl_msg_logger.o \
-		$(BUILD_DIR)/rctdl_version.o \
+OBJECTS=$(BUILD_DIR)/ocsd_dcd_tree.o \
+		$(BUILD_DIR)/ocsd_error.o \
+		$(BUILD_DIR)/ocsd_error_logger.o \
+		$(BUILD_DIR)/ocsd_msg_logger.o \
+		$(BUILD_DIR)/ocsd_version.o \
 		$(BUILD_DIR)/trc_component.o \
 		$(BUILD_DIR)/trc_core_arch_map.o \
 		$(BUILD_DIR)/trc_frame_deformatter.o \

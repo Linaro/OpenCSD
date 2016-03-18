@@ -43,7 +43,7 @@ LIB_NAME = libsnapshot_parser
 
 BUILD_DIR=./$(PLAT_DIR)
 
-PARSER_ROOT=$(RCTDL_TESTS)/snapshot_parser_lib
+PARSER_ROOT=$(OCSD_TESTS)/snapshot_parser_lib
 PARSER_SOURCE=$(PARSER_ROOT)/source
 PARSER_INCLUDE=$(PARSER_ROOT)/include
 
@@ -52,7 +52,7 @@ VPATH=	$(PARSER_SOURCE)
 
 CPP_INCLUDES= \
 				-I$(PARSER_INCLUDE) \
-				-I$(RCTDL_INCLUDE)
+				-I$(OCSD_INCLUDE)
 
 OBJECTS=$(BUILD_DIR)/device_info.o \
 		$(BUILD_DIR)/device_parser.o \

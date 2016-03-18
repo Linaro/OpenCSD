@@ -28,7 +28,7 @@
 # 
 #################################################################################
 
-########
+########  
 # RCTDL - test makefile for simple c api packet list test.
 #
 
@@ -41,11 +41,11 @@ PROG = simple_pkt_print_c_api
 
 BUILD_DIR=./$(PLAT_DIR)
 
-VPATH	=	 $(RCTDL_TESTS)/source 
+VPATH	=	 $(OCSD_TESTS)/source 
 
 CC_INCLUDES	=	\
-			-I$(RCTDL_TESTS)/source \
-			-I$(RCTDL_INCLUDE) 
+			-I$(OCSD_TESTS)/source \
+			-I$(OCSD_INCLUDE) 
 
 OBJECTS		=	$(BUILD_DIR)/simple_pkt_c_api.o 
 

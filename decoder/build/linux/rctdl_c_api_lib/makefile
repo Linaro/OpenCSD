@@ -43,13 +43,13 @@ SO_LIB_DEPS= -L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME)
 
 BUILD_DIR=./$(PLAT_DIR)
 
-VPATH=	$(RCTDL_SOURCE)/c_api
+VPATH=	$(OCSD_SOURCE)/c_api
 
 CPP_INCLUDES= \
-				-I$(RCTDL_INCLUDE) \
-				-I$(RCTDL_SOURCE)/c_api
+				-I$(OCSD_INCLUDE) \
+				-I$(OCSD_SOURCE)/c_api
 
-OBJECTS=$(BUILD_DIR)/rctdl_c_api.o
+OBJECTS=$(BUILD_DIR)/ocsd_c_api.o
 
 
 all: build_dir $(OBJECTS)

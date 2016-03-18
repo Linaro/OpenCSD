@@ -41,12 +41,12 @@ PROG = trc_pkt_lister
 
 BUILD_DIR=./$(PLAT_DIR)
 
-VPATH	=	 $(RCTDL_TESTS)/source 
+VPATH	=	 $(OCSD_TESTS)/source 
 
 CPP_INCLUDES	=	\
-			-I$(RCTDL_TESTS)/source \
-			-I$(RCTDL_INCLUDE) \
-			-I$(RCTDL_TESTS)/snapshot_parser_lib/include
+			-I$(OCSD_TESTS)/source \
+			-I$(OCSD_INCLUDE) \
+			-I$(OCSD_TESTS)/snapshot_parser_lib/include
 
 OBJECTS		=	$(BUILD_DIR)/trc_pkt_lister.o \
 				$(BUILD_DIR)/raw_frame_printer.o
