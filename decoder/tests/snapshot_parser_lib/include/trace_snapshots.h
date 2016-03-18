@@ -1,6 +1,6 @@
 /*
  * \file       trace_snapshots.h
- * \brief      Reference CoreSight Trace Decoder : Principal include file for snapshot read and parse library.
+ * \brief      OpenCSD : Principal include file for snapshot read and parse library.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

@@ -1,6 +1,6 @@
 /*
  * \file       trc_data_raw_in_i.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -41,7 +41,7 @@
   * 
   * @brief Interface to either trace data frame deformatter or packet processor.
   *
-  * @ingroup rctdl_interfaces
+  * @ingroup ocsd_interfaces
   *
   * Interface class to a processor that can consume raw formatted trace byte stream from a trace reader 
   * or raw source buffer into a deformatter object.
@@ -68,10 +68,10 @@ public:
      * @param *pDataBlock : pointer to data block. Null for none-data operation 
      * @param *numBytesProcessed : Pointer to count of data used by processor. Set by processor on data operation. Null for none-data operation
      *
-     * @return rctdl_datapath_resp_t  : Standard data path response code.
+     * @return ocsd_datapath_resp_t  : Standard data path response code.
      */
-    virtual rctdl_datapath_resp_t TraceDataIn( const rctdl_datapath_op_t op,
-                                                  const rctdl_trc_index_t index,
+    virtual ocsd_datapath_resp_t TraceDataIn( const ocsd_datapath_op_t op,
+                                                  const ocsd_trc_index_t index,
                                                   const uint32_t dataBlockSize,
                                                   const uint8_t *pDataBlock,
                                                   uint32_t *numBytesProcessed) = 0;

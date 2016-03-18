@@ -1,6 +1,6 @@
 /*
  * \file       trc_instr_decode_i.h
- * \brief      Reference CoreSight Trace Decoder : Interface for instruction decode.
+ * \brief      OpenCSD : Interface for instruction decode.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -37,7 +37,7 @@
 
 /*!
  * @class IInstrDecode   
- * @ingroup rctdl_interfaces
+ * @ingroup ocsd_interfaces
  * @brief Interface class to an instruction opcode decoder.
  *
  * The opcode decoder needs to be capable of limited decode required for trace
@@ -56,9 +56,9 @@ public:
      *
      * @param *instr_info : Structure to pass current opcode, and receive required decode information.
      *
-     * @return rctdl_err_t  : RCTDL_OK if successful.
+     * @return ocsd_err_t  : OCSD_OK if successful.
      */
-    virtual rctdl_err_t DecodeInstruction(rctdl_instr_info *instr_info) = 0;
+    virtual ocsd_err_t DecodeInstruction(ocsd_instr_info *instr_info) = 0;
 };
 
 #endif // ARM_TRC_INSTR_DECODE_I_H_INCLUDED

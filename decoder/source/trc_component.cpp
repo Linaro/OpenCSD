@@ -1,6 +1,6 @@
 /*
  * \file       trc_component.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -77,8 +77,8 @@ TraceComponent::~TraceComponent()
 
 void TraceComponent::Init(const std::string &name)
 {
-    m_errLogHandle = RCTDL_INVALID_HANDLE;
-    m_errVerbosity = RCTDL_ERR_SEV_NONE;
+    m_errLogHandle = OCSD_INVALID_HANDLE;
+    m_errVerbosity = OCSD_ERR_SEV_NONE;
     m_name = name;
 
     m_supported_op_flags = 0;
@@ -89,9 +89,9 @@ void TraceComponent::Init(const std::string &name)
         m_pErrAttachMon->Init(this);
 }
 
-void TraceComponent::LogError(const rctdlError &Error) 
+void TraceComponent::LogError(const ocsdError &Error) 
 {
-    if((m_errLogHandle != RCTDL_INVALID_HANDLE) && 
+    if((m_errLogHandle != OCSD_INVALID_HANDLE) && 
         isLoggingErrorLevel(Error.getErrorSeverity()))
     {
         // ensure we have not disabled the attachPt
@@ -113,7 +113,7 @@ void TraceComponent::do_attach_notify(const int num_attached)
     }
     else
     {   
-        m_errLogHandle = RCTDL_INVALID_HANDLE;
+        m_errLogHandle = OCSD_INVALID_HANDLE;
     }
 }
 
@@ -125,12 +125,12 @@ void TraceComponent::updateErrorLogLevel()
     }
 }
 
-rctdl_err_t TraceComponent::setComponentOpMode(uint32_t op_flags)
+ocsd_err_t TraceComponent::setComponentOpMode(uint32_t op_flags)
 {
     if( (~m_supported_op_flags & op_flags) != 0)
-        return RCTDL_ERR_INVALID_PARAM_VAL;
+        return OCSD_ERR_INVALID_PARAM_VAL;
     m_op_flags = op_flags;
-    return RCTDL_OK;
+    return OCSD_OK;
 }
 
 

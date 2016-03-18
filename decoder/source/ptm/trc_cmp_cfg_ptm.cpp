@@ -1,6 +1,6 @@
 /*
  * \file       trc_cmp_cfg_ptm.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

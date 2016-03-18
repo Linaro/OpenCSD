@@ -1,6 +1,6 @@
 /*!
  * \file       trc_pkt_elem_stm.h
- * \brief      Reference CoreSight Trace Decoder : STM packet class.
+ * \brief      OpenCSD : STM packet class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -46,26 +46,26 @@
  *  packet, implementing the STM protocol rules as appropriate. Maintains
  *  the intra packet state as well as updates on a per packet basis.
  * 
- *  Based on data structure rctdl_stm_pkt.
+ *  Based on data structure ocsd_stm_pkt.
  * 
  */
-class StmTrcPacket : public rctdl_stm_pkt, public trcPrintableElem
+class StmTrcPacket : public ocsd_stm_pkt, public trcPrintableElem
 {
 public:
     StmTrcPacket();
     ~StmTrcPacket() {};
     
-    StmTrcPacket &operator =(const rctdl_stm_pkt *p_pkt);
+    StmTrcPacket &operator =(const ocsd_stm_pkt *p_pkt);
 
     void initStartState();  //!< Initialise packet state at start of decoder. 
     void initNextPacket();  //!< Initialise state for next packet.
 
-    void setPacketType(const rctdl_stm_pkt_type type, const bool bMarker);
-    void updateErrType(const rctdl_stm_pkt_type err_type);
+    void setPacketType(const ocsd_stm_pkt_type type, const bool bMarker);
+    void updateErrType(const ocsd_stm_pkt_type err_type);
     void setMaster(const uint8_t master);
     void setChannel(const uint16_t channel, const bool b8Bit);
     void setTS(const uint64_t ts_val, const uint8_t updatedBits);
-    void onVersionPkt(const rctdl_stm_ts_type type);
+    void onVersionPkt(const ocsd_stm_ts_type type);
 
     void setD4Payload(const uint8_t value);
     void setD8Payload(const uint8_t value);
@@ -76,11 +76,11 @@ public:
     const bool isMarkerPkt() const;
     const bool isTSPkt() const;
     
-    const rctdl_stm_pkt_type getPktType() const;
-    const rctdl_stm_pkt_type getPktErrType() const;
+    const ocsd_stm_pkt_type getPktType() const;
+    const ocsd_stm_pkt_type getPktErrType() const;
     const uint8_t getMaster() const;
     const uint16_t getChannel() const;
-    const rctdl_stm_ts_type getTSType() const;
+    const ocsd_stm_ts_type getTSType() const;
     const uint64_t getCurrentTSVal() const;
 
     const uint8_t getD4Val() const;
@@ -97,17 +97,17 @@ public:
 
 
 private:
-    void pktTypeName(const rctdl_stm_pkt_type pkt_type, std::string &name, std::string &desc) const;
+    void pktTypeName(const ocsd_stm_pkt_type pkt_type, std::string &name, std::string &desc) const;
 };
 
-inline void StmTrcPacket::setPacketType(const rctdl_stm_pkt_type type, const bool bMarker)
+inline void StmTrcPacket::setPacketType(const ocsd_stm_pkt_type type, const bool bMarker)
 {
     this->type = type;
     if(bMarker)
         pkt_has_marker = 1;
 }
 
-inline void StmTrcPacket::updateErrType(const rctdl_stm_pkt_type err_type)
+inline void StmTrcPacket::updateErrType(const ocsd_stm_pkt_type err_type)
 {
     this->err_type = this->type;    // original type is the err type;
     this->type = err_type;          // mark main type as an error.
@@ -127,7 +127,7 @@ inline void StmTrcPacket::setChannel(const uint16_t channel, const bool b8Bit)
         this->channel = channel;
 }
 
-inline void StmTrcPacket::onVersionPkt(const rctdl_stm_ts_type type)
+inline void StmTrcPacket::onVersionPkt(const ocsd_stm_ts_type type)
 {
     this->ts_type = type;
     master = 0;
@@ -169,12 +169,12 @@ inline const bool StmTrcPacket::isTSPkt() const
     return (pkt_has_ts != 0);
 }
 
-inline const rctdl_stm_pkt_type StmTrcPacket::getPktType() const
+inline const ocsd_stm_pkt_type StmTrcPacket::getPktType() const
 {
     return type;
 }
 
-inline const rctdl_stm_pkt_type StmTrcPacket::getPktErrType() const
+inline const ocsd_stm_pkt_type StmTrcPacket::getPktErrType() const
 {
     return err_type;
 }
@@ -189,7 +189,7 @@ inline const uint16_t StmTrcPacket::getChannel() const
     return channel;
 }
 
-inline const rctdl_stm_ts_type StmTrcPacket::getTSType() const
+inline const ocsd_stm_ts_type StmTrcPacket::getTSType() const
 {
     return ts_type;
 }

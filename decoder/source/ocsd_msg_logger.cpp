@@ -1,6 +1,6 @@
 /*
- * \file       rctdl_msg_logger.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \file       ocsd_msg_logger.cpp
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -37,23 +37,23 @@
 #include <iostream>
 #include <sstream>
 
-rctdlMsgLogger::rctdlMsgLogger() :
-    m_outFlags(rctdlMsgLogger::OUT_STDOUT),
-    m_logFileName("rctdl_trace_decode.log")
+ocsdMsgLogger::ocsdMsgLogger() :
+    m_outFlags(ocsdMsgLogger::OUT_STDOUT),
+    m_logFileName("ocsd_trace_decode.log")
 {
 }
 
-rctdlMsgLogger::~rctdlMsgLogger()
+ocsdMsgLogger::~ocsdMsgLogger()
 {
     m_out_file.close();
 }
 
-void rctdlMsgLogger::setLogOpts(int logOpts)
+void ocsdMsgLogger::setLogOpts(int logOpts)
 {
-    m_outFlags = logOpts & (rctdlMsgLogger::OUT_FILE | rctdlMsgLogger::OUT_STDERR | rctdlMsgLogger::OUT_STDOUT);
+    m_outFlags = logOpts & (ocsdMsgLogger::OUT_FILE | ocsdMsgLogger::OUT_STDERR | ocsdMsgLogger::OUT_STDOUT);
 }
 
-void rctdlMsgLogger::setLogFileName(const char *fileName)
+void ocsdMsgLogger::setLogFileName(const char *fileName)
 {
     m_logFileName = fileName;
     if(m_out_file.is_open())
@@ -61,7 +61,7 @@ void rctdlMsgLogger::setLogFileName(const char *fileName)
 }
 
 
-void rctdlMsgLogger::LogMsg(const std::string &msg)
+void ocsdMsgLogger::LogMsg(const std::string &msg)
 {
     if(m_outFlags & OUT_STDOUT)
     {
@@ -86,9 +86,9 @@ void rctdlMsgLogger::LogMsg(const std::string &msg)
     }
 }
 
-const bool rctdlMsgLogger::isLogging() const
+const bool ocsdMsgLogger::isLogging() const
 {
-    return (bool)((m_outFlags & (rctdlMsgLogger::OUT_FILE | rctdlMsgLogger::OUT_STDERR | rctdlMsgLogger::OUT_STDOUT)) != 0);
+    return (bool)((m_outFlags & (ocsdMsgLogger::OUT_FILE | ocsdMsgLogger::OUT_STDERR | ocsdMsgLogger::OUT_STDOUT)) != 0);
 }
 
-/* End of File rctdl_msg_logger.cpp */
+/* End of File ocsd_msg_logger.cpp */

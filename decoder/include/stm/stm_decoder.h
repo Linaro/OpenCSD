@@ -1,6 +1,6 @@
 /*
  * \file       stm_decoder.h
- * \brief      Reference CoreSight Trace Decoder : STM decoder
+ * \brief      OpenCSD : STM decoder
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

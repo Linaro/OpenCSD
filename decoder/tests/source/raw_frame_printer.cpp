@@ -1,6 +1,6 @@
 /*
  * \file       raw_frame_printer.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -39,15 +39,15 @@
 #include "raw_frame_printer.h"
 
 
-rctdl_err_t RawFramePrinter::TraceRawFrameIn(  const rctdl_datapath_op_t op, 
-                                                const rctdl_trc_index_t index, 
-                                                const rctdl_rawframe_elem_t frame_element, 
+ocsd_err_t RawFramePrinter::TraceRawFrameIn(  const ocsd_datapath_op_t op, 
+                                                const ocsd_trc_index_t index, 
+                                                const ocsd_rawframe_elem_t frame_element, 
                                                 const int dataBlockSize, 
                                                 const uint8_t *pDataBlock,
                                                 const uint8_t traceID)
 {
 
-    if(op == RCTDL_OP_DATA) // only interested in actual frame data.
+    if(op == OCSD_OP_DATA) // only interested in actual frame data.
     {
         std::string strData;
         std::ostringstream oss;
@@ -57,10 +57,10 @@ rctdl_err_t RawFramePrinter::TraceRawFrameIn(  const rctdl_datapath_op_t op,
         oss << "Frame Data; Index" << std::setw(7) << index << "; ";
         switch(frame_element) 
         {
-        case RCTDL_FRM_PACKED: oss << std::setw(15) << "RAW_PACKED; "; break;
-        case RCTDL_FRM_HSYNC:  oss << std::setw(15) << "HSYNC; "; break;
-        case RCTDL_FRM_FSYNC:  oss << std::setw(15)  << "FSYNC; "; break;  
-        case RCTDL_FRM_ID_DATA: oss << std::setw(10) << "ID_DATA[0x" << std::hex << std::setw(2) << std::setfill('0') << (uint16_t)traceID << "]; "; break;
+        case OCSD_FRM_PACKED: oss << std::setw(15) << "RAW_PACKED; "; break;
+        case OCSD_FRM_HSYNC:  oss << std::setw(15) << "HSYNC; "; break;
+        case OCSD_FRM_FSYNC:  oss << std::setw(15)  << "FSYNC; "; break;  
+        case OCSD_FRM_ID_DATA: oss << std::setw(10) << "ID_DATA[0x" << std::hex << std::setw(2) << std::setfill('0') << (uint16_t)traceID << "]; "; break;
         default: oss << std::setw(15) << "UNKNOWN; "; break;
         }
 
@@ -72,7 +72,7 @@ rctdl_err_t RawFramePrinter::TraceRawFrameIn(  const rctdl_datapath_op_t op,
         oss << std::endl;
         itemPrintLine(oss.str());
     }
-    return RCTDL_OK;
+    return OCSD_OK;
 }
 
 void RawFramePrinter::createDataString(const int dataSize, const uint8_t *pData, int bytesPerLine, std::string &dataStr)

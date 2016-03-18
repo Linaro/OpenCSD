@@ -1,6 +1,6 @@
 /*
  * \file       ss_key_value_names.h
- * \brief      Reference CoreSight Trace Decoder : Names and Value Strings needed to interpret snapshot .ini data
+ * \brief      OpenCSD : Names and Value Strings needed to interpret snapshot .ini data
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

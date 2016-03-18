@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_lister.cpp
- * \brief      Reference CoreSight Trace Decoder : Trace Packet Lister Test program
+ * \brief      OpenCSD : Trace Packet Lister Test program
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -50,7 +50,7 @@
 #include "gen_elem_printer.h"
 
 static bool process_cmd_line_opts( int argc, char* argv[]);
-static void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name);
+static void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name);
 static bool process_cmd_line_logger_opts(int argc, char* argv[]);
 static void log_cmd_line_opts(int argc, char* argv[]);
 
@@ -65,8 +65,8 @@ static std::string source_buffer_name = "";    // source name - used if more tha
 static bool all_source_ids = true;      // output all IDs in source.
 static std::vector<uint8_t> id_list;    // output specific IDs in source
 
-static rctdlMsgLogger logger;
-static int logOpts = rctdlMsgLogger::OUT_STDOUT | rctdlMsgLogger::OUT_FILE;
+static ocsdMsgLogger logger;
+static int logOpts = ocsdMsgLogger::OUT_STDOUT | ocsdMsgLogger::OUT_FILE;
 static std::string logfileName = "trc_pkt_lister.ppl";
 static bool outRawPacked = false;
 static bool outRawUnpacked = false;
@@ -91,13 +91,13 @@ int main(int argc, char* argv[])
 
     moss << "Trace Packet Lister: CS Decode library testing\n";
     moss << "-----------------------------------------------\n\n";
-    moss << "** Library Version : " << rctdlVersion::vers_str() << "\n\n";
+    moss << "** Library Version : " << ocsdVersion::vers_str() << "\n\n";
     logger.LogMsg(moss.str());
 
     log_cmd_line_opts(argc,argv);
 
-    rctdlDefaultErrorLogger err_log;
-    err_log.initErrorLogger(RCTDL_ERR_SEV_INFO);
+    ocsdDefaultErrorLogger err_log;
+    err_log.initErrorLogger(OCSD_ERR_SEV_INFO);
     err_log.setOutputLogger(&logger);
 
     if(!process_cmd_line_opts(argc, argv))
@@ -231,7 +231,7 @@ bool process_cmd_line_logger_opts(int argc, char* argv[])
 {
     bool badLoggerOpts = false;
     bool bChangingOptFlags = false;
-    int newlogOpts = rctdlMsgLogger::OUT_NONE;
+    int newlogOpts = ocsdMsgLogger::OUT_NONE;
     std::string opt;
     if(argc > 1)
     {
@@ -242,17 +242,17 @@ bool process_cmd_line_logger_opts(int argc, char* argv[])
             opt = argv[optIdx];
             if(opt == "-logstdout")
             {
-                newlogOpts |= rctdlMsgLogger::OUT_STDOUT;
+                newlogOpts |= ocsdMsgLogger::OUT_STDOUT;
                 bChangingOptFlags = true;
             }
             else if(opt == "-logstderr")
             {
-                newlogOpts |= rctdlMsgLogger::OUT_STDERR;
+                newlogOpts |= ocsdMsgLogger::OUT_STDERR;
                 bChangingOptFlags = true;
             }
             else if(opt == "-logfile")
             {
-                newlogOpts |= rctdlMsgLogger::OUT_FILE;
+                newlogOpts |= ocsdMsgLogger::OUT_FILE;
                 bChangingOptFlags = true;
             }
             else if(opt == "-logfilename")
@@ -262,7 +262,7 @@ bool process_cmd_line_logger_opts(int argc, char* argv[])
                 if(options_to_process)
                 {
                     logfileName = argv[optIdx];
-                    newlogOpts |= rctdlMsgLogger::OUT_FILE;
+                    newlogOpts |= ocsdMsgLogger::OUT_FILE;
                     bChangingOptFlags = true;
                 }
                 else
@@ -455,7 +455,7 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
         {
             switch(pElement->getProtocol())
             {
-            case RCTDL_PROTOCOL_ETMV4I:
+            case OCSD_PROTOCOL_ETMV4I:
                 {
                     std::ostringstream oss;
                     PacketPrinter<EtmV4ITrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV4ITrcPacket>(elemID,&logger);
@@ -478,7 +478,7 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                 }
                 break;
 
-            case RCTDL_PROTOCOL_ETMV3:
+            case OCSD_PROTOCOL_ETMV3:
                 {
                     std::ostringstream oss;
                     PacketPrinter<EtmV3TrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV3TrcPacket>(elemID,&logger);
@@ -500,7 +500,7 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                 }
                 break;
 
-            case RCTDL_PROTOCOL_PTM:
+            case OCSD_PROTOCOL_PTM:
                 {
                     std::ostringstream oss;
                     PacketPrinter<PtmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<PtmTrcPacket>(elemID,&logger);
@@ -523,7 +523,7 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                 break;
 
 
-            case RCTDL_PROTOCOL_STM:
+            case OCSD_PROTOCOL_STM:
                 {
                     std::ostringstream oss;
                     PacketPrinter<StmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<StmTrcPacket>(elemID,&logger);
@@ -569,20 +569,20 @@ void ConfigureFrameDeMux(DecodeTree *dcd_tree, RawFramePrinter &framePrinter)
     if(pDeformatter != 0)
     {
         // configuration - memory alinged buffer
-        uint32_t configFlags = RCTDL_DFRMTR_FRAME_MEM_ALIGN;
+        uint32_t configFlags = OCSD_DFRMTR_FRAME_MEM_ALIGN;
 
         // if we want the raw frames output
         if(outRawPacked || outRawUnpacked)
         {
             pDeformatter->getTrcRawFrameAttachPt()->attach(&framePrinter);
-            if(outRawPacked) configFlags |= RCTDL_DFRMTR_PACKED_RAW_OUT;
-            if(outRawUnpacked) configFlags |= RCTDL_DFRMTR_UNPACKED_RAW_OUT;
+            if(outRawPacked) configFlags |= OCSD_DFRMTR_PACKED_RAW_OUT;
+            if(outRawUnpacked) configFlags |= OCSD_DFRMTR_UNPACKED_RAW_OUT;
         }
         pDeformatter->Configure(configFlags);
     }
 }
 
-void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name)
+void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name)
 {
     CreateDcdTreeFromSnapShot tree_creator;
     RawFramePrinter framePrinter;
@@ -630,13 +630,13 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
             in.open(tree_creator.getBufferFileName(),std::ifstream::in | std::ifstream::binary);
             if(in.is_open())
             {
-                rctdl_datapath_resp_t dataPathResp = RCTDL_RESP_CONT;
+                ocsd_datapath_resp_t dataPathResp = OCSD_RESP_CONT;
                 static const int bufferSize = 1024;
                 uint8_t trace_buffer[bufferSize];   // temporary buffer to load blocks of data from the file
                 uint32_t trace_index = 0;           // index into the overall trace buffer (file).
 
                 // process the file, a buffer load at a time
-                while(!in.eof() && !RCTDL_DATA_RESP_IS_FATAL(dataPathResp))
+                while(!in.eof() && !OCSD_DATA_RESP_IS_FATAL(dataPathResp))
                 {
                     in.read((char *)&trace_buffer[0],bufferSize);   // load a block of data into the buffer
 
@@ -645,12 +645,12 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                     uint32_t nUsedThisTime = 0;
 
                     // process the current buffer load until buffer done, or fatal error occurs
-                    while((nBuffProcessed < nBuffRead) && !RCTDL_DATA_RESP_IS_FATAL(dataPathResp))
+                    while((nBuffProcessed < nBuffRead) && !OCSD_DATA_RESP_IS_FATAL(dataPathResp))
                     {
-                        if(RCTDL_DATA_RESP_IS_CONT(dataPathResp))
+                        if(OCSD_DATA_RESP_IS_CONT(dataPathResp))
                         {
                             dataPathResp = dcd_tree->TraceDataIn(
-                                RCTDL_OP_DATA,
+                                OCSD_OP_DATA,
                                 trace_index,
                                 (uint32_t)(nBuffRead - nBuffProcessed),
                                 &(trace_buffer[0])+nBuffProcessed,
@@ -662,7 +662,7 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                             // test printers can inject _WAIT responses - see if we are expecting one...
                             if(ExpectingPPrintWaitResp(printers,genElemPrinter))
                             {
-                                if(RCTDL_DATA_RESP_IS_CONT(dataPathResp))
+                                if(OCSD_DATA_RESP_IS_CONT(dataPathResp))
                                 {
                                     // not wait or fatal - log a warning here.
                                     std::ostringstream oss;
@@ -678,26 +678,26 @@ void ListTracePackets(rctdlDefaultErrorLogger &err_logger, SnapShotReader &reade
                                 genElemPrinter.ackWait();
 
                             // dataPathResp not continue or fatal so must be wait...
-                            dataPathResp = dcd_tree->TraceDataIn(RCTDL_OP_FLUSH,0,0,0,0);
+                            dataPathResp = dcd_tree->TraceDataIn(OCSD_OP_FLUSH,0,0,0,0);
                         }
                     }
                 }
 
                 // fatal error - no futher processing
-                if(RCTDL_DATA_RESP_IS_FATAL(dataPathResp))
+                if(OCSD_DATA_RESP_IS_FATAL(dataPathResp))
                 {
                     std::ostringstream oss;
                     oss << "Trace Packet Lister : Data Path fatal error\n";
                     logger.LogMsg(oss.str());
-                    rctdlError *perr = err_logger.GetLastError();
+                    ocsdError *perr = err_logger.GetLastError();
                     if(perr != 0)
-                        logger.LogMsg(rctdlError::getErrorString(perr));
+                        logger.LogMsg(ocsdError::getErrorString(perr));
 
                 }
                 else
                 {
                     // mark end of trace into the data path
-                    dcd_tree->TraceDataIn(RCTDL_OP_EOT,0,0,0,0);
+                    dcd_tree->TraceDataIn(OCSD_OP_EOT,0,0,0,0);
                 }
 
                 // close the input file.

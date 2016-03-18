@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_etmv3_impl.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -51,16 +51,16 @@ public:
 
     void Initialise(TrcPktProcEtmV3 *p_interface);
 
-    rctdl_err_t Configure(const EtmV3Config *p_config);
+    ocsd_err_t Configure(const EtmV3Config *p_config);
 
 
-    rctdl_datapath_resp_t processData(  const rctdl_trc_index_t index,
+    ocsd_datapath_resp_t processData(  const ocsd_trc_index_t index,
                                         const uint32_t dataBlockSize,
                                         const uint8_t *pDataBlock,
                                         uint32_t *numBytesProcessed);
-    rctdl_datapath_resp_t onEOT();
-    rctdl_datapath_resp_t onReset();
-    rctdl_datapath_resp_t onFlush();
+    ocsd_datapath_resp_t onEOT();
+    ocsd_datapath_resp_t onReset();
+    ocsd_datapath_resp_t onFlush();
     const bool isBadPacket() const;
 
 protected:
@@ -81,8 +81,8 @@ protected:
     // byte processing
 
     uint32_t waitForSync(const uint32_t dataBlockSize, const uint8_t *pDataBlock);  //!< look for sync, return none-sync bytes processed.
-    rctdl_err_t processHeaderByte(uint8_t by);
-    rctdl_err_t processPayloadByte(uint8_t by);
+    ocsd_err_t processHeaderByte(uint8_t by);
+    ocsd_err_t processPayloadByte(uint8_t by);
 
     // packet handling - main routines
     void OnBranchAddress();
@@ -97,11 +97,11 @@ protected:
     uint32_t extractBrAddrPkt(int &nBitsOut);
     void extractExceptionData();
     void checkPktLimits();
-    void setBytesPartPkt(const int numBytes, const process_state nextState, const rctdl_etmv3_pkt_type nextType); // set first n bytes from current packet to be sent via alt packet.
+    void setBytesPartPkt(const int numBytes, const process_state nextState, const ocsd_etmv3_pkt_type nextType); // set first n bytes from current packet to be sent via alt packet.
 
     // packet output
     void SendPacket();  // mark state for packet output
-    rctdl_datapath_resp_t outputPacket();   // output a packet
+    ocsd_datapath_resp_t outputPacket();   // output a packet
 
     // bad packets 
     void throwMalformedPacketErr(const char *pszErrMsg);
@@ -116,7 +116,7 @@ protected:
     std::vector<uint8_t> m_partPktData;   // raw data when we need to split a packet. 
     bool m_bSendPartPkt;                  // mark the part packet as the one we send.
     process_state m_post_part_pkt_state;  // state to set after part packet set
-    rctdl_etmv3_pkt_type m_post_part_pkt_type;  // reset the packet type.
+    ocsd_etmv3_pkt_type m_post_part_pkt_type;  // reset the packet type.
 
     // process state
     bool            m_bStreamSync;          //!< true if we have synced this stream
@@ -131,8 +131,8 @@ protected:
 	bool m_bExpectingDataAddress;
 	bool m_bFoundDataAddress;
 
-    rctdl_trc_index_t m_packet_index;   // index of the start of the current packet
-    rctdl_trc_index_t m_packet_curr_byte_index; // index of the current byte.
+    ocsd_trc_index_t m_packet_index;   // index of the start of the current packet
+    ocsd_trc_index_t m_packet_curr_byte_index; // index of the current byte.
 
     bool m_isInit;
     TrcPktProcEtmV3 *m_interface;       /**< The interface to the other decode components */
@@ -150,17 +150,17 @@ inline void EtmV3PktProcImpl::SendPacket()
 
 inline void EtmV3PktProcImpl::throwMalformedPacketErr(const char *pszErrMsg)
 {
-    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,m_packet_index,m_chanIDCopy,pszErrMsg);
+    throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_PACKET_SEQ,m_packet_index,m_chanIDCopy,pszErrMsg);
 }
 
 inline void EtmV3PktProcImpl::throwPacketHeaderErr(const char *pszErrMsg)
 {
-    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PCKT_HDR,m_packet_index,m_chanIDCopy,pszErrMsg);
+    throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_INVALID_PCKT_HDR,m_packet_index,m_chanIDCopy,pszErrMsg);
 }
 
 inline void EtmV3PktProcImpl::throwUnsupportedErr(const char *pszErrMsg)
 {
-    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,m_packet_index,m_chanIDCopy,pszErrMsg);
+    throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,m_packet_index,m_chanIDCopy,pszErrMsg);
 }
 
 

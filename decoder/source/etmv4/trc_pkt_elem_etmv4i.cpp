@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_elem_etmv4i.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -160,7 +160,7 @@ void EtmV4ITrcPacket::toStringFmt(const uint32_t fmtFlags, std::string &str) con
     toString(str);  // TBD add in formatted response.
 }
 
-const char *EtmV4ITrcPacket::packetTypeName(const rctdl_etmv4_i_pkt_type type, const char **ppDesc) const
+const char *EtmV4ITrcPacket::packetTypeName(const ocsd_etmv4_i_pkt_type type, const char **ppDesc) const
 {
     const char *pName = "I_RESERVED";
     const char *pDesc = "Reserved Packet Header";
@@ -528,9 +528,9 @@ void EtmV4ITrcPacket::exceptionInfo(std::string &valStr) const
     valStr = oss.str();
 }
 
-EtmV4ITrcPacket &EtmV4ITrcPacket::operator =(const rctdl_etmv4_i_pkt* p_pkt)
+EtmV4ITrcPacket &EtmV4ITrcPacket::operator =(const ocsd_etmv4_i_pkt* p_pkt)
 {
-    *dynamic_cast<rctdl_etmv4_i_pkt *>(this) = *p_pkt;
+    *dynamic_cast<ocsd_etmv4_i_pkt *>(this) = *p_pkt;
     return *this;        
 }
 

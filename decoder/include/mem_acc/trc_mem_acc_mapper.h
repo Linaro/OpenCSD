@@ -1,6 +1,6 @@
 /*
  * \file       trc_mem_acc_mapper.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -54,26 +54,26 @@ public:
     virtual ~TrcMemAccMapper();
 
 // decoder memory access interface
-    virtual rctdl_err_t ReadTargetMemory(   const rctdl_vaddr_t address, 
+    virtual ocsd_err_t ReadTargetMemory(   const ocsd_vaddr_t address, 
                                             const uint8_t cs_trace_id, 
-                                            const rctdl_mem_space_acc_t mem_space, 
+                                            const ocsd_mem_space_acc_t mem_space, 
                                             uint32_t *num_bytes, 
                                             uint8_t *p_buffer);
 
 // mapper memory area configuration interface
 
     // add an accessor to this map
-    virtual rctdl_err_t AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id) = 0;
+    virtual ocsd_err_t AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id) = 0;
 
     // remove a specific accessor
-    virtual rctdl_err_t RemoveAccessor(const TrcMemAccessorBase *p_accessor) = 0;
+    virtual ocsd_err_t RemoveAccessor(const TrcMemAccessorBase *p_accessor) = 0;
 
 
     // clear all attached accessors from the map
     void RemoveAllAccessors();
 
     // remove a single accessor based on address.
-    rctdl_err_t RemoveAccessorByAddress(const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id = 0);
+    ocsd_err_t RemoveAccessorByAddress(const ocsd_vaddr_t st_address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id = 0);
     
     // set the error log.
     void setErrorLog(ITraceErrorLog *err_log_i) { m_err_log = err_log_i;  };
@@ -82,8 +82,8 @@ public:
     virtual void logMappedRanges() = 0;
 
 protected:
-    virtual bool findAccessor(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id) = 0;     // set m_acc_curr if found valid range, leave unchanged if not.
-    virtual bool readFromCurrent(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id) = 0;
+    virtual bool findAccessor(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id) = 0;     // set m_acc_curr if found valid range, leave unchanged if not.
+    virtual bool readFromCurrent(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id) = 0;
     virtual TrcMemAccessorBase *getFirstAccessor() = 0;
     virtual TrcMemAccessorBase *getNextAccessor() = 0;
     virtual void clearAccessorList() = 0;
@@ -106,18 +106,18 @@ public:
     virtual ~TrcMemAccMapGlobalSpace();
 
     // mapper creation interface - prevent overlaps
-    virtual rctdl_err_t AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id);
+    virtual ocsd_err_t AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id);
 
     // print out the ranges in this mapper.
     virtual void logMappedRanges();
 
 protected:
-    virtual bool findAccessor(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id); 
-    virtual bool readFromCurrent(const rctdl_vaddr_t address,const rctdl_mem_space_acc_t mem_space,  const uint8_t cs_trace_id);    
+    virtual bool findAccessor(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id); 
+    virtual bool readFromCurrent(const ocsd_vaddr_t address,const ocsd_mem_space_acc_t mem_space,  const uint8_t cs_trace_id);    
     virtual TrcMemAccessorBase *getFirstAccessor();
     virtual TrcMemAccessorBase *getNextAccessor();
     virtual void clearAccessorList();
-    virtual rctdl_err_t RemoveAccessor(const TrcMemAccessorBase *p_accessor);
+    virtual ocsd_err_t RemoveAccessor(const TrcMemAccessorBase *p_accessor);
 
     std::vector<TrcMemAccessorBase *> m_acc_global;
     std::vector<TrcMemAccessorBase *>::iterator m_acc_it;

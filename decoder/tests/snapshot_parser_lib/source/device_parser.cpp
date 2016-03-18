@@ -1,6 +1,6 @@
 /*
  * \file       device_parser.cpp
- * \brief      Reference CoreSight Trace Decoder : Snapshot Parser Library
+ * \brief      OpenCSD : Snapshot Parser Library
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -91,7 +91,7 @@ uint32_t ModernSnapshotParser::getUniqueDeviceID(std::string &rawName)
             // didn't throw means already in list, so bad candidate
             candidate++;
         }
-        catch (rctdlError & /*e*/)
+        catch (ocsdError & /*e*/)
         {
             // threw, so unique ID, so this is good, leave loop
             break;
@@ -120,7 +120,7 @@ ModernSnapshotParser::DevPtr ModernSnapshotParser::getDevice(int id)
     {
         std::ostringstream ost;
         ost << "Unknown device:" << id;
-        throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE, ost.str());
+        throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE, ost.str());
     }
     return it->second;
 }

@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_elem_etmv4d.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -46,7 +46,7 @@
  *  This class represents a single ETMv4 instruction trace packet, along with intra packet state.
  * 
  */
-class EtmV4DTrcPacket : public rctdl_etmv4_d_pkt, trcPrintableElem
+class EtmV4DTrcPacket : public ocsd_etmv4_d_pkt, trcPrintableElem
 {
 public:
     EtmV4DTrcPacket();

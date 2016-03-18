@@ -1,6 +1,6 @@
 /*!
  * \file       trc_error_log_i.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -39,12 +39,12 @@
 #include "ocsd_if_types.h"
 #include <string>
 
-class rctdlError;
+class ocsdError;
 
 /*!
  * @class ITraceErrorLog 
  * @brief Error logging interface. 
- * @ingroup rctdl_interfaces
+ * @ingroup ocsd_interfaces
  * 
  *  This class provides a standard interface to the decoder error logger for all trace decode and 
  *  reader components.
@@ -66,15 +66,15 @@ public:
      *
      * @return virtual const  : Handle associated with the component.
      */
-    virtual const rctdl_hndl_err_log_t RegisterErrorSource(const std::string &component_name) = 0;
+    virtual const ocsd_hndl_err_log_t RegisterErrorSource(const std::string &component_name) = 0;
 
     /*!
-     *  Return the verbosity level of the logger. Errors of the returned rctdl_err_severity_t severity 
+     *  Return the verbosity level of the logger. Errors of the returned ocsd_err_severity_t severity 
      *  or lower will be logged, others are ignored.
      *
-     * @return rctdl_err_severity_t  : Current logging severity level.
+     * @return ocsd_err_severity_t  : Current logging severity level.
      */
-    virtual const rctdl_err_severity_t GetErrorLogVerbosity() const = 0;
+    virtual const ocsd_err_severity_t GetErrorLogVerbosity() const = 0;
 
     /*!
      * Log an error. 
@@ -86,7 +86,7 @@ public:
      * @param handle : Component handle or standard generic handle
      * @param *Error : Pointer to an error object.
      */
-    virtual void LogError(const rctdl_hndl_err_log_t handle, const rctdlError *Error) = 0;
+    virtual void LogError(const ocsd_hndl_err_log_t handle, const ocsdError *Error) = 0;
 
     /*!
      * Log a general message. Associated with component or use generic handle.
@@ -96,15 +96,15 @@ public:
      * @param filter_level : Verbosity filter.
      * @param msg    : Pointer to an error object.
      */
-    virtual void LogMessage(const rctdl_hndl_err_log_t handle, const rctdl_err_severity_t filter_level, const std::string &msg ) = 0;
+    virtual void LogMessage(const ocsd_hndl_err_log_t handle, const ocsd_err_severity_t filter_level, const std::string &msg ) = 0;
 
     /*!
      * Get a pointer to the last logged error. 
      * Returns 0 if no errors have been logged.
      *
-     * @return rctdlError *: last error pointer.
+     * @return ocsdError *: last error pointer.
      */
-    virtual rctdlError *GetLastError() = 0;
+    virtual ocsdError *GetLastError() = 0;
 
     /*!
      * Get the last error associated with the given Trace source channel ID.
@@ -112,9 +112,9 @@ public:
      *
      * @param chan_id : ID.
      *
-     * @return rctdlError *: last error pointer for ID or 0.
+     * @return ocsdError *: last error pointer for ID or 0.
      */
-    virtual rctdlError *GetLastIDError(const uint8_t chan_id) = 0;
+    virtual ocsdError *GetLastIDError(const uint8_t chan_id) = 0;
 
 
     enum generic_handles {

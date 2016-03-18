@@ -1,6 +1,6 @@
 /*
  * \file       device_parser.h
- * \brief      Reference CoreSight Trace Decoder : Snapshot parser library
+ * \brief      OpenCSD : Snapshot parser library
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

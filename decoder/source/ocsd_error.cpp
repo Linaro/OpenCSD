@@ -1,6 +1,6 @@
 /*
- * \file       rctdl_error.cpp
- * \brief      Reference CoreSight Trace Decoder : Library error class.
+ * \file       ocsd_error.cpp
+ * \brief      OpenCSD : Library error class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -39,70 +39,70 @@
 
 static const char *s_errorCodeDescs[][2] = {
     /* general return errors */
-    {"RCTDL_OK", "No Error."},
-    {"RCTDL_ERR_FAIL","General failure."},
-    {"RCTDL_ERR_MEM","Internal memory allocation error."},
-    {"RCTDL_ERR_NOT_INIT","Component not initialised."},
-    {"RCTDL_ERR_INVALID_ID","Invalid CoreSight Trace Source ID."},
-    {"RCTDL_ERR_BAD_HANDLE","Invalid handle passed to component."},
-    {"RCTDL_ERR_INVALID_PARAM_VAL","Invalid value parameter passed to component."},
-    {"RCTDL_ERR_FILE_ERROR","File access error"},
-    {"RCTDL_ERR_NO_PROTOCOL","Trace protocol unsupported"},
+    {"OCSD_OK", "No Error."},
+    {"OCSD_ERR_FAIL","General failure."},
+    {"OCSD_ERR_MEM","Internal memory allocation error."},
+    {"OCSD_ERR_NOT_INIT","Component not initialised."},
+    {"OCSD_ERR_INVALID_ID","Invalid CoreSight Trace Source ID."},
+    {"OCSD_ERR_BAD_HANDLE","Invalid handle passed to component."},
+    {"OCSD_ERR_INVALID_PARAM_VAL","Invalid value parameter passed to component."},
+    {"OCSD_ERR_FILE_ERROR","File access error"},
+    {"OCSD_ERR_NO_PROTOCOL","Trace protocol unsupported"},
     /* attachment point errors */
-    {"RCTDL_ERR_ATTACH_TOO_MANY","Cannot attach - attach device limit reached."},
-    {"RCTDL_ERR_ATTACH_INVALID_PARAM"," Cannot attach - invalid parameter."},
-    {"RCTDL_ERR_ATTACH_COMP_NOT_FOUND","Cannot detach - component not found."},
+    {"OCSD_ERR_ATTACH_TOO_MANY","Cannot attach - attach device limit reached."},
+    {"OCSD_ERR_ATTACH_INVALID_PARAM"," Cannot attach - invalid parameter."},
+    {"OCSD_ERR_ATTACH_COMP_NOT_FOUND","Cannot detach - component not found."},
     /* source reader errors */
-    {"RCTDL_ERR_RDR_FILE_NOT_FOUND","source reader - file not found."},
-    {"RCTDL_ERR_RDR_INVALID_INIT",  "source reader - invalid initialisation parameter."},
-    {"RCTDL_ERR_RDR_NO_DECODER", "source reader - not trace decoder set."},
+    {"OCSD_ERR_RDR_FILE_NOT_FOUND","source reader - file not found."},
+    {"OCSD_ERR_RDR_INVALID_INIT",  "source reader - invalid initialisation parameter."},
+    {"OCSD_ERR_RDR_NO_DECODER", "source reader - not trace decoder set."},
     /* data path errors */
-    {"RCTDL_ERR_DATA_DECODE_FATAL", "A decoder in the data path has returned a fatal error."},
+    {"OCSD_ERR_DATA_DECODE_FATAL", "A decoder in the data path has returned a fatal error."},
     /* frame deformatter errors */
-    {"RCTDL_ERR_DFMTR_NOTCONTTRACE", "Trace input to deformatter none-continuous"},
+    {"OCSD_ERR_DFMTR_NOTCONTTRACE", "Trace input to deformatter none-continuous"},
     /* packet processor errors - protocol issues etc */
-    {"RCTDL_ERR_BAD_PACKET_SEQ","Bad packet sequence"},
-    {"RCTDL_ERR_INVALID_PCKT_HDR","Invalid packet header"},
-    {"RCTDL_ERR_PKT_INTERP_FAIL","Interpreter failed - cannot recover - bad data or sequence"},
+    {"OCSD_ERR_BAD_PACKET_SEQ","Bad packet sequence"},
+    {"OCSD_ERR_INVALID_PCKT_HDR","Invalid packet header"},
+    {"OCSD_ERR_PKT_INTERP_FAIL","Interpreter failed - cannot recover - bad data or sequence"},
     /* packet decoder errors */
-    {"RCTDL_ERR_UNSUPPORTED_ISA","ISA not supported in decoder"},
-    {"RCTDL_ERR_HW_CFG_UNSUPP","Programmed trace configuration not supported by decoder."},
-    {"RCTDL_ERR_UNSUPP_DECODE_PKT","Packet not supported in decoder"},
-    {"RCTDL_ERR_BAD_DECODE_PKT","Reserved or unknown packet in decoder."}, 
-    {"RCTDL_ERR_COMMIT_PKT_OVERRUN","Overrun in commit packet stack - tried to commit more than available"},
+    {"OCSD_ERR_UNSUPPORTED_ISA","ISA not supported in decoder"},
+    {"OCSD_ERR_HW_CFG_UNSUPP","Programmed trace configuration not supported by decoder."},
+    {"OCSD_ERR_UNSUPP_DECODE_PKT","Packet not supported in decoder"},
+    {"OCSD_ERR_BAD_DECODE_PKT","Reserved or unknown packet in decoder."}, 
+    {"OCSD_ERR_COMMIT_PKT_OVERRUN","Overrun in commit packet stack - tried to commit more than available"},
     /* decode tree errors */
-    {"RCTDL_ERR_DCDT_NO_FORMATTER","No formatter in use - operation not valid."},
+    {"OCSD_ERR_DCDT_NO_FORMATTER","No formatter in use - operation not valid."},
     /* target memory access errors */
-    {"RCTDL_ERR_MEM_ACC_OVERLAP","Attempted to set an overlapping range in memory access map."},
-    {"RCTDL_ERR_MEM_ACC_FILE_NOT_FOUND","Memory access file could not be opened."},
-    {"RCTDL_ERR_MEM_ACC_FILE_DIFF_RANGE","Attempt to re-use the same memory access file for a different address range."},
-    {"RCTDL_ERR_MEM_ACC_RANGE_INVALID","Address range in accessor set to invalid values."},
+    {"OCSD_ERR_MEM_ACC_OVERLAP","Attempted to set an overlapping range in memory access map."},
+    {"OCSD_ERR_MEM_ACC_FILE_NOT_FOUND","Memory access file could not be opened."},
+    {"OCSD_ERR_MEM_ACC_FILE_DIFF_RANGE","Attempt to re-use the same memory access file for a different address range."},
+    {"OCSD_ERR_MEM_ACC_RANGE_INVALID","Address range in accessor set to invalid values."},
     /* test errors - errors generated only by the test code, not the library */
-    {"RCTDL_ERR_TEST_SNAPSHOT_PARSE", "Test snapshot file parse error"},
-    {"RCTDL_ERR_TEST_SNAPSHOT_PARSE_INFO", "Test snapshot file parse information"},
-    {"RCTDL_ERR_TEST_SNAPSHOT_READ","test snapshot reader error"},
-    {"RCTDL_ERR_TEST_SS_TO_DECODER","test snapshot to decode tree conversion error"},
+    {"OCSD_ERR_TEST_SNAPSHOT_PARSE", "Test snapshot file parse error"},
+    {"OCSD_ERR_TEST_SNAPSHOT_PARSE_INFO", "Test snapshot file parse information"},
+    {"OCSD_ERR_TEST_SNAPSHOT_READ","test snapshot reader error"},
+    {"OCSD_ERR_TEST_SS_TO_DECODER","test snapshot to decode tree conversion error"},
     /* end marker*/
-    {"RCTDL_ERR_LAST", "No error - error code end marker"}
+    {"OCSD_ERR_LAST", "No error - error code end marker"}
 };
 
-rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t code) :
+ocsdError::ocsdError(const ocsd_err_severity_t sev_type, const ocsd_err_t code) :
     m_error_code(code),
     m_sev(sev_type),
-    m_idx(RCTDL_BAD_TRC_INDEX),
-    m_chan_ID(RCTDL_BAD_CS_SRC_ID)
+    m_idx(OCSD_BAD_TRC_INDEX),
+    m_chan_ID(OCSD_BAD_CS_SRC_ID)
 {
 }
 
-rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t code, const rctdl_trc_index_t idx) :
+ocsdError::ocsdError(const ocsd_err_severity_t sev_type, const ocsd_err_t code, const ocsd_trc_index_t idx) :
     m_error_code(code),
     m_sev(sev_type),
     m_idx(idx),
-    m_chan_ID(RCTDL_BAD_CS_SRC_ID)
+    m_chan_ID(OCSD_BAD_CS_SRC_ID)
 {
 }
 
-rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t code, const rctdl_trc_index_t idx, const uint8_t chan_id) :
+ocsdError::ocsdError(const ocsd_err_severity_t sev_type, const ocsd_err_t code, const ocsd_trc_index_t idx, const uint8_t chan_id) :
     m_error_code(code),
     m_sev(sev_type),
     m_idx(idx),
@@ -110,25 +110,25 @@ rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t co
 {
 }
 
-rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t code, const std::string &msg) :
+ocsdError::ocsdError(const ocsd_err_severity_t sev_type, const ocsd_err_t code, const std::string &msg) :
     m_error_code(code),
     m_sev(sev_type),
-    m_idx(RCTDL_BAD_TRC_INDEX),
-    m_chan_ID(RCTDL_BAD_CS_SRC_ID),
+    m_idx(OCSD_BAD_TRC_INDEX),
+    m_chan_ID(OCSD_BAD_CS_SRC_ID),
     m_err_message(msg)
 {
 }
 
-rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t code, const rctdl_trc_index_t idx, const std::string &msg) :
+ocsdError::ocsdError(const ocsd_err_severity_t sev_type, const ocsd_err_t code, const ocsd_trc_index_t idx, const std::string &msg) :
     m_error_code(code),
     m_sev(sev_type),
     m_idx(idx),
-    m_chan_ID(RCTDL_BAD_CS_SRC_ID),
+    m_chan_ID(OCSD_BAD_CS_SRC_ID),
     m_err_message(msg)
 {
 }
 
-rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t code, const rctdl_trc_index_t idx, const uint8_t chan_id, const std::string &msg) :
+ocsdError::ocsdError(const ocsd_err_severity_t sev_type, const ocsd_err_t code, const ocsd_trc_index_t idx, const uint8_t chan_id, const std::string &msg) :
     m_error_code(code),
     m_sev(sev_type),
     m_idx(idx),
@@ -138,7 +138,7 @@ rctdlError::rctdlError(const rctdl_err_severity_t sev_type, const rctdl_err_t co
 }
 
 
-rctdlError::rctdlError(const rctdlError *pError) :
+ocsdError::ocsdError(const ocsdError *pError) :
     m_error_code(pError->getErrorCode()),
     m_sev(pError->getErrorSeverity()),
     m_idx(pError->getErrorIndex()),
@@ -147,7 +147,7 @@ rctdlError::rctdlError(const rctdlError *pError) :
     setMessage(pError->getMessage());
 }
 
-rctdlError::rctdlError(const rctdlError &Error) :
+ocsdError::ocsdError(const ocsdError &Error) :
     m_error_code(Error.getErrorCode()),
     m_sev(Error.getErrorSeverity()),
     m_idx(Error.getErrorIndex()),
@@ -156,19 +156,19 @@ rctdlError::rctdlError(const rctdlError &Error) :
     setMessage(Error.getMessage());
 }
 
-rctdlError::rctdlError():
-    m_error_code(RCTDL_ERR_LAST),
-    m_sev(RCTDL_ERR_SEV_NONE),
-    m_idx(RCTDL_BAD_TRC_INDEX),
-    m_chan_ID(RCTDL_BAD_CS_SRC_ID)
+ocsdError::ocsdError():
+    m_error_code(OCSD_ERR_LAST),
+    m_sev(OCSD_ERR_SEV_NONE),
+    m_idx(OCSD_BAD_TRC_INDEX),
+    m_chan_ID(OCSD_BAD_CS_SRC_ID)
 {
 }
 
-rctdlError::~rctdlError()
+ocsdError::~ocsdError()
 {
 }
 
-const std::string rctdlError::getErrorString(const rctdlError &error)
+const std::string ocsdError::getErrorString(const ocsdError &error)
 {
     std::string szErrStr = "LIBRARY INTERNAL ERROR: Invalid Error Object";
     const char *sev_type_sz[] = {
@@ -181,12 +181,12 @@ const std::string rctdlError::getErrorString(const rctdlError &error)
     switch(error.getErrorSeverity())
     {
     default:
-    case RCTDL_ERR_SEV_NONE:
+    case OCSD_ERR_SEV_NONE:
         break;
 
-    case RCTDL_ERR_SEV_ERROR:
-    case RCTDL_ERR_SEV_WARN:
-    case RCTDL_ERR_SEV_INFO:
+    case OCSD_ERR_SEV_ERROR:
+    case OCSD_ERR_SEV_WARN:
+    case OCSD_ERR_SEV_INFO:
         szErrStr = sev_type_sz[(int)error.getErrorSeverity()];
         appendErrorDetails(szErrStr,error);
         break;
@@ -194,11 +194,11 @@ const std::string rctdlError::getErrorString(const rctdlError &error)
     return szErrStr;
 }
 
-void rctdlError::appendErrorDetails(std::string &errStr, const rctdlError &error)
+void ocsdError::appendErrorDetails(std::string &errStr, const ocsdError &error)
 {
     int numerrstr = ((sizeof(s_errorCodeDescs) / sizeof(const char *)) / 2);
     int code = (int)error.getErrorCode();
-    rctdl_trc_index_t idx = error.getErrorIndex();
+    ocsd_trc_index_t idx = error.getErrorIndex();
     uint8_t chan_ID = error.getErrorChanID();
     std::ostringstream oss;
 
@@ -208,14 +208,14 @@ void rctdlError::appendErrorDetails(std::string &errStr, const rctdlError &error
     else
         oss << " (unknown); ";
 
-    if(idx != RCTDL_BAD_TRC_INDEX)
+    if(idx != OCSD_BAD_TRC_INDEX)
         oss << "TrcIdx=" << std::dec << idx << "; ";
 
-    if(chan_ID != RCTDL_BAD_CS_SRC_ID)
+    if(chan_ID != OCSD_BAD_CS_SRC_ID)
         oss << "CS ID=" << std::hex << std::setfill('0') << std::setw(2) << (uint16_t)chan_ID << "; ";
 
     oss << error.getMessage();
     errStr = oss.str();
 }
 
-/* End of File rctdl_error.cpp */
+/* End of File ocsd_error.cpp */

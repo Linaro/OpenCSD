@@ -1,6 +1,6 @@
 /*!
  * \file       ocsd_msg_logger.h
- * \brief      Reference CoreSight Trace Decoder : Generic Message logger / printer
+ * \brief      OpenCSD : Generic Message logger / printer
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -32,17 +32,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_RCTDL_MSG_LOGGER_H_INCLUDED
-#define ARM_RCTDL_MSG_LOGGER_H_INCLUDED
+#ifndef ARM_OCSD_MSG_LOGGER_H_INCLUDED
+#define ARM_OCSD_MSG_LOGGER_H_INCLUDED
 
 #include <string>
 #include <fstream>
 
-class rctdlMsgLogger 
+class ocsdMsgLogger 
 {
 public:
-    rctdlMsgLogger();
-    ~rctdlMsgLogger();
+    ocsdMsgLogger();
+    ~ocsdMsgLogger();
 
     typedef enum {
         OUT_NONE = 0,
@@ -65,6 +65,6 @@ private:
     std::fstream m_out_file;
 };
 
-#endif // ARM_RCTDL_MSG_LOGGER_H_INCLUDED
+#endif // ARM_OCSD_MSG_LOGGER_H_INCLUDED
 
 /* End of File ocsd_msg_logger.h */

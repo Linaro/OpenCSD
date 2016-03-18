@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_etmv3.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -41,10 +41,10 @@
 // G++ doesn't like the ## pasting
 #define ETMV3_PKTS_NAME "PKTP_ETMV3"
 #else
-#define ETMV3_PKTS_NAME RCTDL_CMPNAME_PREFIX_PKTPROC##"_ETMV3"
+#define ETMV3_PKTS_NAME OCSD_CMPNAME_PREFIX_PKTPROC##"_ETMV3"
 #endif 
 
-static const uint32_t ETMV3_SUPPORTED_OP_FLAGS = RCTDL_OPFLG_PKTPROC_COMMON |
+static const uint32_t ETMV3_SUPPORTED_OP_FLAGS = OCSD_OPFLG_PKTPROC_COMMON |
     ETMV3_OPFLG_UNFORMATTED_SOURCE;
     
 TrcPktProcEtmV3::TrcPktProcEtmV3() : TrcPktProcBase(ETMV3_PKTS_NAME), 
@@ -66,50 +66,50 @@ TrcPktProcEtmV3::~TrcPktProcEtmV3()
     m_pProcessor = 0;
 }
 
-rctdl_err_t TrcPktProcEtmV3::onProtocolConfig()
+ocsd_err_t TrcPktProcEtmV3::onProtocolConfig()
 {
     if(m_pProcessor == 0)
     {
         m_pProcessor = new (std::nothrow) EtmV3PktProcImpl();
         if(m_pProcessor == 0)
         {           
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_MEM));
-            return RCTDL_ERR_MEM;
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_MEM));
+            return OCSD_ERR_MEM;
         }
         m_pProcessor->Initialise(this);
     }
     return m_pProcessor->Configure(m_config);
 }
 
-rctdl_datapath_resp_t TrcPktProcEtmV3::processData(  const rctdl_trc_index_t index,
+ocsd_datapath_resp_t TrcPktProcEtmV3::processData(  const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
                                                 const uint8_t *pDataBlock,
                                                 uint32_t *numBytesProcessed)
 {
     if(m_pProcessor)
         return m_pProcessor->processData(index,dataBlockSize,pDataBlock,numBytesProcessed);
-    return RCTDL_RESP_FATAL_NOT_INIT;
+    return OCSD_RESP_FATAL_NOT_INIT;
 }
 
-rctdl_datapath_resp_t TrcPktProcEtmV3::onEOT()
+ocsd_datapath_resp_t TrcPktProcEtmV3::onEOT()
 {
     if(m_pProcessor)
         return m_pProcessor->onEOT();
-    return RCTDL_RESP_FATAL_NOT_INIT;
+    return OCSD_RESP_FATAL_NOT_INIT;
 }
 
-rctdl_datapath_resp_t TrcPktProcEtmV3::onReset()
+ocsd_datapath_resp_t TrcPktProcEtmV3::onReset()
 {
     if(m_pProcessor)
         return m_pProcessor->onReset();
-    return RCTDL_RESP_FATAL_NOT_INIT;
+    return OCSD_RESP_FATAL_NOT_INIT;
 }
 
-rctdl_datapath_resp_t TrcPktProcEtmV3::onFlush()
+ocsd_datapath_resp_t TrcPktProcEtmV3::onFlush()
 {
     if(m_pProcessor)
         return m_pProcessor->onFlush();
-    return RCTDL_RESP_FATAL_NOT_INIT;
+    return OCSD_RESP_FATAL_NOT_INIT;
 }
 
 const bool TrcPktProcEtmV3::isBadPacket() const 

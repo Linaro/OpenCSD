@@ -1,6 +1,6 @@
 /*
  * \file       gen_elem_printer.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -43,7 +43,7 @@ public:
     TrcGenericElementPrinter();
     virtual ~TrcGenericElementPrinter() {};
 
-    virtual rctdl_datapath_resp_t TraceElemIn(const rctdl_trc_index_t index_sop,
+    virtual ocsd_datapath_resp_t TraceElemIn(const ocsd_trc_index_t index_sop,
                                               const uint8_t trc_chan_id,         
                                               const RctdlTraceElement &elem);
 
@@ -61,11 +61,11 @@ inline TrcGenericElementPrinter::TrcGenericElementPrinter() :
 {
 }
 
-inline rctdl_datapath_resp_t TrcGenericElementPrinter::TraceElemIn(const rctdl_trc_index_t index_sop,
+inline ocsd_datapath_resp_t TrcGenericElementPrinter::TraceElemIn(const ocsd_trc_index_t index_sop,
                                               const uint8_t trc_chan_id,
                                               const RctdlTraceElement &elem)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     std::string elemStr;
     std::ostringstream oss;
     oss << "Idx:" << index_sop << "; ID:"<< std::hex << (uint32_t)trc_chan_id << "; ";
@@ -84,7 +84,7 @@ inline rctdl_datapath_resp_t TrcGenericElementPrinter::TraceElemIn(const rctdl_t
     
     if(getTestWaits())
     {
-        resp = RCTDL_RESP_WAIT; // return _WAIT for the 1st N packets.
+        resp = OCSD_RESP_WAIT; // return _WAIT for the 1st N packets.
         decTestWaits();
         m_needWaitAck = true;
     }

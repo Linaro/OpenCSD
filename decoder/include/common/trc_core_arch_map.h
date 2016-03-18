@@ -1,6 +1,6 @@
 /*!
  * \file       trc_core_arch_map.h
- * \brief      Reference CoreSight Trace Decoder : Map core name strings to architecture profile constants.
+ * \brief      OpenCSD : Map core name strings to architecture profile constants.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -45,18 +45,18 @@ public:
     CoreArchProfileMap();
     ~CoreArchProfileMap() {};
 
-    rctdl_arch_profile_t getArchProfile(const std::string &coreName);
+    ocsd_arch_profile_t getArchProfile(const std::string &coreName);
 
 private:
 
-    std::map<std::string, rctdl_arch_profile_t> core_profiles;
+    std::map<std::string, ocsd_arch_profile_t> core_profiles;
 };
 
-inline rctdl_arch_profile_t CoreArchProfileMap::getArchProfile(const std::string &coreName)
+inline ocsd_arch_profile_t CoreArchProfileMap::getArchProfile(const std::string &coreName)
 {
-    rctdl_arch_profile_t ap = { ARCH_UNKNOWN, profile_Unknown };
+    ocsd_arch_profile_t ap = { ARCH_UNKNOWN, profile_Unknown };
 
-    std::map<std::string, rctdl_arch_profile_t>::const_iterator it;
+    std::map<std::string, ocsd_arch_profile_t>::const_iterator it;
     it = core_profiles.find(coreName);
     if(it != core_profiles.end())
         ap = it->second;

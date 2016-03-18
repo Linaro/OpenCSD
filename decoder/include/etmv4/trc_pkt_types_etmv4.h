@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_types_etmv4.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -45,7 +45,7 @@
 @{*/
 
 /** I stream packets. */
-typedef enum _rctdl_etmv4_i_pkt_type
+typedef enum _ocsd_etmv4_i_pkt_type
 {
 /* state of decode markers */
 		ETM4_PKT_I_NOTSYNC = 0x200,             /*!< no sync found yet.  */
@@ -131,7 +131,7 @@ typedef enum _rctdl_etmv4_i_pkt_type
         ETM4_PKT_I_DISCARD = 0x103,            //!< b00000011
         ETM4_PKT_I_OVERFLOW = 0x105            //!< b00000101
 
-} rctdl_etmv4_i_pkt_type;
+} ocsd_etmv4_i_pkt_type;
 
 typedef union _etmv4_trace_info_t {
     uint32_t val;   //!< trace info full value.
@@ -158,17 +158,17 @@ typedef struct _etmv4_context_t {
 
 /** a broadcast address value. */
 typedef struct _etmv4_addr_val_t {
-    rctdl_vaddr_t val;  //!< Address value.
+    ocsd_vaddr_t val;  //!< Address value.
     uint8_t isa;        //!< instruction set.
 } etmv4_addr_val_t;
 
-typedef struct _rctdl_etmv4_i_pkt
+typedef struct _ocsd_etmv4_i_pkt
 {
-    rctdl_etmv4_i_pkt_type type;    /**< Trace packet type derived from header byte */
+    ocsd_etmv4_i_pkt_type type;    /**< Trace packet type derived from header byte */
 
     //** intra-packet data - valid across packets.
 
-    rctdl_pkt_vaddr v_addr;         //!< most recently broadcast address packet
+    ocsd_pkt_vaddr v_addr;         //!< most recently broadcast address packet
     uint8_t         v_addr_ISA;     //!< ISA for the address packet. (0 = IS0 / 1 = IS1)
 
     etmv4_context_t context;        //!< current context for PE
@@ -181,7 +181,7 @@ typedef struct _rctdl_etmv4_i_pkt
     uint32_t cc_threshold;      //!< cycle count threshold - from trace info.
 
     // single packet data - only valid for specific packet types on packet instance.
-    rctdl_pkt_atom  atom;       //!< atom elements - number of atoms indicates validity of packet
+    ocsd_pkt_atom  atom;       //!< atom elements - number of atoms indicates validity of packet
     uint32_t cycle_count;       //!< cycle count
 
     uint32_t curr_spec_depth;   //!< current speculation depth
@@ -258,13 +258,13 @@ typedef struct _rctdl_etmv4_i_pkt
     } pkt_valid;
 
     // original header type when packet type changed to error on decode error.
-    rctdl_etmv4_i_pkt_type err_type;
+    ocsd_etmv4_i_pkt_type err_type;
 
-} rctdl_etmv4_i_pkt;
+} ocsd_etmv4_i_pkt;
 
 
 // D stream packets
-typedef enum _rctdl_etmv4_d_pkt_type
+typedef enum _ocsd_etmv4_d_pkt_type
 {
 // markers for unknown/bad packets
 		ETM4_PKT_D_NOTSYNC = 0x200,        //!< no sync found yet
@@ -310,22 +310,22 @@ typedef enum _rctdl_etmv4_d_pkt_type
         ETM4_PKT_D_DISCARD = 0x103,            //!< b00000011
         ETM4_PKT_D_OVERFLOW = 0x105            //!< b00000101
 
-} rctdl_etmv4_d_pkt_type;
+} ocsd_etmv4_d_pkt_type;
 
 
-typedef struct _rctdl_etmv4_d_pkt
+typedef struct _ocsd_etmv4_d_pkt
 {
-    rctdl_etmv4_d_pkt_type type;
+    ocsd_etmv4_d_pkt_type type;
 
-    rctdl_pkt_vaddr d_addr;
+    ocsd_pkt_vaddr d_addr;
 
     uint64_t        pkt_val;    /**< Packet value -> data value, timestamp value, event value */
 
-    rctdl_etmv4_d_pkt_type err_type;
+    ocsd_etmv4_d_pkt_type err_type;
 
-} rctdl_etmv4_d_pkt;
+} ocsd_etmv4_d_pkt;
 
-typedef struct _rctdl_etmv4_cfg 
+typedef struct _ocsd_etmv4_cfg 
 {
     uint32_t                reg_idr0;    /**< ID0 register */
     uint32_t                reg_idr1;    /**< ID1 register */
@@ -338,9 +338,9 @@ typedef struct _rctdl_etmv4_cfg
     uint32_t                reg_idr13;
     uint32_t                reg_configr;  /**< Config Register */
     uint32_t                reg_traceidr;  /**< Trace Stream ID register */
-    rctdl_arch_version_t    arch_ver;   /**< Architecture version */
-    rctdl_core_profile_t    core_prof;  /**< Core Profile */
-} rctdl_etmv4_cfg;
+    ocsd_arch_version_t    arch_ver;   /**< Architecture version */
+    ocsd_core_profile_t    core_prof;  /**< Core Profile */
+} ocsd_etmv4_cfg;
 
 /** @}*/
 /** @}*/

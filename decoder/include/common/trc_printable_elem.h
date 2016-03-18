@@ -1,6 +1,6 @@
 /*!
  * \file       trc_printable_elem.h
- * \brief      Reference CoreSight Trace Decoder : Standard printable element base class.
+ * \brief      OpenCSD : Standard printable element base class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -39,7 +39,7 @@
 #include <string>
 #include <cstdint>
 
-/** @addtogroup rctdl_infrastructure
+/** @addtogroup ocsd_infrastructure
 @{*/
 
 /*!

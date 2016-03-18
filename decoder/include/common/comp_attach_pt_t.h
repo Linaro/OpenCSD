@@ -1,6 +1,6 @@
 /*!
  * \file       comp_attach_pt_t.h
- * \brief      Reference CoreSight Trace Decoder : Component attachment point interface class.
+ * \brief      OpenCSD : Component attachment point interface class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -38,7 +38,7 @@
 #include <vector>
 #include "ocsd_if_types.h"
 
-/** @defgroup rctdl_infrastructure  Reference CoreSight Trace Decoder Library : Library Component Infrastructure
+/** @defgroup ocsd_infrastructure  OpenCSD Library : Library Component Infrastructure
 
     @brief Classes providing library infrastructure and auxilary functionality
 @{*/
@@ -68,18 +68,18 @@ public:
      *
      * @param component : interface to attach.
      *
-     * @return  rctdl_err_t  : RCTDL_OK if successful, RCTDL_ERR_ATTACH_TOO_MANY if too many connections.
+     * @return  ocsd_err_t  : OCSD_OK if successful, OCSD_ERR_ATTACH_TOO_MANY if too many connections.
      */
-    virtual rctdl_err_t attach(T* component);
+    virtual ocsd_err_t attach(T* component);
 
     /*!
      * Detach component from the attachment point.
      *
      * @param component : Component to detach.
      *
-     * @return virtual rctdl_err_t  : RCTDL_OK if successful, RCTDL_ERR_ATTACH_COMP_NOT_FOUND if no match to component.
+     * @return virtual ocsd_err_t  : OCSD_OK if successful, OCSD_ERR_ATTACH_COMP_NOT_FOUND if no match to component.
      */
-    virtual rctdl_err_t detach(T* component);
+    virtual ocsd_err_t detach(T* component);
 
     /*!
      * Detach all components.
@@ -160,24 +160,24 @@ template<class T> componentAttachPt<T>::~componentAttachPt()
 }
 
 
-template<class T> rctdl_err_t componentAttachPt<T>::attach(T* component)
+template<class T> ocsd_err_t componentAttachPt<T>::attach(T* component)
 {
     if(m_comp != 0)
-            return RCTDL_ERR_ATTACH_TOO_MANY;
+            return OCSD_ERR_ATTACH_TOO_MANY;
     m_comp = component;
     if(m_notifier) m_notifier->attachNotify(1);
     m_hasAttached = true;
-    return RCTDL_OK;
+    return OCSD_OK;
 }
 
-template<class T> rctdl_err_t componentAttachPt<T>::detach(T* component)
+template<class T> ocsd_err_t componentAttachPt<T>::detach(T* component)
 {    
     if(m_comp != component)
-        return RCTDL_ERR_ATTACH_COMP_NOT_FOUND;
+        return OCSD_ERR_ATTACH_COMP_NOT_FOUND;
     m_comp = 0;
     m_hasAttached = false;
     if(m_notifier) m_notifier->attachNotify(0);
-    return RCTDL_OK;
+    return OCSD_OK;
 }
 
 template<class T> T* componentAttachPt<T>::first()

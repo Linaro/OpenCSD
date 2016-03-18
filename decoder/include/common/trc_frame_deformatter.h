@@ -1,6 +1,6 @@
 /*!
  * \file       trc_frame_deformatter.h
- * \brief      Reference CoreSight Trace Decoder : De-format CoreSight formatted trace frame.
+ * \brief      OpenCSD : De-format CoreSight formatted trace frame.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -45,7 +45,7 @@ class ITrcSrcIndexCreator;
 class ITraceErrorLog;
 class TraceFmtDcdImpl;
 
-/** @defgroup rctdl_deformatter  Reference CoreSight Trace Decoder Library : Trace Frame Deformatter
+/** @defgroup ocsd_deformatter  OpenCSD Library : Trace Frame Deformatter
     @brief CoreSight Formatted Trace Frame  - deformatting functionality.
 @{*/
 
@@ -57,8 +57,8 @@ public:
     virtual ~TraceFormatterFrameDecoder();
 
     /* the data input interface from the reader */
-    virtual rctdl_datapath_resp_t TraceDataIn(  const rctdl_datapath_op_t op, 
-                                                const rctdl_trc_index_t index, 
+    virtual ocsd_datapath_resp_t TraceDataIn(  const ocsd_datapath_op_t op, 
+                                                const ocsd_trc_index_t index, 
                                                 const uint32_t dataBlockSize, 
                                                 const uint8_t *pDataBlock, 
                                                 uint32_t *numBytesProcessed);
@@ -74,15 +74,15 @@ public:
     componentAttachPt<ITraceErrorLog> *getErrLogAttachPt();
 
     /* configuration - set operational mode for incoming stream (has FSYNCS etc) */
-    rctdl_err_t Configure(uint32_t cfg_flags);
+    ocsd_err_t Configure(uint32_t cfg_flags);
 
     /* enable / disable ID streams - default as all enabled */
-    rctdl_err_t OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable);
-    rctdl_err_t OutputFilterAllIDs(bool bEnable);
+    ocsd_err_t OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable);
+    ocsd_err_t OutputFilterAllIDs(bool bEnable);
 
     /* decode control */
-    rctdl_datapath_resp_t Reset();    /* reset the decode to the start state, drop partial data - propogate to attached components */
-    rctdl_datapath_resp_t Flush();    /* flush existing data if possible, retain state - propogate to attached components */
+    ocsd_datapath_resp_t Reset();    /* reset the decode to the start state, drop partial data - propogate to attached components */
+    ocsd_datapath_resp_t Flush();    /* flush existing data if possible, retain state - propogate to attached components */
 
 private:
     TraceFmtDcdImpl *m_pDecoder;

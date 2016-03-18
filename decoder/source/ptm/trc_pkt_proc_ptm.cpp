@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_ptm.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -42,7 +42,7 @@
 #define PTM_PKTS_NAME "PKTP_PTM"
 #else
 // VC++ is OK
-#define PTM_PKTS_NAME RCTDL_CMPNAME_PREFIX_PKTPROC##"_PTM"
+#define PTM_PKTS_NAME OCSD_CMPNAME_PREFIX_PKTPROC##"_PTM"
 #endif
 
 TrcPktProcPtm::TrcPktProcPtm() : TrcPktProcBase(PTM_PKTS_NAME)
@@ -62,31 +62,31 @@ TrcPktProcPtm::~TrcPktProcPtm()
 
 }
 
-rctdl_err_t TrcPktProcPtm::onProtocolConfig()
+ocsd_err_t TrcPktProcPtm::onProtocolConfig()
 {
-    rctdl_err_t err = RCTDL_ERR_NOT_INIT;
+    ocsd_err_t err = OCSD_ERR_NOT_INIT;
 
     if(m_config != 0)
     {       
         m_chanIDCopy = m_config->getTraceID();        
-        err = RCTDL_OK;
+        err = OCSD_OK;
     }
     return err;
 }
 
-rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index,
+ocsd_datapath_resp_t TrcPktProcPtm::processData(  const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
                                                 const uint8_t *pDataBlock,
                                                 uint32_t *numBytesProcessed)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     uint8_t currByte = 0;
     
     m_dataInProcessed = 0;
     
     if(!checkInit())
     {
-        resp = RCTDL_RESP_FATAL_NOT_INIT;
+        resp = OCSD_RESP_FATAL_NOT_INIT;
     }
     else
     {
@@ -97,7 +97,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index
 
     while(  ( ( m_dataInProcessed  < dataBlockSize) || 
               (( m_dataInProcessed  == dataBlockSize) && (m_process_state == SEND_PKT)) ) && 
-            RCTDL_DATA_RESP_IS_CONT(resp))
+            OCSD_DATA_RESP_IS_CONT(resp))
     {
         try
         {
@@ -125,7 +125,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index
                     // sequencing error - should not get to the point where readByte
                     // fails and m_DataInProcessed  < dataBlockSize
                     // throw data overflow error
-                    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_PKT_INTERP_FAIL,m_curr_pkt_index,this->m_chanIDCopy,"Data Buffer Overrun");
+                    throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_PKT_INTERP_FAIL,m_curr_pkt_index,this->m_chanIDCopy,"Data Buffer Overrun");
                 }
                 m_process_state = PROC_DATA;
 
@@ -140,11 +140,11 @@ rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index
                 break;
             }
         }
-        catch(rctdlError &err)
+        catch(ocsdError &err)
         {
             LogError(err);
-            if( (err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ) ||
-                (err.getErrorCode() == RCTDL_ERR_INVALID_PCKT_HDR))
+            if( (err.getErrorCode() == OCSD_ERR_BAD_PACKET_SEQ) ||
+                (err.getErrorCode() == OCSD_ERR_INVALID_PCKT_HDR))
             {
                 // send invalid packets up the pipe to let the next stage decide what to do.
                 m_process_state = SEND_PKT; 
@@ -158,8 +158,8 @@ rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index
         catch(...)
         {
             /// vv bad at this point.
-            resp = RCTDL_RESP_FATAL_SYS_ERR;
-            const rctdlError &fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_curr_pkt_index,m_chanIDCopy,"Unknown System Error decoding trace.");
+            resp = OCSD_RESP_FATAL_SYS_ERR;
+            const ocsdError &fatal = ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_FAIL,m_curr_pkt_index,m_chanIDCopy,"Unknown System Error decoding trace.");
             LogError(fatal);
         }
 
@@ -168,12 +168,12 @@ rctdl_datapath_resp_t TrcPktProcPtm::processData(  const rctdl_trc_index_t index
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktProcPtm::onEOT()
+ocsd_datapath_resp_t TrcPktProcPtm::onEOT()
 {
-    rctdl_datapath_resp_t err = RCTDL_RESP_FATAL_NOT_INIT;
+    ocsd_datapath_resp_t err = OCSD_RESP_FATAL_NOT_INIT;
     if(!checkInit())
     {
-        err = RCTDL_RESP_CONT;
+        err = OCSD_RESP_CONT;
         if(m_currPacketData.size() > 0)
         {
             m_curr_packet.SetErrType(PTM_PKT_INCOMPLETE_EOT);
@@ -183,23 +183,23 @@ rctdl_datapath_resp_t TrcPktProcPtm::onEOT()
     return err;
 }
 
-rctdl_datapath_resp_t TrcPktProcPtm::onReset()
+ocsd_datapath_resp_t TrcPktProcPtm::onReset()
 {
-    rctdl_datapath_resp_t err = RCTDL_RESP_FATAL_NOT_INIT;
+    ocsd_datapath_resp_t err = OCSD_RESP_FATAL_NOT_INIT;
     if(!checkInit())
     {
         InitProcessorState();
-        err = RCTDL_RESP_CONT;
+        err = OCSD_RESP_CONT;
     }
     return err;
 }
 
-rctdl_datapath_resp_t TrcPktProcPtm::onFlush()
+ocsd_datapath_resp_t TrcPktProcPtm::onFlush()
 {
-    rctdl_datapath_resp_t err = RCTDL_RESP_FATAL_NOT_INIT;
+    ocsd_datapath_resp_t err = OCSD_RESP_FATAL_NOT_INIT;
     if(!checkInit())
     {
-         err = RCTDL_RESP_CONT;
+         err = OCSD_RESP_CONT;
     }
     return err;
 }
@@ -247,18 +247,18 @@ void TrcPktProcPtm::unReadByte()
     m_currPacketData.pop_back();
 }
 
-rctdl_datapath_resp_t TrcPktProcPtm::outputPacket()
+ocsd_datapath_resp_t TrcPktProcPtm::outputPacket()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     resp = outputOnAllInterfaces(m_curr_pkt_index,&m_curr_packet,&m_curr_packet.type,m_currPacketData);
     m_currPacketData.clear();
     return resp;
 }
 
 /*** sync and packet functions ***/
-rctdl_datapath_resp_t TrcPktProcPtm::waitASync()
+ocsd_datapath_resp_t TrcPktProcPtm::waitASync()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
 
     // looking for possible patterns in input buffer:-
     // a) ASYNC @ start :          00 00 00 00 00 80
@@ -279,7 +279,7 @@ rctdl_datapath_resp_t TrcPktProcPtm::waitASync()
     int unsync_scan_block_start = 0;
     int pktBytesOnEntry = m_currPacketData.size();  // did we have part of a potential async last time?
 
-    while(doScan && RCTDL_DATA_RESP_IS_CONT(resp))
+    while(doScan && OCSD_DATA_RESP_IS_CONT(resp))
     {
         // may have spotted the start of an async
         if(m_waitASyncSOPkt == true)
@@ -457,14 +457,14 @@ void TrcPktProcPtm::pktISync()
                 // got the info byte  
                 int altISA = (currByte >> 2) & 0x1;
                 int reason = (currByte >> 5) & 0x3;
-                m_curr_packet.SetISyncReason((rctdl_iSync_reason)(reason));
+                m_curr_packet.SetISyncReason((ocsd_iSync_reason)(reason));
                 m_curr_packet.UpdateNS((currByte >> 3) & 0x1);
                 m_curr_packet.UpdateAltISA((currByte >> 2) & 0x1);
                 m_curr_packet.UpdateHyp((currByte >> 1) & 0x1);
 
-                rctdl_isa isa = rctdl_isa_arm;
+                ocsd_isa isa = ocsd_isa_arm;
                 if(m_currPacketData[1] & 0x1)
-                    isa = altISA ? rctdl_isa_tee : rctdl_isa_thumb2;
+                    isa = altISA ? ocsd_isa_tee : ocsd_isa_thumb2;
                 m_curr_packet.UpdateISA(isa);
 
                 // check cycle count required - not if reason == 0;
@@ -552,7 +552,7 @@ void TrcPktProcPtm::pktWPointUpdate()
         m_gotExcepBytes = false;    // mark as not got all required exception bytes thus far
         m_numExcepBytes = 0;        // 0 read in
 
-         m_addrPktIsa = rctdl_isa_unknown; // not set by this packet as yet        
+         m_addrPktIsa = ocsd_isa_unknown; // not set by this packet as yet        
     }
 
     // collect all the bytes needed
@@ -583,11 +583,11 @@ void TrcPktProcPtm::pktWPointUpdate()
                     m_gotAddrBytes = true;
                     bDone = m_gotExcepBytes;
 
-                    m_addrPktIsa = rctdl_isa_arm;   // assume ARM, but then check
+                    m_addrPktIsa = ocsd_isa_arm;   // assume ARM, but then check
                     if((currByte & 0x20) == 0x20)   // bit 5 == 1'b1 - jazelle, bits 4 & 3 part of address.
-                        m_addrPktIsa = rctdl_isa_jazelle;
+                        m_addrPktIsa = ocsd_isa_jazelle;
                     else if((currByte & 0x30) == 0x10) // bit [5:4] == 2'b01 - thumb, bit 3 part of address.
-                        m_addrPktIsa = rctdl_isa_thumb2;                       
+                        m_addrPktIsa = ocsd_isa_thumb2;                       
                 } 
                 m_numAddrBytes++;
             }
@@ -608,15 +608,15 @@ void TrcPktProcPtm::pktWPointUpdate()
     if(bDone)
     {
         // ISA for the packet
-        if(m_addrPktIsa == rctdl_isa_unknown) // unchanged by trace packet
+        if(m_addrPktIsa == ocsd_isa_unknown) // unchanged by trace packet
             m_addrPktIsa = m_curr_packet.getISA(); // same as prev
 
         if(m_gotExcepBytes) // may adjust according to alt ISA in exception packet
         {
-            if((m_addrPktIsa == rctdl_isa_tee)  && (m_excepAltISA == 0))
-                m_addrPktIsa = rctdl_isa_thumb2;
-            else if((m_addrPktIsa == rctdl_isa_thumb2) && (m_excepAltISA == 1))
-                m_addrPktIsa = rctdl_isa_tee;
+            if((m_addrPktIsa == ocsd_isa_tee)  && (m_excepAltISA == 0))
+                m_addrPktIsa = ocsd_isa_thumb2;
+            else if((m_addrPktIsa == ocsd_isa_thumb2) && (m_excepAltISA == 1))
+                m_addrPktIsa = ocsd_isa_tee;
         }
         m_curr_packet.UpdateISA(m_addrPktIsa); // mark ISA in packet (update changes current and prev to dectect an ISA change).
 
@@ -810,7 +810,7 @@ void TrcPktProcPtm::pktBranchAddr()
         m_gotExcepBytes = false;    // mark as not got all required exception bytes thus far
         m_numExcepBytes = 0;        // 0 read in
         
-        m_addrPktIsa = rctdl_isa_unknown; // not set by this packet as yet
+        m_addrPktIsa = ocsd_isa_unknown; // not set by this packet as yet
         
         // header is also 1st address byte
         if((currByte & 0x80) == 0)  // could be single byte packet
@@ -852,11 +852,11 @@ void TrcPktProcPtm::pktBranchAddr()
                     m_gotAddrBytes = true;
                     bDone = m_gotExcepBytes && !m_needCycleCount;
 
-                    m_addrPktIsa = rctdl_isa_arm;   // assume ARM, but then check
+                    m_addrPktIsa = ocsd_isa_arm;   // assume ARM, but then check
                     if((currByte & 0x20) == 0x20)   // bit 5 == 1'b1 - jazelle, bits 4 & 3 part of address.
-                        m_addrPktIsa = rctdl_isa_jazelle;
+                        m_addrPktIsa = ocsd_isa_jazelle;
                     else if((currByte & 0x30) == 0x10) // bit [5:4] == 2'b01 - thumb, bit 3 part of address.
-                        m_addrPktIsa = rctdl_isa_thumb2;                       
+                        m_addrPktIsa = ocsd_isa_thumb2;                       
                 } 
                 m_numAddrBytes++;
             }
@@ -903,15 +903,15 @@ void TrcPktProcPtm::pktBranchAddr()
     if(bDone)
     {
         // ISA for the packet
-        if(m_addrPktIsa == rctdl_isa_unknown) // unchanged by trace packet
+        if(m_addrPktIsa == ocsd_isa_unknown) // unchanged by trace packet
             m_addrPktIsa = m_curr_packet.getISA(); // same as prev
 
         if(m_gotExcepBytes) // may adjust according to alt ISA in exception packet
         {
-            if((m_addrPktIsa == rctdl_isa_tee)  && (m_excepAltISA == 0))
-                m_addrPktIsa = rctdl_isa_thumb2;
-            else if((m_addrPktIsa == rctdl_isa_thumb2) && (m_excepAltISA == 1))
-                m_addrPktIsa = rctdl_isa_tee;
+            if((m_addrPktIsa == ocsd_isa_tee)  && (m_excepAltISA == 0))
+                m_addrPktIsa = ocsd_isa_thumb2;
+            else if((m_addrPktIsa == ocsd_isa_thumb2) && (m_excepAltISA == 1))
+                m_addrPktIsa = ocsd_isa_tee;
         }
         m_curr_packet.UpdateISA(m_addrPktIsa); // mark ISA in packet (update changes current and prev to dectect an ISA change).
 
@@ -926,7 +926,7 @@ void TrcPktProcPtm::pktBranchAddr()
         {
             uint8_t E1 = m_currPacketData[m_numAddrBytes];
             uint16_t ENum = (E1 >> 1) & 0xF;
-            rctdl_armv7_exception excep = Excp_Reserved;
+            ocsd_armv7_exception excep = Excp_Reserved;
 
             m_curr_packet.UpdateNS(E1 & 0x1);
             if(m_numExcepBytes > 1)
@@ -938,7 +938,7 @@ void TrcPktProcPtm::pktBranchAddr()
 
             if(ENum <= 0xF)
             {
-                static rctdl_armv7_exception v7ARExceptions[16] = {
+                static ocsd_armv7_exception v7ARExceptions[16] = {
                     Excp_NoException, Excp_DebugHalt, Excp_SMC, Excp_Hyp,
                     Excp_AsyncDAbort, Excp_ThumbEECheckFail, Excp_Reserved, Excp_Reserved,
                     Excp_Reset, Excp_Undef, Excp_SVC, Excp_PrefAbort,
@@ -1082,12 +1082,12 @@ uint32_t TrcPktProcPtm::extractAddress(const int offset, uint8_t &total_bits)
             // 5th byte mask
             mask = 0x0f;    // thumb mask;
             num_bits = 4;
-            if(m_addrPktIsa == rctdl_isa_jazelle)
+            if(m_addrPktIsa == ocsd_isa_jazelle)
             {
                 mask = 0x1F;
                 num_bits = 5;
             }
-            else if(m_addrPktIsa == rctdl_isa_arm)
+            else if(m_addrPktIsa == ocsd_isa_arm)
             {
                 mask = 0x07;
                 num_bits = 3;
@@ -1113,7 +1113,7 @@ uint32_t TrcPktProcPtm::extractAddress(const int offset, uint8_t &total_bits)
         // how much we shift the next value
         if(i == 0)
         {
-            if(m_addrPktIsa == rctdl_isa_jazelle)
+            if(m_addrPktIsa == ocsd_isa_jazelle)
             {
                 addr_val >>= 1;
                 next_shift = 6;
@@ -1130,7 +1130,7 @@ uint32_t TrcPktProcPtm::extractAddress(const int offset, uint8_t &total_bits)
         }
     }
 
-    if(m_addrPktIsa == rctdl_isa_arm)
+    if(m_addrPktIsa == ocsd_isa_arm)
     {
         addr_val <<= 1; // shift one extra bit for ARM address alignment.
         total_bits++;

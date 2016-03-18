@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_etmv4.h
- * \brief      Reference CoreSight Trace Decoder : ETMv4 packet processor interface classes.
+ * \brief      OpenCSD : ETMv4 packet processor interface classes.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -45,10 +45,10 @@ class EtmV4ITrcPacket;
 class EtmV4DTrcPacket;
 class EtmV4Config;
 
-/** @addtogroup rctdl_pkt_proc
+/** @addtogroup ocsd_pkt_proc
 @{*/
 
-class TrcPktProcEtmV4I : public TrcPktProcBase< EtmV4ITrcPacket,  rctdl_etmv4_i_pkt_type, EtmV4Config>
+class TrcPktProcEtmV4I : public TrcPktProcBase< EtmV4ITrcPacket,  ocsd_etmv4_i_pkt_type, EtmV4Config>
 {
 public:
     TrcPktProcEtmV4I();
@@ -57,14 +57,14 @@ public:
 
 protected:
     /* implementation packet processing interface */
-    virtual rctdl_datapath_resp_t processData(  const rctdl_trc_index_t index,
+    virtual ocsd_datapath_resp_t processData(  const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
                                                 const uint8_t *pDataBlock,
                                                 uint32_t *numBytesProcessed);
-    virtual rctdl_datapath_resp_t onEOT();
-    virtual rctdl_datapath_resp_t onReset();
-    virtual rctdl_datapath_resp_t onFlush();
-    virtual rctdl_err_t onProtocolConfig();
+    virtual ocsd_datapath_resp_t onEOT();
+    virtual ocsd_datapath_resp_t onReset();
+    virtual ocsd_datapath_resp_t onFlush();
+    virtual ocsd_err_t onProtocolConfig();
     virtual const bool isBadPacket() const;
 
     friend class EtmV4IPktProcImpl;
@@ -73,7 +73,7 @@ protected:
 };
 
 
-class TrcPktProcEtmV4D : public TrcPktProcBase< EtmV4DTrcPacket,  rctdl_etmv4_d_pkt_type, EtmV4Config>
+class TrcPktProcEtmV4D : public TrcPktProcBase< EtmV4DTrcPacket,  ocsd_etmv4_d_pkt_type, EtmV4Config>
 {
 public:
     TrcPktProcEtmV4D();
@@ -82,14 +82,14 @@ public:
 
 protected:
     /* implementation packet processing interface */
-    virtual rctdl_datapath_resp_t processData(  const rctdl_trc_index_t index,
+    virtual ocsd_datapath_resp_t processData(  const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
                                                 const uint8_t *pDataBlock,
                                                 uint32_t *numBytesProcessed);
-    virtual rctdl_datapath_resp_t onEOT();
-    virtual rctdl_datapath_resp_t onReset();
-    virtual rctdl_datapath_resp_t onFlush();
-    virtual rctdl_err_t onProtocolConfig();
+    virtual ocsd_datapath_resp_t onEOT();
+    virtual ocsd_datapath_resp_t onReset();
+    virtual ocsd_datapath_resp_t onFlush();
+    virtual ocsd_err_t onProtocolConfig();
     virtual const bool isBadPacket() const;
 
     friend class EtmV4DPktProcImpl;

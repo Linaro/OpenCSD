@@ -1,6 +1,6 @@
 /*
  * \file       trc_cmp_cfg_stm.h
- * \brief      Reference CoreSight Trace Decoder : STM compnent configuration.
+ * \brief      OpenCSD : STM compnent configuration.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -37,7 +37,7 @@
 
 #include "trc_pkt_types_stm.h"
 
-/** @addtogroup rctdl_protocol_cfg
+/** @addtogroup ocsd_protocol_cfg
 @{*/
 
 /** @name STM configuration
@@ -54,15 +54,15 @@
  *  If this default is sufficient a single call to setTraceID() will be all that is 
  *  required to decode the STM protocol.
  *
- *  Can also be initialised with a fully populated rctdl_stm_cfg structure.
+ *  Can also be initialised with a fully populated ocsd_stm_cfg structure.
  */
-class STMConfig : public rctdl_stm_cfg
+class STMConfig : public ocsd_stm_cfg
 {
 public:
     STMConfig();    //!< Constructor - creates a default configuration
     ~STMConfig() {};    
 
-    STMConfig & operator=(const rctdl_stm_cfg *p_cfg);  //!< set from full configuration structure.
+    STMConfig & operator=(const ocsd_stm_cfg *p_cfg);  //!< set from full configuration structure.
     void setTraceID(const uint8_t traceID);     //!< Set the CoreSight trace ID.
     void setHWTraceFeat(const hw_event_feat_t hw_feat); //!< set usage of STM HW event trace.
     
@@ -87,9 +87,9 @@ inline STMConfig::STMConfig()
     m_bHWTraceEn = false;
 }
   
-inline STMConfig & STMConfig::operator=(const rctdl_stm_cfg *p_cfg)
+inline STMConfig & STMConfig::operator=(const ocsd_stm_cfg *p_cfg)
 {
-    *dynamic_cast<rctdl_stm_cfg *>(this) = *p_cfg;
+    *dynamic_cast<ocsd_stm_cfg *>(this) = *p_cfg;
     setHWTraceFeat(p_cfg->hw_event);
     return *this;
 }

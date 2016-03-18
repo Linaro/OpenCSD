@@ -1,6 +1,6 @@
 /*
  * \file       raw_frame_printer.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -45,12 +45,12 @@ class RawFramePrinter : public ITrcRawFrameIn, public ItemPrinter
 {
 public:
     RawFramePrinter() {};
-    RawFramePrinter(rctdlMsgLogger *pMsgLogger);
+    RawFramePrinter(ocsdMsgLogger *pMsgLogger);
     virtual ~RawFramePrinter() {};
 
-    virtual rctdl_err_t TraceRawFrameIn(  const rctdl_datapath_op_t op, 
-                                                const rctdl_trc_index_t index, 
-                                                const rctdl_rawframe_elem_t frame_element, 
+    virtual ocsd_err_t TraceRawFrameIn(  const ocsd_datapath_op_t op, 
+                                                const ocsd_trc_index_t index, 
+                                                const ocsd_rawframe_elem_t frame_element, 
                                                 const int dataBlockSize, 
                                                 const uint8_t *pDataBlock,
                                                 const uint8_t traceID);
@@ -60,7 +60,7 @@ private:
 
 };
 
-inline RawFramePrinter::RawFramePrinter(rctdlMsgLogger *pMsgLogger)
+inline RawFramePrinter::RawFramePrinter(ocsdMsgLogger *pMsgLogger)
 {
     setMessageLogger(pMsgLogger);
 }

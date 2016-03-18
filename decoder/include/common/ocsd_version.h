@@ -1,6 +1,6 @@
 /*
- * \file       rctdl_version.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \file       ocsd_version.h
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -31,16 +31,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
-#ifndef ARM_RCTDL_VERSION_H_INCLUDED
-#define ARM_RCTDL_VERSION_H_INCLUDED
+#ifndef ARM_OCSD_VERSION_H_INCLUDED
+#define ARM_OCSD_VERSION_H_INCLUDED
 
-class rctdlVersion
+class ocsdVersion
 {
 public:
     static const uint32_t vers_num();
     static const char *vers_str();
 };
 
-#endif // ARM_RCTDL_VERSION_H_INCLUDED
+#endif // ARM_OCSD_VERSION_H_INCLUDED
 
-/* End of File rctdl_version.h */
+/* End of File ocsd_version.h */

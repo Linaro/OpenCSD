@@ -1,6 +1,6 @@
 /*
  * \file       snapshot_parser.h
- * \brief      Reference CoreSight Trace Decoder : Snapshot Parser Library
+ * \brief      OpenCSD : Snapshot Parser Library
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -136,7 +136,7 @@ namespace Parser
 
 
     static ITraceErrorLog *s_pErrorLogger = 0;
-    static rctdl_hndl_err_log_t s_errlog_handle = 0;
+    static ocsd_hndl_err_log_t s_errlog_handle = 0;
     static bool s_verbose_logging = true;
 
     void SetIErrorLogger(ITraceErrorLog *i_err_log);

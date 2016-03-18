@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_elem_etmv3.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -75,7 +75,7 @@ void EtmV3TrcPacket::ResetState()
 {
     addr.val = 0;
     addr.valid_bits = 0;
-    curr_isa = prev_isa = rctdl_isa_unknown;
+    curr_isa = prev_isa = ocsd_isa_unknown;
     context.curr_alt_isa = 0;
     context.curr_NS = 0;     
     context.curr_Hyp = 0;  
@@ -88,10 +88,10 @@ void EtmV3TrcPacket::ResetState()
     Clear();
 }
 
-void EtmV3TrcPacket::UpdateAddress(const rctdl_vaddr_t partAddrVal, const int updateBits)
+void EtmV3TrcPacket::UpdateAddress(const ocsd_vaddr_t partAddrVal, const int updateBits)
 {
-    rctdl_vaddr_t validMask = RCTDL_VA_MASK;
-    validMask >>= RCTDL_MAX_VA_BITSIZE-updateBits;
+    ocsd_vaddr_t validMask = OCSD_VA_MASK;
+    validMask >>= OCSD_MAX_VA_BITSIZE-updateBits;
     addr.pkt_bits = updateBits;
     addr.val &= ~validMask;
     addr.val |= (partAddrVal & validMask);
@@ -123,7 +123,7 @@ void EtmV3TrcPacket::UpdateTimestamp(const uint64_t tsVal, const uint8_t updateB
 
 
 
-void EtmV3TrcPacket::SetException(  const rctdl_armv7_exception type, 
+void EtmV3TrcPacket::SetException(  const ocsd_armv7_exception type, 
                                     const uint16_t number, 
                                     const bool cancel,
                                     const bool cm_type,
@@ -219,9 +219,9 @@ bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccu
     return bValid;
 }
 
-EtmV3TrcPacket &EtmV3TrcPacket::operator =(const rctdl_etmv3_pkt* p_pkt)
+EtmV3TrcPacket &EtmV3TrcPacket::operator =(const ocsd_etmv3_pkt* p_pkt)
 {
-    *dynamic_cast<rctdl_etmv3_pkt *>(this) = *p_pkt;
+    *dynamic_cast<ocsd_etmv3_pkt *>(this) = *p_pkt;
     return *this;        
 }
 
@@ -344,7 +344,7 @@ void EtmV3TrcPacket::toStringFmt(const uint32_t fmtFlags, std::string &str) cons
     toString(str);
 }
 
-const char *EtmV3TrcPacket::packetTypeName(const rctdl_etmv3_pkt_type type, const char **ppDesc) const
+const char *EtmV3TrcPacket::packetTypeName(const ocsd_etmv3_pkt_type type, const char **ppDesc) const
 {
     const char *pName = "I_RESERVED";
     const char *pDesc = "Reserved Packet Header";
@@ -620,28 +620,28 @@ void EtmV3TrcPacket::getISAStr(std::string &isaStr) const
     oss << "ISA=";
     switch(curr_isa)
     {
-    case rctdl_isa_arm: 
+    case ocsd_isa_arm: 
         oss << "ARM(32); ";
         break;
 
-    case rctdl_isa_thumb2:
+    case ocsd_isa_thumb2:
         oss << "Thumb2; ";
         break;
 
-    case rctdl_isa_aarch64:
+    case ocsd_isa_aarch64:
         oss << "AArch64; ";
         break;
 
-    case rctdl_isa_tee:
+    case ocsd_isa_tee:
         oss << "ThumbEE; ";
         break;
 
-    case rctdl_isa_jazelle:
+    case ocsd_isa_jazelle:
         oss << "Jazelle; ";
         break;
 
     default:
-    case rctdl_isa_unknown:
+    case ocsd_isa_unknown:
         oss << "Unknown; ";
         break;
     }

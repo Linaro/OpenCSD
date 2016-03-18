@@ -35,8 +35,8 @@
 #ifndef ARM_OPENCSD_C_API_H_INCLUDED
 #define ARM_OPENCSD_C_API_H_INCLUDED
 
-/** @defgroup lib_c_api Reference CoreSight Trace Decoder Library : Library "C" API.
-    @brief  "C" API for the Reference CoreSight Trace Decoder Library
+/** @defgroup lib_c_api OpenCSD Library : Library "C" API.
+    @brief  "C" API for the OpenCSD Library
 
     Set of "C" wrapper functions for the RCTDL library.
 
@@ -84,10 +84,10 @@
 
 @{*/
 /** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
-OCSD_C_API uint32_t rctdl_get_version(void);
+OCSD_C_API uint32_t ocsd_get_version(void);
 
 /** Get library version string */
-OCSD_C_API const char * rctdl_get_version_str(void);
+OCSD_C_API const char * ocsd_get_version_str(void);
 /** @}*/
 
 /** @name Library Decode Tree API
@@ -101,7 +101,7 @@ OCSD_C_API const char * rctdl_get_version_str(void);
  *
  * @return dcd_tree_handle_t  : Handle to the decode tree. Handle value set to 0 if creation failed.
  */
-OCSD_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags);
+OCSD_C_API dcd_tree_handle_t ocsd_create_dcd_tree(const ocsd_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags);
 
 /*!
  * Destroy a decode tree.
@@ -110,7 +110,7 @@ OCSD_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t sr
  *
  * @param handle : Handle for decode tree to destroy.
  */
-OCSD_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle);
+OCSD_C_API void ocsd_destroy_dcd_tree(const dcd_tree_handle_t handle);
 
 /*!
  * Input trace data into the decoder. 
@@ -124,11 +124,11 @@ OCSD_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle);
  * @param *pDataBlock : Pointer to data block.
  * @param *numBytesProcessed : Number of bytes actually processed by the decoder.
  *
- * @return rctdl_datapath_resp_t  : Datapath response code
+ * @return ocsd_datapath_resp_t  : Datapath response code
  */
-OCSD_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t handle,
-                                            const rctdl_datapath_op_t op,
-                                            const rctdl_trc_index_t index,
+OCSD_C_API ocsd_datapath_resp_t ocsd_dt_process_data(const dcd_tree_handle_t handle,
+                                            const ocsd_datapath_op_t op,
+                                            const ocsd_trc_index_t index,
                                             const uint32_t dataBlockSize,
                                             const uint8_t *pDataBlock,
                                             uint32_t *numBytesProcessed);
@@ -145,9 +145,9 @@ OCSD_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t h
  * @param pFn : Pointer to the callback functions.
  * @param p_context : opaque context pointer value used in callback function.
  *
- * @return  rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return  ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context);
+OCSD_C_API ocsd_err_t ocsd_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context);
 
 /*!
  * Create an ETMv4 instruction trace packet processor only for the supplied configuration. 
@@ -158,20 +158,20 @@ OCSD_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handl
  * @param pPktFn : pointer to a packet handling callback function.
  * @param p_context : opaque context pointer value used in callback function..
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn, const void *p_context);
+OCSD_C_API ocsd_err_t ocsd_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn, const void *p_context);
 
 /*!
  * Creates a packet processor + packet decoder pair for the supplied configuration structure.
- * Uses the output function set in rctdl_dt_set_gen_elem_outfn() as the output sink.
+ * Uses the output function set in ocsd_dt_set_gen_elem_outfn() as the output sink.
  *
  * @param handle : Handle to decode tree.
  * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *etmv4_cfg);
+OCSD_C_API ocsd_err_t ocsd_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *etmv4_cfg);
 
 /*!
  * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
@@ -181,9 +181,9 @@ OCSD_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t ha
  * @param pPktFn : Function to attach to monitor point.
  * @param p_context : opaque context pointer value used in callback function.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context); 
+OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context); 
 
 
 /*!
@@ -195,9 +195,9 @@ OCSD_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t ha
  * @param pPktFn : pointer to a packet handling callback function.
  * @param p_context : opaque context pointer value used in callback function.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn, const void *p_context);
+OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn, const void *p_context);
 
 
 /*!
@@ -209,9 +209,9 @@ OCSD_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t ha
  * @param pPktFn : Function to attach to monitor point.
  * @param p_context : opaque context pointer value used in callback function.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context); 
+OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context); 
 
 
 /*!
@@ -223,9 +223,9 @@ OCSD_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t han
  * @param pPktFn : pointer to a packet handling callback function.
  * @param p_context : opaque context pointer value used in callback function.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context);
+OCSD_C_API ocsd_err_t ocsd_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context);
 
 
 /** TBD : more C API functions to be added here */    
@@ -250,9 +250,9 @@ OCSD_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t hand
  * @param mem_space : Associated memory space.
  * @param *filepath : Path to binary data file.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
+OCSD_C_API ocsd_err_t ocsd_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const char *filepath); 
 
 /*!
  * Add a binary file based memory range accessor to the decode tree.
@@ -269,9 +269,9 @@ OCSD_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t hand
  * @param mem_space : Associated memory space.
  * @param *filepath : Path to binary data file.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
+OCSD_C_API ocsd_err_t ocsd_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const ocsd_mem_space_acc_t mem_space, const char *filepath); 
 
 /*!
  * Add a memory buffer based memory range accessor to the decode tree.
@@ -282,9 +282,9 @@ OCSD_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle
  * @param *p_mem_buffer : pointer to memory buffer.
  * @param mem_length : Size of memory buffer.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length); 
+OCSD_C_API ocsd_err_t ocsd_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length); 
 
 
 /*!
@@ -298,9 +298,9 @@ OCSD_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handl
  * @param p_cb_func : Callback function
  * @param p_context : opaque context pointer value used in callback function.
  *
- * @return OCSD_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return OCSD_C_API ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context); 
+OCSD_C_API ocsd_err_t ocsd_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context); 
 
 /*!
  * Remove a memory accessor by address and memory space.
@@ -309,16 +309,16 @@ OCSD_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t han
  * @param st_address : Start address of memory accessor. 
  * @param mem_space : Memory space(s) covered by the accessor.
  *
- * @return OCSD_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return OCSD_C_API ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space);
+OCSD_C_API ocsd_err_t ocsd_dt_remove_mem_acc(const dcd_tree_handle_t handle, const ocsd_vaddr_t st_address, const ocsd_mem_space_acc_t mem_space);
 
 /*
  *  Print the mapped memory accessor ranges to the configured logger.
  *
  * @param handle : Handle to decode tree.
  */
-OCSD_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
+OCSD_C_API void ocsd_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
 
 /** @}*/  
 
@@ -338,9 +338,9 @@ OCSD_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
  * @param verbosity : Severity of errors that will be logged.
  * @param create_output_logger : Set to none-zero to create an output printer.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful. 
  */
-OCSD_C_API rctdl_err_t rctdl_def_errlog_init(const rctdl_err_severity_t verbosity, const int create_output_logger);
+OCSD_C_API ocsd_err_t ocsd_def_errlog_init(const ocsd_err_severity_t verbosity, const int create_output_logger);
 
 /*!
  * Configure the output logger. Choose STDOUT, STDERR and/or log to file.
@@ -349,9 +349,9 @@ OCSD_C_API rctdl_err_t rctdl_def_errlog_init(const rctdl_err_severity_t verbosit
  * @param output_flags : OR combination of required  C_API_MSGLOGOUT_FLG_* flags.
  * @param *log_file_name : optional filename if logging to file. Set to NULL if not needed.
  *
- * @return OCSD_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
+ * @return OCSD_C_API ocsd_err_t  : Library error code -  RCDTL_OK if successful. 
  */
-OCSD_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, const char *log_file_name);
+OCSD_C_API ocsd_err_t ocsd_def_errlog_config_output(const int output_flags, const char *log_file_name);
 
 /*!
  * Print a message via the library output printer - if enabled.
@@ -359,7 +359,7 @@ OCSD_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, co
  * @param *msg : Message to output.
  *
  */
-OCSD_C_API void rctdl_def_errlog_msgout(const char *msg);
+OCSD_C_API void ocsd_def_errlog_msgout(const char *msg);
 
 
 /** @}*/
@@ -378,9 +378,9 @@ OCSD_C_API void rctdl_def_errlog_msgout(const char *msg);
  * @param *buffer : character buffer for string.
  * @param buffer_size : size of character buffer.
  *
- * @return  rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
+ * @return  ocsd_err_t  : Library error code -  RCDTL_OK if successful. 
  */
-OCSD_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, const void *p_pkt, char *buffer, const int buffer_size);
+OCSD_C_API ocsd_err_t ocsd_pkt_str(const ocsd_trace_protocol_t pkt_protocol, const void *p_pkt, char *buffer, const int buffer_size);
 
 /*!
  * Get a string representation of the generic trace element.
@@ -389,9 +389,9 @@ OCSD_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, 
  * @param *buffer : character buffer for string.
  * @param buffer_size : size of character buffer.
  *
- * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful. 
  */
-OCSD_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt, char *buffer, const int buffer_size);
+OCSD_C_API ocsd_err_t ocsd_gen_elem_str(const ocsd_generic_trace_elem *p_pkt, char *buffer, const int buffer_size);
 
 /** @}*/
 

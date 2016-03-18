@@ -1,6 +1,6 @@
 /*
  * \file       ss_to_dcdtree.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -83,11 +83,11 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
             /* make a note of the trace binary file name + path to ss directory */            
             m_BufferFileName = m_pReader->getSnapShotDir() + tree.buffer_info.dataFileName;
 
-            rctdl_dcd_tree_src_t src_format = tree.buffer_info.dataFormat == "source_data" ? RCTDL_TRC_SRC_SINGLE : RCTDL_TRC_SRC_FRAME_FORMATTED;
+            ocsd_dcd_tree_src_t src_format = tree.buffer_info.dataFormat == "source_data" ? OCSD_TRC_SRC_SINGLE : OCSD_TRC_SRC_FRAME_FORMATTED;
 
             /* create the initial device tree */
             // TBD:     handle syncs / hsyncs data from TPIU
-            m_pDecodeTree = DecodeTree::CreateDecodeTree(src_format,RCTDL_DFRMTR_FRAME_MEM_ALIGN); 
+            m_pDecodeTree = DecodeTree::CreateDecodeTree(src_format,OCSD_DFRMTR_FRAME_MEM_ALIGN); 
             if(m_pDecodeTree == 0)
             {
                 LogError("Failed to create decode tree object\n");
@@ -165,7 +165,7 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
                     oss << "Failed to find device data for source " << it->first << ".\n";
                     LogError(oss.str());
                 }
-                if(src_format == RCTDL_TRC_SRC_SINGLE)
+                if(src_format == OCSD_TRC_SRC_SINGLE)
                     it = tree.source_core_assoc.end();
                 else
                     it++;
@@ -200,11 +200,11 @@ void CreateDcdTreeFromSnapShot::destroyDecodeTree()
 
 void  CreateDcdTreeFromSnapShot::LogError(const std::string &msg)
 {
-    rctdlError err(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_TEST_SS_TO_DECODER,msg);
+    ocsdError err(OCSD_ERR_SEV_ERROR,OCSD_ERR_TEST_SS_TO_DECODER,msg);
     m_pErrLogInterface->LogError(m_errlog_handle,&err);
 }
 
-void CreateDcdTreeFromSnapShot::LogError(const rctdlError &err)
+void CreateDcdTreeFromSnapShot::LogError(const ocsdError &err)
 {
     m_pErrLogInterface->LogError(m_errlog_handle,&err);
 }
@@ -269,7 +269,7 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
     // good config - generate the decoder on the tree.
     if(configOK)
     {
-        rctdl_err_t err = RCTDL_OK;
+        ocsd_err_t err = OCSD_OK;
         if(m_bPacketProcOnly)
         {
             if(bDataChannel)
@@ -281,10 +281,10 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
         {
             err = m_pDecodeTree->createETMv4Decoder(&config,bDataChannel);
         }
-        if(err ==  RCTDL_OK)
+        if(err ==  OCSD_OK)
             createdDecoder = true;
         else
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
     }
 
     return createdDecoder;
@@ -316,16 +316,16 @@ bool CreateDcdTreeFromSnapShot::createETMv3Decoder(const std::string &coreName, 
     // good config - generate the decoder on the tree.
     if(configOK)
     {
-        rctdl_err_t err = RCTDL_OK;
+        ocsd_err_t err = OCSD_OK;
         if(m_bPacketProcOnly)
             err = m_pDecodeTree->createETMv3PktProcessor(&config);
         else
             err = m_pDecodeTree->createETMv3Decoder(&config);
 
-        if(err ==  RCTDL_OK)
+        if(err ==  OCSD_OK)
             createdDecoder = true;
         else
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
     }
     return createdDecoder;
 }
@@ -355,16 +355,16 @@ bool CreateDcdTreeFromSnapShot::createPTMDecoder(const std::string &coreName, Pa
     // good config - generate the decoder on the tree.
     if(configOK)
     {
-        rctdl_err_t err = RCTDL_OK;
+        ocsd_err_t err = OCSD_OK;
         if(m_bPacketProcOnly)
             err = m_pDecodeTree->createPTMPktProcessor(&config);
         else
             err = m_pDecodeTree->createPTMDecoder(&config);
 
-        if(err ==  RCTDL_OK)
+        if(err ==  OCSD_OK)
             createdDecoder = true;
         else
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
     }
     return createdDecoder;
 
@@ -403,16 +403,16 @@ bool CreateDcdTreeFromSnapShot::createSTMDecoder(Parser::Parsed *devSrc)
     configOK = getRegisters(devSrc->regDefs,sizeof(regs_to_access)/sizeof(regs_to_access_t), regs_to_access);
     if(configOK)
     {
-        rctdl_err_t err = RCTDL_OK;
+        ocsd_err_t err = OCSD_OK;
         if(m_bPacketProcOnly)
             err = m_pDecodeTree->createSTMPktProcessor(&config);
         else
-            err = RCTDL_ERR_TEST_SS_TO_DECODER;
+            err = OCSD_ERR_TEST_SS_TO_DECODER;
 
-        if(err ==  RCTDL_OK)
+        if(err ==  OCSD_OK)
             createdDecoder = true;
         else
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,"Snapshot processor : failed to create STM decoder on decode tree."));
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create STM decoder on decode tree."));
     }
 
     return createdDecoder;
@@ -467,7 +467,7 @@ bool CreateDcdTreeFromSnapShot::getRegByPrefix(std::map<std::string, std::string
         *reg_accessor.value = strtoul(strval.c_str(),0,0);
     else
     {
-        rctdl_err_severity_t sev = RCTDL_ERR_SEV_ERROR;
+        ocsd_err_severity_t sev = OCSD_ERR_SEV_ERROR;
         if(reg_accessor.failIfMissing)
         {
             oss << "Error:";
@@ -477,7 +477,7 @@ bool CreateDcdTreeFromSnapShot::getRegByPrefix(std::map<std::string, std::string
             // no fail if missing - set any default and just warn.
             bFound = true;
             oss << "Warning: Default set for register. ";
-            sev = RCTDL_ERR_SEV_WARN;
+            sev = OCSD_ERR_SEV_WARN;
             *reg_accessor.value = reg_accessor.val_default;
         }
         oss << "Missing " << reg_accessor.pszName << "\n";
@@ -486,10 +486,10 @@ bool CreateDcdTreeFromSnapShot::getRegByPrefix(std::map<std::string, std::string
     return bFound;
 }
 
-bool CreateDcdTreeFromSnapShot::getCoreProfile(const std::string &coreName, rctdl_arch_version_t &arch_ver, rctdl_core_profile_t &core_prof)
+bool CreateDcdTreeFromSnapShot::getCoreProfile(const std::string &coreName, ocsd_arch_version_t &arch_ver, ocsd_core_profile_t &core_prof)
 {
     bool profileOK = true;
-    rctdl_arch_profile_t ap = m_arch_profiles.getArchProfile(coreName);
+    ocsd_arch_profile_t ap = m_arch_profiles.getArchProfile(coreName);
     if(ap.arch != ARCH_UNKNOWN)
     {
         arch_ver = ap.arch;
@@ -518,9 +518,9 @@ void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &d
         {
             TrcMemAccessorBase *p_acc;
             // not already a file accessor on this tree (n.b. assume only one tree in use)
-            rctdl_err_t err = TrcMemAccFactory::CreateFileAccessor(&p_acc, dumpFilePathName,it->address);
+            ocsd_err_t err = TrcMemAccFactory::CreateFileAccessor(&p_acc, dumpFilePathName,it->address);
                 
-            if(err == RCTDL_OK)
+            if(err == OCSD_OK)
             { 
                 err = m_pDecodeTree->addMemAccessorToMap(p_acc,0);
             }
@@ -528,7 +528,7 @@ void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &d
             {                
                 std::ostringstream oss;
                 oss << "Failed to create memory accessor for file " << dumpFilePathName << ".";
-                LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,oss.str()));
+                LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,oss.str()));
             }
         }
         it++;

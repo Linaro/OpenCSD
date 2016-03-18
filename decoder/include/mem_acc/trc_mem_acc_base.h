@@ -1,6 +1,6 @@
 /*!
  * \file       trc_mem_acc_base.h
- * \brief      Reference CoreSight Trace Decoder : Memory accessor base class.
+ * \brief      OpenCSD : Memory accessor base class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -65,7 +65,7 @@ public:
     TrcMemAccessorBase(MemAccTypes type);
     
     /** costruct with address range values */
-    TrcMemAccessorBase(MemAccTypes type, rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr);
+    TrcMemAccessorBase(MemAccTypes type, ocsd_vaddr_t startAddr, ocsd_vaddr_t endAddr);
     
     /** default desctructor */
     virtual ~TrcMemAccessorBase() {};
@@ -76,7 +76,7 @@ public:
      * @param startAddr : start address of the range.
      * @param endAddr : end address of the range.
      */
-    void setRange(rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr);
+    void setRange(ocsd_vaddr_t startAddr, ocsd_vaddr_t endAddr);
 
     /*!
      * test if an address is in the inclusive range for this accessor
@@ -85,7 +85,7 @@ public:
      *
      * @return const bool  : true if the address is in range.
      */
-    virtual const bool addrInRange(const rctdl_vaddr_t s_address) const;
+    virtual const bool addrInRange(const ocsd_vaddr_t s_address) const;
 
 
     /*!
@@ -95,7 +95,7 @@ public:
      *
      * @return const bool  : true if the address is start of range.
      */
-    virtual const bool addrStartOfRange(const rctdl_vaddr_t s_address) const;
+    virtual const bool addrStartOfRange(const ocsd_vaddr_t s_address) const;
 
     /*!
      * Test number of bytes available from the start address, up to the number of requested bytes.
@@ -107,7 +107,7 @@ public:
      *
      * @return const uint32_t  : Bytes available, up to reqBytes. 0 is s_address not in range.
      */
-    virtual const uint32_t bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const;
+    virtual const uint32_t bytesInRange(const ocsd_vaddr_t s_address, const uint32_t reqBytes) const;
     
     /*!
      * test is supplied range accessor overlaps this range.
@@ -128,7 +128,7 @@ public:
      *
      * @return uint32_t : Number of bytes read, 0 if s_address out of range, or mem space not accessible.
      */
-    virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const rctdl_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer) = 0;
+    virtual const uint32_t readBytes(const ocsd_vaddr_t s_address, const ocsd_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer) = 0;
 
     /*!
      * Validate the address range - ensure addresses aligned, different, st < en etc.
@@ -141,25 +141,25 @@ public:
     const enum MemAccTypes getType() const { return m_type; };
 
     /* handle memory spaces */
-    void setMemSpace(rctdl_mem_space_acc_t memSpace) { m_mem_space = memSpace; };
-    const rctdl_mem_space_acc_t getMemSpace() const { return m_mem_space; };
-    const bool inMemSpace(const rctdl_mem_space_acc_t mem_space) const { return (bool)(((uint8_t)m_mem_space & (uint8_t)mem_space) != 0); }; 
+    void setMemSpace(ocsd_mem_space_acc_t memSpace) { m_mem_space = memSpace; };
+    const ocsd_mem_space_acc_t getMemSpace() const { return m_mem_space; };
+    const bool inMemSpace(const ocsd_mem_space_acc_t mem_space) const { return (bool)(((uint8_t)m_mem_space & (uint8_t)mem_space) != 0); }; 
     
     /* memory access info logging */
     virtual void getMemAccString(std::string &accStr) const;
 
 protected:
-    rctdl_vaddr_t m_startAddress;   /**< accessible range start address */
-    rctdl_vaddr_t m_endAddress;     /**< accessible range end address */
+    ocsd_vaddr_t m_startAddress;   /**< accessible range start address */
+    ocsd_vaddr_t m_endAddress;     /**< accessible range end address */
     const MemAccTypes m_type;       /**< memory accessor type */
-    rctdl_mem_space_acc_t m_mem_space;
+    ocsd_mem_space_acc_t m_mem_space;
 };
 
-inline TrcMemAccessorBase::TrcMemAccessorBase(MemAccTypes accType, rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr) :
+inline TrcMemAccessorBase::TrcMemAccessorBase(MemAccTypes accType, ocsd_vaddr_t startAddr, ocsd_vaddr_t endAddr) :
      m_startAddress(startAddr),
      m_endAddress(endAddr),
      m_type(accType),
-     m_mem_space(RCTDL_MEM_SPACE_ANY)
+     m_mem_space(OCSD_MEM_SPACE_ANY)
 {
 }
 
@@ -167,30 +167,30 @@ inline TrcMemAccessorBase::TrcMemAccessorBase(MemAccTypes accType) :
      m_startAddress(0),
      m_endAddress(0),
      m_type(accType),
-     m_mem_space(RCTDL_MEM_SPACE_ANY)
+     m_mem_space(OCSD_MEM_SPACE_ANY)
 {
 }
 
-inline void TrcMemAccessorBase::setRange(rctdl_vaddr_t startAddr, rctdl_vaddr_t endAddr)
+inline void TrcMemAccessorBase::setRange(ocsd_vaddr_t startAddr, ocsd_vaddr_t endAddr)
 {
      m_startAddress = startAddr;
      m_endAddress = endAddr;
 }
 
-inline const bool TrcMemAccessorBase::addrInRange(const rctdl_vaddr_t s_address) const
+inline const bool TrcMemAccessorBase::addrInRange(const ocsd_vaddr_t s_address) const
 {
     return (s_address >= m_startAddress) && (s_address <= m_endAddress);
 }
 
-inline const bool TrcMemAccessorBase::addrStartOfRange(const rctdl_vaddr_t s_address) const
+inline const bool TrcMemAccessorBase::addrStartOfRange(const ocsd_vaddr_t s_address) const
 {
     return (s_address == m_startAddress);
 }
 
 
-inline const uint32_t TrcMemAccessorBase::bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const
+inline const uint32_t TrcMemAccessorBase::bytesInRange(const ocsd_vaddr_t s_address, const uint32_t reqBytes) const
 {
-    rctdl_vaddr_t bytesInRange = 0;
+    ocsd_vaddr_t bytesInRange = 0;
     if(addrInRange(s_address))  // start not in range, return 0.
     {
         // bytes available till end address.
@@ -228,9 +228,9 @@ class TrcMemAccFactory
 {
 public:
     /** Accessor Creation */
-    static rctdl_err_t CreateBufferAccessor(TrcMemAccessorBase **pAccessor, const rctdl_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size);
-    static rctdl_err_t CreateFileAccessor(TrcMemAccessorBase **pAccessor, const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset = 0, size_t size = 0);
-    static rctdl_err_t CreateCBAccessor(TrcMemAccessorBase **pAccessor, const rctdl_vaddr_t s_address, const rctdl_vaddr_t e_address, const rctdl_mem_space_acc_t mem_space);
+    static ocsd_err_t CreateBufferAccessor(TrcMemAccessorBase **pAccessor, const ocsd_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size);
+    static ocsd_err_t CreateFileAccessor(TrcMemAccessorBase **pAccessor, const std::string &pathToFile, ocsd_vaddr_t startAddr, size_t offset = 0, size_t size = 0);
+    static ocsd_err_t CreateCBAccessor(TrcMemAccessorBase **pAccessor, const ocsd_vaddr_t s_address, const ocsd_vaddr_t e_address, const ocsd_mem_space_acc_t mem_space);
     
     /** Accessor Destruction */
     static void DestroyAccessor(TrcMemAccessorBase *pAccessor);

@@ -1,6 +1,6 @@
 /*
  * \file       snapshot_parser_util.h
- * \brief      Reference CoreSight Trace Decoder : Snapshot Parser Library
+ * \brief      OpenCSD : Snapshot Parser Library
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -64,7 +64,7 @@ namespace Util
     //
     inline void ThrowUnsignedConversionError(const std::string& s)
     {
-        throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE, "Could not parse '" + s + "' as unsigned integer");
+        throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE, "Could not parse '" + s + "' as unsigned integer");
     }
 
     template <class T>

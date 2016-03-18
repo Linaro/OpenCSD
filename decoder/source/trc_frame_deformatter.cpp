@@ -1,6 +1,6 @@
 /*
  * \file       trc_frame_deformatter.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -45,7 +45,7 @@
 #define DEFORMATTER_NAME "DFMT_CSFRAMES"
 #else
 // VC is fine
-#define DEFORMATTER_NAME RCTDL_CMPNAME_PREFIX_FRAMEDEFORMATTER##"_CSFRAMES"
+#define DEFORMATTER_NAME OCSD_CMPNAME_PREFIX_FRAMEDEFORMATTER##"_CSFRAMES"
 #endif
 
 TraceFmtDcdImpl::TraceFmtDcdImpl() : TraceComponent(DEFORMATTER_NAME),
@@ -75,38 +75,38 @@ TraceFmtDcdImpl::~TraceFmtDcdImpl()
 {
 }
 
-rctdl_datapath_resp_t TraceFmtDcdImpl::TraceDataIn(
-    const rctdl_datapath_op_t op, 
-    const rctdl_trc_index_t index, 
+ocsd_datapath_resp_t TraceFmtDcdImpl::TraceDataIn(
+    const ocsd_datapath_op_t op, 
+    const ocsd_trc_index_t index, 
     const uint32_t dataBlockSize, 
     const uint8_t *pDataBlock, 
     uint32_t *numBytesProcessed)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_FATAL_INVALID_OP;
+    ocsd_datapath_resp_t resp = OCSD_RESP_FATAL_INVALID_OP;
     InitCollateDataPathResp();
 
-    m_b_output_packed_raw = m_RawTraceFrame.num_attached() && ((m_cfgFlags & RCTDL_DFRMTR_PACKED_RAW_OUT) != 0);
-    m_b_output_unpacked_raw = m_RawTraceFrame.num_attached() && ((m_cfgFlags & RCTDL_DFRMTR_UNPACKED_RAW_OUT) != 0);
+    m_b_output_packed_raw = m_RawTraceFrame.num_attached() && ((m_cfgFlags & OCSD_DFRMTR_PACKED_RAW_OUT) != 0);
+    m_b_output_unpacked_raw = m_RawTraceFrame.num_attached() && ((m_cfgFlags & OCSD_DFRMTR_UNPACKED_RAW_OUT) != 0);
 
     switch(op)
     {
-    case RCTDL_OP_RESET: 
+    case OCSD_OP_RESET: 
         resp = Reset();
         break;
 
-    case RCTDL_OP_FLUSH:
+    case OCSD_OP_FLUSH:
         resp = Flush();
         break;
 
-    case RCTDL_OP_EOT:
+    case OCSD_OP_EOT:
         // local 'flush' here?
         // pass on EOT to connected ID streams
-        resp = executeNoneDataOpAllIDs(RCTDL_OP_EOT);
+        resp = executeNoneDataOpAllIDs(OCSD_OP_EOT);
         break;
 
-    case RCTDL_OP_DATA:
+    case OCSD_OP_DATA:
         if((dataBlockSize <= 0) || ( pDataBlock == 0) || (numBytesProcessed == 0))
-            resp = RCTDL_RESP_FATAL_INVALID_PARAM;
+            resp = OCSD_RESP_FATAL_INVALID_PARAM;
         else
             resp = processTraceData(index,dataBlockSize, pDataBlock, numBytesProcessed);
         break;
@@ -119,17 +119,17 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::TraceDataIn(
 }
 
 /* enable / disable ID streams - default as all enabled */
-rctdl_err_t TraceFmtDcdImpl::OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable)
+ocsd_err_t TraceFmtDcdImpl::OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable)
 {
-    rctdl_err_t err =  RCTDL_OK;
+    ocsd_err_t err =  OCSD_OK;
     std::vector<uint8_t>::iterator iter = id_list.begin();
     uint8_t id = 0;
 
-    while((iter < id_list.end()) && (err == RCTDL_OK))
+    while((iter < id_list.end()) && (err == OCSD_OK))
     {
         id = *iter;
         if(id > 128)
-            err = RCTDL_ERR_INVALID_ID;
+            err = OCSD_ERR_INVALID_ID;
         else
         {
             m_IDStreams[id].set_enabled(bEnable);
@@ -140,14 +140,14 @@ rctdl_err_t TraceFmtDcdImpl::OutputFilterIDs(std::vector<uint8_t> &id_list, bool
     return err;
 }
 
-rctdl_err_t TraceFmtDcdImpl::OutputFilterAllIDs(bool bEnable)
+ocsd_err_t TraceFmtDcdImpl::OutputFilterAllIDs(bool bEnable)
 {
     for(uint8_t id = 0; id < 128; id++)
     {
         m_IDStreams[id].set_enabled(bEnable);
     }
     setRawChanFilterAll(bEnable);
-    return RCTDL_OK;
+    return OCSD_OK;
 }
 
 void TraceFmtDcdImpl::setRawChanFilterAll(bool bEnable)
@@ -166,22 +166,22 @@ const bool TraceFmtDcdImpl::rawChanEnabled(const uint8_t id) const
 }
 
 /* decode control */
-rctdl_datapath_resp_t TraceFmtDcdImpl::Reset()
+ocsd_datapath_resp_t TraceFmtDcdImpl::Reset()
 {
     resetStateParams();
     InitCollateDataPathResp();
-    return executeNoneDataOpAllIDs(RCTDL_OP_RESET);
+    return executeNoneDataOpAllIDs(OCSD_OP_RESET);
 }
 
-rctdl_datapath_resp_t TraceFmtDcdImpl::Flush()
+ocsd_datapath_resp_t TraceFmtDcdImpl::Flush()
 {
-    executeNoneDataOpAllIDs(RCTDL_OP_FLUSH);    // flush any upstream data.
+    executeNoneDataOpAllIDs(OCSD_OP_FLUSH);    // flush any upstream data.
     if(dataPathCont())
         outputFrame();  // try to flush any partial frame data remaining
     return highestDataPathResp();
 }
 
-rctdl_datapath_resp_t TraceFmtDcdImpl::executeNoneDataOpAllIDs(rctdl_datapath_op_t op)
+ocsd_datapath_resp_t TraceFmtDcdImpl::executeNoneDataOpAllIDs(ocsd_datapath_op_t op)
 {
     ITrcDataIn *pTrcComp = 0;
     for(uint8_t id = 0; id < 128; id++)
@@ -200,14 +200,14 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::executeNoneDataOpAllIDs(rctdl_datapath_op
     if( m_RawTraceFrame.num_attached())
     {
         if(m_RawTraceFrame.first())
-            m_RawTraceFrame.first()->TraceRawFrameIn(op,0,RCTDL_FRM_NONE,0,0,0);
+            m_RawTraceFrame.first()->TraceRawFrameIn(op,0,OCSD_FRM_NONE,0,0,0);
     }
     return highestDataPathResp();
 }
 
-void TraceFmtDcdImpl::outputRawMonBytes(const rctdl_datapath_op_t op, 
-                           const rctdl_trc_index_t index, 
-                           const rctdl_rawframe_elem_t frame_element, 
+void TraceFmtDcdImpl::outputRawMonBytes(const ocsd_datapath_op_t op, 
+                           const ocsd_trc_index_t index, 
+                           const ocsd_rawframe_elem_t frame_element, 
                            const int dataBlockSize, 
                            const uint8_t *pDataBlock,
                            const uint8_t traceID)                           
@@ -219,14 +219,14 @@ void TraceFmtDcdImpl::outputRawMonBytes(const rctdl_datapath_op_t op,
     }
 }
 
-void TraceFmtDcdImpl::CollateDataPathResp(const rctdl_datapath_resp_t resp)
+void TraceFmtDcdImpl::CollateDataPathResp(const ocsd_datapath_resp_t resp)
 {
     // simple most severe error across multiple IDs.
     if(resp > m_highestResp) m_highestResp = resp;
 }
 
-rctdl_datapath_resp_t TraceFmtDcdImpl::processTraceData( 
-                                        const rctdl_trc_index_t index, 
+ocsd_datapath_resp_t TraceFmtDcdImpl::processTraceData( 
+                                        const ocsd_trc_index_t index, 
                                         const uint32_t dataBlockSize, 
                                         const uint8_t *pDataBlock, 
                                         uint32_t *numBytesProcessed
@@ -241,16 +241,16 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::processTraceData(
         else
         {
             if(m_trc_curr_idx != index) // none continuous trace data - throw an error.
-                throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_DFMTR_NOTCONTTRACE,index);
+                throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_DFMTR_NOTCONTTRACE,index);
         }
         
         if(dataBlockSize % m_alignment) // must be correctly aligned data 
         {
-            rctdlError err(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_INVALID_PARAM_VAL);
+            ocsdError err(OCSD_ERR_SEV_ERROR, OCSD_ERR_INVALID_PARAM_VAL);
             char msg_buffer[64];
             sprintf(msg_buffer,"Input block incorrect size, must be %d byte multiple", m_alignment);
             err.setMessage(msg_buffer);
-            throw rctdlError(&err);
+            throw ocsdError(&err);
         }
 
         // record the incoming block for extraction routines to use.
@@ -272,13 +272,13 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::processTraceData(
             }
         }
     }
-    catch(const rctdlError &err) {
+    catch(const ocsdError &err) {
         LogError(err);
         CollateDataPathResp(RCDTL_RESP_FATAL_INVALID_DATA);
     }
     catch(...) {
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_FAIL));
-        CollateDataPathResp(RCTDL_RESP_FATAL_SYS_ERR);
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_FAIL));
+        CollateDataPathResp(OCSD_RESP_FATAL_SYS_ERR);
     }
 
     if(!m_first_data)
@@ -290,34 +290,34 @@ rctdl_datapath_resp_t TraceFmtDcdImpl::processTraceData(
     return highestDataPathResp();
 }
 
-rctdl_err_t  TraceFmtDcdImpl::DecodeConfigure(uint32_t flags)
+ocsd_err_t  TraceFmtDcdImpl::DecodeConfigure(uint32_t flags)
 {
     const char *pszErrMsg = "";
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
 
-    if((flags & ~RCTDL_DFRMTR_VALID_MASK) != 0)
+    if((flags & ~OCSD_DFRMTR_VALID_MASK) != 0)
     {
-        err = RCTDL_ERR_INVALID_PARAM_VAL;
+        err = OCSD_ERR_INVALID_PARAM_VAL;
         pszErrMsg = "Unknown Config Flags";
     }
 
-    if((flags & RCTDL_DFRMTR_VALID_MASK) == 0)
+    if((flags & OCSD_DFRMTR_VALID_MASK) == 0)
     {
-        err = RCTDL_ERR_INVALID_PARAM_VAL;
+        err = OCSD_ERR_INVALID_PARAM_VAL;
         pszErrMsg = "No Config Flags Set";
     }
 
-    if((flags & (RCTDL_DFRMTR_HAS_FSYNCS | RCTDL_DFRMTR_HAS_HSYNCS)) &&
-       (flags & RCTDL_DFRMTR_FRAME_MEM_ALIGN)
+    if((flags & (OCSD_DFRMTR_HAS_FSYNCS | OCSD_DFRMTR_HAS_HSYNCS)) &&
+       (flags & OCSD_DFRMTR_FRAME_MEM_ALIGN)
        )
     {
-        err = RCTDL_ERR_INVALID_PARAM_VAL;
+        err = OCSD_ERR_INVALID_PARAM_VAL;
         pszErrMsg = "Invalid Config Flag Combination Set";
     }
 
-    if(err != RCTDL_OK)
+    if(err != OCSD_OK)
     {
-        rctdlError errObj(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PARAM_VAL);
+        ocsdError errObj(OCSD_ERR_SEV_ERROR,OCSD_ERR_INVALID_PARAM_VAL);
         errObj.setMessage(pszErrMsg);
         LogError(errObj);
     }
@@ -325,9 +325,9 @@ rctdl_err_t  TraceFmtDcdImpl::DecodeConfigure(uint32_t flags)
     {
         m_cfgFlags = flags;
         m_alignment = 16;
-        if(flags & RCTDL_DFRMTR_HAS_FSYNCS)
+        if(flags & OCSD_DFRMTR_HAS_FSYNCS)
             m_alignment = 4;
-        else if(flags & RCTDL_DFRMTR_HAS_HSYNCS)
+        else if(flags & OCSD_DFRMTR_HAS_HSYNCS)
             m_alignment = 2;
     }
     return err;
@@ -336,14 +336,14 @@ rctdl_err_t  TraceFmtDcdImpl::DecodeConfigure(uint32_t flags)
 void TraceFmtDcdImpl::resetStateParams()
 {
     // overall dynamic state - intra frame
-    m_trc_curr_idx = RCTDL_BAD_TRC_INDEX;    /* source index of current trace data */
+    m_trc_curr_idx = OCSD_BAD_TRC_INDEX;    /* source index of current trace data */
     m_frame_synced = false;
     m_first_data = false;    
-    m_curr_src_ID = RCTDL_BAD_CS_SRC_ID;
+    m_curr_src_ID = OCSD_BAD_CS_SRC_ID;
 
     // current frame processing
     m_ex_frm_n_bytes = 0;
-    m_trc_curr_idx_sof = RCTDL_BAD_TRC_INDEX;
+    m_trc_curr_idx_sof = OCSD_BAD_TRC_INDEX;
 }
 
 bool TraceFmtDcdImpl::checkForSync()
@@ -369,14 +369,14 @@ bool TraceFmtDcdImpl::checkForSync()
                 unsynced_bytes = m_in_block_size;
             }
         }
-        else if( m_cfgFlags & RCTDL_DFRMTR_HAS_FSYNCS)   // memory aligned data
+        else if( m_cfgFlags & OCSD_DFRMTR_HAS_FSYNCS)   // memory aligned data
         {
              unsynced_bytes = findfirstFSync();
 
         }
         else
         {
-            // RCTDL_DFRMTR_FRAME_MEM_ALIGN - this has guaranteed 16 byte frame size and alignment.
+            // OCSD_DFRMTR_FRAME_MEM_ALIGN - this has guaranteed 16 byte frame size and alignment.
             m_frame_synced = true;
         }
 
@@ -399,9 +399,9 @@ uint32_t TraceFmtDcdImpl::findfirstFSync()
         uint8_t pattern[] = { 0xFF, 0xFF, 0xFF, 0x7F };
         if(!m_match_fsync.setPattern(pattern,sizeof(pattern)))
         {
-            rctdlError err(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_NOT_INIT);
+            ocsdError err(OCSD_ERR_SEV_ERROR, OCSD_ERR_NOT_INIT);
             err.setMessage("Failed to set pattern in FSYNC matcher.");
-            throw rctdlError(&err);
+            throw ocsdError(&err);
         }
     }
 
@@ -428,7 +428,7 @@ bool TraceFmtDcdImpl::extractFrame()
     uint32_t ex_bytes = 0;  // extracted bytes
 
     // memory aligned sources are always multiples of frames, aligned to start.
-    if( m_cfgFlags & RCTDL_DFRMTR_FRAME_MEM_ALIGN)
+    if( m_cfgFlags & OCSD_DFRMTR_FRAME_MEM_ALIGN)
     {
         if(m_in_block_processed == m_in_block_size)
         {
@@ -438,10 +438,10 @@ bool TraceFmtDcdImpl::extractFrame()
         else
         {
             // always a complete frame.
-            m_ex_frm_n_bytes = RCTDL_DFRMTR_FRAME_SIZE;
+            m_ex_frm_n_bytes = OCSD_DFRMTR_FRAME_SIZE;
             memcpy(m_ex_frm_data, m_in_block_base+m_in_block_processed,m_ex_frm_n_bytes);
             m_trc_curr_idx_sof = m_trc_curr_idx;
-            ex_bytes = RCTDL_DFRMTR_FRAME_SIZE;
+            ex_bytes = OCSD_DFRMTR_FRAME_SIZE;
         }
     }
     else
@@ -453,8 +453,8 @@ bool TraceFmtDcdImpl::extractFrame()
         #define HSYNC_PATTERN 0x7FFF        // LE host pattern for HSYNC
 
         // check what we a looking for
-        bool hasFSyncs =  ((m_cfgFlags & RCTDL_DFRMTR_HAS_FSYNCS) == RCTDL_DFRMTR_HAS_FSYNCS);
-        bool hasHSyncs =  ((m_cfgFlags & RCTDL_DFRMTR_HAS_HSYNCS) == RCTDL_DFRMTR_HAS_HSYNCS);
+        bool hasFSyncs =  ((m_cfgFlags & OCSD_DFRMTR_HAS_FSYNCS) == OCSD_DFRMTR_HAS_FSYNCS);
+        bool hasHSyncs =  ((m_cfgFlags & OCSD_DFRMTR_HAS_HSYNCS) == OCSD_DFRMTR_HAS_HSYNCS);
 
         const uint8_t *dataPtr = m_in_block_base+m_in_block_processed;
         const uint8_t *eodPtr = m_in_block_base+m_in_block_size;
@@ -475,7 +475,7 @@ bool TraceFmtDcdImpl::extractFrame()
         }
 
         // not an FSYNC
-        while((m_ex_frm_n_bytes < RCTDL_DFRMTR_FRAME_SIZE) && cont_process)
+        while((m_ex_frm_n_bytes < OCSD_DFRMTR_FRAME_SIZE) && cont_process)
         {
             // check for illegal out of sequence FSYNC
             if((m_ex_frm_n_bytes % 4) == 0)
@@ -518,16 +518,16 @@ bool TraceFmtDcdImpl::extractFrame()
 
         // if we hit the end of data but still have a complete frame waiting, 
         // need to continue processing to allow it to be used.
-        if(!cont_process && (m_ex_frm_n_bytes == RCTDL_DFRMTR_FRAME_SIZE))
+        if(!cont_process && (m_ex_frm_n_bytes == OCSD_DFRMTR_FRAME_SIZE))
             cont_process = true;
     }
 
     // output raw data on raw frame channel - packed raw. 
-    if ((m_ex_frm_n_bytes == RCTDL_DFRMTR_FRAME_SIZE) && m_b_output_packed_raw)
+    if ((m_ex_frm_n_bytes == OCSD_DFRMTR_FRAME_SIZE) && m_b_output_packed_raw)
     {
-        outputRawMonBytes(  RCTDL_OP_DATA, 
+        outputRawMonBytes(  OCSD_OP_DATA, 
                             m_trc_curr_idx, 
-                            RCTDL_FRM_PACKED,
+                            OCSD_FRM_PACKED,
                             ex_bytes + f_sync_bytes + h_sync_bytes,
                             m_in_block_base+m_in_block_processed,
                             0);
@@ -546,7 +546,7 @@ bool TraceFmtDcdImpl::unpackFrame()
 {
     // unpack cannot fail as never called on incomplete frame.
     uint8_t frameFlagBit = 0x1;
-    uint8_t newSrcID = RCTDL_BAD_CS_SRC_ID;
+    uint8_t newSrcID = OCSD_BAD_CS_SRC_ID;
     bool PrevIDandIDChange = false;
 
     // init output processing
@@ -637,7 +637,7 @@ bool TraceFmtDcdImpl::outputFrame()
     {
         
         // may have data prior to a valid ID appearing
-        if(m_out_data[m_out_processed].id != RCTDL_BAD_CS_SRC_ID)
+        if(m_out_data[m_out_processed].id != OCSD_BAD_CS_SRC_ID)
         {
             if((pDataIn = m_IDStreams[m_out_data[m_out_processed].id].first()) != 0)
             {
@@ -645,16 +645,16 @@ bool TraceFmtDcdImpl::outputFrame()
                 // however, don't re-output if only part used first time round.
                 if(m_b_output_unpacked_raw && (m_out_data[m_out_processed].used == 0) && rawChanEnabled( m_out_data[m_out_processed].id))
                 {
-                    outputRawMonBytes( RCTDL_OP_DATA, 
+                    outputRawMonBytes( OCSD_OP_DATA, 
                             m_out_data[m_out_processed].index, 
-                            RCTDL_FRM_ID_DATA,
+                            OCSD_FRM_ID_DATA,
                             m_out_data[m_out_processed].valid,
                             m_out_data[m_out_processed].data,
                             m_out_data[m_out_processed].id);
                 }
 
                 // output to the connected packet process
-                CollateDataPathResp(pDataIn->TraceDataIn(RCTDL_OP_DATA,
+                CollateDataPathResp(pDataIn->TraceDataIn(OCSD_OP_DATA,
                     m_out_data[m_out_processed].index + m_out_data[m_out_processed].used,
                     m_out_data[m_out_processed].valid - m_out_data[m_out_processed].used,
                     m_out_data[m_out_processed].data + m_out_data[m_out_processed].used,
@@ -677,9 +677,9 @@ bool TraceFmtDcdImpl::outputFrame()
                 // optional raw output for debugging / monitor tools
                 if(m_b_output_unpacked_raw && rawChanEnabled( m_out_data[m_out_processed].id))
                 {
-                    outputRawMonBytes(  RCTDL_OP_DATA, 
+                    outputRawMonBytes(  OCSD_OP_DATA, 
                         m_out_data[m_out_processed].index, 
-                        RCTDL_FRM_ID_DATA,
+                        OCSD_FRM_ID_DATA,
                         m_out_data[m_out_processed].valid,
                         m_out_data[m_out_processed].data,
                         m_out_data[m_out_processed].id);
@@ -692,9 +692,9 @@ bool TraceFmtDcdImpl::outputFrame()
             // optional raw output for debugging / monitor tools
             if(m_b_output_unpacked_raw && rawChanEnabled( m_out_data[m_out_processed].id))
             {
-                outputRawMonBytes(  RCTDL_OP_DATA, 
+                outputRawMonBytes(  OCSD_OP_DATA, 
                     m_out_data[m_out_processed].index, 
-                    RCTDL_FRM_ID_DATA,
+                    OCSD_FRM_ID_DATA,
                     m_out_data[m_out_processed].valid,
                     m_out_data[m_out_processed].data,
                     m_out_data[m_out_processed].id);
@@ -728,13 +728,13 @@ TraceFormatterFrameDecoder::~TraceFormatterFrameDecoder()
 }
 
     /* the data input interface from the reader / source */
-rctdl_datapath_resp_t TraceFormatterFrameDecoder::TraceDataIn(  const rctdl_datapath_op_t op, 
-                                                                const rctdl_trc_index_t index, 
+ocsd_datapath_resp_t TraceFormatterFrameDecoder::TraceDataIn(  const ocsd_datapath_op_t op, 
+                                                                const ocsd_trc_index_t index, 
                                                                 const uint32_t dataBlockSize, 
                                                                 const uint8_t *pDataBlock, 
                                                                 uint32_t *numBytesProcessed)
 {
-    return (m_pDecoder == 0) ? RCTDL_RESP_FATAL_NOT_INIT : m_pDecoder->TraceDataIn(op,index,dataBlockSize,pDataBlock,numBytesProcessed);
+    return (m_pDecoder == 0) ? OCSD_RESP_FATAL_NOT_INIT : m_pDecoder->TraceDataIn(op,index,dataBlockSize,pDataBlock,numBytesProcessed);
 }
 
 /* attach a data processor to a stream ID output */
@@ -764,7 +764,7 @@ componentAttachPt<ITraceErrorLog> *TraceFormatterFrameDecoder::getErrLogAttachPt
 }
 
 /* configuration - set operational mode for incoming stream (has FSYNCS etc) */
-rctdl_err_t TraceFormatterFrameDecoder::Configure(uint32_t cfg_flags)
+ocsd_err_t TraceFormatterFrameDecoder::Configure(uint32_t cfg_flags)
 {
     if(!m_pDecoder) 
     {  
@@ -772,32 +772,32 @@ rctdl_err_t TraceFormatterFrameDecoder::Configure(uint32_t cfg_flags)
             m_pDecoder = new (std::nothrow) TraceFmtDcdImpl(m_instNum);
         else
             m_pDecoder = new (std::nothrow) TraceFmtDcdImpl();
-        if(!m_pDecoder) return RCTDL_ERR_MEM;
+        if(!m_pDecoder) return OCSD_ERR_MEM;
     }
     m_pDecoder->m_cfgFlags = cfg_flags;
-    return RCTDL_OK;
+    return OCSD_OK;
 }
 
 /* enable / disable ID streams - default as all enabled */
-rctdl_err_t TraceFormatterFrameDecoder::OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable)
+ocsd_err_t TraceFormatterFrameDecoder::OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable)
 {
-    return (m_pDecoder == 0) ? RCTDL_ERR_NOT_INIT : m_pDecoder->OutputFilterIDs(id_list,bEnable);
+    return (m_pDecoder == 0) ? OCSD_ERR_NOT_INIT : m_pDecoder->OutputFilterIDs(id_list,bEnable);
 }
 
-rctdl_err_t TraceFormatterFrameDecoder::OutputFilterAllIDs(bool bEnable)
+ocsd_err_t TraceFormatterFrameDecoder::OutputFilterAllIDs(bool bEnable)
 {
-    return (m_pDecoder == 0) ? RCTDL_ERR_NOT_INIT : m_pDecoder->OutputFilterAllIDs(bEnable);
+    return (m_pDecoder == 0) ? OCSD_ERR_NOT_INIT : m_pDecoder->OutputFilterAllIDs(bEnable);
 }
 
 /* decode control */
-rctdl_datapath_resp_t TraceFormatterFrameDecoder::Reset()
+ocsd_datapath_resp_t TraceFormatterFrameDecoder::Reset()
 {
-    return (m_pDecoder == 0) ? RCTDL_RESP_FATAL_NOT_INIT : m_pDecoder->Reset();
+    return (m_pDecoder == 0) ? OCSD_RESP_FATAL_NOT_INIT : m_pDecoder->Reset();
 }
 
-rctdl_datapath_resp_t TraceFormatterFrameDecoder::Flush()
+ocsd_datapath_resp_t TraceFormatterFrameDecoder::Flush()
 {
-    return (m_pDecoder == 0) ? RCTDL_RESP_FATAL_NOT_INIT : m_pDecoder->Flush();
+    return (m_pDecoder == 0) ? OCSD_RESP_FATAL_NOT_INIT : m_pDecoder->Flush();
 }
 
 

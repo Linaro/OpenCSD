@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_etmv3_impl.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -44,9 +44,9 @@ EtmV3PktProcImpl::~EtmV3PktProcImpl()
 {
 }
 
-rctdl_err_t EtmV3PktProcImpl::Configure(const EtmV3Config *p_config)
+ocsd_err_t EtmV3PktProcImpl::Configure(const EtmV3Config *p_config)
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
     if(p_config != 0)
     {
         m_config = *p_config;
@@ -54,24 +54,24 @@ rctdl_err_t EtmV3PktProcImpl::Configure(const EtmV3Config *p_config)
     }
     else
     {
-        err = RCTDL_ERR_INVALID_PARAM_VAL;
+        err = OCSD_ERR_INVALID_PARAM_VAL;
         if(m_isInit)
-            m_interface->LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err));
+            m_interface->LogError(ocsdError(OCSD_ERR_SEV_ERROR,err));
     }
     return err;
 }
 
-rctdl_datapath_resp_t EtmV3PktProcImpl::processData(const rctdl_trc_index_t index,
+ocsd_datapath_resp_t EtmV3PktProcImpl::processData(const ocsd_trc_index_t index,
                                                     const uint32_t dataBlockSize,
                                                     const uint8_t *pDataBlock,
                                                     uint32_t *numBytesProcessed)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     m_bytesProcessed = 0;
 
     while( ( (m_bytesProcessed < dataBlockSize) ||
              ((m_bytesProcessed == dataBlockSize) && (m_process_state == SEND_PKT)) )
-        && RCTDL_DATA_RESP_IS_CONT(resp))
+        && OCSD_DATA_RESP_IS_CONT(resp))
     {
         try 
         {
@@ -97,11 +97,11 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::processData(const rctdl_trc_index_t inde
                 break;
             }
         }
-        catch(rctdlError &err)
+        catch(ocsdError &err)
         {
             m_interface->LogError(err);
-            if( (err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ) ||
-                (err.getErrorCode() == RCTDL_ERR_INVALID_PCKT_HDR))
+            if( (err.getErrorCode() == OCSD_ERR_BAD_PACKET_SEQ) ||
+                (err.getErrorCode() == OCSD_ERR_INVALID_PCKT_HDR))
             {
                 // send invalid packets up the pipe to let the next stage decide what to do.
                 m_process_state = SEND_PKT; 
@@ -115,8 +115,8 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::processData(const rctdl_trc_index_t inde
         catch(...)
         {
             /// vv bad at this point.
-            resp = RCTDL_RESP_FATAL_SYS_ERR;
-            rctdlError fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_chanIDCopy);
+            resp = OCSD_RESP_FATAL_SYS_ERR;
+            ocsdError fatal = ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_FAIL,m_packet_index,m_chanIDCopy);
             fatal.setMessage("Unknown System Error decoding trace.");
             m_interface->LogError(fatal);
         }
@@ -126,9 +126,9 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::processData(const rctdl_trc_index_t inde
     return resp;
 }
 
-rctdl_datapath_resp_t EtmV3PktProcImpl::onEOT()
+ocsd_datapath_resp_t EtmV3PktProcImpl::onEOT()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     // if we have a partial packet then send to attached sinks
     if(m_currPacketData.size() != 0)
     {
@@ -139,17 +139,17 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::onEOT()
     return resp;
 }
 
-rctdl_datapath_resp_t EtmV3PktProcImpl::onReset()
+ocsd_datapath_resp_t EtmV3PktProcImpl::onReset()
 {
     InitProcessorState();
-    return RCTDL_RESP_CONT;
+    return OCSD_RESP_CONT;
 }
 
-rctdl_datapath_resp_t EtmV3PktProcImpl::onFlush()
+ocsd_datapath_resp_t EtmV3PktProcImpl::onFlush()
 {
     // packet processor never holds on to flushable data (may have partial packet, 
     // but any full packets are immediately sent)
-    return RCTDL_RESP_CONT;
+    return OCSD_RESP_CONT;
 }
 
 void EtmV3PktProcImpl::Initialise(TrcPktProcEtmV3 *p_interface)
@@ -191,9 +191,9 @@ void EtmV3PktProcImpl::InitPacketState()
     
 }
 
-rctdl_datapath_resp_t EtmV3PktProcImpl::outputPacket()
+ocsd_datapath_resp_t EtmV3PktProcImpl::outputPacket()
 {
-    rctdl_datapath_resp_t dp_resp = RCTDL_RESP_FATAL_NOT_INIT;
+    ocsd_datapath_resp_t dp_resp = OCSD_RESP_FATAL_NOT_INIT;
     if(m_isInit)
     {
         if(!m_bSendPartPkt) 
@@ -215,7 +215,7 @@ rctdl_datapath_resp_t EtmV3PktProcImpl::outputPacket()
     return dp_resp;
 }
 
-void EtmV3PktProcImpl::setBytesPartPkt(int numBytes, process_state nextState, const rctdl_etmv3_pkt_type nextType)
+void EtmV3PktProcImpl::setBytesPartPkt(int numBytes, process_state nextState, const ocsd_etmv3_pkt_type nextType)
 {
     m_partPktData.clear();
     for(int i=0; i < numBytes; i++)
@@ -306,7 +306,7 @@ uint32_t EtmV3PktProcImpl::waitForSync(const uint32_t dataBlockSize, const uint8
     return bytesProcessed;
 }
 
-rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
+ocsd_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 {
     InitPacketState();  // new packet, clear old single packet state (retains intra packet state).
 
@@ -503,10 +503,10 @@ rctdl_err_t EtmV3PktProcImpl::processHeaderByte(uint8_t by)
 		m_curr_packet.SetErrType(ETM3_PKT_RESERVED);
         throwPacketHeaderErr("Packet header reserved encoding.");
 	}
-    return RCTDL_OK;
+    return OCSD_OK;
 }
 
-rctdl_err_t EtmV3PktProcImpl::processPayloadByte(uint8_t by)
+ocsd_err_t EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 {
     bool bTopBitSet = false;
     bool packetDone = false;
@@ -516,7 +516,7 @@ rctdl_err_t EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 				
     switch(m_curr_packet.type) {
 	default:
-        throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_PKT_INTERP_FAIL,m_packet_index,m_chanIDCopy,"Interpreter failed - cannot process payload for unexpected or unsupported packet.");
+        throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_PKT_INTERP_FAIL,m_packet_index,m_chanIDCopy,"Interpreter failed - cannot process payload for unexpected or unsupported packet.");
 		break;
      	
 	case ETM3_PKT_BRANCH_ADDRESS:
@@ -771,14 +771,14 @@ rctdl_err_t EtmV3PktProcImpl::processPayloadByte(uint8_t by)
         break;
 	}
 
-    return RCTDL_OK;
+    return OCSD_OK;
 }
 
 // extract branch address packet at current location in packet data.
 void EtmV3PktProcImpl::OnBranchAddress()
 {
     int validBits = 0;
-    rctdl_vaddr_t partAddr = 0;
+    ocsd_vaddr_t partAddr = 0;
   
     partAddr = extractBrAddrPkt(validBits);
     m_curr_packet.UpdateAddress(partAddr,validBits);
@@ -807,7 +807,7 @@ uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
         5  // jazelle
     };
 
-    static rctdl_armv7_exception exceptionTypeARMdeprecated[] = {
+    static ocsd_armv7_exception exceptionTypeARMdeprecated[] = {
         Excp_Reset,
         Excp_IRQ,
         Excp_Reserved,
@@ -869,7 +869,7 @@ uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
         if(addrbyte & 0x80)
         {
             uint8_t excep_num = (addrbyte >> 3) & 0x7;
-            m_curr_packet.UpdateISA(rctdl_isa_arm);
+            m_curr_packet.UpdateISA(ocsd_isa_arm);
             m_curr_packet.SetException(exceptionTypeARMdeprecated[excep_num], excep_num, (addrbyte & 0x40) ? true : false,m_config.isV7MArch());
         }
         else
@@ -880,11 +880,11 @@ uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
                 extractExceptionData();     
 
             if((addrbyte & 0xB8) == 0x08)
-                m_curr_packet.UpdateISA(rctdl_isa_arm);
+                m_curr_packet.UpdateISA(ocsd_isa_arm);
             else if ((addrbyte & 0xB0) == 0x10)
-                m_curr_packet.UpdateISA(m_curr_packet.AltISA() ? rctdl_isa_tee : rctdl_isa_thumb2);
+                m_curr_packet.UpdateISA(m_curr_packet.AltISA() ? ocsd_isa_tee : ocsd_isa_thumb2);
             else if ((addrbyte & 0xA0) == 0x20)
-                m_curr_packet.UpdateISA(rctdl_isa_jazelle);
+                m_curr_packet.UpdateISA(ocsd_isa_jazelle);
             else
                 throwMalformedPacketErr("Malformed Packet - Unknown ISA.");
         }
@@ -895,9 +895,9 @@ uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
     // figure out the correct ISA shifts for the address bits
     switch(m_curr_packet.ISA()) 
     {
-    case rctdl_isa_thumb2: isa_idx = 1; break;
-    case rctdl_isa_tee: isa_idx = 2; break;
-    case rctdl_isa_jazelle: isa_idx = 3; break;
+    case ocsd_isa_thumb2: isa_idx = 1; break;
+    case ocsd_isa_tee: isa_idx = 2; break;
+    case ocsd_isa_jazelle: isa_idx = 3; break;
     default: break;
     }
 
@@ -919,14 +919,14 @@ uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
 // extract exception data from bytes after address.
 void EtmV3PktProcImpl::extractExceptionData()
 {
-    static const rctdl_armv7_exception exceptionTypesStd[] = {
+    static const ocsd_armv7_exception exceptionTypesStd[] = {
         Excp_NoException, Excp_DebugHalt, Excp_SMC, Excp_Hyp,
         Excp_AsyncDAbort, Excp_Jazelle, Excp_Reserved, Excp_Reserved,
         Excp_Reset, Excp_Undef, Excp_SVC, Excp_PrefAbort, 
         Excp_SyncDataAbort, Excp_Generic, Excp_IRQ, Excp_FIQ
     };
 
-    static const rctdl_armv7_exception exceptionTypesCM[] = {
+    static const ocsd_armv7_exception exceptionTypesCM[] = {
         Excp_NoException, Excp_CMIRQn, Excp_CMIRQn, Excp_CMIRQn,
         Excp_CMIRQn, Excp_CMIRQn, Excp_CMIRQn, Excp_CMIRQn, 
         Excp_CMIRQn, Excp_CMUsageFault, Excp_CMNMI, Excp_SVC, 
@@ -936,7 +936,7 @@ void EtmV3PktProcImpl::extractExceptionData()
     };
 
     uint16_t exceptionNum = 0;
-    rctdl_armv7_exception excep_type = Excp_Reserved;
+    ocsd_armv7_exception excep_type = Excp_Reserved;
     int resume = 0;
     int irq_n = 0;
     bool cancel_prev_instr = 0;
@@ -1178,7 +1178,7 @@ void EtmV3PktProcImpl::OnISyncPacket()
 
     // extract context info 
     iSyncInfoByte = m_currPacketData[m_currPktIdx++];
-    m_curr_packet.SetISyncReason((rctdl_iSync_reason)((iSyncInfoByte >> 5) & 0x3));
+    m_curr_packet.SetISyncReason((ocsd_iSync_reason)((iSyncInfoByte >> 5) & 0x3));
     J = (iSyncInfoByte >> 4) & 0x1;
     AltISA = m_config.MinorRev() >= 3 ? (iSyncInfoByte >> 2) & 0x1 : 0;
     m_curr_packet.UpdateNS((iSyncInfoByte >> 3) & 0x1);
@@ -1195,11 +1195,11 @@ void EtmV3PktProcImpl::OnISyncPacket()
         m_curr_packet.UpdateAddress(instrAddr,32);  
 
         // enough data now to set the instruction set.
-        rctdl_isa currISA = rctdl_isa_arm;
+        ocsd_isa currISA = ocsd_isa_arm;
         if(J)
-            currISA = rctdl_isa_jazelle;
+            currISA = ocsd_isa_jazelle;
         else if(T)
-            currISA = AltISA ? rctdl_isa_tee : rctdl_isa_thumb2;
+            currISA = AltISA ? ocsd_isa_tee : ocsd_isa_thumb2;
         m_curr_packet.UpdateISA(currISA);
 
         // possible follow up address value - rarely uses unless trace enabled during

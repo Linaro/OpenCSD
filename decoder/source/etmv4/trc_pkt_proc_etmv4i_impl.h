@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_etmv4i_impl.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -47,16 +47,16 @@ public:
 
     void Initialise(TrcPktProcEtmV4I *p_interface);
 
-    rctdl_err_t Configure(const EtmV4Config *p_config);
+    ocsd_err_t Configure(const EtmV4Config *p_config);
 
 
-    rctdl_datapath_resp_t processData(  const rctdl_trc_index_t index,
+    ocsd_datapath_resp_t processData(  const ocsd_trc_index_t index,
                                         const uint32_t dataBlockSize,
                                         const uint8_t *pDataBlock,
                                         uint32_t *numBytesProcessed);
-    rctdl_datapath_resp_t onEOT();
-    rctdl_datapath_resp_t onReset();
-    rctdl_datapath_resp_t onFlush();
+    ocsd_datapath_resp_t onEOT();
+    ocsd_datapath_resp_t onReset();
+    ocsd_datapath_resp_t onFlush();
     const bool isBadPacket() const;
 
 protected:
@@ -84,16 +84,16 @@ protected:
     std::vector<uint8_t> m_currPacketData;  // raw data
     int m_currPktIdx;   // index into raw packet when expanding
     EtmV4ITrcPacket m_curr_packet;  // expanded packet
-    rctdl_trc_index_t m_packet_index;   // index of the start of the current packet
+    ocsd_trc_index_t m_packet_index;   // index of the start of the current packet
     uint32_t m_blockBytesProcessed;     // number of bytes processed in the current data block
-    rctdl_trc_index_t m_blockIndex;     // index at the start of the current data block being processed
+    ocsd_trc_index_t m_blockIndex;     // index at the start of the current data block being processed
 
     // searching for sync
     bool m_is_sync;             //!< seen first sync packet
     bool m_first_trace_info;    //!< seen first trace info packet after sync
     bool m_sent_notsync_packet; //!< send one not sync packet if we see any unsynced data on the channel 
     unsigned m_dump_unsynced_bytes;  //!< number of unsynced bytes to send
-    rctdl_trc_index_t m_update_on_unsync_packet_index;
+    ocsd_trc_index_t m_update_on_unsync_packet_index;
 
 
 private:
@@ -141,8 +141,8 @@ private:
     uint8_t m_Q_type;
     uint8_t m_QE;
 
-    rctdl_datapath_resp_t outputPacket();
-    rctdl_datapath_resp_t outputUnsyncedRawPacket(); 
+    ocsd_datapath_resp_t outputPacket();
+    ocsd_datapath_resp_t outputUnsyncedRawPacket(); 
 
     void iNotSync();      // not synced yet
     void iPktNoPayload(); // process a single byte packet
@@ -176,7 +176,7 @@ private:
     PPKTFN m_pIPktFn;
 
     struct _pkt_i_table_t {
-        rctdl_etmv4_i_pkt_type pkt_type;
+        ocsd_etmv4_i_pkt_type pkt_type;
         PPKTFN pptkFn;
     } m_i_table[256];
 

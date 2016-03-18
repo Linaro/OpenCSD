@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_stm.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -42,10 +42,10 @@
 // G++ doesn't like the ## pasting
 #define STM_PKTS_NAME "PKTP_STM"
 #else
-#define STM_PKTS_NAME RCTDL_CMPNAME_PREFIX_PKTPROC##"_STM"
+#define STM_PKTS_NAME OCSD_CMPNAME_PREFIX_PKTPROC##"_STM"
 #endif
 
-static const uint32_t STM_SUPPORTED_OP_FLAGS = RCTDL_OPFLG_PKTPROC_COMMON;
+static const uint32_t STM_SUPPORTED_OP_FLAGS = OCSD_OPFLG_PKTPROC_COMMON;
 
 TrcPktProcStm::TrcPktProcStm() : TrcPktProcBase(STM_PKTS_NAME)
 {
@@ -72,18 +72,18 @@ void TrcPktProcStm::initObj()
 
 // implementation packet processing interface overrides 
 // ************************
-rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index,
+ocsd_datapath_resp_t TrcPktProcStm::processData(  const ocsd_trc_index_t index,
                                             const uint32_t dataBlockSize,
                                             const uint8_t *pDataBlock,
                                             uint32_t *numBytesProcessed)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     m_p_data_in = pDataBlock;
     m_data_in_size = dataBlockSize;
     m_data_in_used = 0;
    
     // while there is data and a continue response on the data path
-    while(  dataToProcess() && RCTDL_DATA_RESP_IS_CONT(resp) )
+    while(  dataToProcess() && OCSD_DATA_RESP_IS_CONT(resp) )
     {
         try 
         {
@@ -115,16 +115,16 @@ rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index
                 break;
             }
         }
-        catch(rctdlError &err)
+        catch(ocsdError &err)
         {
             LogError(err);
-            if( ((err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ) ||
-                 (err.getErrorCode() == RCTDL_ERR_INVALID_PCKT_HDR)) &&
-                 !(getComponentOpMode() & RCTDL_OPFLG_PKTPROC_ERR_BAD_PKTS))
+            if( ((err.getErrorCode() == OCSD_ERR_BAD_PACKET_SEQ) ||
+                 (err.getErrorCode() == OCSD_ERR_INVALID_PCKT_HDR)) &&
+                 !(getComponentOpMode() & OCSD_OPFLG_PKTPROC_ERR_BAD_PKTS))
             {
                 // send invalid packets up the pipe to let the next stage decide what to do.
                 resp = outputPacket();
-                if(getComponentOpMode() & RCTDL_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS)
+                if(getComponentOpMode() & OCSD_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS)
                     m_proc_state = WAIT_SYNC;
             }
             else
@@ -136,8 +136,8 @@ rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index
         catch(...)
         {
             /// vv bad at this point.
-            resp = RCTDL_RESP_FATAL_SYS_ERR;
-            rctdlError fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_config->getTraceID());
+            resp = OCSD_RESP_FATAL_SYS_ERR;
+            ocsdError fatal = ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_FAIL,m_packet_index,m_config->getTraceID());
             fatal.setMessage("Unknown System Error decoding trace.");
             LogError(fatal);
         }
@@ -148,9 +148,9 @@ rctdl_datapath_resp_t TrcPktProcStm::processData(  const rctdl_trc_index_t index
     
 }
 
-rctdl_datapath_resp_t TrcPktProcStm::onEOT()
+ocsd_datapath_resp_t TrcPktProcStm::onEOT()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     if(m_num_nibbles > 0)   // there is a partial packet in flight
     {
         m_curr_packet.updateErrType(STM_PKT_INCOMPLETE_EOT);    // re mark as incomplete
@@ -159,22 +159,22 @@ rctdl_datapath_resp_t TrcPktProcStm::onEOT()
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktProcStm::onReset()
+ocsd_datapath_resp_t TrcPktProcStm::onReset()
 {
     initProcessorState();
-    return RCTDL_RESP_CONT;
+    return OCSD_RESP_CONT;
 }
 
-rctdl_datapath_resp_t TrcPktProcStm::onFlush()
+ocsd_datapath_resp_t TrcPktProcStm::onFlush()
 {
     // packet processor never holds on to flushable data (may have partial packet, 
     // but any full packets are immediately sent)
-    return RCTDL_RESP_CONT;
+    return OCSD_RESP_CONT;
 }
 
-rctdl_err_t TrcPktProcStm::onProtocolConfig()
+ocsd_err_t TrcPktProcStm::onProtocolConfig()
 {
-    return RCTDL_OK;  // nothing to do on config for this processor
+    return OCSD_OK;  // nothing to do on config for this processor
 }
 
 const bool TrcPktProcStm::isBadPacket() const
@@ -182,9 +182,9 @@ const bool TrcPktProcStm::isBadPacket() const
     return m_curr_packet.isBadPacket();
 }
 
-rctdl_datapath_resp_t TrcPktProcStm::outputPacket()
+ocsd_datapath_resp_t TrcPktProcStm::outputPacket()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     resp = outputOnAllInterfaces(m_packet_index,&m_curr_packet,&m_curr_packet.type,m_packet_data);
     m_packet_data.clear();
     initNextPacket();
@@ -197,13 +197,13 @@ rctdl_datapath_resp_t TrcPktProcStm::outputPacket()
 void TrcPktProcStm::throwBadSequenceError(const char *pszMessage /*= ""*/)
 {
     m_curr_packet.updateErrType(STM_PKT_BAD_SEQUENCE);
-    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,m_packet_index,this->m_config->getTraceID(),pszMessage);
+    throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_PACKET_SEQ,m_packet_index,this->m_config->getTraceID(),pszMessage);
 }
 
 void TrcPktProcStm::throwReservedHdrError(const char *pszMessage /*= ""*/)
 {
     m_curr_packet.setPacketType(STM_PKT_RESERVED,false);
-    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PCKT_HDR,m_packet_index,this->m_config->getTraceID(),pszMessage);
+    throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_INVALID_PCKT_HDR,m_packet_index,this->m_config->getTraceID(),pszMessage);
 }
 
 // processor / packet init
@@ -233,7 +233,7 @@ void TrcPktProcStm::initNextPacket()
 }
 
 // search remaining buffer for a start of sync or full sync packet
-void TrcPktProcStm::waitForSync(const rctdl_trc_index_t blk_st_index)
+void TrcPktProcStm::waitForSync(const ocsd_trc_index_t blk_st_index)
 {
     bool bGotData = true;
     uint32_t start_offset = m_data_in_used; // record the offset into the buffer at start of this fn.

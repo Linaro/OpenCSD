@@ -1,6 +1,6 @@
 /*!
  * \file       ocsd_error_logger.h
- * \brief      Reference CoreSight Trace Decoder : Library error logger.
+ * \brief      OpenCSD : Library error logger.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -32,8 +32,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_RCTDL_ERROR_LOGGER_H_INCLUDED
-#define ARM_RCTDL_ERROR_LOGGER_H_INCLUDED
+#ifndef ARM_OCSD_ERROR_LOGGER_H_INCLUDED
+#define ARM_OCSD_ERROR_LOGGER_H_INCLUDED
 
 #include <string>
 #include <vector>
@@ -43,47 +43,47 @@
 #include "ocsd_error.h"
 #include "ocsd_msg_logger.h"
 
-class rctdlDefaultErrorLogger : public ITraceErrorLog
+class ocsdDefaultErrorLogger : public ITraceErrorLog
 {
 public:
-    rctdlDefaultErrorLogger();
-    virtual ~rctdlDefaultErrorLogger();
+    ocsdDefaultErrorLogger();
+    virtual ~ocsdDefaultErrorLogger();
 
-    bool initErrorLogger(const rctdl_err_severity_t verbosity, bool bCreateOutputLogger = false);
+    bool initErrorLogger(const ocsd_err_severity_t verbosity, bool bCreateOutputLogger = false);
     
-    rctdlMsgLogger *getOutputLogger() { return m_output_logger; };
-    void setOutputLogger(rctdlMsgLogger *pLogger);
+    ocsdMsgLogger *getOutputLogger() { return m_output_logger; };
+    void setOutputLogger(ocsdMsgLogger *pLogger);
     
-    virtual const rctdl_hndl_err_log_t RegisterErrorSource(const std::string &component_name);
+    virtual const ocsd_hndl_err_log_t RegisterErrorSource(const std::string &component_name);
 
-    virtual void LogError(const rctdl_hndl_err_log_t handle, const rctdlError *Error);
-    virtual void LogMessage(const rctdl_hndl_err_log_t handle, const rctdl_err_severity_t filter_level, const std::string &msg );
+    virtual void LogError(const ocsd_hndl_err_log_t handle, const ocsdError *Error);
+    virtual void LogMessage(const ocsd_hndl_err_log_t handle, const ocsd_err_severity_t filter_level, const std::string &msg );
 
-    virtual const rctdl_err_severity_t GetErrorLogVerbosity() const { return m_Verbosity; };
+    virtual const ocsd_err_severity_t GetErrorLogVerbosity() const { return m_Verbosity; };
 
-    virtual rctdlError *GetLastError() { return m_lastErr; };
-    virtual rctdlError *GetLastIDError(const uint8_t chan_id)
+    virtual ocsdError *GetLastError() { return m_lastErr; };
+    virtual ocsdError *GetLastIDError(const uint8_t chan_id)
     { 
-        if(RCTDL_IS_VALID_CS_SRC_ID(chan_id))
+        if(OCSD_IS_VALID_CS_SRC_ID(chan_id))
             return m_lastErrID[chan_id];
         return 0;
     };
     
 private:
-    void CreateErrorObj(rctdlError **ppErr, const rctdlError *p_from);
+    void CreateErrorObj(ocsdError **ppErr, const ocsdError *p_from);
 
-    rctdlError *m_lastErr;
-    rctdlError *m_lastErrID[0x80];
+    ocsdError *m_lastErr;
+    ocsdError *m_lastErrID[0x80];
 
-    rctdl_err_severity_t m_Verbosity;
+    ocsd_err_severity_t m_Verbosity;
 
-    rctdlMsgLogger *m_output_logger;   // pointer to a standard message output logger;
+    ocsdMsgLogger *m_output_logger;   // pointer to a standard message output logger;
     bool m_created_output_logger;      // true if this class created it's own logger;
 
     std::vector<std::string> m_error_sources;
 };
 
 
-#endif // ARM_RCTDL_ERROR_LOGGER_H_INCLUDED
+#endif // ARM_OCSD_ERROR_LOGGER_H_INCLUDED
 
 /* End of File ocsd_error_logger.h */

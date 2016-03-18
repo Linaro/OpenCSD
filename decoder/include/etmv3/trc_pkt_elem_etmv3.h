@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_elem_etmv3.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -49,23 +49,23 @@
  *  This class represents a single ETMv3 trace packet, along with intra packet state.
  * 
  */
-class EtmV3TrcPacket : public rctdl_etmv3_pkt, trcPrintableElem
+class EtmV3TrcPacket : public ocsd_etmv3_pkt, trcPrintableElem
 {
 public:
     EtmV3TrcPacket();
     ~EtmV3TrcPacket();
 
-    EtmV3TrcPacket &operator =(const rctdl_etmv3_pkt* p_pkt);
+    EtmV3TrcPacket &operator =(const ocsd_etmv3_pkt* p_pkt);
 
     // update interface - set packet values
 
     void Clear();       //!< clear update data in packet ready for new one.
     void ResetState();  //!< reset intra packet state data -on full decoder reset.
 
-    void SetType(const rctdl_etmv3_pkt_type p_type);
-    void SetErrType(const rctdl_etmv3_pkt_type e_type);
-    void UpdateAddress(const rctdl_vaddr_t partAddrVal, const int updateBits);
-    void SetException(  const rctdl_armv7_exception type, 
+    void SetType(const ocsd_etmv3_pkt_type p_type);
+    void SetErrType(const ocsd_etmv3_pkt_type e_type);
+    void UpdateAddress(const ocsd_vaddr_t partAddrVal, const int updateBits);
+    void SetException(  const ocsd_armv7_exception type, 
                         const uint16_t number, 
                         const bool cancel,
                         const bool cm_type,
@@ -74,7 +74,7 @@ public:
     void UpdateNS(const int NS);
     void UpdateAltISA(const int AltISA);
     void UpdateHyp(const int Hyp);
-    void UpdateISA(const rctdl_isa isa);
+    void UpdateISA(const ocsd_isa isa);
     void UpdateContextID(const uint32_t contextID);
     void UpdateVMID(const uint8_t VMID);
     void UpdateTimestamp(const uint64_t tsVal, const uint8_t updateBits);
@@ -86,7 +86,7 @@ public:
     void UpdateDataAddress(const uint32_t value, const uint8_t valid_bits);
     void UpdateDataEndian(const uint8_t BE_Val);
     void SetCycleCount(const uint32_t cycleCount);
-    void SetISyncReason(const rctdl_iSync_reason reason);
+    void SetISyncReason(const ocsd_iSync_reason reason);
     void SetISyncHasCC();
     void SetISyncIsLSiP();
     void SetISyncNoAddr();
@@ -94,7 +94,7 @@ public:
  // packet status interface - get packet info.
 
     const int AltISA() const { return context.curr_alt_isa; };
-    const rctdl_isa ISA() const { return curr_isa; };
+    const ocsd_isa ISA() const { return curr_isa; };
     const bool isBadPacket() const;
 
 // printing
@@ -103,7 +103,7 @@ public:
 
 
 private:
-    const char *packetTypeName(const rctdl_etmv3_pkt_type type, const char **ppDesc) const;
+    const char *packetTypeName(const ocsd_etmv3_pkt_type type, const char **ppDesc) const;
     void getBranchAddressStr(std::string &valStr) const;
     void getAtomStr(std::string &valStr) const;
     void getISyncStr(std::string &valStr) const;
@@ -129,18 +129,18 @@ inline void EtmV3TrcPacket::UpdateHyp(const int Hyp)
     context.updated = 1;
 }
 
-inline void EtmV3TrcPacket::UpdateISA(const rctdl_isa isa)
+inline void EtmV3TrcPacket::UpdateISA(const ocsd_isa isa)
 {
     prev_isa = curr_isa;
     curr_isa = isa;
 }
 
-inline void EtmV3TrcPacket::SetType(const rctdl_etmv3_pkt_type p_type)
+inline void EtmV3TrcPacket::SetType(const ocsd_etmv3_pkt_type p_type)
 {
     type = p_type;
 }
 
-inline void EtmV3TrcPacket::SetErrType(const rctdl_etmv3_pkt_type e_type)
+inline void EtmV3TrcPacket::SetErrType(const ocsd_etmv3_pkt_type e_type)
 {
     err_type = type;
     type = e_type;
@@ -185,7 +185,7 @@ inline void EtmV3TrcPacket::SetCycleCount(const uint32_t cycleCount)
     cycle_count = cycleCount;
 }
 
-inline void EtmV3TrcPacket::SetISyncReason(const rctdl_iSync_reason reason)
+inline void EtmV3TrcPacket::SetISyncReason(const ocsd_iSync_reason reason)
 {
     isync_info.reason = reason;
 }

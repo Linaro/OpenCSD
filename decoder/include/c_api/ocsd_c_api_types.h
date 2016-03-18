@@ -71,38 +71,38 @@ typedef void * dcd_tree_handle_t;
 #define C_API_MSGLOGOUT_MASK       0x7
 
 /** function pointer type for decoder outputs. all protocols, generic data element input */
-typedef rctdl_datapath_resp_t (* FnTraceElemIn)(const void *p_context, const rctdl_trc_index_t index_sop, const uint8_t trc_chan_id, const rctdl_generic_trace_elem *elem); 
+typedef ocsd_datapath_resp_t (* FnTraceElemIn)(const void *p_context, const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const ocsd_generic_trace_elem *elem); 
 
 /** function pointer type for ETMv4 instruction packet processor output, packet analyser/decoder input */
-typedef rctdl_datapath_resp_t (* FnEtmv4IPacketDataIn)(const void *p_context, const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv4_i_pkt *p_packet_in);
+typedef ocsd_datapath_resp_t (* FnEtmv4IPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_etmv4_i_pkt *p_packet_in);
 
 /** function pointer type for ETMv4 instruction packet processor monitor output, raw packet monitor / display input  */
 typedef void (* FnEtmv4IPktMonDataIn)(  const void *p_context, 
-                                        const rctdl_datapath_op_t op, 
-                                        const rctdl_trc_index_t index_sop, 
-                                        const rctdl_etmv4_i_pkt *p_packet_in,
+                                        const ocsd_datapath_op_t op, 
+                                        const ocsd_trc_index_t index_sop, 
+                                        const ocsd_etmv4_i_pkt *p_packet_in,
                                         const uint32_t size,
                                         const uint8_t *p_data);
 
 /** function pointer type for ETMv3 packet processor output, packet analyser/decoder input */
-typedef rctdl_datapath_resp_t (* FnEtmv3PacketDataIn)(const void *p_context, const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_etmv3_pkt *p_packet_in);
+typedef ocsd_datapath_resp_t (* FnEtmv3PacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_etmv3_pkt *p_packet_in);
 
 /** function pointer type for ETMv3 packet processor monitor output, raw packet monitor / display input  */
 typedef void (* FnEtmv3PktMonDataIn)(   const void *p_context, 
-                                        const rctdl_datapath_op_t op, 
-                                        const rctdl_trc_index_t index_sop, 
-                                        const rctdl_etmv3_pkt *p_packet_in,
+                                        const ocsd_datapath_op_t op, 
+                                        const ocsd_trc_index_t index_sop, 
+                                        const ocsd_etmv3_pkt *p_packet_in,
                                         const uint32_t size,
                                         const uint8_t *p_data);
 
 /** function pointer type for STM packet processor output, packet analyser/decoder input */
-typedef rctdl_datapath_resp_t (* FnStmPacketDataIn)(const void *p_context, const rctdl_datapath_op_t op, const rctdl_trc_index_t index_sop, const rctdl_stm_pkt *p_packet_in);
+typedef ocsd_datapath_resp_t (* FnStmPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_stm_pkt *p_packet_in);
 
 /** function pointer type for STM packet processor monitor output, raw packet monitor / display input  */
 typedef void (* FnStmPktMonDataIn)(     const void *p_context, 
-                                        const rctdl_datapath_op_t op, 
-                                        const rctdl_trc_index_t index_sop, 
-                                        const rctdl_stm_pkt *p_packet_in,
+                                        const ocsd_datapath_op_t op, 
+                                        const ocsd_trc_index_t index_sop, 
+                                        const ocsd_stm_pkt *p_packet_in,
                                         const uint32_t size,
                                         const uint8_t *p_data);
 
@@ -110,7 +110,7 @@ typedef void (* FnStmPktMonDataIn)(     const void *p_context,
 /** memory region type for adding multi-region binary files to memory access interface */
 typedef struct _file_mem_region {
     size_t                  file_offset;    /**< Offset from start of file for memory region */
-    rctdl_vaddr_t           start_address;  /**< Start address of memory region */
+    ocsd_vaddr_t           start_address;  /**< Start address of memory region */
     size_t                  region_size;    /**< size in bytes of memory region */
 } file_mem_region_t;
 

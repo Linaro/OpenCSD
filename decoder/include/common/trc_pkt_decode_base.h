@@ -1,6 +1,6 @@
 /*!
  * \file       trc_pkt_decode_base.h
- * \brief      Reference CoreSight Trace Decoder : Trace Packet decoder base class.
+ * \brief      OpenCSD : Trace Packet decoder base class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -44,7 +44,7 @@
 #include "interfaces/trc_instr_decode_i.h"
 
 
-/** @defgroup rctdl_pkt_decode Reference CoreSight Trace Decoder Library : Packet Decoders.
+/** @defgroup ocsd_pkt_decode OpenCSD Library : Packet Decoders.
 
     @brief Classes providing Protocol Packet Decoding capability.
 
@@ -73,30 +73,30 @@ public:
 protected:
 
     /* implementation packet decoding interface */
-    virtual rctdl_datapath_resp_t processPacket() = 0;
-    virtual rctdl_datapath_resp_t onEOT() = 0;
-    virtual rctdl_datapath_resp_t onReset() = 0;
-    virtual rctdl_datapath_resp_t onFlush() = 0;
-    virtual rctdl_err_t onProtocolConfig() = 0;
+    virtual ocsd_datapath_resp_t processPacket() = 0;
+    virtual ocsd_datapath_resp_t onEOT() = 0;
+    virtual ocsd_datapath_resp_t onReset() = 0;
+    virtual ocsd_datapath_resp_t onFlush() = 0;
+    virtual ocsd_err_t onProtocolConfig() = 0;
     virtual const uint8_t getCoreSightTraceID() = 0;
 
     const bool checkInit();
 
     /* data output */
-    rctdl_datapath_resp_t outputTraceElement(const RctdlTraceElement &elem);    // use current index
-    rctdl_datapath_resp_t outputTraceElementIdx(rctdl_trc_index_t idx, const RctdlTraceElement &elem); // use supplied index (where decoder caches elements) 
+    ocsd_datapath_resp_t outputTraceElement(const RctdlTraceElement &elem);    // use current index
+    ocsd_datapath_resp_t outputTraceElementIdx(ocsd_trc_index_t idx, const RctdlTraceElement &elem); // use supplied index (where decoder caches elements) 
 
     /* target access */
-    rctdl_err_t accessMemory(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer);
+    ocsd_err_t accessMemory(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer);
 
     /* instruction decode */
-    rctdl_err_t instrDecode(rctdl_instr_info *instr_info);
+    ocsd_err_t instrDecode(ocsd_instr_info *instr_info);
 
     componentAttachPt<ITrcGenElemIn> m_trace_elem_out;
     componentAttachPt<ITargetMemAccess> m_mem_access;
     componentAttachPt<IInstrDecode> m_instr_decode;
 
-    rctdl_trc_index_t   m_index_curr_pkt;
+    ocsd_trc_index_t   m_index_curr_pkt;
 
     bool m_decode_init_ok;  //!< set true if all attachments in place for decode. (remove checks in main throughput paths)
     bool m_config_init_ok;  //!< set true if config set.
@@ -139,22 +139,22 @@ inline const bool TrcPktDecodeI::checkInit()
     return m_decode_init_ok;
 }
 
-inline rctdl_datapath_resp_t TrcPktDecodeI::outputTraceElement(const RctdlTraceElement &elem)
+inline ocsd_datapath_resp_t TrcPktDecodeI::outputTraceElement(const RctdlTraceElement &elem)
 {
     return m_trace_elem_out.first()->TraceElemIn(m_index_curr_pkt,getCoreSightTraceID(), elem);
 }
 
-inline rctdl_datapath_resp_t TrcPktDecodeI::outputTraceElementIdx(rctdl_trc_index_t idx, const RctdlTraceElement &elem)
+inline ocsd_datapath_resp_t TrcPktDecodeI::outputTraceElementIdx(ocsd_trc_index_t idx, const RctdlTraceElement &elem)
 {
     return m_trace_elem_out.first()->TraceElemIn(idx, getCoreSightTraceID(), elem);
 }
 
-inline rctdl_err_t TrcPktDecodeI::instrDecode(rctdl_instr_info *instr_info)
+inline ocsd_err_t TrcPktDecodeI::instrDecode(ocsd_instr_info *instr_info)
 {
     return m_instr_decode.first()->DecodeInstruction(instr_info);
 }
 
-inline rctdl_err_t TrcPktDecodeI::accessMemory(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer)
+inline ocsd_err_t TrcPktDecodeI::accessMemory(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer)
 {
     return m_mem_access.first()->ReadTargetMemory(address,getCoreSightTraceID(),mem_space, num_bytes,p_buffer);
 }
@@ -170,13 +170,13 @@ public:
     TrcPktDecodeBase(const char *component_name, int instIDNum);
     virtual ~TrcPktDecodeBase();
 
-    virtual rctdl_datapath_resp_t PacketDataIn( const rctdl_datapath_op_t op,
-                                                const rctdl_trc_index_t index_sop,
+    virtual ocsd_datapath_resp_t PacketDataIn( const ocsd_datapath_op_t op,
+                                                const ocsd_trc_index_t index_sop,
                                                 const P *p_packet_in);
     
 
     /* protocol configuration */
-    rctdl_err_t setProtocolConfig(Pc *config); 
+    ocsd_err_t setProtocolConfig(Pc *config); 
     const Pc *  getProtocolConfig() const { return  m_config; };
     
 protected:
@@ -207,24 +207,24 @@ template <class P, class Pc> TrcPktDecodeBase<P, Pc>::~TrcPktDecodeBase()
     ClearConfigObj();
 }
 
-template <class P, class Pc> rctdl_datapath_resp_t TrcPktDecodeBase<P, Pc>::PacketDataIn( const rctdl_datapath_op_t op,
-                                                const rctdl_trc_index_t index_sop,
+template <class P, class Pc> ocsd_datapath_resp_t TrcPktDecodeBase<P, Pc>::PacketDataIn( const ocsd_datapath_op_t op,
+                                                const ocsd_trc_index_t index_sop,
                                                 const P *p_packet_in)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     if(!checkInit())
     {
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_NOT_INIT,init_err_msg));
-        return RCTDL_RESP_FATAL_NOT_INIT;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_NOT_INIT,init_err_msg));
+        return OCSD_RESP_FATAL_NOT_INIT;
     }
 
     switch(op)
     {
-    case RCTDL_OP_DATA:
+    case OCSD_OP_DATA:
         if(p_packet_in == 0)
         {
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PARAM_VAL));
-            resp = RCTDL_RESP_FATAL_INVALID_PARAM;
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_INVALID_PARAM_VAL));
+            resp = OCSD_RESP_FATAL_INVALID_PARAM;
         }
         else
         {
@@ -234,30 +234,30 @@ template <class P, class Pc> rctdl_datapath_resp_t TrcPktDecodeBase<P, Pc>::Pack
         }
         break;
 
-    case RCTDL_OP_EOT:
+    case OCSD_OP_EOT:
         resp = onEOT();
         break;
 
-    case RCTDL_OP_FLUSH:
+    case OCSD_OP_FLUSH:
         resp = onFlush();
         break;
 
-    case RCTDL_OP_RESET:
+    case OCSD_OP_RESET:
         resp = onReset();
         break;
 
     default:
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PARAM_VAL));
-        resp = RCTDL_RESP_FATAL_INVALID_OP;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_INVALID_PARAM_VAL));
+        resp = OCSD_RESP_FATAL_INVALID_OP;
         break;
     }
     return resp;
 }
 
     /* protocol configuration */
-template <class P, class Pc>  rctdl_err_t TrcPktDecodeBase<P, Pc>::setProtocolConfig(Pc *config)
+template <class P, class Pc>  ocsd_err_t TrcPktDecodeBase<P, Pc>::setProtocolConfig(Pc *config)
 {
-    rctdl_err_t err = RCTDL_ERR_INVALID_PARAM_VAL;
+    ocsd_err_t err = OCSD_ERR_INVALID_PARAM_VAL;
     if(config != 0)
     {
         ClearConfigObj(); // remove any current config
@@ -265,11 +265,11 @@ template <class P, class Pc>  rctdl_err_t TrcPktDecodeBase<P, Pc>::setProtocolCo
         if(m_config != 0)
         {
             err = onProtocolConfig();
-            if(err == RCTDL_OK)
+            if(err == OCSD_OK)
                 m_config_init_ok = true;
         }
         else
-            err = RCTDL_ERR_MEM;
+            err = OCSD_ERR_MEM;
     }
     return err;
 }

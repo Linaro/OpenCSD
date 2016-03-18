@@ -1,6 +1,6 @@
 /*!
  * \file       trc_gen_elem.h
- * \brief      Reference CoreSight Trace Decoder : Decoder Generic trace element output class.
+ * \brief      OpenCSD : Decoder Generic trace element output class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -44,35 +44,35 @@
  * @brief Generic trace element class
  * 
  */
-class RctdlTraceElement : public trcPrintableElem, public rctdl_generic_trace_elem
+class RctdlTraceElement : public trcPrintableElem, public ocsd_generic_trace_elem
 {
 public:
     RctdlTraceElement();
-    RctdlTraceElement(rctdl_gen_trc_elem_t type);
+    RctdlTraceElement(ocsd_gen_trc_elem_t type);
     virtual ~RctdlTraceElement() {};
 
     void init();
 
-    const rctdl_gen_trc_elem_t getType() const { return elem_type; };
-    void setType(const rctdl_gen_trc_elem_t type);
-    void setContext(const rctdl_pe_context &new_context) { context = new_context; };
+    const ocsd_gen_trc_elem_t getType() const { return elem_type; };
+    void setType(const ocsd_gen_trc_elem_t type);
+    void setContext(const ocsd_pe_context &new_context) { context = new_context; };
     void setCycleCount(const uint32_t cycleCount);
     void setEvent(const event_t ev_type, const uint16_t number);
 
     virtual void toString(std::string &str) const;
 
-    RctdlTraceElement &operator =(const rctdl_generic_trace_elem* p_elem);
+    RctdlTraceElement &operator =(const ocsd_generic_trace_elem* p_elem);
 
 };
 
-inline RctdlTraceElement::RctdlTraceElement(rctdl_gen_trc_elem_t type)    
+inline RctdlTraceElement::RctdlTraceElement(ocsd_gen_trc_elem_t type)    
 {
     elem_type = type;
 }
 
 inline RctdlTraceElement::RctdlTraceElement()    
 {
-    elem_type = RCTDL_GEN_TRC_ELEM_UNKNOWN;
+    elem_type = OCSD_GEN_TRC_ELEM_UNKNOWN;
 }
 
 inline void RctdlTraceElement::setCycleCount(const uint32_t cycleCount)
@@ -87,13 +87,13 @@ inline void RctdlTraceElement::setEvent(const event_t ev_type, const uint16_t nu
     trace_event.ev_number = ev_type == EVENT_NUMBERED ? number : 0;
 }
 
-inline void RctdlTraceElement::setType(const rctdl_gen_trc_elem_t type) 
+inline void RctdlTraceElement::setType(const ocsd_gen_trc_elem_t type) 
 { 
     // set the type and clear down the per element flags
     elem_type = type;
     has_cc = 0;
     last_instr_exec = 0;
-    last_i_type = RCTDL_INSTR_OTHER;
+    last_i_type = OCSD_INSTR_OTHER;
     excep_ret_addr = 0;
     exception_number = 0;
 }

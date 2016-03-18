@@ -1,6 +1,6 @@
 /*!
  * \file       trc_mem_acc_cb.h
- * \brief      Reference CoreSight Trace Decoder : Callback trace memory accessor.
+ * \brief      OpenCSD : Callback trace memory accessor.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -41,15 +41,15 @@
 class TrcMemAccCB : public TrcMemAccessorBase
 {
 public:
-    TrcMemAccCB(const rctdl_vaddr_t s_address, 
-                const rctdl_vaddr_t e_address, 
-                const rctdl_mem_space_acc_t mem_space);
+    TrcMemAccCB(const ocsd_vaddr_t s_address, 
+                const ocsd_vaddr_t e_address, 
+                const ocsd_mem_space_acc_t mem_space);
                 
 
     virtual ~TrcMemAccCB() {};
     
     /** Memory access override - allow decoder to read bytes from the buffer. */
-    virtual const uint32_t readBytes(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer);
+    virtual const uint32_t readBytes(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer);
     
     void setCBIfClass(TrcMemAccCBIF *p_if);
     void setCBIfFn(Fn_MemAcc_CB p_fn, const void *p_context);

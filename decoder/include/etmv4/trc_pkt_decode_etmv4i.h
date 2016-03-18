@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_decode_etmv4i.h
- * \brief      Reference CoreSight Trace Decoder : ETMv4 instruction decoder
+ * \brief      OpenCSD : ETMv4 instruction decoder
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -56,41 +56,41 @@ public:
 
 protected:
     /* implementation packet decoding interface */
-    virtual rctdl_datapath_resp_t processPacket();
-    virtual rctdl_datapath_resp_t onEOT();
-    virtual rctdl_datapath_resp_t onReset();
-    virtual rctdl_datapath_resp_t onFlush();
-    virtual rctdl_err_t onProtocolConfig();
+    virtual ocsd_datapath_resp_t processPacket();
+    virtual ocsd_datapath_resp_t onEOT();
+    virtual ocsd_datapath_resp_t onReset();
+    virtual ocsd_datapath_resp_t onFlush();
+    virtual ocsd_err_t onProtocolConfig();
     virtual const uint8_t getCoreSightTraceID() { return m_CSID; };
 
     /* local decode methods */
     void initDecoder();      // initial state on creation (zeros all config)
     void resetDecoder();     // reset state to start of decode. (moves state, retains config)
 
-    rctdl_datapath_resp_t decodePacket(bool &Complete);    // return true to indicate decode complete - can change FSM to commit state - return is false.
-    rctdl_datapath_resp_t commitElements(bool &Complete);   // commit elements - may get wait response, or flag completion.
-    rctdl_datapath_resp_t flushEOT();
+    ocsd_datapath_resp_t decodePacket(bool &Complete);    // return true to indicate decode complete - can change FSM to commit state - return is false.
+    ocsd_datapath_resp_t commitElements(bool &Complete);   // commit elements - may get wait response, or flag completion.
+    ocsd_datapath_resp_t flushEOT();
 
     void doTraceInfoPacket();
     void updateContext(TrcStackElemCtxt *pCtxtElem);
     
     // process atom will output instruction trace, or no memory access trace elements. 
-    rctdl_datapath_resp_t processAtom(const rctdl_atm_val, bool &bCont);
+    ocsd_datapath_resp_t processAtom(const ocsd_atm_val, bool &bCont);
 
     // process an exception element - output instruction trace + exception generic type.
-    rctdl_datapath_resp_t processException(); 
+    ocsd_datapath_resp_t processException(); 
 
     // process a bad packet
-    rctdl_datapath_resp_t handleBadPacket(const char *reason);
+    ocsd_datapath_resp_t handleBadPacket(const char *reason);
 
-    rctdl_datapath_resp_t outputCC(TrcStackElemParam *pParamElem);
-    rctdl_datapath_resp_t outputTS(TrcStackElemParam *pParamElem, bool withCC);
-    rctdl_datapath_resp_t outputEvent(TrcStackElemParam *pParamElem);
+    ocsd_datapath_resp_t outputCC(TrcStackElemParam *pParamElem);
+    ocsd_datapath_resp_t outputTS(TrcStackElemParam *pParamElem, bool withCC);
+    ocsd_datapath_resp_t outputEvent(TrcStackElemParam *pParamElem);
      
 private:
-    void SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, const uint8_t isa); 
+    void SetInstrInfoInAddrISA(const ocsd_vaddr_t addr_val, const uint8_t isa); 
 
-    rctdl_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const rctdl_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
+    ocsd_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
 
 //** intra packet state (see ETMv4 spec 6.2.1);
 
@@ -159,14 +159,14 @@ private:
 
     excep_proc_state_t m_excep_proc;  //!< state of exception processing
     etmv4_addr_val_t m_excep_addr;    //!< excepiton return address.
-    rctdl_trc_index_t m_excep_index;  //!< trace index for exception element
+    ocsd_trc_index_t m_excep_index;  //!< trace index for exception element
 
-    rctdl_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
+    ocsd_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
 
     bool m_mem_nacc_pending;    //!< need to output a memory access failure packet
-    rctdl_vaddr_t m_nacc_addr;  //!< 
+    ocsd_vaddr_t m_nacc_addr;  //!< 
 
-    rctdl_pe_context m_pe_context;  //!< current context information
+    ocsd_pe_context m_pe_context;  //!< current context information
     etmv4_trace_info_t m_trace_info; //!< trace info for this trace run.
 
     bool m_prev_overflow;

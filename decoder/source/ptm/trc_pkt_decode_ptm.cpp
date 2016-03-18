@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_decode_ptm.cpp
- * \brief      Reference CoreSight Trace Decoder : PTM packet decoder.
+ * \brief      OpenCSD : PTM packet decoder.
  * 
  * \copyright  Copyright (c) 2016, ARM Limited. All Rights Reserved.
  */
@@ -55,9 +55,9 @@ TrcPktDecodePtm::~TrcPktDecodePtm()
 
 /*********************** implementation packet decoding interface */
 
-rctdl_datapath_resp_t TrcPktDecodePtm::processPacket()
+ocsd_datapath_resp_t TrcPktDecodePtm::processPacket()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     bool bPktDone = false;
 
     while(!bPktDone)
@@ -66,7 +66,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processPacket()
         {
         case NO_SYNC:
             // no sync - output a no sync packet then transition to wait sync.
-            m_output_elem.elem_type = RCTDL_GEN_TRC_ELEM_NO_SYNC;
+            m_output_elem.elem_type = OCSD_GEN_TRC_ELEM_NO_SYNC;
             resp = outputTraceElement(m_output_elem);
             m_curr_state = (m_curr_packet_in->getType() == PTM_PKT_A_SYNC) ? WAIT_ISYNC : WAIT_SYNC;
             bPktDone = true;
@@ -100,34 +100,34 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processPacket()
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodePtm::onEOT()
+ocsd_datapath_resp_t TrcPktDecodePtm::onEOT()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     // shouldn't be any packets left to be processed - flush shoudl have done this.
     // just output the end of trace marker
-    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EO_TRACE);
+    m_output_elem.setType(OCSD_GEN_TRC_ELEM_EO_TRACE);
     resp = outputTraceElement(m_output_elem);
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodePtm::onReset()
+ocsd_datapath_resp_t TrcPktDecodePtm::onReset()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     resetDecoder();
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodePtm::onFlush()
+ocsd_datapath_resp_t TrcPktDecodePtm::onFlush()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     resp = contProcess();
     return resp;
 }
 
 // atom and isync packets can have multiple ouput packets that can be _WAITed mid stream.
-rctdl_datapath_resp_t TrcPktDecodePtm::contProcess()
+ocsd_datapath_resp_t TrcPktDecodePtm::contProcess()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     switch(m_curr_state)
     { 
     case CONT_ISYNC:
@@ -149,17 +149,17 @@ rctdl_datapath_resp_t TrcPktDecodePtm::contProcess()
     default: break; // not a state that requires further processing
     }
 
-    if(RCTDL_DATA_RESP_IS_CONT(resp) && processStateIsCont())
+    if(OCSD_DATA_RESP_IS_CONT(resp) && processStateIsCont())
         m_curr_state = DECODE_PKTS; // continue packet processing - assuming we have not degraded into an unsynced state.
 
     return resp;
 }
 
-rctdl_err_t TrcPktDecodePtm::onProtocolConfig()
+ocsd_err_t TrcPktDecodePtm::onProtocolConfig()
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
     if(m_config == 0)
-        return RCTDL_ERR_NOT_INIT;
+        return OCSD_ERR_NOT_INIT;
 
     // static config - copy of CSID for easy reference
     m_CSID = m_config->getTraceID();
@@ -187,26 +187,26 @@ void TrcPktDecodePtm::resetDecoder()
     m_curr_state = NO_SYNC;
     m_need_isync = true;    // need context to start.
 
-    m_instr_info.isa = rctdl_isa_unknown;
+    m_instr_info.isa = ocsd_isa_unknown;
     m_mem_nacc_pending = false;
 
     m_pe_context.ctxt_id_valid = 0;
     m_pe_context.bits64 = 0;
     m_pe_context.vmid_valid = 0;
-    m_pe_context.exception_level = rctdl_EL3;
-    m_pe_context.security_level = rctdl_sec_secure;
+    m_pe_context.exception_level = ocsd_EL3;
+    m_pe_context.security_level = ocsd_sec_secure;
     m_pe_context.el_valid = 0;
     
     m_curr_pe_state.instr_addr = 0x0;
-    m_curr_pe_state.isa = rctdl_isa_unknown;
+    m_curr_pe_state.isa = ocsd_isa_unknown;
     m_curr_pe_state.valid = false;
 
     m_atoms.clearAll();
 }
 
-rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
+ocsd_datapath_resp_t TrcPktDecodePtm::decodePacket()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     switch(m_curr_packet_in->getType())
     {
         // ignore these from trace o/p point of veiw
@@ -220,7 +220,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
     case PTM_PKT_RESERVED:
         m_curr_state = WAIT_SYNC;
         m_need_isync = true;    // need context to re-start.
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_NO_SYNC);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_NO_SYNC);
         resp = outputTraceElement(m_output_elem);
         break;
 
@@ -239,7 +239,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
         break;
 
     case PTM_PKT_TRIGGER:
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EVENT);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_EVENT);
         m_output_elem.setEvent(EVENT_TRIGGER, 0);
         resp = outputTraceElement(m_output_elem);
         break;
@@ -258,7 +258,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
             {
                 m_pe_context.context_id = m_curr_packet_in->context.ctxtID;
                 m_pe_context.ctxt_id_valid = 1;
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_PE_CONTEXT);
+                m_output_elem.setType(OCSD_GEN_TRC_ELEM_PE_CONTEXT);
                 m_output_elem.setContext(m_pe_context);
                 resp = outputTraceElement(m_output_elem);
             }
@@ -275,7 +275,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
             {
                 m_pe_context.vmid = m_curr_packet_in->context.VMID;
                 m_pe_context.vmid_valid = 1;
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_PE_CONTEXT);
+                m_output_elem.setType(OCSD_GEN_TRC_ELEM_PE_CONTEXT);
                 m_output_elem.setContext(m_pe_context);
                 resp = outputTraceElement(m_output_elem);
             }
@@ -291,7 +291,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
         break;
 
     case PTM_PKT_TIMESTAMP:
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TIMESTAMP);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_TIMESTAMP);
         m_output_elem.timestamp = m_curr_packet_in->timestamp;
         if(m_curr_packet_in->cc_valid)
             m_output_elem.setCycleCount(m_curr_packet_in->cycle_count);
@@ -299,7 +299,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
         break;
 
     case PTM_PKT_EXCEPTION_RET:
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION_RET);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_EXCEPTION_RET);
         resp = outputTraceElement(m_output_elem);
         break;
 
@@ -307,9 +307,9 @@ rctdl_datapath_resp_t TrcPktDecodePtm::decodePacket()
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
+ocsd_datapath_resp_t TrcPktDecodePtm::processIsync()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
 
     // extract the I-Sync data if not re-entering after a _WAIT
     if(m_curr_state == DECODE_PKTS)
@@ -332,11 +332,11 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
             m_pe_context.vmid_valid = 1;
             m_i_sync_pe_ctxt = true;
         }
-        m_pe_context.security_level = m_curr_packet_in->getNS() ? rctdl_sec_nonsecure : rctdl_sec_secure;
+        m_pe_context.security_level = m_curr_packet_in->getNS() ? ocsd_sec_nonsecure : ocsd_sec_secure;
         
         if(m_need_isync || (m_curr_packet_in->iSyncReason() != iSync_Periodic))
         {
-            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_ON);
+            m_output_elem.setType(OCSD_GEN_TRC_ELEM_TRACE_ON);
             m_output_elem.trace_on_reason = TRACE_ON_NORMAL;
             if(m_curr_packet_in->iSyncReason() == iSync_TraceRestartAfterOverflow)
                 m_output_elem.trace_on_reason = TRACE_ON_OVERFLOW;
@@ -354,16 +354,16 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
         m_need_isync = false;   // got 1st Isync - can continue to process data.
     }
     
-    if(m_i_sync_pe_ctxt && RCTDL_DATA_RESP_IS_CONT(resp))
+    if(m_i_sync_pe_ctxt && OCSD_DATA_RESP_IS_CONT(resp))
     {
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_PE_CONTEXT);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_PE_CONTEXT);
         m_output_elem.setContext(m_pe_context);
         resp = outputTraceElement(m_output_elem); 
         m_i_sync_pe_ctxt = false;
     }
 
     // if wait and still stuff to process....
-    if(RCTDL_DATA_RESP_IS_WAIT(resp) && ( m_i_sync_pe_ctxt))
+    if(OCSD_DATA_RESP_IS_WAIT(resp) && ( m_i_sync_pe_ctxt))
         m_curr_state = CONT_ISYNC;
 
     return resp;
@@ -371,9 +371,9 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processIsync()
 
 // change of address and/or exception in program flow.
 // implies E atom before the branch if none exception.
-rctdl_datapath_resp_t TrcPktDecodePtm::processBranch()
+ocsd_datapath_resp_t TrcPktDecodePtm::processBranch()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
 
     // initial pass - decoding packet.
     if(m_curr_state == DECODE_PKTS)
@@ -386,7 +386,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processBranch()
         if(m_curr_packet_in->isBranchExcepPacket())
         {
             // exception - record address and output exception packet.
-            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION);
+            m_output_elem.setType(OCSD_GEN_TRC_ELEM_EXCEPTION);
             m_output_elem.exception_number = m_curr_packet_in->excepNum();
             m_output_elem.excep_ret_addr = 0;
             if(m_curr_pe_state.valid)
@@ -414,7 +414,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processBranch()
     checkPendingNacc(resp);
 
     // if wait and still stuff to process....
-    if(RCTDL_DATA_RESP_IS_WAIT(resp) && ( m_mem_nacc_pending))
+    if(OCSD_DATA_RESP_IS_WAIT(resp) && ( m_mem_nacc_pending))
         m_curr_state = CONT_BRANCH;
 
     return resp;
@@ -422,9 +422,9 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processBranch()
 
 // effectively completes a range prior to exception or after many bytes of trace (>4096)
 //
-rctdl_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
+ocsd_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
 
     // if we need an address to run from then the WPUpdate will not form a range as 
     // we do not have a start point - still waiting for branch or other address packet
@@ -438,7 +438,7 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
     checkPendingNacc(resp);
 
     // if wait and still stuff to process....
-    if(RCTDL_DATA_RESP_IS_WAIT(resp) && ( m_mem_nacc_pending))
+    if(OCSD_DATA_RESP_IS_WAIT(resp) && ( m_mem_nacc_pending))
         m_curr_state = CONT_WPUP;
 
     return resp;
@@ -447,13 +447,13 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
 // a single atom packet can result in multiple range outputs...need to be re-entrant in case we get a wait response.
 // also need to handle nacc response from instruction walking routine
 // 
-rctdl_datapath_resp_t TrcPktDecodePtm::processAtom()
+ocsd_datapath_resp_t TrcPktDecodePtm::processAtom()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     bool bWPFound = false;
 
     // loop to process all the atoms in the packet
-    while(m_atoms.numAtoms() && m_curr_pe_state.valid && RCTDL_DATA_RESP_IS_CONT(resp))
+    while(m_atoms.numAtoms() && m_curr_pe_state.valid && OCSD_DATA_RESP_IS_CONT(resp))
     {
         resp = processAtomRange(m_atoms.getCurrAtomVal(),"atom");
         if(!m_curr_pe_state.valid)
@@ -466,17 +466,17 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processAtom()
     checkPendingNacc(resp);
 
     // if wait and still stuff to process....
-    if(RCTDL_DATA_RESP_IS_WAIT(resp) && ( m_mem_nacc_pending || m_atoms.numAtoms()))
+    if(OCSD_DATA_RESP_IS_WAIT(resp) && ( m_mem_nacc_pending || m_atoms.numAtoms()))
         m_curr_state = CONT_ATOM;
 
     return resp;
 }
 
- void TrcPktDecodePtm::checkPendingNacc(rctdl_datapath_resp_t &resp)
+ void TrcPktDecodePtm::checkPendingNacc(ocsd_datapath_resp_t &resp)
  {
-    if(m_mem_nacc_pending && RCTDL_DATA_RESP_IS_CONT(resp))
+    if(m_mem_nacc_pending && OCSD_DATA_RESP_IS_CONT(resp))
     {
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_ADDR_NACC);
         m_output_elem.st_addr = m_nacc_addr;
         resp = outputTraceElementIdx(m_index_curr_pkt,m_output_elem);
         m_mem_nacc_pending = false;
@@ -484,31 +484,31 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processAtom()
  }
 
 // given an atom element - walk the code and output a range or mark nacc.
-rctdl_datapath_resp_t TrcPktDecodePtm::processAtomRange(const rctdl_atm_val A, const char *pkt_msg,  const bool traceToAddrNext /*= false*/, const rctdl_vaddr_t nextAddrMatch /*= 0*/)
+ocsd_datapath_resp_t TrcPktDecodePtm::processAtomRange(const ocsd_atm_val A, const char *pkt_msg,  const bool traceToAddrNext /*= false*/, const ocsd_vaddr_t nextAddrMatch /*= 0*/)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     bool bWPFound = false;
     std::ostringstream oss;
 
     m_instr_info.instr_addr = m_curr_pe_state.instr_addr;
     m_instr_info.isa = m_curr_pe_state.isa;
 
-    rctdl_err_t err = traceInstrToWP(bWPFound,traceToAddrNext,nextAddrMatch);
-    if(err != RCTDL_OK)
+    ocsd_err_t err = traceInstrToWP(bWPFound,traceToAddrNext,nextAddrMatch);
+    if(err != OCSD_OK)
     {
-        if(err == RCTDL_ERR_UNSUPPORTED_ISA)
+        if(err == OCSD_ERR_UNSUPPORTED_ISA)
         {
                 m_curr_pe_state.valid = false; // need a new address packet
                 oss << "Warning: unsupported instruction set processing " << pkt_msg << " packet.";
-                LogError(rctdlError(RCTDL_ERR_SEV_WARN,err,m_index_curr_pkt,m_CSID,oss.str()));  
+                LogError(ocsdError(OCSD_ERR_SEV_WARN,err,m_index_curr_pkt,m_CSID,oss.str()));  
                 // wait for next address
-                return RCTDL_RESP_WARN_CONT;
+                return OCSD_RESP_WARN_CONT;
         }
         else
         {
             resp = RCDTL_RESP_FATAL_INVALID_DATA;
             oss << "Error processing " << pkt_msg << " packet.";
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,m_index_curr_pkt,m_CSID,oss.str()));  
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,m_index_curr_pkt,m_CSID,oss.str()));  
             return resp;
         }
     }
@@ -518,19 +518,19 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processAtomRange(const rctdl_atm_val A, c
         // action according to waypoint type and atom value
         switch(m_instr_info.type)
         {
-        case RCTDL_INSTR_BR:
+        case OCSD_INSTR_BR:
             if(A == ATOM_E)
                 m_instr_info.instr_addr = m_instr_info.branch_addr;
             break;
 
             // TBD: is this valid for PTM -> branch addresses imply E atom, N atom does not need address (return stack will require this)
-        case RCTDL_INSTR_BR_INDIRECT:
+        case OCSD_INSTR_BR_INDIRECT:
             if(A == ATOM_E)
                 m_curr_pe_state.valid = false; // indirect branch taken - need new address.
             break;
         }
             
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
         m_output_elem.last_instr_exec = (A == ATOM_E) ? 1 : 0;
         m_output_elem.last_i_type = m_instr_info.type;
         m_output_elem.last_i_subtype = m_instr_info.sub_type;
@@ -549,20 +549,20 @@ rctdl_datapath_resp_t TrcPktDecodePtm::processAtomRange(const rctdl_atm_val A, c
         if(m_output_elem.st_addr != m_output_elem.en_addr)
         {
             // some trace before we were out of memory access range
-            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+            m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
             resp = outputTraceElementIdx(m_index_curr_pkt,m_output_elem);
         }
     }
     return resp;
 }
 
-rctdl_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const bool traceToAddrNext /*= false*/, const rctdl_vaddr_t nextAddrMatch /*= 0*/)
+ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const bool traceToAddrNext /*= false*/, const ocsd_vaddr_t nextAddrMatch /*= 0*/)
 {
     uint32_t opcode;
     uint32_t bytesReq;
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
 
-    rctdl_mem_space_acc_t mem_space = (m_pe_context.security_level == rctdl_sec_secure) ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N;
+    ocsd_mem_space_acc_t mem_space = (m_pe_context.security_level == ocsd_sec_secure) ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
 
     m_output_elem.st_addr = m_output_elem.en_addr = m_instr_info.instr_addr;
 
@@ -573,13 +573,13 @@ rctdl_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const bool traceToAd
         // start off by reading next opcode;
         bytesReq = 4;
         err = accessMemory(m_instr_info.instr_addr,mem_space,&bytesReq,(uint8_t *)&opcode);
-        if(err != RCTDL_OK) break;
+        if(err != OCSD_OK) break;
 
         if(bytesReq == 4) // got data back
         {
             m_instr_info.opcode = opcode;
             err = instrDecode(&m_instr_info);
-            if(err != RCTDL_OK) break;
+            if(err != OCSD_OK) break;
 
             // increment address - may be adjusted by direct branch value later
             m_instr_info.instr_addr += m_instr_info.instr_size;
@@ -592,7 +592,7 @@ rctdl_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const bool traceToAd
             if(traceToAddrNext)
                 bWPFound = (m_output_elem.en_addr == nextAddrMatch);
             else
-                bWPFound = (m_instr_info.type != RCTDL_INSTR_OTHER);
+                bWPFound = (m_instr_info.type != OCSD_INSTR_OTHER);
         }
         else
         {

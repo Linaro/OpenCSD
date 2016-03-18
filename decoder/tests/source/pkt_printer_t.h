@@ -1,6 +1,6 @@
 /*
  * \file       pkt_printer_t.h
- * \brief      Reference CoreSight Trace Decoder : Test packet printer.
+ * \brief      OpenCSD : Test packet printer.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -46,42 +46,42 @@ class PacketPrinter : public IPktDataIn<P>, public IPktRawDataMon<P>, public Ite
 {
 public:
     PacketPrinter(const uint8_t trcID);
-    PacketPrinter(const uint8_t trcID, rctdlMsgLogger *pMsgLogger);
+    PacketPrinter(const uint8_t trcID, ocsdMsgLogger *pMsgLogger);
     virtual ~PacketPrinter();
 
 
-    virtual rctdl_datapath_resp_t PacketDataIn( const rctdl_datapath_op_t op,
-                                        const rctdl_trc_index_t index_sop,                                        
+    virtual ocsd_datapath_resp_t PacketDataIn( const ocsd_datapath_op_t op,
+                                        const ocsd_trc_index_t index_sop,                                        
                                         const P *p_packet_in);
 
-    virtual void RawPacketDataMon( const rctdl_datapath_op_t op,
-                                   const rctdl_trc_index_t index_sop,
+    virtual void RawPacketDataMon( const ocsd_datapath_op_t op,
+                                   const ocsd_trc_index_t index_sop,
                                    const P *pkt,
                                    const uint32_t size,
                                    const uint8_t *p_data);
 
 
 private:
-    void printIdx_ID(const rctdl_trc_index_t index_sop);
+    void printIdx_ID(const ocsd_trc_index_t index_sop);
 
     uint8_t m_trcID;
     bool m_bRawPrint;
     std::ostringstream m_oss;
-    rctdl_datapath_resp_t m_last_resp;
+    ocsd_datapath_resp_t m_last_resp;
 
 };
 
 template<class P> PacketPrinter<P>::PacketPrinter(uint8_t trcID) : 
     m_trcID(trcID),
     m_bRawPrint(false),
-    m_last_resp(RCTDL_RESP_CONT)
+    m_last_resp(OCSD_RESP_CONT)
 {
 }
 
-template<class P> PacketPrinter<P>::PacketPrinter(const uint8_t trcID, rctdlMsgLogger *pMsgLogger) :
+template<class P> PacketPrinter<P>::PacketPrinter(const uint8_t trcID, ocsdMsgLogger *pMsgLogger) :
     m_trcID(trcID),
     m_bRawPrint(false),
-    m_last_resp(RCTDL_RESP_CONT)
+    m_last_resp(OCSD_RESP_CONT)
 {
     setMessageLogger(pMsgLogger);
 }
@@ -90,29 +90,29 @@ template<class P> PacketPrinter<P>::~PacketPrinter()
 {
 }
 
-template<class P> rctdl_datapath_resp_t PacketPrinter<P>::PacketDataIn( const rctdl_datapath_op_t op,
-                                        const rctdl_trc_index_t index_sop,
+template<class P> ocsd_datapath_resp_t PacketPrinter<P>::PacketDataIn( const ocsd_datapath_op_t op,
+                                        const ocsd_trc_index_t index_sop,
                                         const P *p_packet_in)
 {
     std::string pktstr;
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     
     // wait / flush test verification
-    if(!m_bRawPrint && (m_last_resp == RCTDL_RESP_WAIT))
+    if(!m_bRawPrint && (m_last_resp == OCSD_RESP_WAIT))
     {
         // expect a flush or a complete reset after a wait.
-        if((op != RCTDL_OP_FLUSH) || (op != RCTDL_OP_RESET))
+        if((op != OCSD_OP_FLUSH) || (op != OCSD_OP_RESET))
         {
             m_oss <<"ID:"<< std::hex << (uint32_t)m_trcID << "\tERROR: FLUSH operation expected after wait on trace decode path\n";
             itemPrintLine(m_oss.str());
             m_oss.str("");
-            return RCTDL_RESP_FATAL_INVALID_OP;
+            return OCSD_RESP_FATAL_INVALID_OP;
         }
     }
 
     switch(op)
     {
-    case RCTDL_OP_DATA:
+    case OCSD_OP_DATA:
         p_packet_in->toString(pktstr);
         if(!m_bRawPrint)
             printIdx_ID(index_sop);
@@ -122,19 +122,19 @@ template<class P> rctdl_datapath_resp_t PacketPrinter<P>::PacketDataIn( const rc
         if(getTestWaits() && !m_bRawPrint)
         {
             decTestWaits();
-            resp = RCTDL_RESP_WAIT;
+            resp = OCSD_RESP_WAIT;
         }
         break;
 
-    case RCTDL_OP_EOT:
+    case OCSD_OP_EOT:
         m_oss <<"ID:"<< std::hex << (uint32_t)m_trcID << "\tEND OF TRACE DATA\n";
         break;
 
-    case RCTDL_OP_FLUSH:
+    case OCSD_OP_FLUSH:
         m_oss <<"ID:"<< std::hex << (uint32_t)m_trcID << "\tFLUSH operation on trace decode path\n";
         break;
 
-    case RCTDL_OP_RESET:
+    case OCSD_OP_RESET:
         m_oss <<"ID:"<< std::hex << (uint32_t)m_trcID << "\tRESET operation on trace decode path\n";
         break;
     }
@@ -145,15 +145,15 @@ template<class P> rctdl_datapath_resp_t PacketPrinter<P>::PacketDataIn( const rc
     return resp;
 }
 
-template<class P> void PacketPrinter<P>::RawPacketDataMon( const rctdl_datapath_op_t op,
-                                   const rctdl_trc_index_t index_sop,
+template<class P> void PacketPrinter<P>::RawPacketDataMon( const ocsd_datapath_op_t op,
+                                   const ocsd_trc_index_t index_sop,
                                    const P *pkt,
                                    const uint32_t size,
                                    const uint8_t *p_data)
 {
     switch(op)
     {
-    case RCTDL_OP_DATA:
+    case OCSD_OP_DATA:
         printIdx_ID(index_sop);
         m_oss << "; [";
         if((size > 0) && (p_data != 0))
@@ -178,7 +178,7 @@ template<class P> void PacketPrinter<P>::RawPacketDataMon( const rctdl_datapath_
 
 }
 
-template<class P> void PacketPrinter<P>::printIdx_ID(const rctdl_trc_index_t index_sop)
+template<class P> void PacketPrinter<P>::printIdx_ID(const ocsd_trc_index_t index_sop)
 {
     m_oss << "Idx:" << std::dec << index_sop << "; ID:"<< std::hex << (uint32_t)m_trcID;
 }

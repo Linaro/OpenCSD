@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_elem_etmv4d.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

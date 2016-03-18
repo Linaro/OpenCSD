@@ -1,6 +1,6 @@
 /*
  * \file       ss_to_dcdtree.h
- * \brief      Reference CoreSight Trace Decoder : Create a decode tree given a snapshot database.
+ * \brief      OpenCSD : Create a decode tree given a snapshot database.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -83,10 +83,10 @@ private:
     bool getRegisters(std::map<std::string, std::string, Util::CaseInsensitiveLess> &regDefs, int numRegs, regs_to_access_t *reg_access_array);
     bool getRegByPrefix(std::map<std::string, std::string, Util::CaseInsensitiveLess> &regDefs, 
                         regs_to_access_t &reg_accessor);
-    bool getCoreProfile(const std::string &coreName, rctdl_arch_version_t &arch_ver, rctdl_core_profile_t &core_prof);
+    bool getCoreProfile(const std::string &coreName, ocsd_arch_version_t &arch_ver, ocsd_core_profile_t &core_prof);
 
     void LogError(const std::string &msg);
-    void LogError(const rctdlError &err);
+    void LogError(const ocsdError &err);
 
     void processDumpfiles(std::vector<Parser::DumpDef> &dumps);
 
@@ -97,7 +97,7 @@ private:
     DecodeTree *m_pDecodeTree;
     SnapShotReader *m_pReader;
     ITraceErrorLog *m_pErrLogInterface;
-    rctdl_hndl_err_log_t m_errlog_handle;
+    ocsd_hndl_err_log_t m_errlog_handle;
 
     bool m_bPacketProcOnly;
     std::string m_BufferFileName;

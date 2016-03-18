@@ -1,6 +1,6 @@
 /*
  * \file       trc_data_rawframe_in_i.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -43,7 +43,7 @@
  * 
  * @brief Interface to monitor the raw frame decode progress..
  *
- * @ingroup rctdl_interfaces
+ * @ingroup ocsd_interfaces
  *
  * This interface allows a program to monitor the contents of the CoreSight frames passing through the 
  * frame deformatter.
@@ -65,11 +65,11 @@ public:
      * @param *pDataBlock : pointer to frame data.
      * @param traceID : Trace ID when element type ID data.
      *
-     * @return rctdl_err_t  : Standard library erroc code. Monitor only, not on data path.
+     * @return ocsd_err_t  : Standard library erroc code. Monitor only, not on data path.
      */
-    virtual rctdl_err_t TraceRawFrameIn(  const rctdl_datapath_op_t op, 
-                                          const rctdl_trc_index_t index, 
-                                          const rctdl_rawframe_elem_t frame_element, 
+    virtual ocsd_err_t TraceRawFrameIn(  const ocsd_datapath_op_t op, 
+                                          const ocsd_trc_index_t index, 
+                                          const ocsd_rawframe_elem_t frame_element, 
                                           const int dataBlockSize, 
                                           const uint8_t *pDataBlock,
                                           const uint8_t traceID) = 0;

@@ -1,6 +1,6 @@
 /*
  * \file       trc_etmv4_stack_elem.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -89,17 +89,17 @@ typedef enum _p0_elem_t
 
 class TrcStackElem {
 public:
-     TrcStackElem(const p0_elem_t p0_type, const bool isP0, const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
+     TrcStackElem(const p0_elem_t p0_type, const bool isP0, const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
      virtual ~TrcStackElem() {};
 
      const p0_elem_t getP0Type() const { return m_P0_type; };
-     const rctdl_etmv4_i_pkt_type getRootPkt() const { return m_root_pkt; };
-     const rctdl_trc_index_t getRootIndex() const  { return m_root_idx; };
+     const ocsd_etmv4_i_pkt_type getRootPkt() const { return m_root_pkt; };
+     const ocsd_trc_index_t getRootIndex() const  { return m_root_idx; };
      const bool isP0() const { return m_is_P0; };
 
 private:
-     rctdl_etmv4_i_pkt_type m_root_pkt;
-     rctdl_trc_index_t m_root_idx;
+     ocsd_etmv4_i_pkt_type m_root_pkt;
+     ocsd_trc_index_t m_root_idx;
      p0_elem_t m_P0_type;
 
 protected:
@@ -107,7 +107,7 @@ protected:
 
 };
 
-inline TrcStackElem::TrcStackElem(p0_elem_t p0_type, const bool isP0, rctdl_etmv4_i_pkt_type root_pkt, rctdl_trc_index_t root_index) :
+inline TrcStackElem::TrcStackElem(p0_elem_t p0_type, const bool isP0, ocsd_etmv4_i_pkt_type root_pkt, ocsd_trc_index_t root_index) :
     m_root_pkt(root_pkt),
     m_root_idx(root_index),
     m_P0_type(p0_type),
@@ -121,7 +121,7 @@ inline TrcStackElem::TrcStackElem(p0_elem_t p0_type, const bool isP0, rctdl_etmv
 class TrcStackElemAddr : public TrcStackElem
 {
 public:
-    TrcStackElemAddr(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
+    TrcStackElemAddr(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
     virtual ~TrcStackElemAddr() {};
 
     void setAddr(const etmv4_addr_val_t addr_val, const bool is64bit) { m_addr_val = addr_val; m_64bit = is64bit; };
@@ -139,7 +139,7 @@ private:
     int  m_addr_match_idx;
 };
 
-inline TrcStackElemAddr::TrcStackElemAddr(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+inline TrcStackElemAddr::TrcStackElemAddr(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index) :
     TrcStackElem(P0_ADDR, false, root_pkt,root_index),
         m_64bit(false),
         m_is_addr_match(false),
@@ -155,7 +155,7 @@ inline TrcStackElemAddr::TrcStackElemAddr(const rctdl_etmv4_i_pkt_type root_pkt,
 class TrcStackElemCtxt : public TrcStackElem
 {
 public:
-    TrcStackElemCtxt(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
+    TrcStackElemCtxt(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
     virtual ~TrcStackElemCtxt() {};
 
     void setContext(const  etmv4_context_t &ctxt) { m_context = ctxt; };
@@ -165,7 +165,7 @@ private:
      etmv4_context_t m_context;
 };
 
-inline TrcStackElemCtxt::TrcStackElemCtxt(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+inline TrcStackElemCtxt::TrcStackElemCtxt(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index) :
     TrcStackElem(P0_CTXT, false, root_pkt,root_index)
 {
 }
@@ -176,7 +176,7 @@ inline TrcStackElemCtxt::TrcStackElemCtxt(const rctdl_etmv4_i_pkt_type root_pkt,
 class TrcStackElemExcept : public TrcStackElem
 {
 public:
-    TrcStackElemExcept(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
+    TrcStackElemExcept(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
     virtual ~TrcStackElemExcept() {};
 
     void setPrevSame(bool bSame) { m_prev_addr_same = bSame; };
@@ -190,7 +190,7 @@ private:
     uint16_t m_excep_num;
 };
 
-inline TrcStackElemExcept::TrcStackElemExcept(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+inline TrcStackElemExcept::TrcStackElemExcept(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index) :
     TrcStackElem(P0_EXCEP, true, root_pkt,root_index),
         m_prev_addr_same(false)
 {
@@ -202,29 +202,29 @@ inline TrcStackElemExcept::TrcStackElemExcept(const rctdl_etmv4_i_pkt_type root_
 class TrcStackElemAtom : public TrcStackElem
 {
 public:
-    TrcStackElemAtom(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
+    TrcStackElemAtom(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
     virtual ~TrcStackElemAtom() {};
 
-    void setAtom(const rctdl_pkt_atom &atom) { m_atom = atom; };
+    void setAtom(const ocsd_pkt_atom &atom) { m_atom = atom; };
 
-    const rctdl_atm_val commitOldest();
+    const ocsd_atm_val commitOldest();
     int cancelNewest(const int nCancel);
     const bool isEmpty() const { return (m_atom.num == 0); };
 
 private:
-    rctdl_pkt_atom m_atom;
+    ocsd_pkt_atom m_atom;
 };
 
-inline TrcStackElemAtom::TrcStackElemAtom(const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+inline TrcStackElemAtom::TrcStackElemAtom(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index) :
     TrcStackElem(P0_ATOM, true, root_pkt,root_index)
 {
     m_atom.num = 0;
 }
 
 // commit oldest - get value and remove it from pattern
-inline const rctdl_atm_val TrcStackElemAtom::commitOldest()
+inline const ocsd_atm_val TrcStackElemAtom::commitOldest()
 {
-    rctdl_atm_val val = (m_atom.En_bits & 0x1) ? ATOM_E : ATOM_N;
+    ocsd_atm_val val = (m_atom.En_bits & 0x1) ? ATOM_E : ATOM_N;
     m_atom.num--;
     m_atom.En_bits >>= 1;
     return val;
@@ -244,7 +244,7 @@ inline int TrcStackElemAtom::cancelNewest(const int nCancel)
 class TrcStackElemParam : public TrcStackElem
 {
 public:
-    TrcStackElemParam(const p0_elem_t p0_type, const bool isP0, const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index);
+    TrcStackElemParam(const p0_elem_t p0_type, const bool isP0, const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
     virtual ~TrcStackElemParam() {};
 
     void setParam(const uint32_t param, const int nParamNum) { m_param[(nParamNum & 0x3)] = param; };
@@ -254,7 +254,7 @@ private:
     uint32_t m_param[4];    
 };
 
-inline TrcStackElemParam::TrcStackElemParam(const p0_elem_t p0_type, const bool isP0, const rctdl_etmv4_i_pkt_type root_pkt, const rctdl_trc_index_t root_index) :
+inline TrcStackElemParam::TrcStackElemParam(const p0_elem_t p0_type, const bool isP0, const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index) :
     TrcStackElem(p0_type, isP0, root_pkt,root_index)
 {
 }

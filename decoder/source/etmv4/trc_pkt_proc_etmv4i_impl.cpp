@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_etmv4i_impl.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -56,34 +56,34 @@ void EtmV4IPktProcImpl::Initialise(TrcPktProcEtmV4I *p_interface)
      InitProcessorState();
 }
 
-rctdl_err_t EtmV4IPktProcImpl::Configure(const EtmV4Config *p_config)
+ocsd_err_t EtmV4IPktProcImpl::Configure(const EtmV4Config *p_config)
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
     if(p_config != 0)
     {
         m_config = *p_config;
     }
     else
     {
-        err = RCTDL_ERR_INVALID_PARAM_VAL;
+        err = OCSD_ERR_INVALID_PARAM_VAL;
         if(m_isInit)
-            m_interface->LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err));
+            m_interface->LogError(ocsdError(OCSD_ERR_SEV_ERROR,err));
     }
     return err;
 }
 
-rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t index,
+ocsd_datapath_resp_t EtmV4IPktProcImpl::processData(  const ocsd_trc_index_t index,
                                     const uint32_t dataBlockSize,
                                     const uint8_t *pDataBlock,
                                     uint32_t *numBytesProcessed)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     m_blockBytesProcessed = 0;
     m_blockIndex = index;
     uint8_t currByte;
     while(  ( (m_blockBytesProcessed < dataBlockSize) || 
               ((m_blockBytesProcessed == dataBlockSize) && (m_process_state == SEND_PKT)) ) && 
-            RCTDL_DATA_RESP_IS_CONT(resp))
+            OCSD_DATA_RESP_IS_CONT(resp))
     {
         currByte = pDataBlock[m_blockBytesProcessed];
         try 
@@ -128,11 +128,11 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
                 break;
             }
         }
-        catch(rctdlError &err)
+        catch(ocsdError &err)
         {
             m_interface->LogError(err);
-            if( (err.getErrorCode() == RCTDL_ERR_BAD_PACKET_SEQ) ||
-                (err.getErrorCode() == RCTDL_ERR_INVALID_PCKT_HDR))
+            if( (err.getErrorCode() == OCSD_ERR_BAD_PACKET_SEQ) ||
+                (err.getErrorCode() == OCSD_ERR_INVALID_PCKT_HDR))
             {
                 // send invalid packets up the pipe to let the next stage decide what to do.
                 m_process_state = SEND_PKT; 
@@ -146,8 +146,8 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
         catch(...)
         {
             /// vv bad at this point.
-            resp = RCTDL_RESP_FATAL_SYS_ERR;
-            const rctdlError &fatal = rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_FAIL,m_packet_index,m_config.getTraceID(),"Unknown System Error decoding trace.");
+            resp = OCSD_RESP_FATAL_SYS_ERR;
+            const ocsdError &fatal = ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_FAIL,m_packet_index,m_config.getTraceID(),"Unknown System Error decoding trace.");
             m_interface->LogError(fatal);
         }
     }
@@ -156,9 +156,9 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::processData(  const rctdl_trc_index_t i
     return resp;
 }
 
-rctdl_datapath_resp_t EtmV4IPktProcImpl::onEOT()
+ocsd_datapath_resp_t EtmV4IPktProcImpl::onEOT()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     // if we have a partial packet then send to attached sinks
     if(m_currPacketData.size() != 0)
     {
@@ -169,18 +169,18 @@ rctdl_datapath_resp_t EtmV4IPktProcImpl::onEOT()
     return resp;
 }
 
-rctdl_datapath_resp_t EtmV4IPktProcImpl::onReset()
+ocsd_datapath_resp_t EtmV4IPktProcImpl::onReset()
 {
     // prepare for new decoding session
     InitProcessorState();
-    return RCTDL_RESP_CONT;
+    return OCSD_RESP_CONT;
 }
 
-rctdl_datapath_resp_t EtmV4IPktProcImpl::onFlush()
+ocsd_datapath_resp_t EtmV4IPktProcImpl::onFlush()
 {
     // packet processor never holds on to flushable data (may have partial packet, 
     // but any full packets are immediately sent)
-    return RCTDL_RESP_CONT;
+    return OCSD_RESP_CONT;
 }
 
 void EtmV4IPktProcImpl::InitPacketState()
@@ -202,16 +202,16 @@ void EtmV4IPktProcImpl::InitProcessorState()
     m_curr_packet.initStartState();
 }
 
-rctdl_datapath_resp_t EtmV4IPktProcImpl::outputPacket()
+ocsd_datapath_resp_t EtmV4IPktProcImpl::outputPacket()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     resp = m_interface->outputOnAllInterfaces(m_packet_index,&m_curr_packet,&m_curr_packet.type,m_currPacketData);
     return resp;
 }
 
-rctdl_datapath_resp_t EtmV4IPktProcImpl::outputUnsyncedRawPacket()
+ocsd_datapath_resp_t EtmV4IPktProcImpl::outputUnsyncedRawPacket()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     
 
     m_interface->outputRawPacketToMonitor(m_packet_index,&m_curr_packet,m_dump_unsynced_bytes,&m_currPacketData[0]);
@@ -289,7 +289,7 @@ void EtmV4IPktProcImpl::iPktNoPayload()
 void EtmV4IPktProcImpl::iPktReserved()
 {
     m_curr_packet.updateErrType(ETM4_PKT_I_RESERVED);   // swap type for err type
-    throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_INVALID_PCKT_HDR,m_packet_index,m_config.getTraceID());
+    throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_INVALID_PCKT_HDR,m_packet_index,m_config.getTraceID());
 }
 
 void EtmV4IPktProcImpl::iPktExtension()
@@ -532,7 +532,7 @@ void EtmV4IPktProcImpl::iPktException()
 
 void EtmV4IPktProcImpl::iPktCycleCntF123()
 {
-    static  rctdl_etmv4_i_pkt_type format = ETM4_PKT_I_CCNT_F1;
+    static  ocsd_etmv4_i_pkt_type format = ETM4_PKT_I_CCNT_F1;
 
     uint8_t lastByte = m_currPacketData.back();
     if( m_currPacketData.size() == 1)
@@ -692,7 +692,7 @@ void EtmV4IPktProcImpl::iPktCondInstr()
 
 void EtmV4IPktProcImpl::iPktCondResult()
 {
-    //static rctdl_etmv4_i_pkt_type format = ETM4_PKT_I_COND_RES_F1; // conditional result formats F1-F4
+    //static ocsd_etmv4_i_pkt_type format = ETM4_PKT_I_COND_RES_F1; // conditional result formats F1-F4
     uint8_t lastByte = m_currPacketData.back();
     if(m_currPacketData.size() == 1)    
     {
@@ -1574,7 +1574,7 @@ int EtmV4IPktProcImpl::extract32BitLongAddr(const std::vector<uint8_t> &buffer, 
 void EtmV4IPktProcImpl::throwBadSequenceError(const char *pszExtMsg)
 {
     m_curr_packet.updateErrType(ETM4_PKT_I_BAD_SEQUENCE);   // swap type for err type
-    throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_BAD_PACKET_SEQ,m_packet_index,m_config.getTraceID(),pszExtMsg);
+    throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_BAD_PACKET_SEQ,m_packet_index,m_config.getTraceID(),pszExtMsg);
 }
 
 

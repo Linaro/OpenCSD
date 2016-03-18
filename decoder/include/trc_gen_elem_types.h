@@ -35,7 +35,7 @@
 #ifndef ARM_TRC_GEN_ELEM_TYPES_H_INCLUDED
 #define ARM_TRC_GEN_ELEM_TYPES_H_INCLUDED
 
-/** @defgroup gen_trc_elem  Reference CoreSight Trace Decoder Library : Generic Trace Elements
+/** @defgroup gen_trc_elem  OpenCSD Library : Generic Trace Elements
   * @brief Generic trace elements output by the PE trace decode and SW stim decode stages.
   *
   * 
@@ -44,28 +44,28 @@
 #include "ocsd_if_types.h"
 
 /**  Enum for generic element types */
-typedef enum _rctdl_gen_trc_elem_t 
+typedef enum _ocsd_gen_trc_elem_t 
 {  
-    RCTDL_GEN_TRC_ELEM_UNKNOWN = 0,     /*!< Unknown trace element - default value or indicate error in stream to client */
-    RCTDL_GEN_TRC_ELEM_NO_SYNC,         /*!< Waiting for sync - either at start of decode, or after overflow / bad packet */
-    RCTDL_GEN_TRC_ELEM_TRACE_ON,        /*!< Start of trace - beginning of elements or restart after discontinuity (overflow, trace filtering). */
-    RCTDL_GEN_TRC_ELEM_EO_TRACE,        /*!< end of the available trace in the buffer.  */
-    RCTDL_GEN_TRC_ELEM_PE_CONTEXT,      /*!< PE status update / change (arch, ctxtid, vmid etc).  */
-    RCTDL_GEN_TRC_ELEM_INSTR_RANGE,     /*!< traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key  */
-    RCTDL_GEN_TRC_ELEM_ADDR_NACC,       /*!< tracing in inaccessible memory area  */ 
-    RCTDL_GEN_TRC_ELEM_EXCEPTION,       /*!< exception - trace range executed up to an exception occurring */
-    RCTDL_GEN_TRC_ELEM_EXCEPTION_RET,   /*!< expection return */
-    RCTDL_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
-    RCTDL_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count - cycles since last cycle count value - associated with a preceding instruction range. */
-    RCTDL_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */
+    OCSD_GEN_TRC_ELEM_UNKNOWN = 0,     /*!< Unknown trace element - default value or indicate error in stream to client */
+    OCSD_GEN_TRC_ELEM_NO_SYNC,         /*!< Waiting for sync - either at start of decode, or after overflow / bad packet */
+    OCSD_GEN_TRC_ELEM_TRACE_ON,        /*!< Start of trace - beginning of elements or restart after discontinuity (overflow, trace filtering). */
+    OCSD_GEN_TRC_ELEM_EO_TRACE,        /*!< end of the available trace in the buffer.  */
+    OCSD_GEN_TRC_ELEM_PE_CONTEXT,      /*!< PE status update / change (arch, ctxtid, vmid etc).  */
+    OCSD_GEN_TRC_ELEM_INSTR_RANGE,     /*!< traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key  */
+    OCSD_GEN_TRC_ELEM_ADDR_NACC,       /*!< tracing in inaccessible memory area  */ 
+    OCSD_GEN_TRC_ELEM_EXCEPTION,       /*!< exception - trace range executed up to an exception occurring */
+    OCSD_GEN_TRC_ELEM_EXCEPTION_RET,   /*!< expection return */
+    OCSD_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
+    OCSD_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count - cycles since last cycle count value - associated with a preceding instruction range. */
+    OCSD_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */
 #if 0
-    RCTDL_GEN_TRC_ELEM_DATA_VAL,        /*!< Data value - associated with prev instr (if same stream) + daddr, or data assoc key if supplied.  */
-    RCTDL_GEN_TRC_ELEM_DATA_ADDR,       /*!< Data address - associated with prev instr (if same stream), or data assoc key if supplied.  */
-    RCTDL_GEN_TRC_ELEM_SWCHAN_DATA,     /*!< data out on a SW channel (master, ID, data, type etc).  */
-    RCTDL_GEN_TRC_ELEM_BUS_TRANSFER,    /*!< Bus transfer event from a bus trace module (HTM)  */
+    OCSD_GEN_TRC_ELEM_DATA_VAL,        /*!< Data value - associated with prev instr (if same stream) + daddr, or data assoc key if supplied.  */
+    OCSD_GEN_TRC_ELEM_DATA_ADDR,       /*!< Data address - associated with prev instr (if same stream), or data assoc key if supplied.  */
+    OCSD_GEN_TRC_ELEM_SWCHAN_DATA,     /*!< data out on a SW channel (master, ID, data, type etc).  */
+    OCSD_GEN_TRC_ELEM_BUS_TRANSFER,    /*!< Bus transfer event from a bus trace module (HTM)  */
 #endif
     
-} rctdl_gen_trc_elem_t;
+} ocsd_gen_trc_elem_t;
 
 
 typedef enum _trace_on_reason_t {
@@ -80,16 +80,16 @@ typedef struct _trace_event_t {
 } trace_event_t;
 
 
-typedef struct _rctdl_generic_trace_elem {
-    rctdl_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
-    rctdl_isa           isa;          /**< instruction set for executed instructions */
-    rctdl_vaddr_t       st_addr;      /**< start address for instruction execution range / inaccessible code address / data address */
-    rctdl_vaddr_t       en_addr;        /**< end address (exclusive) for instruction execution range. */
-    rctdl_pe_context    context;        /**< PE Context */
+typedef struct _ocsd_generic_trace_elem {
+    ocsd_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
+    ocsd_isa           isa;          /**< instruction set for executed instructions */
+    ocsd_vaddr_t       st_addr;      /**< start address for instruction execution range / inaccessible code address / data address */
+    ocsd_vaddr_t       en_addr;        /**< end address (exclusive) for instruction execution range. */
+    ocsd_pe_context    context;        /**< PE Context */
     uint64_t            timestamp;      /**< timestamp value for TS element type */
     uint32_t            cycle_count;    /**< cycle count for explicit cycle count element, or count for element with associated cycle count */
-    rctdl_instr_type    last_i_type;    /**< Last instruction type if instruction execution range */
-    rctdl_instr_subtype last_i_subtype; /**< sub type for last instruction in range */
+    ocsd_instr_type    last_i_type;    /**< Last instruction type if instruction execution range */
+    ocsd_instr_subtype last_i_subtype; /**< sub type for last instruction in range */
  
     // per element flags
     struct {
@@ -107,7 +107,7 @@ typedef struct _rctdl_generic_trace_elem {
     };
 
 
-} rctdl_generic_trace_elem;
+} ocsd_generic_trace_elem;
 
 
 typedef enum _event_t {

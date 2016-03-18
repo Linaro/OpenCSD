@@ -1,6 +1,6 @@
 /*
- * \file       rctdl_error_logger.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \file       ocsd_error_logger.cpp
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -38,8 +38,8 @@
 #include <iostream>
 #include <sstream>
 
-rctdlDefaultErrorLogger::rctdlDefaultErrorLogger() :
-    m_Verbosity(RCTDL_ERR_SEV_ERROR),
+ocsdDefaultErrorLogger::ocsdDefaultErrorLogger() :
+    m_Verbosity(OCSD_ERR_SEV_ERROR),
     m_output_logger(0),
     m_created_output_logger(false)
 {
@@ -51,7 +51,7 @@ rctdlDefaultErrorLogger::rctdlDefaultErrorLogger() :
     m_error_sources.push_back("Gen_Info");   // handle 2
 }
 
-rctdlDefaultErrorLogger::~rctdlDefaultErrorLogger()
+ocsdDefaultErrorLogger::~ocsdDefaultErrorLogger()
 {
     if(m_created_output_logger)
         delete m_output_logger;
@@ -63,17 +63,17 @@ rctdlDefaultErrorLogger::~rctdlDefaultErrorLogger()
         if(m_lastErrID[i] != 0) delete m_lastErrID[i];
 }
 
-bool rctdlDefaultErrorLogger::initErrorLogger(const rctdl_err_severity_t verbosity, bool bCreateOutputLogger /*= false*/)
+bool ocsdDefaultErrorLogger::initErrorLogger(const ocsd_err_severity_t verbosity, bool bCreateOutputLogger /*= false*/)
 {
     bool bInit = true;
     m_Verbosity = verbosity;
     if(bCreateOutputLogger)
     {
-        m_output_logger = new (std::nothrow) rctdlMsgLogger();
+        m_output_logger = new (std::nothrow) ocsdMsgLogger();
         if(m_output_logger)
         {
             m_created_output_logger = true;
-            m_output_logger->setLogOpts(rctdlMsgLogger::OUT_STDERR);
+            m_output_logger->setLogOpts(ocsdMsgLogger::OUT_STDERR);
         }
         else
             bInit = false;
@@ -81,7 +81,7 @@ bool rctdlDefaultErrorLogger::initErrorLogger(const rctdl_err_severity_t verbosi
     return bInit;
 }
 
-void rctdlDefaultErrorLogger::setOutputLogger(rctdlMsgLogger *pLogger)
+void ocsdDefaultErrorLogger::setOutputLogger(ocsdMsgLogger *pLogger)
 {
     // if we created the current logger, delete it.
     if(m_output_logger && m_created_output_logger)
@@ -90,14 +90,14 @@ void rctdlDefaultErrorLogger::setOutputLogger(rctdlMsgLogger *pLogger)
     m_output_logger = pLogger;
 }
 
-const rctdl_hndl_err_log_t rctdlDefaultErrorLogger::RegisterErrorSource(const std::string &component_name)
+const ocsd_hndl_err_log_t ocsdDefaultErrorLogger::RegisterErrorSource(const std::string &component_name)
 {
-    rctdl_hndl_err_log_t handle = m_error_sources.size();
+    ocsd_hndl_err_log_t handle = m_error_sources.size();
     m_error_sources.push_back(component_name);
     return handle;
 }
 
-void rctdlDefaultErrorLogger::LogError(const rctdl_hndl_err_log_t handle, const rctdlError *Error)
+void ocsdDefaultErrorLogger::LogError(const ocsd_hndl_err_log_t handle, const ocsdError *Error)
 {
     // only log errors that match or exceed the current verbosity
     if(m_Verbosity >= Error->getErrorSeverity())
@@ -110,7 +110,7 @@ void rctdlDefaultErrorLogger::LogError(const rctdl_hndl_err_log_t handle, const 
                 std::string errStr = "unknown";
                 if(handle < m_error_sources.size())
                     errStr = m_error_sources[handle];
-                errStr += " : " + rctdlError::getErrorString(Error);
+                errStr += " : " + ocsdError::getErrorString(Error);
                 m_output_logger->LogMsg(errStr);
             }
         }
@@ -122,7 +122,7 @@ void rctdlDefaultErrorLogger::LogError(const rctdl_hndl_err_log_t handle, const 
             *m_lastErr = Error;
 
         // log last error associated with an ID
-        if(RCTDL_IS_VALID_CS_SRC_ID(Error->getErrorChanID()))
+        if(OCSD_IS_VALID_CS_SRC_ID(Error->getErrorChanID()))
         {
             if(m_lastErrID[Error->getErrorChanID()] == 0)
                 CreateErrorObj(&m_lastErrID[Error->getErrorChanID()], Error);
@@ -132,7 +132,7 @@ void rctdlDefaultErrorLogger::LogError(const rctdl_hndl_err_log_t handle, const 
     }
 }
 
-void rctdlDefaultErrorLogger::LogMessage(const rctdl_hndl_err_log_t handle, const rctdl_err_severity_t filter_level, const std::string &msg )
+void ocsdDefaultErrorLogger::LogMessage(const ocsd_hndl_err_log_t handle, const ocsd_err_severity_t filter_level, const std::string &msg )
 {
     // only log errors that match or exceed the current verbosity
     if((m_Verbosity >= filter_level))
@@ -151,9 +151,9 @@ void rctdlDefaultErrorLogger::LogMessage(const rctdl_hndl_err_log_t handle, cons
     }
 }
 
-void rctdlDefaultErrorLogger::CreateErrorObj(rctdlError **ppErr, const rctdlError *p_from)
+void ocsdDefaultErrorLogger::CreateErrorObj(ocsdError **ppErr, const ocsdError *p_from)
 {
-    *ppErr = new (std::nothrow) rctdlError(p_from);
+    *ppErr = new (std::nothrow) ocsdError(p_from);
 }
 
-/* End of File rctdl_error_logger.cpp */
+/* End of File ocsd_error_logger.cpp */

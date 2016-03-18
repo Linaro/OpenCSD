@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_elem_ptm.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -74,17 +74,17 @@ void PtmTrcPacket::ResetState()
     addr.size = VA_32BIT;
     addr.val = 0;
 
-    prev_isa = curr_isa = rctdl_isa_unknown;
+    prev_isa = curr_isa = ocsd_isa_unknown;
 
     timestamp = 0; 
 
     Clear();
 }
 
-void PtmTrcPacket::UpdateAddress(const rctdl_vaddr_t partAddrVal, const int updateBits)
+void PtmTrcPacket::UpdateAddress(const ocsd_vaddr_t partAddrVal, const int updateBits)
 {
-    rctdl_vaddr_t validMask = RCTDL_VA_MASK;
-    validMask >>= RCTDL_MAX_VA_BITSIZE-updateBits;
+    ocsd_vaddr_t validMask = OCSD_VA_MASK;
+    validMask >>= OCSD_MAX_VA_BITSIZE-updateBits;
     addr.pkt_bits = updateBits;
     addr.val &= ~validMask;
     addr.val |= (partAddrVal & validMask);
@@ -268,28 +268,28 @@ void PtmTrcPacket::getISAStr(std::string &isaStr) const
     oss << "ISA=";
     switch(curr_isa)
     {
-    case rctdl_isa_arm: 
+    case ocsd_isa_arm: 
         oss << "ARM(32); ";
         break;
 
-    case rctdl_isa_thumb2:
+    case ocsd_isa_thumb2:
         oss << "Thumb2; ";
         break;
 
-    case rctdl_isa_aarch64:
+    case ocsd_isa_aarch64:
         oss << "AArch64; ";
         break;
 
-    case rctdl_isa_tee:
+    case ocsd_isa_tee:
         oss << "ThumbEE; ";
         break;
 
-    case rctdl_isa_jazelle:
+    case ocsd_isa_jazelle:
         oss << "Jazelle; ";
         break;
 
     default:
-    case rctdl_isa_unknown:
+    case ocsd_isa_unknown:
         oss << "Unknown; ";
         break;
     }
@@ -370,7 +370,7 @@ void PtmTrcPacket::getCycleCountStr(std::string &subStr) const
 }
 
 
-void PtmTrcPacket::packetTypeName(const rctdl_ptm_pkt_type pkt_type, std::string &name, std::string &desc) const
+void PtmTrcPacket::packetTypeName(const ocsd_ptm_pkt_type pkt_type, std::string &name, std::string &desc) const
 {
     switch(pkt_type)
     {

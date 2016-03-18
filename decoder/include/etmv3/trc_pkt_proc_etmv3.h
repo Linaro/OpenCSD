@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_etmv3.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -43,11 +43,11 @@ class EtmV3PktProcImpl;
 class EtmV3TrcPacket;
 class EtmV3Config;
 
-/** @addtogroup rctdl_pkt_proc
+/** @addtogroup ocsd_pkt_proc
 @{*/
 
 
-class TrcPktProcEtmV3 : public TrcPktProcBase< EtmV3TrcPacket, rctdl_etmv3_pkt_type, EtmV3Config>
+class TrcPktProcEtmV3 : public TrcPktProcBase< EtmV3TrcPacket, ocsd_etmv3_pkt_type, EtmV3Config>
 {
 public:
     TrcPktProcEtmV3();
@@ -56,14 +56,14 @@ public:
 
 protected:
     /* implementation packet processing interface */
-    virtual rctdl_datapath_resp_t processData(  const rctdl_trc_index_t index,
+    virtual ocsd_datapath_resp_t processData(  const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
                                                 const uint8_t *pDataBlock,
                                                 uint32_t *numBytesProcessed);
-    virtual rctdl_datapath_resp_t onEOT();
-    virtual rctdl_datapath_resp_t onReset();
-    virtual rctdl_datapath_resp_t onFlush();
-    virtual rctdl_err_t onProtocolConfig();
+    virtual ocsd_datapath_resp_t onEOT();
+    virtual ocsd_datapath_resp_t onReset();
+    virtual ocsd_datapath_resp_t onFlush();
+    virtual ocsd_err_t onProtocolConfig();
     virtual const bool isBadPacket() const;
 
     friend class EtmV3PktProcImpl;

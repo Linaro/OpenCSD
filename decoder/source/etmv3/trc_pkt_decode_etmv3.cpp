@@ -1,6 +1,6 @@
 /*!
  * \file       trc_pkt_decode_etmv3.cpp
- * \brief      Reference CoreSight Trace Decoder : ETMv3 trace packet decode.
+ * \brief      OpenCSD : ETMv3 trace packet decode.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -54,37 +54,37 @@ TrcPktDecodeEtmV3::~TrcPktDecodeEtmV3()
 
 
 /* implementation packet decoding interface */
-rctdl_datapath_resp_t TrcPktDecodeEtmV3::processPacket()
+ocsd_datapath_resp_t TrcPktDecodeEtmV3::processPacket()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
 
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV3::onEOT()
+ocsd_datapath_resp_t TrcPktDecodeEtmV3::onEOT()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV3::onReset()
+ocsd_datapath_resp_t TrcPktDecodeEtmV3::onReset()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     resetDecoder();
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV3::onFlush()
+ocsd_datapath_resp_t TrcPktDecodeEtmV3::onFlush()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
 
     return resp;
 }
 
-rctdl_err_t TrcPktDecodeEtmV3::onProtocolConfig()
+ocsd_err_t TrcPktDecodeEtmV3::onProtocolConfig()
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
     if(m_config)
     {
         // set some static config elements
@@ -94,12 +94,12 @@ rctdl_err_t TrcPktDecodeEtmV3::onProtocolConfig()
         // at present no data trace;
         if(m_config->GetTraceMode() != EtmV3Config::TM_INSTR_ONLY)
         {
-            err = RCTDL_ERR_HW_CFG_UNSUPP;
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,"ETMv3 trace decoder : data trace decode not yet supported"));
+            err = OCSD_ERR_HW_CFG_UNSUPP;
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv3 trace decoder : data trace decode not yet supported"));
         }
     }
     else
-        err = RCTDL_ERR_NOT_INIT;
+        err = OCSD_ERR_NOT_INIT;
     return err;
 }
 

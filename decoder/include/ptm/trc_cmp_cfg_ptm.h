@@ -1,6 +1,6 @@
 /*
  * \file       trc_cmp_cfg_ptm.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -38,7 +38,7 @@
 
 #include "trc_pkt_types_ptm.h"
 
-/** @defgroup rctdl_protocol_cfg  Reference CoreSight Trace Decoder Library : Protcol Generator Configuration.
+/** @defgroup ocsd_protocol_cfg  OpenCSD Library : Protcol Generator Configuration.
 
     @brief Classes describing the trace capture time configuration of the protocol generators.
 
@@ -58,7 +58,7 @@
  * Provides quick value interpretation methods for the PTM config register values.
  * Primarily inlined for efficient code.
  */
-class PtmConfig : public rctdl_ptm_cfg
+class PtmConfig : public ocsd_ptm_cfg
 {
 public:
     PtmConfig();    /**< Default constructor */
@@ -80,7 +80,7 @@ public:
     static const uint32_t CCER_TS_64BIT     = (0x1 << 29);
 
     //! copy assignment operator for base structure into class.
-    PtmConfig & operator=(const rctdl_ptm_cfg *p_cfg);
+    PtmConfig & operator=(const ocsd_ptm_cfg *p_cfg);
  
     const bool enaBranchBCast() const; //!< Branch broadcast enabled.
     const bool enaCycleAcc() const;  //!< cycle accurate tracing enabled.
@@ -107,10 +107,10 @@ public:
 
 /* inlines */
 
-inline PtmConfig & PtmConfig::operator=(const rctdl_ptm_cfg *p_cfg)
+inline PtmConfig & PtmConfig::operator=(const ocsd_ptm_cfg *p_cfg)
 {
-    // object of base class rctdl_ptm_cfg 
-    *dynamic_cast<rctdl_ptm_cfg *>(this) = *p_cfg;
+    // object of base class ocsd_ptm_cfg 
+    *dynamic_cast<ocsd_ptm_cfg *>(this) = *p_cfg;
     return *this;
 }
 

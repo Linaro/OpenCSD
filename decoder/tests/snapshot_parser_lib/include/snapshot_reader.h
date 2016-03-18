@@ -1,6 +1,6 @@
 /*
  * \file       snapshot_reader.h
- * \brief      Reference CoreSight Trace Decoder : Snapshot Parser Library 
+ * \brief      OpenCSD : Snapshot Parser Library 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -76,7 +76,7 @@ private:
     std::string m_snapshotPath; // snapshot directory - default to cwd.
     bool m_snapshot_found;  // true if the path supplied can be opened.
     ITraceErrorLog *m_i_err_log;
-    rctdl_hndl_err_log_t m_errlog_handle;
+    ocsd_hndl_err_log_t m_errlog_handle;
     bool m_verbose; // true for verbose output.
     bool m_read_ok;
     

@@ -1,6 +1,6 @@
 /*
  * \file       trc_i_decode.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -43,12 +43,12 @@ public:
     TrcIDecode() {};
     virtual ~TrcIDecode() {};
 
-    virtual rctdl_err_t DecodeInstruction(rctdl_instr_info *instr_info);
+    virtual ocsd_err_t DecodeInstruction(ocsd_instr_info *instr_info);
 
 private:
-    rctdl_err_t DecodeA32(rctdl_instr_info *instr_info);
-    rctdl_err_t DecodeA64(rctdl_instr_info *instr_info);
-    rctdl_err_t DecodeT32(rctdl_instr_info *instr_info);
+    ocsd_err_t DecodeA32(ocsd_instr_info *instr_info);
+    ocsd_err_t DecodeA64(ocsd_instr_info *instr_info);
+    ocsd_err_t DecodeT32(ocsd_instr_info *instr_info);
 };
 
 #endif // ARM_TRC_I_DECODE_H_INCLUDED

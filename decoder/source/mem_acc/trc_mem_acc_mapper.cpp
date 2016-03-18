@@ -1,6 +1,6 @@
 /*
  * \file       trc_mem_acc_mapper.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -60,7 +60,7 @@ TrcMemAccMapper::~TrcMemAccMapper()
 }
 
 // memory access interface
-rctdl_err_t TrcMemAccMapper::ReadTargetMemory(const rctdl_vaddr_t address, const uint8_t cs_trace_id, const rctdl_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer)
+ocsd_err_t TrcMemAccMapper::ReadTargetMemory(const ocsd_vaddr_t address, const uint8_t cs_trace_id, const ocsd_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer)
 {
     bool bReadFromCurr = true;
 
@@ -73,7 +73,7 @@ rctdl_err_t TrcMemAccMapper::ReadTargetMemory(const rctdl_vaddr_t address, const
         *num_bytes = m_acc_curr->readBytes(address,  mem_space, *num_bytes,p_buffer);
     else
         *num_bytes = 0;
-    return RCTDL_OK;
+    return OCSD_OK;
 }
 
 void TrcMemAccMapper::RemoveAllAccessors()
@@ -88,23 +88,23 @@ void TrcMemAccMapper::RemoveAllAccessors()
     clearAccessorList();
 }
 
-rctdl_err_t TrcMemAccMapper::RemoveAccessorByAddress(const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id /* = 0 */)
+ocsd_err_t TrcMemAccMapper::RemoveAccessorByAddress(const ocsd_vaddr_t st_address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id /* = 0 */)
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
     if(findAccessor(st_address,mem_space,cs_trace_id))
     {
         err = RemoveAccessor(m_acc_curr);
         m_acc_curr = 0;
     }
     else
-        err = RCTDL_ERR_INVALID_PARAM_VAL;
+        err = OCSD_ERR_INVALID_PARAM_VAL;
     return err;
 }
 
 void  TrcMemAccMapper::LogMessage(const std::string &msg)
 {
     if(m_err_log)
-        m_err_log->LogMessage(ITraceErrorLog::HANDLE_GEN_INFO,RCTDL_ERR_SEV_INFO,msg);
+        m_err_log->LogMessage(ITraceErrorLog::HANDLE_GEN_INFO,OCSD_ERR_SEV_INFO,msg);
 }
 
 /************************************************************************************/
@@ -118,13 +118,13 @@ TrcMemAccMapGlobalSpace::~TrcMemAccMapGlobalSpace()
 {
 }
 
-rctdl_err_t TrcMemAccMapGlobalSpace::AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t /*cs_trace_id*/)
+ocsd_err_t TrcMemAccMapGlobalSpace::AddAccessor(TrcMemAccessorBase *p_accessor, const uint8_t /*cs_trace_id*/)
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
     bool bOverLap = false;
 
     if(!p_accessor->validateRange())
-        return RCTDL_ERR_MEM_ACC_RANGE_INVALID;
+        return OCSD_ERR_MEM_ACC_RANGE_INVALID;
 
     std::vector<TrcMemAccessorBase *>::const_iterator it =  m_acc_global.begin();
     while((it != m_acc_global.end()) && !bOverLap)
@@ -135,7 +135,7 @@ rctdl_err_t TrcMemAccMapGlobalSpace::AddAccessor(TrcMemAccessorBase *p_accessor,
             )
         {
             bOverLap = true;
-            err = RCTDL_ERR_MEM_ACC_OVERLAP;
+            err = OCSD_ERR_MEM_ACC_OVERLAP;
         }
         it++;
     }
@@ -147,7 +147,7 @@ rctdl_err_t TrcMemAccMapGlobalSpace::AddAccessor(TrcMemAccessorBase *p_accessor,
     return err;
 }
 
-bool TrcMemAccMapGlobalSpace::findAccessor(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t /*cs_trace_id*/)
+bool TrcMemAccMapGlobalSpace::findAccessor(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t /*cs_trace_id*/)
 {
     bool bFound = false;
     std::vector<TrcMemAccessorBase *>::const_iterator it =  m_acc_global.begin();
@@ -164,7 +164,7 @@ bool TrcMemAccMapGlobalSpace::findAccessor(const rctdl_vaddr_t address, const rc
     return bFound;
 }
 
-bool TrcMemAccMapGlobalSpace::readFromCurrent(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t /*cs_trace_id*/)
+bool TrcMemAccMapGlobalSpace::readFromCurrent(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t /*cs_trace_id*/)
 {
     bool readFromCurr = false;
     if(m_acc_curr)
@@ -200,7 +200,7 @@ void TrcMemAccMapGlobalSpace::clearAccessorList()
     m_acc_global.clear();
 }
 
-rctdl_err_t TrcMemAccMapGlobalSpace::RemoveAccessor(const TrcMemAccessorBase *p_accessor)
+ocsd_err_t TrcMemAccMapGlobalSpace::RemoveAccessor(const TrcMemAccessorBase *p_accessor)
 {
     bool bFound = false;
     TrcMemAccessorBase *p_acc = getFirstAccessor();
@@ -216,7 +216,7 @@ rctdl_err_t TrcMemAccMapGlobalSpace::RemoveAccessor(const TrcMemAccessorBase *p_
         else
             p_acc = getNextAccessor();
     }
-    return bFound ? RCTDL_OK : RCTDL_ERR_INVALID_PARAM_VAL;
+    return bFound ? OCSD_OK : OCSD_ERR_INVALID_PARAM_VAL;
 }
 
 

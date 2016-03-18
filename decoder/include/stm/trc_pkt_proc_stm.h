@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_stm.h
- * \brief      Reference CoreSight Trace Decoder : STM packet processing
+ * \brief      OpenCSD : STM packet processing
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -42,10 +42,10 @@
 #include "trc_pkt_elem_stm.h"
 #include "trc_cmp_cfg_stm.h"
 
-/** @addtogroup rctdl_pkt_proc
+/** @addtogroup ocsd_pkt_proc
 @{*/
 
-class TrcPktProcStm : public TrcPktProcBase<StmTrcPacket, rctdl_stm_pkt_type, STMConfig>
+class TrcPktProcStm : public TrcPktProcBase<StmTrcPacket, ocsd_stm_pkt_type, STMConfig>
 {
 public:
     TrcPktProcStm();
@@ -54,14 +54,14 @@ public:
 
 protected:
     /* implementation packet processing interface */
-    virtual rctdl_datapath_resp_t processData(  const rctdl_trc_index_t index,
+    virtual ocsd_datapath_resp_t processData(  const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
                                                 const uint8_t *pDataBlock,
                                                 uint32_t *numBytesProcessed);
-    virtual rctdl_datapath_resp_t onEOT();
-    virtual rctdl_datapath_resp_t onReset();
-    virtual rctdl_datapath_resp_t onFlush();
-    virtual rctdl_err_t onProtocolConfig();
+    virtual ocsd_datapath_resp_t onEOT();
+    virtual ocsd_datapath_resp_t onReset();
+    virtual ocsd_datapath_resp_t onFlush();
+    virtual ocsd_err_t onProtocolConfig();
     virtual const bool isBadPacket() const;
 
 
@@ -79,9 +79,9 @@ private:
     void initObj();
     void initProcessorState();
     void initNextPacket();
-    void waitForSync(const rctdl_trc_index_t blk_st_index);
+    void waitForSync(const ocsd_trc_index_t blk_st_index);
 
-    rctdl_datapath_resp_t outputPacket();   //!< send packet on output 
+    ocsd_datapath_resp_t outputPacket();   //!< send packet on output 
     void sendPacket();                      //!< mark packet for send.
     void setProcUnsynced();                 //!< set processor state to unsynced
     void throwBadSequenceError(const char *pszMessage = "");
@@ -178,7 +178,7 @@ private:
     const uint8_t *m_p_data_in;             //!< pointer to input data.
     uint32_t  m_data_in_size;               //!< amount of data in.
     uint32_t  m_data_in_used;               //!< amount of data processed.
-    rctdl_trc_index_t m_packet_index;       //!< byte index for start of current packet
+    ocsd_trc_index_t m_packet_index;       //!< byte index for start of current packet
 
     std::vector<uint8_t> m_packet_data;     //!< current packet data (bytes) - only saved if needed to output to monitor.
     bool m_bWaitSyncSaveSuppressed;         //!< don't save byte at a time when waitsync
@@ -200,7 +200,7 @@ private:
     uint8_t   m_num_F_nibbles;              //!< count consecutive F nibbles.
     bool m_sync_start;                      //!< possible start of sync
     bool m_is_sync;                         //!< true if found sync at current nibble
-    rctdl_trc_index_t m_sync_index;         //!< index of start of possible sync packet
+    ocsd_trc_index_t m_sync_index;         //!< index of start of possible sync packet
 
     void checkSyncNibble();                 //!< check current nibble as part of sync.
     void clearSyncCount();                  //!< valid packet, so clear sync counters (i.e. a trailing ffff is not part of sync).

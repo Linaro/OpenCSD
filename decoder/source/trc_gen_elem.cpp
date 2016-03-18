@@ -1,6 +1,6 @@
 /*
  * \file       trc_gen_elem.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -40,18 +40,18 @@
 
 static const char *s_elem_descs[][2] =  
 {
-    {"RCTDL_GEN_TRC_ELEM_UNKNOWN","Unknown trace element - default value or indicate error in stream to client."},
-    {"RCTDL_GEN_TRC_ELEM_NO_SYNC","Waiting for sync - either at start of decode, or after overflow / bad packet"},
-    {"RCTDL_GEN_TRC_ELEM_TRACE_ON","Start of trace - beginning of elements or restart after discontinuity (overflow, trace filtering)."},
-    {"RCTDL_GEN_TRC_ELEM_EO_TRACE","End of the available trace in the buffer."},
-    {"RCTDL_GEN_TRC_ELEM_PE_CONTEXT","PE status update / change (arch, ctxtid, vmid etc)."},
-    {"RCTDL_GEN_TRC_ELEM_INSTR_RANGE","Traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key"},
-    {"RCTDL_GEN_TRC_ELEM_ADDR_NACC","Tracing in inaccessible memory area."},
-    {"RCTDL_GEN_TRC_ELEM_EXCEPTION","Exception"},
-    {"RCTDL_GEN_TRC_ELEM_EXCEPTION_RET","Expection return"},
-    {"RCTDL_GEN_TRC_ELEM_TIMESTAMP","Timestamp - preceding elements happeded before this time."},
-    {"RCTDL_GEN_TRC_ELEM_CYCLE_COUNT","Cycle count - cycles since last cycle count value - associated with a preceding instruction range."},
-    {"RCTDL_GEN_TRC_ELEM_EVENT","Event - numbered event or trigger"}
+    {"OCSD_GEN_TRC_ELEM_UNKNOWN","Unknown trace element - default value or indicate error in stream to client."},
+    {"OCSD_GEN_TRC_ELEM_NO_SYNC","Waiting for sync - either at start of decode, or after overflow / bad packet"},
+    {"OCSD_GEN_TRC_ELEM_TRACE_ON","Start of trace - beginning of elements or restart after discontinuity (overflow, trace filtering)."},
+    {"OCSD_GEN_TRC_ELEM_EO_TRACE","End of the available trace in the buffer."},
+    {"OCSD_GEN_TRC_ELEM_PE_CONTEXT","PE status update / change (arch, ctxtid, vmid etc)."},
+    {"OCSD_GEN_TRC_ELEM_INSTR_RANGE","Traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key"},
+    {"OCSD_GEN_TRC_ELEM_ADDR_NACC","Tracing in inaccessible memory area."},
+    {"OCSD_GEN_TRC_ELEM_EXCEPTION","Exception"},
+    {"OCSD_GEN_TRC_ELEM_EXCEPTION_RET","Expection return"},
+    {"OCSD_GEN_TRC_ELEM_TIMESTAMP","Timestamp - preceding elements happeded before this time."},
+    {"OCSD_GEN_TRC_ELEM_CYCLE_COUNT","Cycle count - cycles since last cycle count value - associated with a preceding instruction range."},
+    {"OCSD_GEN_TRC_ELEM_EVENT","Event - numbered event or trigger"}
 };
 
 static const char *instr_type[] = {
@@ -89,20 +89,20 @@ void RctdlTraceElement::toString(std::string &str) const
         oss << s_elem_descs[typeIdx][0] << "(";
         switch(elem_type)
         {
-        case RCTDL_GEN_TRC_ELEM_INSTR_RANGE:
+        case OCSD_GEN_TRC_ELEM_INSTR_RANGE:
             oss << "exec range=0x" << std::hex << st_addr << ":[0x" << en_addr << "] ";
             oss << ((last_instr_exec == 1) ? "E " : "N ");
             if((int)last_i_type < T_SIZE)
                 oss << instr_type[last_i_type];
-            if((last_i_subtype != RCTDL_S_INSTR_NONE) && ((int)last_i_subtype < ST_SIZE))
+            if((last_i_subtype != OCSD_S_INSTR_NONE) && ((int)last_i_subtype < ST_SIZE))
                 oss << instr_sub_type[last_i_type];
             break;
 
-        case RCTDL_GEN_TRC_ELEM_ADDR_NACC:
+        case OCSD_GEN_TRC_ELEM_ADDR_NACC:
             oss << " 0x" << std::hex << st_addr << " ";
             break;
 
-        case RCTDL_GEN_TRC_ELEM_EXCEPTION:
+        case OCSD_GEN_TRC_ELEM_EXCEPTION:
             if(excep_ret_addr == 1)
             {
                 oss << "pref ret addr:0x" << std::hex << en_addr << "; ";
@@ -110,19 +110,19 @@ void RctdlTraceElement::toString(std::string &str) const
             oss << "excep num (0x" << std::setfill('0') << std::setw(2) << std::hex << exception_number;
             break;
 
-        case RCTDL_GEN_TRC_ELEM_PE_CONTEXT:
-            oss << "EL" << std::dec << (int)(context.exception_level) << (context.security_level == rctdl_sec_secure ? " S; " : "N; ") << (context.bits64 ? "AArch64; " : "AArch32; ");
+        case OCSD_GEN_TRC_ELEM_PE_CONTEXT:
+            oss << "EL" << std::dec << (int)(context.exception_level) << (context.security_level == ocsd_sec_secure ? " S; " : "N; ") << (context.bits64 ? "AArch64; " : "AArch32; ");
             if(context.vmid_valid)
                 oss << "VMID=0x" << std::hex << context.vmid << "; ";
             if(context.ctxt_id_valid)
                 oss << "CTXTID=0x" << std::hex << context.context_id << "; ";
             break;
 
-        case  RCTDL_GEN_TRC_ELEM_TRACE_ON:
+        case  OCSD_GEN_TRC_ELEM_TRACE_ON:
             oss << " [" << s_trace_on_reason[trace_on_reason] << "]";
             break;
 
-        case RCTDL_GEN_TRC_ELEM_TIMESTAMP:
+        case OCSD_GEN_TRC_ELEM_TIMESTAMP:
             oss << " [ TS=0x" << std::setfill('0') << std::setw(12) << std::hex << timestamp << "]; "; 
             break;
 
@@ -134,19 +134,19 @@ void RctdlTraceElement::toString(std::string &str) const
     }
     else
     {
-        oss << "RCTDL_GEN_TRC_ELEM??: index out of range.";
+        oss << "OCSD_GEN_TRC_ELEM??: index out of range.";
     }
     str = oss.str();
 }
 
-RctdlTraceElement &RctdlTraceElement::operator =(const rctdl_generic_trace_elem* p_elem)
+RctdlTraceElement &RctdlTraceElement::operator =(const ocsd_generic_trace_elem* p_elem)
 {
-    *dynamic_cast<rctdl_generic_trace_elem*>(this) = *p_elem;
+    *dynamic_cast<ocsd_generic_trace_elem*>(this) = *p_elem;
     return *this;
 }
 
 /*
-void RctdlTraceElement::toString(const rctdl_generic_trace_elem *p_elem, std::string &str)
+void RctdlTraceElement::toString(const ocsd_generic_trace_elem *p_elem, std::string &str)
 {
     RctdlTraceElement elem;
     elem = p_elem;

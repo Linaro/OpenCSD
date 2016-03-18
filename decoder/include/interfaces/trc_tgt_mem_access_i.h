@@ -1,6 +1,6 @@
 /*
  * \file       trc_tgt_mem_access_i.h
- * \brief      Reference CoreSight Trace Decoder : Target memory read interface.
+ * \brief      OpenCSD : Target memory read interface.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -40,7 +40,7 @@
  * 
  * @brief Interface to target memory access.
  *
- * @ingroup rctdl_interfaces
+ * @ingroup ocsd_interfaces
  *
  * Read Target memory call is used by the decoder to access the memory location in the
  * target memory space for the next instruction(s) to be traced.
@@ -76,11 +76,11 @@ public:
      * @param num_bytes : [in] Number of bytes required. [out] Number of bytes actually read.
      * @param *p_buffer : Buffer to fill with the bytes.
      *
-     * @return rctdl_err_t : RCTDL_OK on successful access (including memory not available)
+     * @return ocsd_err_t : OCSD_OK on successful access (including memory not available)
      */
-    virtual rctdl_err_t ReadTargetMemory(   const rctdl_vaddr_t address, 
+    virtual ocsd_err_t ReadTargetMemory(   const ocsd_vaddr_t address, 
                                             const uint8_t cs_trace_id, 
-                                            const rctdl_mem_space_acc_t mem_space, 
+                                            const ocsd_mem_space_acc_t mem_space, 
                                             uint32_t *num_bytes, 
                                             uint8_t *p_buffer) = 0;
 };

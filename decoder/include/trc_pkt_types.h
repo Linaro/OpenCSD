@@ -39,7 +39,7 @@
 #include <stdint.h>
 #include "ocsd_if_types.h"
 
-/** @defgroup trc_pkts  Reference CoreSight Trace Decoder Library : Trace Packet Types
+/** @defgroup trc_pkts  OpenCSD Library : Trace Packet Types
 
     @brief Types used in trace packet description structures.
 
@@ -49,39 +49,39 @@
 /** @name Common Packet Types
 @{*/
 
-typedef enum _rctdl_pkt_va_size
+typedef enum _ocsd_pkt_va_size
 {
     VA_32BIT,
     VA_64BIT
-} rctdl_pkt_va_size;
+} ocsd_pkt_va_size;
 
-typedef struct _rctdl_pkt_vaddr 
+typedef struct _ocsd_pkt_vaddr 
 {
-    rctdl_pkt_va_size size;     /**< Virtual address size. */
-    rctdl_vaddr_t val;  /**< Current value */
+    ocsd_pkt_va_size size;     /**< Virtual address size. */
+    ocsd_vaddr_t val;  /**< Current value */
     uint8_t pkt_bits;   /**< Bits updated this packet */
     uint8_t valid_bits; /**< Currently valid bits */
-} rctdl_pkt_vaddr;
+} ocsd_pkt_vaddr;
 
-typedef struct _rctdl_pkt_byte_sz_val
+typedef struct _ocsd_pkt_byte_sz_val
 {
     uint32_t val;
     uint8_t  size_bytes;
     uint8_t  valid_bytes;
-} rctdl_pkt_byte_sz_val;
+} ocsd_pkt_byte_sz_val;
 
-typedef enum _rctdl_pkt_atm_type
+typedef enum _ocsd_pkt_atm_type
 {
     ATOM_PATTERN,   /**< set atom packet using pattern supplied */
     ATOM_REPEAT     /**< set atom packet using repeat value (convert to pattern) */
-} rctdl_pkt_atm_type;
+} ocsd_pkt_atm_type;
 
-typedef enum _rctdl_atm_val {
+typedef enum _ocsd_atm_val {
     ATOM_N,
     ATOM_E
-} rctdl_atm_val;
+} ocsd_atm_val;
 
-typedef struct _rctdl_pkt_atom
+typedef struct _ocsd_pkt_atom
 {
     /** pattern across num bits.
         Bit sequence:- ls bit = oldest atom (1st instruction executed), ms bit = newest (last instruction executed), 
@@ -89,18 +89,18 @@ typedef struct _rctdl_pkt_atom
       */
     uint32_t En_bits;
     uint8_t num;                /**< number of atoms represented */
-} rctdl_pkt_atom;
+} ocsd_pkt_atom;
 
 /** Isync Reason - common to PTM and ETMv3 **/
-typedef enum _rctdl_iSync_reason {
+typedef enum _ocsd_iSync_reason {
     iSync_Periodic,
     iSync_TraceEnable,
     iSync_TraceRestartAfterOverflow,
     iSync_DebugExit
-} rctdl_iSync_reason;
+} ocsd_iSync_reason;
 
 
-typedef enum _rctdl_armv7_exception {
+typedef enum _ocsd_armv7_exception {
     Excp_Reserved,
     Excp_NoException,
     Excp_Reset,
@@ -126,7 +126,7 @@ typedef enum _rctdl_armv7_exception {
     Excp_CMHardFault,
     Excp_CMIRQn,
     Excp_ThumbEECheckFail,
-} rctdl_armv7_exception;
+} ocsd_armv7_exception;
 
 /** @}*/
 

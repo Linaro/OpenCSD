@@ -1,6 +1,6 @@
 /*!
  * \file       trc_mem_acc_cb_if.h
- * \brief      Reference CoreSight Trace Decoder : Memory Accessor Callback Direct Interface
+ * \brief      OpenCSD : Memory Accessor Callback Direct Interface
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -63,7 +63,7 @@ public:
      *
      * @return uint32_t : Number of bytes read, 0 if s_address out of range, or mem space not accessible.
      */
-    virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const rctdl_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer) = 0;
+    virtual const uint32_t readBytes(const ocsd_vaddr_t s_address, const ocsd_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer) = 0;
 };
 
 #endif // ARM_TRC_MEM_ACC_CB_IF_H_INCLUDED

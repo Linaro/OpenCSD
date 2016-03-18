@@ -1,6 +1,6 @@
 /*
  * \file       trc_indexer_src_i.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -45,7 +45,7 @@
  * 
  * @brief Interface class to index the frame formatted trace stream
  *
- * @ingroup rctdl_interfaces
+ * @ingroup ocsd_interfaces
  * 
  * This indexer creates an index of trace IDs present in the frame formatted trace stream.
  * It will also index any trigger point markers indicated in the frame format.
@@ -77,9 +77,9 @@ public:
      * @param src_idx : trace index of source ID
      * @param ID : The source ID.
      *
-     * @return virtual rctdl_err_t  : RCTDL_OK if successful.
+     * @return virtual ocsd_err_t  : OCSD_OK if successful.
      */
-    virtual rctdl_err_t TrcIDIndex(const rctdl_trc_index_t src_idx, const uint8_t ID) = 0;
+    virtual ocsd_err_t TrcIDIndex(const ocsd_trc_index_t src_idx, const uint8_t ID) = 0;
     
     /*!
      * Index a set of IDs in a block.
@@ -92,9 +92,9 @@ public:
      * @param src_idx_start : Index of start of block.
      * @param IDs : IDs within the block.
      *
-     * @return virtual rctdl_err_t  : RCTDL_OK if successful.
+     * @return virtual ocsd_err_t  : OCSD_OK if successful.
      */
-    virtual rctdl_err_t TrcIDBlockMap(const rctdl_trc_index_t src_idx_start, const std::vector<uint8_t> IDs) = 0;
+    virtual ocsd_err_t TrcIDBlockMap(const ocsd_trc_index_t src_idx_start, const std::vector<uint8_t> IDs) = 0;
        
     /*!
      * The CoreSight frame format can use a reserved ID to indicate trigger or other 
@@ -104,9 +104,9 @@ public:
      * @param src_idx : trace index of the event.
      * @param event_type : type of event.
      *
-     * @return rctdl_err_t  : RCTDL_OK if indexed correctly,  RCTDL_ERR_INVALID_PARAM_VAL if incorrect value used.
+     * @return ocsd_err_t  : OCSD_OK if indexed correctly,  OCSD_ERR_INVALID_PARAM_VAL if incorrect value used.
      */
-    virtual rctdl_err_t TrcEventIndex(const rctdl_trc_index_t src_idx, const int event_type) = 0;
+    virtual ocsd_err_t TrcEventIndex(const ocsd_trc_index_t src_idx, const int event_type) = 0;
 
     
     /*!
@@ -115,7 +115,7 @@ public:
      *
      * @param src_idx : trace index of sync point.
      */
-    virtual void TrcSyncIndex(const rctdl_trc_index_t src_idx);
+    virtual void TrcSyncIndex(const ocsd_trc_index_t src_idx);
 
 };
 

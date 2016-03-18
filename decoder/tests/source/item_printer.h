@@ -1,6 +1,6 @@
 /*
  * \file       item_printer.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -44,7 +44,7 @@ public:
     ItemPrinter();
     virtual ~ItemPrinter();
 
-    void setMessageLogger(rctdlMsgLogger *pMsgLogger) { m_pMsgLogger = pMsgLogger; };
+    void setMessageLogger(ocsdMsgLogger *pMsgLogger) { m_pMsgLogger = pMsgLogger; };
     void itemPrintLine(const std::string &msg);
 
     // return wait for the first N packets - test the wait mechanism.
@@ -53,7 +53,7 @@ public:
     void decTestWaits();
 
 protected:
-    rctdlMsgLogger *m_pMsgLogger;    
+    ocsdMsgLogger *m_pMsgLogger;    
     int m_test_waits;
 };
 

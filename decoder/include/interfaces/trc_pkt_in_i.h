@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_in_i.h
- * \brief      Reference CoreSight Trace Decoder : Interface for trace protocol packet input
+ * \brief      OpenCSD : Interface for trace protocol packet input
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -38,7 +38,7 @@
 
 /*!
  * @class IPktDataIn
- * @ingroup rctdl_interfaces
+ * @ingroup ocsd_interfaces
  * @brief Interface class providing an input for discrete protocol packets.
  *
  * Implemented by trace protocol packet decoders to convert packets into 
@@ -58,16 +58,16 @@ public:
     /*!
      * Interface function to process a single protocol packet.
      * Pass a trace index for the start of packet and a pointer to a packet when the 
-     * datapath operation is RCTDL_OP_DATA.
+     * datapath operation is OCSD_OP_DATA.
      *
      * @param op : Datapath operation.
-     * @param index_sop : Trace index for the start of the packet, 0 if not RCTDL_OP_DATA.
-     * @param *p_packet_in : Protocol Packet - when data path operation is RCTDL_OP_DATA. null otherwise. 
+     * @param index_sop : Trace index for the start of the packet, 0 if not OCSD_OP_DATA.
+     * @param *p_packet_in : Protocol Packet - when data path operation is OCSD_OP_DATA. null otherwise. 
      *
-     * @return rctdl_datapath_resp_t  : Standard data path response.
+     * @return ocsd_datapath_resp_t  : Standard data path response.
      */
-    virtual rctdl_datapath_resp_t PacketDataIn( const rctdl_datapath_op_t op,
-                                                const rctdl_trc_index_t index_sop,
+    virtual ocsd_datapath_resp_t PacketDataIn( const ocsd_datapath_op_t op,
+                                                const ocsd_trc_index_t index_sop,
                                                 const P *p_packet_in) = 0;
 
 

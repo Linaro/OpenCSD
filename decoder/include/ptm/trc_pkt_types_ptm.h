@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_ptm_types.h
- * \brief      Reference CoreSight Trace Decoder : PTM specific types
+ * \brief      OpenCSD : PTM specific types
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -43,7 +43,7 @@
 /** @name PTM Packet Types
 @{*/
 
-typedef enum _rctdl_ptm_pkt_type
+typedef enum _ocsd_ptm_pkt_type
 {
 // markers for unknown packets
 	PTM_PKT_NOTSYNC,        //!< no sync found yet
@@ -69,7 +69,7 @@ typedef enum _rctdl_ptm_pkt_type
    	PTM_PKT_BAD_SEQUENCE,   //!< invalid sequence for packet type
 	PTM_PKT_RESERVED,		//!< Reserved packet encoding	
 
-} rctdl_ptm_pkt_type;
+} ocsd_ptm_pkt_type;
 
 typedef struct _ptm_context_t {
     struct {
@@ -84,27 +84,27 @@ typedef struct _ptm_context_t {
     uint8_t VMID;       /**< VMID */
 } ptm_context_t;
 
-typedef struct _rctdl_ptm_excep {
-    rctdl_armv7_exception type; /**<  exception type. */
+typedef struct _ocsd_ptm_excep {
+    ocsd_armv7_exception type; /**<  exception type. */
     uint16_t number;    /**< exception as number */
     struct {
         uint32_t present:1;      /**< exception present in packet */
     } bits;
-} rctdl_ptm_excep;
+} ocsd_ptm_excep;
 
 
-typedef struct _rctdl_ptm_pkt
+typedef struct _ocsd_ptm_pkt
 {
-    rctdl_ptm_pkt_type type;        /**< Primary packet type. */
+    ocsd_ptm_pkt_type type;        /**< Primary packet type. */
 
-    rctdl_isa curr_isa;         /**< current ISA. */
-    rctdl_isa prev_isa;         /**< previous ISA */
+    ocsd_isa curr_isa;         /**< current ISA. */
+    ocsd_isa prev_isa;         /**< previous ISA */
 
-    rctdl_pkt_vaddr addr;       /**< current address. */
+    ocsd_pkt_vaddr addr;       /**< current address. */
     ptm_context_t   context;    /**< current context. */
-    rctdl_pkt_atom  atom;
+    ocsd_pkt_atom  atom;
 
-    rctdl_iSync_reason i_sync_reason;   /**< reason for ISync Packet. */
+    ocsd_iSync_reason i_sync_reason;   /**< reason for ISync Packet. */
 
     uint32_t cycle_count;       /**< cycle count value associated with this packet. */
     uint8_t cc_valid;           /**< cycle count value valid. */
@@ -112,21 +112,21 @@ typedef struct _rctdl_ptm_pkt
     uint64_t timestamp;         /**< timestamp value. */
     uint8_t ts_update_bits;     /**< bits of ts updated this packet. (if TS packet) */
 
-    rctdl_ptm_excep exception;  /**< exception information in packet */
+    ocsd_ptm_excep exception;  /**< exception information in packet */
 
-    rctdl_ptm_pkt_type err_type;    /**< Basic packet type if primary type indicates error or incomplete. */
+    ocsd_ptm_pkt_type err_type;    /**< Basic packet type if primary type indicates error or incomplete. */
 
-} rctdl_ptm_pkt;
+} ocsd_ptm_pkt;
 
-typedef struct _rctdl_ptm_cfg 
+typedef struct _ocsd_ptm_cfg 
 {
     uint32_t                reg_idr;    /**< PTM ID register */
     uint32_t                reg_ctrl;   /**< Control Register */
     uint32_t                reg_ccer;   /**< Condition code extension register */
     uint32_t                reg_trc_id; /**< CoreSight Trace ID register */
-    rctdl_arch_version_t    arch_ver;   /**< Architecture version */
-    rctdl_core_profile_t    core_prof;  /**< Core Profile */
-} rctdl_ptm_cfg;
+    ocsd_arch_version_t    arch_ver;   /**< Architecture version */
+    ocsd_core_profile_t    core_prof;  /**< Core Profile */
+} ocsd_ptm_cfg;
 
 /** @}*/
 

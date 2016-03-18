@@ -1,6 +1,6 @@
 /*
  * \file       trc_cmp_cfg_etmv4.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -40,7 +40,7 @@
 
 
 
-/** @addtogroup rctdl_protocol_cfg
+/** @addtogroup ocsd_protocol_cfg
 @{*/
 
 /** @name ETMv4 configuration
@@ -53,17 +53,17 @@
  * Provides quick value interpretation methods for the ETMv4 config register values.
  * Primarily inlined for efficient code. 
  */
-class EtmV4Config : public rctdl_etmv4_cfg
+class EtmV4Config : public ocsd_etmv4_cfg
 {
 public:
     EtmV4Config();  /**< Default constructor */
     ~EtmV4Config() {}; /**< Default destructor */
 
     //! copy assignment operator for base structure into class.
-    EtmV4Config & operator=(const rctdl_etmv4_cfg *p_cfg);
+    EtmV4Config & operator=(const ocsd_etmv4_cfg *p_cfg);
 
-    const rctdl_core_profile_t &coreProfile() const { return core_prof; };
-    const rctdl_arch_version_t &archVersion() const { return arch_ver; };
+    const ocsd_core_profile_t &coreProfile() const { return core_prof; };
+    const ocsd_arch_version_t &archVersion() const { return arch_ver; };
 
     /* idr 0 */
     const bool LSasInstP0() const;

@@ -1,6 +1,6 @@
 /*
  * \file       trc_idec_arminst.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -122,7 +122,7 @@ int inst_A64_is_UDF(uint32_t inst);
 
 
 /* access sub-type information */
-rctdl_instr_subtype get_instr_subtype();
+ocsd_instr_subtype get_instr_subtype();
 void clear_instr_subtype();
 
 #endif // ARM_TRC_IDEC_ARMINST_H_INCLUDED

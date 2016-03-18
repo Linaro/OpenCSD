@@ -1,6 +1,6 @@
 /*!
  * \file       trc_component.h
- * \brief      Reference CoreSight Trace Decoder : Base trace decode component.
+ * \brief      OpenCSD : Base trace decode component.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -43,7 +43,7 @@
 
 class errLogAttachMonitor;
 
-/** @addtogroup rctdl_infrastructure
+/** @addtogroup ocsd_infrastructure
 @{*/
 
 /*!
@@ -74,9 +74,9 @@ public:
      *
      * @param op_flags : Set of operation mode flags.
      *
-     * @return rctdl_err_t  : RCTDL_OK if flags supported by this component, error if unsuppored 
+     * @return ocsd_err_t  : OCSD_OK if flags supported by this component, error if unsuppored 
      */
-    rctdl_err_t setComponentOpMode(uint32_t op_flags);
+    ocsd_err_t setComponentOpMode(uint32_t op_flags);
 
     /*!
      * Return the current operational mode flags values
@@ -97,9 +97,9 @@ public:
 protected:
     friend class errLogAttachMonitor;
 
-    void LogError(const rctdlError &Error);
-    const rctdl_err_severity_t getErrorLogLevel() const { return m_errVerbosity; };
-    const bool isLoggingErrorLevel(const rctdl_err_severity_t level) const { return level <= m_errVerbosity; };
+    void LogError(const ocsdError &Error);
+    const ocsd_err_severity_t getErrorLogLevel() const { return m_errVerbosity; };
+    const bool isLoggingErrorLevel(const ocsd_err_severity_t level) const { return level <= m_errVerbosity; };
     void updateErrorLogLevel(); 
 
     void do_attach_notify(const int num_attached);
@@ -110,8 +110,8 @@ protected:
 
 private:
     componentAttachPt<ITraceErrorLog> m_error_logger;
-    rctdl_hndl_err_log_t m_errLogHandle;
-    rctdl_err_severity_t m_errVerbosity;
+    ocsd_hndl_err_log_t m_errLogHandle;
+    ocsd_err_severity_t m_errVerbosity;
     errLogAttachMonitor *m_pErrAttachMon;
 
     std::string m_name;  

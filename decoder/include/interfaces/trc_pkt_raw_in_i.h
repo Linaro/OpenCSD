@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_raw_in_i.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -41,7 +41,7 @@
  * 
  * @brief Interface class for packet processor monitor.
  *
- * @addtogroup rctdl_interfaces
+ * @addtogroup ocsd_interfaces
  *
  * This interface provides a monitor point for the packet processor block.
  * The templated interface is called with a complete packet of the given
@@ -69,8 +69,8 @@ public:
      * @param *p_data : the packet data bytes.
      *
      */
-    virtual void RawPacketDataMon( const rctdl_datapath_op_t op,
-                                   const rctdl_trc_index_t index_sop,
+    virtual void RawPacketDataMon( const ocsd_datapath_op_t op,
+                                   const ocsd_trc_index_t index_sop,
                                    const P *pkt,
                                    const uint32_t size,
                                    const uint8_t *p_data) = 0;

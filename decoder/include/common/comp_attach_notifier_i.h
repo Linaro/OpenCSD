@@ -1,6 +1,6 @@
 /*!
  * \file       comp_attach_notifier_i.h
- * \brief      Reference CoreSight Trace Decoder : Component attach point notifier interface.
+ * \brief      OpenCSD : Component attach point notifier interface.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -37,7 +37,7 @@
 
 /*!
  * @class IComponentAttachNotifier  
- * @addtogroup rctdl_infrastructure 
+ * @addtogroup ocsd_infrastructure 
  * @brief Notification interface for attachment.
  * 
  *  Interface to the componentAttachPt classes that allow notification on component 

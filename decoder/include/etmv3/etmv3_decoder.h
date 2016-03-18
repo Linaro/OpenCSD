@@ -1,6 +1,6 @@
 /*
  * \file       etmv3_decoder.h
- * \brief      Reference CoreSight Trace Decoder : Top level header file for ETMv3 decoder
+ * \brief      OpenCSD : Top level header file for ETMv3 decoder
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

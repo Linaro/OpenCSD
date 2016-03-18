@@ -1,6 +1,6 @@
 /*
  * \file       snapshot_parser.cpp
- * \brief      Reference CoreSight Trace Decoder : Snapshot Parser Library
+ * \brief      OpenCSD : Snapshot Parser Library
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -72,7 +72,7 @@ namespace ParserPrivate
         string::size_type eq(kv.find('='));
         if (eq == string::npos)
         {
-            throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE, "Couldn't parse '" + kv + "' as key=value"); 
+            throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE, "Couldn't parse '" + kv + "' as key=value"); 
         }
         return make_pair(Trim(kv.substr(0, eq)), Trim(kv.substr(eq + 1)));
     }
@@ -109,7 +109,7 @@ namespace ParserPrivate
     {
         if (!m.insert(make_pair(key, value)).second)
         {
-            throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE,  "Duplicate key: " + keyStr);
+            throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE,  "Duplicate key: " + keyStr);
         }
     }
 
@@ -117,7 +117,7 @@ namespace ParserPrivate
     {
         if (store)
         {
-            throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE, 
+            throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE, 
                 "Duplicate " + key + " key found in "
                 + section + " section"); 
         }
@@ -146,7 +146,7 @@ namespace ParserPrivate
     public:
         void Define(const string& k, const string&)
         {
-            throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE,  "Definition of '" + k + "' has no section header");
+            throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE,  "Definition of '" + k + "' has no section header");
         }
         void End() {}
     };
@@ -169,7 +169,7 @@ namespace ParserPrivate
         {
             if (m_result.foundGlobal)
             {
-                throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE,  string("Only one ") + GlobalSectionName + " section allowed");
+                throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE,  string("Only one ") + GlobalSectionName + " section allowed");
             }
             m_result.foundGlobal = true;
         }
@@ -183,7 +183,7 @@ namespace ParserPrivate
             }
             else
             {
-                throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE, "Unknown global option '" + k + '\'');
+                throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE, "Unknown global option '" + k + '\'');
             }
         }
 
@@ -233,7 +233,7 @@ namespace ParserPrivate
             }
             else 
             {
-                throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE,  "Unknown dump section key '" + k + '\'');
+                throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE,  "Unknown dump section key '" + k + '\'');
             }
         }
 
@@ -241,11 +241,11 @@ namespace ParserPrivate
         {
             if (!m_got_address)
             {
-                throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE,  "Dump section is missing mandatory address definition");
+                throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE,  "Dump section is missing mandatory address definition");
             }
             if (!m_got_file)
             {
-                throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE, "Dump section is missing mandatory file definition");
+                throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE, "Dump section is missing mandatory file definition");
             }
             
             struct DumpDef add = { m_address, m_file, m_length, m_offset, m_space};
@@ -425,7 +425,7 @@ namespace ParserPrivate
                 m_result.version = v;
                 // the only valid contents of this are 1.0, as this is the version that introduced the "snapshot" section
                 if (v != "1.0" && v != "1")
-                    throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE,  "Illegal snapshot file version: " + v);
+                    throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE,  "Illegal snapshot file version: " + v);
             }
             else if (k == DescriptionKey)
             {
@@ -561,11 +561,11 @@ namespace ParserPrivate
         {
             if (!gotName)
             {
-                throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE,  "Trace Buffer section missing required buffer name");
+                throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE,  "Trace Buffer section missing required buffer name");
             }
             if (!gotFile)
             {
-                throw rctdlError(RCTDL_ERR_SEV_ERROR, RCTDL_ERR_TEST_SNAPSHOT_PARSE, "Trace Buffer section is missing mandatory file definition");
+                throw ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_TEST_SNAPSHOT_PARSE, "Trace Buffer section is missing mandatory file definition");
             }
             
             struct TraceBufferInfo info = { name, file, format };
@@ -830,7 +830,7 @@ ITraceErrorLog *Parser::GetIErrorLogger()
 void Parser::LogInfoStr(const std::string &logMsg)
 {
     if(GetIErrorLogger() && s_verbose_logging)
-        GetIErrorLogger()->LogMessage(s_errlog_handle,RCTDL_ERR_SEV_INFO,logMsg);
+        GetIErrorLogger()->LogMessage(s_errlog_handle,OCSD_ERR_SEV_INFO,logMsg);
 }
 
 void Parser::SetVerboseLogging(bool verbose) 

@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_ptm.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -44,12 +44,12 @@
 class PtmTrcPacket;
 class PtmConfig;
 
-/** @addtogroup rctdl_pkt_proc
+/** @addtogroup ocsd_pkt_proc
 @{*/
 
 
 
-class TrcPktProcPtm : public TrcPktProcBase< PtmTrcPacket,  rctdl_ptm_pkt_type, PtmConfig>
+class TrcPktProcPtm : public TrcPktProcBase< PtmTrcPacket,  ocsd_ptm_pkt_type, PtmConfig>
 {
 public:
     TrcPktProcPtm();
@@ -58,20 +58,20 @@ public:
 
 protected:
     /* implementation packet processing interface */
-    virtual rctdl_datapath_resp_t processData(  const rctdl_trc_index_t index,
+    virtual ocsd_datapath_resp_t processData(  const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
                                                 const uint8_t *pDataBlock,
                                                 uint32_t *numBytesProcessed);
-    virtual rctdl_datapath_resp_t onEOT();
-    virtual rctdl_datapath_resp_t onReset();
-    virtual rctdl_datapath_resp_t onFlush();
-    virtual rctdl_err_t onProtocolConfig();
+    virtual ocsd_datapath_resp_t onEOT();
+    virtual ocsd_datapath_resp_t onReset();
+    virtual ocsd_datapath_resp_t onFlush();
+    virtual ocsd_err_t onProtocolConfig();
     virtual const bool isBadPacket() const;
 
     void InitPacketState();      // clear current packet state.
     void InitProcessorState();   // clear all previous process state
 
-    rctdl_datapath_resp_t outputPacket();
+    ocsd_datapath_resp_t outputPacket();
 
     typedef enum _process_state {
         WAIT_SYNC,
@@ -85,7 +85,7 @@ protected:
     std::vector<uint8_t> m_currPacketData;  // raw data
     uint32_t m_currPktIdx;   // index into packet when expanding
     PtmTrcPacket m_curr_packet;  // expanded packet
-    rctdl_trc_index_t m_curr_pkt_index; // trace index at start of packet.
+    ocsd_trc_index_t m_curr_pkt_index; // trace index at start of packet.
     
     const bool readByte(uint8_t &currByte);
     const bool readByte(); // just read into buffer, don't need the value
@@ -97,11 +97,11 @@ protected:
     const uint8_t *m_pDataIn;
     uint32_t m_dataInLen;
     uint32_t m_dataInProcessed;
-    rctdl_trc_index_t m_block_idx; // index start for current block
+    ocsd_trc_index_t m_block_idx; // index start for current block
 
     // processor synchronisation
     const bool isSync() const;
-    rctdl_datapath_resp_t waitASync();       //!< look for first synchronisation point in the packet stream
+    ocsd_datapath_resp_t waitASync();       //!< look for first synchronisation point in the packet stream
     bool m_waitASyncSOPkt;
     bool m_bAsyncRawOp;
 
@@ -164,7 +164,7 @@ protected:
     int m_numAddrBytes;     //!< number of address bytes
     bool m_gotExcepBytes;   //!< got all needed exception bytes
     int m_numExcepBytes;          //!< got 1st exception byte
-    rctdl_isa m_addrPktIsa; //!< ISA of the branch address packet
+    ocsd_isa m_addrPktIsa; //!< ISA of the branch address packet
     int m_excepAltISA;      //!< Alt ISA bit iff exception bytes
 
     // bad packets 
@@ -177,7 +177,7 @@ protected:
     PPKTFN m_pIPktFn;
 
     struct _pkt_i_table_t {
-        rctdl_ptm_pkt_type pkt_type;
+        ocsd_ptm_pkt_type pkt_type;
         PPKTFN pptkFn;
     } m_i_table[256];
 
@@ -193,12 +193,12 @@ inline const bool TrcPktProcPtm::isSync() const
 inline void TrcPktProcPtm::throwMalformedPacketErr(const char *pszErrMsg)
 {
     m_curr_packet.SetErrType(PTM_PKT_BAD_SEQUENCE);
-    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,m_curr_pkt_index,m_chanIDCopy,pszErrMsg);
+    throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_PACKET_SEQ,m_curr_pkt_index,m_chanIDCopy,pszErrMsg);
 }
 
 inline void TrcPktProcPtm::throwPacketHeaderErr(const char *pszErrMsg)
 {
-    throw rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_INVALID_PCKT_HDR,m_curr_pkt_index,m_chanIDCopy,pszErrMsg);
+    throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_INVALID_PCKT_HDR,m_curr_pkt_index,m_chanIDCopy,pszErrMsg);
 }
 
 inline const bool TrcPktProcPtm::readByte()

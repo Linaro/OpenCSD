@@ -1,6 +1,6 @@
 /*!
  * \file       trc_pkt_decode_etmv3.h
- * \brief      Reference CoreSight Trace Decoder : ETMv3 decode
+ * \brief      OpenCSD : ETMv3 decode
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -51,11 +51,11 @@ public:
 
 protected:
     /* implementation packet decoding interface */
-    virtual rctdl_datapath_resp_t processPacket();
-    virtual rctdl_datapath_resp_t onEOT();
-    virtual rctdl_datapath_resp_t onReset();
-    virtual rctdl_datapath_resp_t onFlush();
-    virtual rctdl_err_t onProtocolConfig();
+    virtual ocsd_datapath_resp_t processPacket();
+    virtual ocsd_datapath_resp_t onEOT();
+    virtual ocsd_datapath_resp_t onReset();
+    virtual ocsd_datapath_resp_t onFlush();
+    virtual ocsd_err_t onProtocolConfig();
     virtual const uint8_t getCoreSightTraceID() { return m_CSID; };
 
     /* local decode methods */

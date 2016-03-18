@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_decode_ptm.h
- * \brief      Reference CoreSight Trace Decoder : PTM packet decoder.
+ * \brief      OpenCSD : PTM packet decoder.
  * 
  * \copyright  Copyright (c) 2016, ARM Limited. All Rights Reserved.
  */
@@ -47,27 +47,27 @@ public:
     ~PtmAtoms() {};
 
     //! initialise the atom and index values
-    void initAtomPkt(const rctdl_pkt_atom &atom, const rctdl_trc_index_t &root_index);
+    void initAtomPkt(const ocsd_pkt_atom &atom, const ocsd_trc_index_t &root_index);
     
-    const rctdl_atm_val getCurrAtomVal() const;
+    const ocsd_atm_val getCurrAtomVal() const;
     const int numAtoms() const; //!< number of atoms
-    const rctdl_trc_index_t pktIndex() const; //!< originating packet index
+    const ocsd_trc_index_t pktIndex() const; //!< originating packet index
 
     void clearAtom();   //!<  clear the current atom, set the next.
     void clearAll(); //!< clear all
 
 private:
-    rctdl_pkt_atom m_atom;
-    rctdl_trc_index_t m_root_index; //!< root index for the atom packet
+    ocsd_pkt_atom m_atom;
+    ocsd_trc_index_t m_root_index; //!< root index for the atom packet
 };
 
-inline void PtmAtoms::initAtomPkt(const rctdl_pkt_atom &atom, const rctdl_trc_index_t &root_index)
+inline void PtmAtoms::initAtomPkt(const ocsd_pkt_atom &atom, const ocsd_trc_index_t &root_index)
 {
     m_atom = atom;
     m_root_index = root_index;
 }
     
-inline const rctdl_atm_val PtmAtoms::getCurrAtomVal() const
+inline const ocsd_atm_val PtmAtoms::getCurrAtomVal() const
 {
     return (m_atom.En_bits & 0x1) ?  ATOM_E : ATOM_N;
 }
@@ -77,7 +77,7 @@ inline const int PtmAtoms::numAtoms() const
     return m_atom.num;
 }
 
-inline const rctdl_trc_index_t PtmAtoms::pktIndex() const
+inline const ocsd_trc_index_t PtmAtoms::pktIndex() const
 {
     return m_root_index;
 }
@@ -106,11 +106,11 @@ public:
 
 protected:
     /* implementation packet decoding interface */
-    virtual rctdl_datapath_resp_t processPacket();
-    virtual rctdl_datapath_resp_t onEOT();
-    virtual rctdl_datapath_resp_t onReset();
-    virtual rctdl_datapath_resp_t onFlush();
-    virtual rctdl_err_t onProtocolConfig();
+    virtual ocsd_datapath_resp_t processPacket();
+    virtual ocsd_datapath_resp_t onEOT();
+    virtual ocsd_datapath_resp_t onReset();
+    virtual ocsd_datapath_resp_t onFlush();
+    virtual ocsd_err_t onProtocolConfig();
     virtual const uint8_t getCoreSightTraceID() { return m_CSID; };
 
     /* local decode methods */
@@ -119,15 +119,15 @@ private:
     void initDecoder();
     void resetDecoder();
 
-    rctdl_datapath_resp_t decodePacket();
-    rctdl_datapath_resp_t contProcess(); 
-    rctdl_datapath_resp_t processIsync();
-    rctdl_datapath_resp_t processBranch();
-    rctdl_datapath_resp_t processWPUpdate();
-    rctdl_datapath_resp_t processAtom();
-    rctdl_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const rctdl_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
-    rctdl_datapath_resp_t processAtomRange(const rctdl_atm_val A, const char *pkt_msg,  const bool traceToAddrNext = false, const rctdl_vaddr_t nextAddrMatch = 0);
-    void checkPendingNacc(rctdl_datapath_resp_t &resp);
+    ocsd_datapath_resp_t decodePacket();
+    ocsd_datapath_resp_t contProcess(); 
+    ocsd_datapath_resp_t processIsync();
+    ocsd_datapath_resp_t processBranch();
+    ocsd_datapath_resp_t processWPUpdate();
+    ocsd_datapath_resp_t processAtom();
+    ocsd_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
+    ocsd_datapath_resp_t processAtomRange(const ocsd_atm_val A, const char *pkt_msg,  const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);
+    void checkPendingNacc(ocsd_datapath_resp_t &resp);
 
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.
 
@@ -153,21 +153,21 @@ private:
 
     //! Structure to contain the PE addr and ISA state.
     typedef struct _ptm_pe_addr_state {
-            rctdl_isa isa;              //!< current isa.
-            rctdl_vaddr_t instr_addr;   //!< current address.
+            ocsd_isa isa;              //!< current isa.
+            ocsd_vaddr_t instr_addr;   //!< current address.
             bool valid;     //!< address valid - false if we need an address to continue decode.
     } ptm_pe_addr_state;
 
     ptm_pe_addr_state m_curr_pe_state;  //!< current instruction state for PTM decode.
-    rctdl_pe_context m_pe_context;      //!< current context information
+    ocsd_pe_context m_pe_context;      //!< current context information
 
     // packet decode state
     bool m_need_isync;   //!< need context to continue
     
-    rctdl_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
+    ocsd_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
 
     bool m_mem_nacc_pending;    //!< need to output a memory access failure packet
-    rctdl_vaddr_t m_nacc_addr;  //!< address of memory access failure
+    ocsd_vaddr_t m_nacc_addr;  //!< address of memory access failure
    
     bool m_i_sync_pe_ctxt;  //!< isync has pe context.
 

@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_types_etmv3.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -43,7 +43,7 @@
 /** @name ETMv3 Packet Types
 @{*/
 
-typedef enum _rctdl_etmv3_pkt_type
+typedef enum _ocsd_etmv3_pkt_type
 {
 
 // markers for unknown packets
@@ -80,10 +80,10 @@ typedef enum _rctdl_etmv3_pkt_type
         ETM3_PKT_BAD_TRACEMODE,  //!< invalid packet type for this trace mode.
 		ETM3_PKT_RESERVED       //!< packet type reserved.
 
-} rctdl_etmv3_pkt_type;
+} ocsd_etmv3_pkt_type;
 
-typedef struct _rctdl_etmv3_excep {
-    rctdl_armv7_exception type; /**<  exception type. */
+typedef struct _ocsd_etmv3_excep {
+    ocsd_armv7_exception type; /**<  exception type. */
     uint16_t number;    /**< exception as number */
     struct {
         uint32_t present:1;      /**< exception present in packet */
@@ -92,7 +92,7 @@ typedef struct _rctdl_etmv3_excep {
         uint32_t cm_resume:4;    /**< M class resume code */
         uint32_t cm_irq_n:9;     /**< M class IRQ n */
     } bits;
-} rctdl_etmv3_excep;
+} ocsd_etmv3_excep;
 
 typedef struct _etmv3_context_t {
     struct {
@@ -111,7 +111,7 @@ typedef struct _etmv3_context_t {
 typedef struct _etmv3_data_t {
 
     uint32_t value;        /**< Data value */
-    rctdl_pkt_vaddr addr;  /**< current data address */
+    ocsd_pkt_vaddr addr;  /**< current data address */
 
     struct {
     uint32_t  ooo_tag:2;        /**< Out of order data tag. */
@@ -123,7 +123,7 @@ typedef struct _etmv3_data_t {
 } etmv3_data_t;
 
 typedef struct _etmv3_isync_t {
-    rctdl_iSync_reason reason;
+    ocsd_iSync_reason reason;
     struct {
         uint32_t has_cycle_count:1; /**< updated cycle count */
         uint32_t has_LSipAddress:1; /**< main address is load-store instuction, data address is overlapping instruction @ start of trace */
@@ -131,21 +131,21 @@ typedef struct _etmv3_isync_t {
     };
 } etmv3_isync_t;
 
-typedef struct _rctdl_etmv3_pkt
+typedef struct _ocsd_etmv3_pkt
 {
-    rctdl_etmv3_pkt_type type;  /**< Primary packet type. */
+    ocsd_etmv3_pkt_type type;  /**< Primary packet type. */
 
-    rctdl_isa curr_isa;         /**< current ISA */
-    rctdl_isa prev_isa;         /**< ISA in previous packet */
+    ocsd_isa curr_isa;         /**< current ISA */
+    ocsd_isa prev_isa;         /**< ISA in previous packet */
 
     etmv3_context_t context;    /**< current context */
-    rctdl_pkt_vaddr addr;       /**< current Addr */
+    ocsd_pkt_vaddr addr;       /**< current Addr */
 
     etmv3_isync_t isync_info;
     
-    rctdl_etmv3_excep exception;
+    ocsd_etmv3_excep exception;
     
-    rctdl_pkt_atom atom;        /**< atom elements - non zerom number indicates valid atom count */
+    ocsd_pkt_atom atom;        /**< atom elements - non zerom number indicates valid atom count */
     uint8_t p_hdr_fmt;          /**< if atom elements, associated phdr format */
     uint32_t cycle_count;       /**< cycle count associated with this packet (ETMv3 has counts in atom packets and as individual packets */
     
@@ -154,19 +154,19 @@ typedef struct _rctdl_etmv3_pkt
     
     etmv3_data_t data;          /**< data transfer values */
 
-    rctdl_etmv3_pkt_type err_type;  /**< Basic packet type if primary type indicates error or incomplete. (header type) */
+    ocsd_etmv3_pkt_type err_type;  /**< Basic packet type if primary type indicates error or incomplete. (header type) */
 
-} rctdl_etmv3_pkt;
+} ocsd_etmv3_pkt;
 
-typedef struct _rctdl_etmv3_cfg 
+typedef struct _ocsd_etmv3_cfg 
 {
     uint32_t                reg_idr;    /**< ID register */
     uint32_t                reg_ctrl;   /**< Control Register */
     uint32_t                reg_ccer;   /**< CCER register */
     uint32_t                reg_trc_id; /**< Trace Stream ID register */
-    rctdl_arch_version_t    arch_ver;   /**< Architecture version */
-    rctdl_core_profile_t    core_prof;  /**< Core Profile */
-} rctdl_etmv3_cfg;
+    ocsd_arch_version_t    arch_ver;   /**< Architecture version */
+    ocsd_core_profile_t    core_prof;  /**< Core Profile */
+} ocsd_etmv3_cfg;
 
 
 #define DATA_ADDR_EXPECTED_FLAG 0x20 /**< Bit set for data trace headers if data address packets follow */

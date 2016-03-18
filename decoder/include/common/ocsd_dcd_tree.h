@@ -1,6 +1,6 @@
 /*!
  * \file       ocsd_dcd_tree.h
- * \brief      Reference CoreSight Trace Decoder : Trace Decode Tree.
+ * \brief      OpenCSD : Trace Decode Tree.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -33,8 +33,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_RCTDL_DCD_TREE_H_INCLUDED
-#define ARM_RCTDL_DCD_TREE_H_INCLUDED
+#ifndef ARM_OCSD_DCD_TREE_H_INCLUDED
+#define ARM_OCSD_DCD_TREE_H_INCLUDED
 
 #include <vector>
 #include <list>
@@ -42,7 +42,7 @@
 #include "opencsd.h"
 
 
-/** @defgroup dcd_tree Reference CoreSight Trace Decoder Library : Trace Decode Tree.
+/** @defgroup dcd_tree OpenCSD Library : Trace Decode Tree.
     @brief Create a multi source decode tree for a single trace capture buffer.
 
     Use to create a connected set of decoder objects to decode a trace buffer.
@@ -75,13 +75,13 @@ public:
      *
      * @return DecodeTree * : pointer to the decode tree, 0 if creation failed.
      */
-    static DecodeTree *CreateDecodeTree(const rctdl_dcd_tree_src_t src_type, const uint32_t formatterCfgFlags);
+    static DecodeTree *CreateDecodeTree(const ocsd_dcd_tree_src_t src_type, const uint32_t formatterCfgFlags);
 
     /** Destroy a decode tree */
     static void DestroyDecodeTree(DecodeTree *p_dcd_tree);
 
     /** The library default error logger */
-    static rctdlDefaultErrorLogger* getDefaultErrorLogger() { return &s_error_logger; };
+    static ocsdDefaultErrorLogger* getDefaultErrorLogger() { return &s_error_logger; };
 
     /** the current error logging interface in use */
     static ITraceErrorLog *getCurrentErrorLogI() { return s_i_error_logger; };
@@ -92,8 +92,8 @@ public:
     /** decode tree implements the data in interface : ITrcDataIn .
         Captured trace data is passed to the deformatter and decoders via this method.
     */
-    virtual rctdl_datapath_resp_t TraceDataIn( const rctdl_datapath_op_t op,
-                                               const rctdl_trc_index_t index,
+    virtual ocsd_datapath_resp_t TraceDataIn( const ocsd_datapath_op_t op,
+                                               const ocsd_trc_index_t index,
                                                const uint32_t dataBlockSize,
                                                const uint8_t *pDataBlock,
                                                uint32_t *numBytesProcessed);
@@ -103,25 +103,25 @@ public:
     /* create packet processing element only - attach to CSID in config
        optionally attach the output interface
        */
-    rctdl_err_t createETMv3PktProcessor(EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout = 0);
-    rctdl_err_t createETMv4IPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout = 0);
-    rctdl_err_t createETMv4DPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout = 0);
-    rctdl_err_t createPTMPktProcessor(PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout = 0);
-    rctdl_err_t createSTMPktProcessor(STMConfig *p_config, IPktDataIn<StmTrcPacket> *p_Iout = 0);
+    ocsd_err_t createETMv3PktProcessor(EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout = 0);
+    ocsd_err_t createETMv4IPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout = 0);
+    ocsd_err_t createETMv4DPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout = 0);
+    ocsd_err_t createPTMPktProcessor(PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout = 0);
+    ocsd_err_t createSTMPktProcessor(STMConfig *p_config, IPktDataIn<StmTrcPacket> *p_Iout = 0);
 
     /* create full decoder - packet processor + packet decoder  - attach to CSID in config 
        All use the standard generic elements output interface.
     */
-    rctdl_err_t createETMv3Decoder(EtmV3Config *p_config);
-    rctdl_err_t createETMv4Decoder(EtmV4Config *p_config, bool bDataChannel = false);
-    rctdl_err_t createPTMDecoder(PtmConfig *p_config);
+    ocsd_err_t createETMv3Decoder(EtmV3Config *p_config);
+    ocsd_err_t createETMv4Decoder(EtmV4Config *p_config, bool bDataChannel = false);
+    ocsd_err_t createPTMDecoder(PtmConfig *p_config);
 
     /* remove a decoder / packet processor attached to an ID  - allows another decoder to be substituted. */
-    rctdl_err_t removeDecoder(const uint8_t CSID);
+    ocsd_err_t removeDecoder(const uint8_t CSID);
 
     /* attach custom / external decoders  */
-    rctdl_err_t  attachExternPktProcessor(const uint8_t CSID, ITrcDataIn* ext_data_in, void *p_pkt_proc_obj);
-    rctdl_err_t  attachExternDecoder(const uint8_t CSID, ITrcDataIn* ext_data_in, void *p_pkt_proc_obj, void *p_decoder_obj);
+    ocsd_err_t  attachExternPktProcessor(const uint8_t CSID, ITrcDataIn* ext_data_in, void *p_pkt_proc_obj);
+    ocsd_err_t  attachExternDecoder(const uint8_t CSID, ITrcDataIn* ext_data_in, void *p_pkt_proc_obj, void *p_decoder_obj);
 
     /* set key interfaces - attach / replace on any existing tree components? */
     void setInstrDecoder(IInstrDecode *i_instr_decode);
@@ -129,10 +129,10 @@ public:
     void setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem);
 
     /* create mapper within the decode tree. */ 
-    rctdl_err_t createMemAccMapper(memacc_mapper_t type = MEMACC_MAP_GLOBAL);
-    rctdl_err_t addMemAccessorToMap(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id);
-    rctdl_err_t removeMemAccessor(TrcMemAccessorBase *p_accessor);
-    rctdl_err_t removeMemAccessorByAddress(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t cs_trace_id);
+    ocsd_err_t createMemAccMapper(memacc_mapper_t type = MEMACC_MAP_GLOBAL);
+    ocsd_err_t addMemAccessorToMap(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id);
+    ocsd_err_t removeMemAccessor(TrcMemAccessorBase *p_accessor);
+    ocsd_err_t removeMemAccessorByAddress(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id);
     const bool hasMemAccMapper() const { return (bool)(m_default_mapper != 0); };
     void logMappedRanges();
 
@@ -147,18 +147,18 @@ public:
     ITrcGenElemIn *getGenTraceElemOutI() const { return m_i_gen_elem_out; };
 
     /* ID filtering - sets the output filter on the trace deformatter. No effect if no decoder attached for the ID */
-    rctdl_err_t setIDFilter(std::vector<uint8_t> &ids);  // only supplied IDs will be decoded
-    rctdl_err_t clearIDFilter(); // remove filter, all IDs will be decoded
+    ocsd_err_t setIDFilter(std::vector<uint8_t> &ids);  // only supplied IDs will be decoded
+    ocsd_err_t clearIDFilter(); // remove filter, all IDs will be decoded
 
 private:
-    bool initialise(const rctdl_dcd_tree_src_t type, uint32_t formatterCfgFlags);
-    const bool usingFormatter() const { return (bool)(m_dcd_tree_type ==  RCTDL_TRC_SRC_FRAME_FORMATTED); };
+    bool initialise(const ocsd_dcd_tree_src_t type, uint32_t formatterCfgFlags);
+    const bool usingFormatter() const { return (bool)(m_dcd_tree_type ==  OCSD_TRC_SRC_FRAME_FORMATTED); };
     void setSingleRoot(TrcPktProcI *pComp);
-    rctdl_err_t createDecodeElement(const uint8_t CSID);
+    ocsd_err_t createDecodeElement(const uint8_t CSID);
     void destroyDecodeElement(const uint8_t CSID);
     void destroyMemAccMapper();
 
-    rctdl_dcd_tree_src_t m_dcd_tree_type;
+    ocsd_dcd_tree_src_t m_dcd_tree_type;
 
     IInstrDecode *m_i_instr_decode;
     ITargetMemAccess *m_i_mem_access;
@@ -179,7 +179,7 @@ private:
     static std::list<DecodeTree *> s_trace_dcd_trees;
 
     /**! default error logger */
-    static rctdlDefaultErrorLogger s_error_logger;
+    static ocsdDefaultErrorLogger s_error_logger;
 
     /**! default instruction decoder */
     static TrcIDecode s_instruction_decoder;
@@ -187,6 +187,6 @@ private:
 
 /** @}*/
 
-#endif // ARM_RCTDL_DCD_TREE_H_INCLUDED
+#endif // ARM_OCSD_DCD_TREE_H_INCLUDED
 
 /* End of File ocsd_dcd_tree.h */

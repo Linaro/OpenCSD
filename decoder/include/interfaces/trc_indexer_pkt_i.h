@@ -1,6 +1,6 @@
 /*
  * \file       trc_indexer_pkt_i.h
- * \brief      Reference CoreSight Trace Decoder : Trace packet indexer
+ * \brief      OpenCSD : Trace packet indexer
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -41,7 +41,7 @@
 
  * @brief Templated interface class to index packet types. 
  *
- * @ingroup rctdl_interfaces
+ * @ingroup ocsd_interfaces
  * 
  * Each protocol version will have an associated indexer that will index significant 
  * packets such as synchronisation points, timestamps, trigger events.
@@ -67,7 +67,7 @@ public:
      * @param index_sop : trace index at the start of the packet.
      * @param *packet_type : The packet type being indexed.
      */
-    virtual void TracePktIndex(const rctdl_trc_index_t index_sop, const Pt *packet_type) = 0;
+    virtual void TracePktIndex(const ocsd_trc_index_t index_sop, const Pt *packet_type) = 0;
 };
 
 #endif // ARM_TRC_INDEXER_PKT_I_H_INCLUDED

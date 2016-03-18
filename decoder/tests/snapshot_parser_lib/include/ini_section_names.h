@@ -1,6 +1,6 @@
 /*
  * \file       ini_section_names.h
- * \brief      Reference CoreSight Trace Decoder : Snapshot Parser Library
+ * \brief      OpenCSD : Snapshot Parser Library
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

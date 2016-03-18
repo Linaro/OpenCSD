@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_decode_etmv4i.cpp
- * \brief      Reference CoreSight Trace Decoder : ETMv4 decoder
+ * \brief      OpenCSD : ETMv4 decoder
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -41,7 +41,7 @@
 
 #define DCD_NAME "DCD_ETMV4"
 
-static const uint32_t ETMV4_SUPPORTED_DECODE_OP_FLAGS = RCTDL_OPFLG_PKTDEC_COMMON;
+static const uint32_t ETMV4_SUPPORTED_DECODE_OP_FLAGS = OCSD_OPFLG_PKTDEC_COMMON;
 
 TrcPktDecodeEtmV4I::TrcPktDecodeEtmV4I()
     : TrcPktDecodeBase(DCD_NAME)
@@ -62,9 +62,9 @@ TrcPktDecodeEtmV4I::~TrcPktDecodeEtmV4I()
 
 /*********************** implementation packet decoding interface */
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     bool bPktDone = false;
 
     while(!bPktDone)
@@ -73,7 +73,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
         {
         case NO_SYNC:
             // output the initial not synced packet to the sink
-            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_NO_SYNC);
+            m_output_elem.setType(OCSD_GEN_TRC_ELEM_NO_SYNC);
             resp = outputTraceElement(m_output_elem);
             m_curr_state = WAIT_SYNC;
             // fall through to check if the current packet is the async we are waiting for.
@@ -109,24 +109,24 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onEOT()
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::onEOT()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     m_flush_EOT = true;
     resp = flushEOT();
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onReset()
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::onReset()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     resetDecoder();
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onFlush()
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::onFlush()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
 
     // continue exception processing (can't go through processPacket as elements no longer on stack)
     if(m_excep_proc != EXCEP_POP)
@@ -140,9 +140,9 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::onFlush()
     return resp;
 }
 
-rctdl_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
+ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
 
     // set some static config elements
     m_CSID = m_config->getTraceID();
@@ -162,33 +162,33 @@ rctdl_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
     // Remove these checks as support is added.
     if(m_max_spec_depth != 0)
     {
-        err = RCTDL_ERR_HW_CFG_UNSUPP;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : None-zero speculation depth not supported"));
+        err = OCSD_ERR_HW_CFG_UNSUPP;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : None-zero speculation depth not supported"));
     }
     else if(m_config->enabledDataTrace())
     {
-        err = RCTDL_ERR_HW_CFG_UNSUPP;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Data trace elements not supported"));
+        err = OCSD_ERR_HW_CFG_UNSUPP;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Data trace elements not supported"));
     }
     else if(m_config->enabledLSP0Trace())
     {
-        err = RCTDL_ERR_HW_CFG_UNSUPP;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : LSP0 elements not supported."));
+        err = OCSD_ERR_HW_CFG_UNSUPP;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : LSP0 elements not supported."));
     }
     else if(m_config->enabledCondITrace() != EtmV4Config::COND_TR_DIS)
     {
-        err = RCTDL_ERR_HW_CFG_UNSUPP;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace on conditional non-branch elements not supported."));
+        err = OCSD_ERR_HW_CFG_UNSUPP;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace on conditional non-branch elements not supported."));
     }
     else if(m_config->enabledRetStack())
     {
-        err = RCTDL_ERR_HW_CFG_UNSUPP;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace using return stack not supported."));
+        err = OCSD_ERR_HW_CFG_UNSUPP;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace using return stack not supported."));
     }
     else if(m_config->enabledQE())
     {
-        err = RCTDL_ERR_HW_CFG_UNSUPP;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace using Q elements not supported."));
+        err = OCSD_ERR_HW_CFG_UNSUPP;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace using Q elements not supported."));
     }
     return err;
 }
@@ -246,10 +246,10 @@ void TrcPktDecodeEtmV4I::resetDecoder()
 
 // this function can output an immediate generic element if this covers the complete packet decode, 
 // or stack P0 and other elements for later processing on commit or cancel.
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
 {
     bool bAllocErr = false;
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     Complete = true;
     bool is_addr = false;
     bool is_except = false;
@@ -494,13 +494,13 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     /* Q packets */
     case ETM4_PKT_I_Q:
         resp = RCDTL_RESP_FATAL_INVALID_DATA;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_DECODE_PKT,"Unsupported packet type."));
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,"Unsupported packet type."));
         break;
 
     default:
         // any other packet - bad packet error
         resp = RCDTL_RESP_FATAL_INVALID_DATA;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_DECODE_PKT,"Unknown packet type."));
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,"Unknown packet type."));
         break;
 
     }
@@ -518,14 +518,14 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         else
         {
             resp = RCDTL_RESP_FATAL_INVALID_DATA;
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_DECODE_PKT,"Expected Address packet to follow exception packet."));
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,"Expected Address packet to follow exception packet."));
         }
     }
 
     if(bAllocErr)
     {
-        resp = RCTDL_RESP_FATAL_SYS_ERR;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_MEM,"Memory allocation error."));       
+        resp = OCSD_RESP_FATAL_SYS_ERR;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_MEM,"Memory allocation error."));       
     }
     else if(m_curr_spec_depth > m_max_spec_depth)
     {
@@ -550,9 +550,9 @@ void TrcPktDecodeEtmV4I::doTraceInfoPacket()
  * Walks through the element stack, processing from oldest element to the newest, 
    according to the number of P0 elements that need committing.
  */
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     bool bPause = false;    // pause commit operation 
     bool bPopElem = true;       // do we remove the element from the stack (multi atom elements may need to stay!)
     int num_commit_req = m_P0_commit;
@@ -571,7 +571,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
             {
             // indicates a trace restart - beginning of trace or discontinuiuty
             case P0_TRC_ON:
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TRACE_ON);
+                m_output_elem.setType(OCSD_GEN_TRC_ELEM_TRACE_ON);
                 m_output_elem.trace_on_reason = m_prev_overflow ? TRACE_ON_OVERFLOW : TRACE_ON_NORMAL;
                 m_prev_overflow = false;
                 resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
@@ -604,7 +604,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                         {
                             // otherwise 32 bit values must add in the top 32 from the stack
                             new_addr = m_pAddrRegs->get(0);
-                            new_addr.val &= ~((rctdl_vaddr_t)0xFFFFFFFF);
+                            new_addr.val &= ~((ocsd_vaddr_t)0xFFFFFFFF);
                             new_addr.val |= (pAddrElem->getAddr().val & 0xFFFFFFFF);
                             new_addr.isa = pAddrElem->getAddr().isa;
                             SetInstrInfoInAddrISA(new_addr.val,new_addr.isa);
@@ -627,7 +627,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                     {
                         updateContext(pCtxtElem);
 
-                        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_PE_CONTEXT);
+                        m_output_elem.setType(OCSD_GEN_TRC_ELEM_PE_CONTEXT);
                         resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                     }
                 }
@@ -678,7 +678,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                     bool bContProcess = true;
                     while(!pAtomElem->isEmpty() && m_P0_commit && bContProcess)
                     {
-                        rctdl_atm_val atom = pAtomElem->commitOldest();
+                        ocsd_atm_val atom = pAtomElem->commitOldest();
                         // if address and context do instruction trace follower.
                         // otherwise skip atom and reduce committed elements
                         if(!m_need_ctxt && !m_need_addr)
@@ -700,7 +700,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 break;
 
             case P0_EXCEP_RET:
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION_RET);
+                m_output_elem.setType(OCSD_GEN_TRC_ELEM_EXCEPTION_RET);
                 resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                 if(pElem->isP0()) // are we on a core that counts ERET as P0?
                     m_P0_commit--;
@@ -711,7 +711,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 m_P0_stack.pop_back();  // remove element from stack;
 
             // if response not continue, then break out of the loop.
-            if(!RCTDL_DATA_RESP_IS_CONT(resp))
+            if(!OCSD_DATA_RESP_IS_CONT(resp))
             {
                 bPause = true;
             }
@@ -719,12 +719,12 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
         else
         {
             // too few elements for commit operation - decode error.
-            rctdl_trc_index_t err_idx = 0;
+            ocsd_trc_index_t err_idx = 0;
             if(pElem)
                 err_idx = pElem->getRootIndex();
               
             resp = RCDTL_RESP_FATAL_INVALID_DATA;
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_COMMIT_PKT_OVERRUN,err_idx,m_CSID,"Not enough elements to commit"));
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_COMMIT_PKT_OVERRUN,err_idx,m_CSID,"Not enough elements to commit"));
             bPause = true;
         }
     }
@@ -739,14 +739,14 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     if(m_flush_EOT)
     {
         TrcStackElem *pElem = 0;
         bool bClearStack = false;
-        while(RCTDL_DATA_RESP_IS_CONT(resp) && (m_P0_stack.size() > 0))
+        while(OCSD_DATA_RESP_IS_CONT(resp) && (m_P0_stack.size() > 0))
         {
             // scan for outstanding events, TS and CC, before any outstanding
             // P0 commit elements.
@@ -805,9 +805,9 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
 
         }
 
-        if(RCTDL_DATA_RESP_IS_CONT(resp) && (m_P0_stack.size() == 0))
+        if(OCSD_DATA_RESP_IS_CONT(resp) && (m_P0_stack.size() == 0))
         {
-            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EO_TRACE);
+            m_output_elem.setType(OCSD_GEN_TRC_ELEM_EO_TRACE);
             resp = outputTraceElement(m_output_elem);
             m_flush_EOT = false;
         }
@@ -815,46 +815,46 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
     return resp;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::outputCC(TrcStackElemParam *pParamElem)
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::outputCC(TrcStackElemParam *pParamElem)
 {
-    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_CYCLE_COUNT);
+    m_output_elem.setType(OCSD_GEN_TRC_ELEM_CYCLE_COUNT);
     m_output_elem.cycle_count = pParamElem->getParam(0);
     return outputTraceElementIdx(pParamElem->getRootIndex(),m_output_elem);
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::outputTS(TrcStackElemParam *pParamElem, bool withCC)
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::outputTS(TrcStackElemParam *pParamElem, bool withCC)
 {
-    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_TIMESTAMP);
+    m_output_elem.setType(OCSD_GEN_TRC_ELEM_TIMESTAMP);
     m_output_elem.timestamp = (uint64_t)(pParamElem->getParam(0)) | (((uint64_t)pParamElem->getParam(1)) << 32);
     if(withCC)
         m_output_elem.setCycleCount(pParamElem->getParam(2));
     return outputTraceElementIdx(pParamElem->getRootIndex(),m_output_elem);
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::outputEvent(TrcStackElemParam *pParamElem)
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::outputEvent(TrcStackElemParam *pParamElem)
 {
-    m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EVENT);
+    m_output_elem.setType(OCSD_GEN_TRC_ELEM_EVENT);
     m_output_elem.trace_event.ev_type = EVENT_NUMBERED;
     m_output_elem.trace_event.ev_number = pParamElem->getParam(0);
     return outputTraceElementIdx(pParamElem->getRootIndex(),m_output_elem);
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, bool &bCont)
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom, bool &bCont)
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     TrcStackElem *pElem = m_P0_stack.back();  // get the atom element
     bool bWPFound = false;
-    rctdl_err_t err;
+    ocsd_err_t err;
     bCont = true;
 
     err = traceInstrToWP(bWPFound);
-    if(err != RCTDL_OK)
+    if(err != OCSD_OK)
     {
-        if(err == RCTDL_ERR_UNSUPPORTED_ISA)
+        if(err == OCSD_ERR_UNSUPPORTED_ISA)
         {
              m_need_addr = true;
              m_need_ctxt = true;
-             LogError(rctdlError(RCTDL_ERR_SEV_WARN,err,pElem->getRootIndex(),m_CSID,"Warning: unsupported instruction set processing atom packet."));  
+             LogError(ocsdError(OCSD_ERR_SEV_WARN,err,pElem->getRootIndex(),m_CSID,"Warning: unsupported instruction set processing atom packet."));  
              // wait for next context
              return resp;
         }
@@ -862,7 +862,7 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
         {
             bCont = false;
             resp = RCDTL_RESP_FATAL_INVALID_DATA;
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,pElem->getRootIndex(),m_CSID,"Error processing atom packet."));  
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,pElem->getRootIndex(),m_CSID,"Error processing atom packet."));  
             return resp;
         }
     }
@@ -872,17 +872,17 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
         // action according to waypoint type and atom value
         switch(m_instr_info.type)
         {
-        case RCTDL_INSTR_BR:
+        case OCSD_INSTR_BR:
             if(atom == ATOM_E)
                 m_instr_info.instr_addr = m_instr_info.branch_addr;
             break;
 
-        case RCTDL_INSTR_BR_INDIRECT:
+        case OCSD_INSTR_BR_INDIRECT:
             if(atom == ATOM_E)
                 m_need_addr = true; // indirect branch taken - need new address.
             break;
         }
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
         m_output_elem.last_instr_exec = (atom == ATOM_E) ? 1 : 0;
         m_output_elem.last_i_type = m_instr_info.type;
         m_output_elem.last_i_subtype = m_instr_info.sub_type;
@@ -897,29 +897,29 @@ rctdl_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const rctdl_atm_val atom, 
         if(m_output_elem.st_addr != m_output_elem.en_addr)
         {
             // some trace before we were out of memory access range
-            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+            m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
             resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
         }
 
-        if(m_mem_nacc_pending && RCTDL_DATA_RESP_IS_CONT(resp))
+        if(m_mem_nacc_pending && OCSD_DATA_RESP_IS_CONT(resp))
         {
-            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
+            m_output_elem.setType(OCSD_GEN_TRC_ELEM_ADDR_NACC);
             m_output_elem.st_addr = m_nacc_addr;
             resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
             m_mem_nacc_pending = false;
         }
     }
 
-    if(!RCTDL_DATA_RESP_IS_CONT(resp))
+    if(!OCSD_DATA_RESP_IS_CONT(resp))
         bCont = false;
 
     return resp;
 }
 
 // Exception processor
-rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
+ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
 {
-    rctdl_datapath_resp_t resp = RCTDL_RESP_CONT; 
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT; 
     bool excep_implied_P0 = false;          //!< exception implies P0
 
     if(m_excep_proc == EXCEP_POP)
@@ -942,7 +942,7 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
         {
             // no following address element - indicate processing error.
             resp = RCDTL_RESP_FATAL_INVALID_DATA;
-            LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_PACKET_SEQ,pExceptElem->getRootIndex(),m_CSID,"Address missing in exception packet."));  
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_PACKET_SEQ,pExceptElem->getRootIndex(),m_CSID,"Address missing in exception packet."));  
         }
         else
         {
@@ -965,7 +965,7 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
                 {
                     // otherwise 32 bit values must add in the top 32 from the stack
                     m_excep_addr = m_pAddrRegs->get(0);
-                    m_excep_addr.val &= ~((rctdl_vaddr_t)0xFFFFFFFF);
+                    m_excep_addr.val &= ~((ocsd_vaddr_t)0xFFFFFFFF);
                     m_excep_addr.val |= (pAddressElem->getAddr().val & 0xFFFFFFFF);
                     m_excep_addr.isa = pAddressElem->getAddr().isa;
                 }                                                                                                
@@ -999,7 +999,7 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
     if(m_excep_proc == EXCEP_RANGE) 
     {
         bool bWPFound = false;
-        rctdl_err_t err;
+        ocsd_err_t err;
 
         // last instr_info address is the start address
         m_output_elem.st_addr = m_instr_info.instr_addr;
@@ -1007,18 +1007,18 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
         // look for either a WP or match to return address.
         err = traceInstrToWP(bWPFound,!excep_implied_P0,m_excep_addr.val);
 
-        if(err != RCTDL_OK)
+        if(err != OCSD_OK)
         {
-            if(err == RCTDL_ERR_UNSUPPORTED_ISA)
+            if(err == OCSD_ERR_UNSUPPORTED_ISA)
             {
                 m_need_addr = true;
                 m_need_ctxt = true;
-                LogError(rctdlError(RCTDL_ERR_SEV_WARN,err,m_excep_index,m_CSID,"Warning: unsupported instruction set processing exception packet."));  
+                LogError(ocsdError(OCSD_ERR_SEV_WARN,err,m_excep_index,m_CSID,"Warning: unsupported instruction set processing exception packet."));  
             }
             else
             {
                 resp = RCDTL_RESP_FATAL_INVALID_DATA;
-                LogError(rctdlError(RCTDL_ERR_SEV_ERROR,err,m_excep_index,m_CSID,"Error processing exception packet."));  
+                LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,m_excep_index,m_CSID,"Error processing exception packet."));  
                 m_excep_proc = EXCEP_POP;  // nothing more to do, reset to start of exception handling
             }
         }
@@ -1030,16 +1030,16 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
             {
                 switch(m_instr_info.type)
                 {
-                case RCTDL_INSTR_BR:
+                case OCSD_INSTR_BR:
                 m_instr_info.instr_addr = m_instr_info.branch_addr;
                 break;
 
-                case RCTDL_INSTR_BR_INDIRECT:
+                case OCSD_INSTR_BR_INDIRECT:
                 m_instr_info.instr_addr = m_excep_addr.val;
                 break;
                 }
             }
-            m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+            m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
             m_output_elem.last_instr_exec = 1;
             m_output_elem.last_i_type = m_instr_info.type;
             m_output_elem.last_i_subtype = m_instr_info.sub_type;
@@ -1054,7 +1054,7 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
             if(m_output_elem.st_addr != m_output_elem.en_addr)
             {
                 // some trace before we were out of memory access range
-                m_output_elem.setType(RCTDL_GEN_TRC_ELEM_INSTR_RANGE);
+                m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
                 resp = outputTraceElementIdx(m_excep_index,m_output_elem);
             }
 
@@ -1062,19 +1062,19 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
         }
     }  
     
-    if((m_excep_proc == EXCEP_NACC) && RCTDL_DATA_RESP_IS_CONT(resp))
+    if((m_excep_proc == EXCEP_NACC) && OCSD_DATA_RESP_IS_CONT(resp))
     {
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_ADDR_NACC);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_ADDR_NACC);
         m_output_elem.st_addr = m_nacc_addr;
         resp = outputTraceElementIdx(m_excep_index,m_output_elem);
         m_excep_proc = EXCEP_EXCEP;
         m_mem_nacc_pending = false;
     }
     
-    if((m_excep_proc == EXCEP_EXCEP) && RCTDL_DATA_RESP_IS_CONT(resp))
+    if((m_excep_proc == EXCEP_EXCEP) && OCSD_DATA_RESP_IS_CONT(resp))
     {
         // output element.
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_EXCEPTION);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_EXCEPTION);
         // add end address as preferred return address to end addr in element
         m_output_elem.en_addr = m_excep_addr.val;
         m_output_elem.excep_ret_addr = 1;
@@ -1084,24 +1084,24 @@ rctdl_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
     return resp;
 }
 
-void TrcPktDecodeEtmV4I::SetInstrInfoInAddrISA(const rctdl_vaddr_t addr_val, const uint8_t isa)
+void TrcPktDecodeEtmV4I::SetInstrInfoInAddrISA(const ocsd_vaddr_t addr_val, const uint8_t isa)
 {
     m_instr_info.instr_addr = addr_val;
     if(m_is_64bit)
-        m_instr_info.isa = rctdl_isa_aarch64;
+        m_instr_info.isa = ocsd_isa_aarch64;
     else
-        m_instr_info.isa = (isa == 0) ? rctdl_isa_arm : rctdl_isa_thumb2;
+        m_instr_info.isa = (isa == 0) ? ocsd_isa_arm : ocsd_isa_thumb2;
 }
 
 // trace an instruction range to a waypoint - and set next address to restart from.
-rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceToAddrNext /*= false*/, const rctdl_vaddr_t nextAddrMatch /*= 0*/)
+ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceToAddrNext /*= false*/, const ocsd_vaddr_t nextAddrMatch /*= 0*/)
 {
     uint32_t opcode;
     uint32_t bytesReq;
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
 
     // TBD?: update mem space to allow for EL as well.
-    rctdl_mem_space_acc_t mem_space = m_is_secure ? RCTDL_MEM_SPACE_S : RCTDL_MEM_SPACE_N;
+    ocsd_mem_space_acc_t mem_space = m_is_secure ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
 
     m_output_elem.st_addr = m_output_elem.en_addr = m_instr_info.instr_addr;
 
@@ -1112,13 +1112,13 @@ rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceT
         // start off by reading next opcode;
         bytesReq = 4;
         err = accessMemory(m_instr_info.instr_addr,mem_space,&bytesReq,(uint8_t *)&opcode);
-        if(err != RCTDL_OK) break;
+        if(err != OCSD_OK) break;
 
         if(bytesReq == 4) // got data back
         {
             m_instr_info.opcode = opcode;
             err = instrDecode(&m_instr_info);
-            if(err != RCTDL_OK) break;
+            if(err != OCSD_OK) break;
 
             // increment address - may be adjusted by direct branch value later
             m_instr_info.instr_addr += m_instr_info.instr_size;
@@ -1130,7 +1130,7 @@ rctdl_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceT
             if(traceToAddrNext)
                 bWPFound = (m_output_elem.en_addr == nextAddrMatch);
             else
-                bWPFound = (m_instr_info.type != RCTDL_INSTR_OTHER);
+                bWPFound = (m_instr_info.type != OCSD_INSTR_OTHER);
         }
         else
         {
@@ -1149,8 +1149,8 @@ void TrcPktDecodeEtmV4I::updateContext(TrcStackElemCtxt *pCtxtElem)
     m_is_64bit = (ctxt.SF != 0);
     m_output_elem.context.bits64 = ctxt.SF;
     m_is_secure = (ctxt.NS == 0);
-    m_output_elem.context.security_level = ctxt.NS ? rctdl_sec_nonsecure : rctdl_sec_secure;
-    m_output_elem.context.exception_level = (rctdl_ex_level)ctxt.EL;
+    m_output_elem.context.security_level = ctxt.NS ? ocsd_sec_nonsecure : ocsd_sec_secure;
+    m_output_elem.context.exception_level = (ocsd_ex_level)ctxt.EL;
     m_output_elem.context.el_valid = 1;
     if(ctxt.updated_c)
     {
@@ -1165,20 +1165,20 @@ void TrcPktDecodeEtmV4I::updateContext(TrcStackElemCtxt *pCtxtElem)
     m_need_ctxt = false;
 }
 
-rctdl_datapath_resp_t TrcPktDecodeEtmV4I::handleBadPacket(const char *reason)
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::handleBadPacket(const char *reason)
 {
-    rctdl_datapath_resp_t resp  = RCTDL_RESP_CONT;   
+    ocsd_datapath_resp_t resp  = OCSD_RESP_CONT;   
 
-    if(getComponentOpMode() && RCTDL_OPFLG_PKTDEC_ERROR_BAD_PKTS)
+    if(getComponentOpMode() && OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
     {
         // error out - stop decoding
         resp = RCDTL_RESP_FATAL_INVALID_DATA;
-        LogError(rctdlError(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_BAD_DECODE_PKT,reason));
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,reason));
     }
     else
     {
         // switch to unsync - clear decode state
-        m_output_elem.setType(RCTDL_GEN_TRC_ELEM_NO_SYNC);
+        m_output_elem.setType(OCSD_GEN_TRC_ELEM_NO_SYNC);
         resp = outputTraceElement(m_output_elem);
         resetDecoder();
         m_curr_state = WAIT_SYNC;

@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_elem_stm.cpp
- * \brief      Reference CoreSight Trace Decoder : STM decode - packet class
+ * \brief      OpenCSD : STM decode - packet class
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -41,9 +41,9 @@ StmTrcPacket::StmTrcPacket()
     initStartState();
 }
 
-StmTrcPacket &StmTrcPacket::operator =(const rctdl_stm_pkt *p_pkt)
+StmTrcPacket &StmTrcPacket::operator =(const ocsd_stm_pkt *p_pkt)
 {
-    *dynamic_cast<rctdl_stm_pkt *>(this) = *p_pkt;
+    *dynamic_cast<ocsd_stm_pkt *>(this) = *p_pkt;
     return *this;
 }
 
@@ -165,7 +165,7 @@ void StmTrcPacket::toStringFmt(const uint32_t fmtFlags, std::string &str) const
     toString(str);
 }
 
-void StmTrcPacket::pktTypeName(const rctdl_stm_pkt_type pkt_type, std::string &name, std::string &desc) const
+void StmTrcPacket::pktTypeName(const ocsd_stm_pkt_type pkt_type, std::string &name, std::string &desc) const
 {
     std::ostringstream oss_name;
     std::ostringstream oss_desc;

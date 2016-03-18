@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_elem_etmv4i.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -50,20 +50,20 @@
  *  This class represents a single ETMv4 data trace packet, along with intra packet state.
  * 
  */
-class EtmV4ITrcPacket : public rctdl_etmv4_i_pkt, public trcPrintableElem
+class EtmV4ITrcPacket : public ocsd_etmv4_i_pkt, public trcPrintableElem
 {
 public:
     EtmV4ITrcPacket();
     ~EtmV4ITrcPacket();
 
-    EtmV4ITrcPacket &operator =(const rctdl_etmv4_i_pkt* p_pkt);
+    EtmV4ITrcPacket &operator =(const ocsd_etmv4_i_pkt* p_pkt);
 
     // update interface - set packet values
     void initStartState();   //!< Set to initial state - no intra packet state valid. Use on start of trace / discontinuities.
     void initNextPacket();  //!< clear any single packet only flags / state.
 
-    void setType(const rctdl_etmv4_i_pkt_type pkt_type) { type = pkt_type; };
-    void updateErrType(const rctdl_etmv4_i_pkt_type err_pkt_type);
+    void setType(const ocsd_etmv4_i_pkt_type pkt_type) { type = pkt_type; };
+    void updateErrType(const ocsd_etmv4_i_pkt_type err_pkt_type);
 
     void clearTraceInfo();  //!< clear all the trace info data prior to setting for new trace info packet.
     void setTraceInfo(const uint32_t infoVal);
@@ -75,7 +75,7 @@ public:
     void setCycleCount(const uint32_t value);
     void setCommitElements(const uint32_t commit_elem);
     void setCancelElements(const uint32_t cancel_elem);
-    void setAtomPacket(const rctdl_pkt_atm_type type, const uint32_t En_bits, const uint8_t num);
+    void setAtomPacket(const ocsd_pkt_atm_type type, const uint32_t En_bits, const uint8_t num);
 
     void setCondIF1(uint32_t const cond_key);
     void setCondIF2(uint8_t const c_elem_idx);
@@ -103,8 +103,8 @@ public:
     void setQType(const bool has_count, const uint32_t count, const bool has_addr, const bool addr_match, const uint8_t type);
 
     // packet status interface - get packet info.
-    const rctdl_etmv4_i_pkt_type getType() const { return type; };
-    const rctdl_etmv4_i_pkt_type getErrType() const { return err_type; };
+    const ocsd_etmv4_i_pkt_type getType() const { return type; };
+    const ocsd_etmv4_i_pkt_type getErrType() const { return err_type; };
 
     const bool hasCommitElementsCount() const;    //!< return true if this packet has set the commit packet count.
     
@@ -115,14 +115,14 @@ public:
     const uint32_t getCurrSpecDepth() const;
 
     // atom
-    const rctdl_pkt_atom &getAtom() const { return atom; };
+    const ocsd_pkt_atom &getAtom() const { return atom; };
 
     // context
     const etmv4_context_t &getContext() const { return context; };
 
     // address
     const uint8_t &getAddrMatch() const  { return addr_exact_match_idx; };
-    const rctdl_vaddr_t &getAddrVal() const { return v_addr.val; };
+    const ocsd_vaddr_t &getAddrVal() const { return v_addr.val; };
     const uint8_t &getAddrIS() const { return v_addr_ISA; };
 
     // ts
@@ -139,14 +139,14 @@ public:
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
 
 private:
-    const char *packetTypeName(const rctdl_etmv4_i_pkt_type type, const char **pDesc) const;
+    const char *packetTypeName(const ocsd_etmv4_i_pkt_type type, const char **pDesc) const;
     void contextStr(std::string &ctxtStr) const;
     void atomSeq(std::string &valStr) const;
     void addrMatchIdx(std::string &valStr) const;
     void exceptionInfo(std::string &valStr) const;
 };
 
-inline void  EtmV4ITrcPacket::updateErrType(const rctdl_etmv4_i_pkt_type err_pkt_type)
+inline void  EtmV4ITrcPacket::updateErrType(const ocsd_etmv4_i_pkt_type err_pkt_type)
 {
     // set primary type to incoming error type, set packet err type to previous primary type.
     err_type = type;
@@ -235,7 +235,7 @@ inline void EtmV4ITrcPacket::setCancelElements(const uint32_t cancel_elem)
     cancel_elements = cancel_elem;
 }
 
-inline void EtmV4ITrcPacket::setAtomPacket(const rctdl_pkt_atm_type type, const uint32_t En_bits, const uint8_t num)
+inline void EtmV4ITrcPacket::setAtomPacket(const ocsd_pkt_atm_type type, const uint32_t En_bits, const uint8_t num)
 {
     if(type == ATOM_REPEAT)
     {
@@ -385,7 +385,7 @@ inline void EtmV4ITrcPacket::set64BitAddress(const uint64_t addr, const uint8_t 
 
 inline void EtmV4ITrcPacket::set32BitAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits)
 {
-    rctdl_vaddr_t update_mask = RCTDL_BIT_MASK(update_bits);
+    ocsd_vaddr_t update_mask = OCSD_BIT_MASK(update_bits);
     v_addr.pkt_bits = update_bits;
     v_addr.size = VA_32BIT;
     if((v_addr.valid_bits < update_bits) || (update_bits == 32) )  // account for dropping into AArch32
@@ -397,7 +397,7 @@ inline void EtmV4ITrcPacket::set32BitAddress(const uint32_t addr, const uint8_t 
 
 inline void EtmV4ITrcPacket::updateShortAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits)
 {
-    rctdl_vaddr_t update_mask = RCTDL_BIT_MASK(update_bits);
+    ocsd_vaddr_t update_mask = OCSD_BIT_MASK(update_bits);
     v_addr.pkt_bits = update_bits;
     if(v_addr.valid_bits < update_bits)
         v_addr.valid_bits = update_bits;

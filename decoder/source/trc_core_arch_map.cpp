@@ -1,6 +1,6 @@
 /*
  * \file       trc_core_arch_map.cpp
- * \brief      Reference CoreSight Trace Decoder : Map core names to architecture profiles
+ * \brief      OpenCSD : Map core names to architecture profiles
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -36,7 +36,7 @@
 
 static struct _ap_map_elements {
     const char *name;
-    rctdl_arch_profile_t ap;
+    ocsd_arch_profile_t ap;
 } ap_map_array[] = 
 {
     { "Cortex-A72", { ARCH_V8, profile_CortexA } },

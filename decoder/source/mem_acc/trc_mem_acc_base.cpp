@@ -1,6 +1,6 @@
 /*!
  * \file       trc_mem_acc_base.cpp
- * \brief      Reference CoreSight Trace Decoder : Trace memory accessor base class.
+ * \brief      OpenCSD : Trace memory accessor base class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -42,33 +42,33 @@
 #include <iomanip>
 
  /** Accessor Creation */
-rctdl_err_t TrcMemAccFactory::CreateBufferAccessor(TrcMemAccessorBase **pAccessor, const rctdl_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size)
+ocsd_err_t TrcMemAccFactory::CreateBufferAccessor(TrcMemAccessorBase **pAccessor, const ocsd_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size)
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
     TrcMemAccessorBase *pAcc = 0;
     pAcc = new (std::nothrow) TrcMemAccBufPtr(s_address,p_buffer,size);
     if(pAcc == 0)
-        err = RCTDL_ERR_MEM;
+        err = OCSD_ERR_MEM;
     *pAccessor = pAcc;
     return err;
 }
 
-rctdl_err_t TrcMemAccFactory::CreateFileAccessor(TrcMemAccessorBase **pAccessor, const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset /*= 0*/, size_t size /*= 0*/)
+ocsd_err_t TrcMemAccFactory::CreateFileAccessor(TrcMemAccessorBase **pAccessor, const std::string &pathToFile, ocsd_vaddr_t startAddr, size_t offset /*= 0*/, size_t size /*= 0*/)
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
     TrcMemAccessorFile *pFileAccessor = 0;
     err = TrcMemAccessorFile::createFileAccessor(&pFileAccessor, pathToFile, startAddr, offset,size);
     *pAccessor = pFileAccessor;
     return err;
 }
 
-rctdl_err_t TrcMemAccFactory::CreateCBAccessor(TrcMemAccessorBase **pAccessor, const rctdl_vaddr_t s_address, const rctdl_vaddr_t e_address, const rctdl_mem_space_acc_t mem_space)
+ocsd_err_t TrcMemAccFactory::CreateCBAccessor(TrcMemAccessorBase **pAccessor, const ocsd_vaddr_t s_address, const ocsd_vaddr_t e_address, const ocsd_mem_space_acc_t mem_space)
 {
-    rctdl_err_t err = RCTDL_OK;
+    ocsd_err_t err = OCSD_OK;
     TrcMemAccessorBase *pAcc = 0;
     pAcc = new (std::nothrow)  TrcMemAccCB(s_address,e_address,mem_space);
     if(pAcc == 0)
-        err = RCTDL_ERR_MEM;
+        err = OCSD_ERR_MEM;
     *pAccessor = pAcc;
     return err;
 }
@@ -97,7 +97,7 @@ void TrcMemAccFactory::DestroyAccessor(TrcMemAccessorBase *pAccessor)
 void TrcMemAccessorBase::getMemAccString(std::string &accStr) const
 {
     std::ostringstream oss;
-    int printNibbles = RCTDL_MAX_VA_BITSIZE / 4;
+    int printNibbles = OCSD_MAX_VA_BITSIZE / 4;
 
     switch(m_type)
     {
@@ -121,24 +121,24 @@ void TrcMemAccessorBase::getMemAccString(std::string &accStr) const
     oss << "; Mem Space::";
     switch(m_mem_space)
     {
-    case RCTDL_MEM_SPACE_EL1S: oss << "EL1S"; break;
-    case RCTDL_MEM_SPACE_EL1N: oss << "EL1N"; break;
-    case RCTDL_MEM_SPACE_EL2: oss << "EL2"; break;
-    case RCTDL_MEM_SPACE_EL3: oss << "EL3"; break;
-    case RCTDL_MEM_SPACE_S: oss << "Any S"; break;
-    case RCTDL_MEM_SPACE_N: oss << "Any NS"; break;
-    case RCTDL_MEM_SPACE_ANY: oss << "Any"; break;
+    case OCSD_MEM_SPACE_EL1S: oss << "EL1S"; break;
+    case OCSD_MEM_SPACE_EL1N: oss << "EL1N"; break;
+    case OCSD_MEM_SPACE_EL2: oss << "EL2"; break;
+    case OCSD_MEM_SPACE_EL3: oss << "EL3"; break;
+    case OCSD_MEM_SPACE_S: oss << "Any S"; break;
+    case OCSD_MEM_SPACE_N: oss << "Any NS"; break;
+    case OCSD_MEM_SPACE_ANY: oss << "Any"; break;
 
     default:
         {
             uint8_t MSBits = (uint8_t)m_mem_space;
-            if(MSBits & (uint8_t)RCTDL_MEM_SPACE_EL1S)
+            if(MSBits & (uint8_t)OCSD_MEM_SPACE_EL1S)
                 oss << "EL1S,";
-            if(MSBits & (uint8_t)RCTDL_MEM_SPACE_EL1N)
+            if(MSBits & (uint8_t)OCSD_MEM_SPACE_EL1N)
                 oss << "EL1N,";
-            if(MSBits & (uint8_t)RCTDL_MEM_SPACE_EL2)
+            if(MSBits & (uint8_t)OCSD_MEM_SPACE_EL2)
                 oss << "EL2,";
-            if(MSBits & (uint8_t)RCTDL_MEM_SPACE_EL3)
+            if(MSBits & (uint8_t)OCSD_MEM_SPACE_EL3)
                 oss << "EL3,";
         }
         break;

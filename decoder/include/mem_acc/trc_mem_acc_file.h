@@ -1,6 +1,6 @@
 /*
  * \file       trc_mem_acc_file.h
- * \brief      Reference CoreSight Trace Decoder :  Access binary target memory file
+ * \brief      OpenCSD :  Access binary target memory file
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -56,9 +56,9 @@ public:
     bool operator<(const FileRegionMemAccessor& rhs) { return this->m_startAddress < rhs.m_startAddress; };
 
     // not going to use these objects to read bytes - defer to the file class for that.
-    virtual const uint32_t readBytes(const rctdl_vaddr_t s_address, const rctdl_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer) { return 0; };
+    virtual const uint32_t readBytes(const ocsd_vaddr_t s_address, const ocsd_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer) { return 0; };
 
-    const rctdl_vaddr_t regionStartAddress() const { return m_startAddress; };
+    const ocsd_vaddr_t regionStartAddress() const { return m_startAddress; };
 
 private:
     size_t m_file_offset;
@@ -77,7 +77,7 @@ class TrcMemAccessorFile : public TrcMemAccessorBase
 {
 public:
     /** read bytes override - reads from file */
-    virtual const uint32_t readBytes(const rctdl_vaddr_t address, const rctdl_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer);
+    virtual const uint32_t readBytes(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t memSpace, const uint32_t reqBytes, uint8_t *byteBuffer);
 
 protected:
     TrcMemAccessorFile();   /**< protected default constructor */
@@ -101,13 +101,13 @@ protected:
      *
      * @return bool  : true if set up successfully, false if file could not be opened.
      */
-    rctdl_err_t initAccessor(const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset, size_t size);
+    ocsd_err_t initAccessor(const std::string &pathToFile, ocsd_vaddr_t startAddr, size_t offset, size_t size);
 
     /** get the file path */
     const std::string &getFilePath() const { return m_file_path; };
 
     /** get an offset region if extant for the address */
-    FileRegionMemAccessor *getRegionForAddress(const rctdl_vaddr_t startAddr) const;
+    FileRegionMemAccessor *getRegionForAddress(const ocsd_vaddr_t startAddr) const;
 
     /* validate ranges */
     virtual const bool validateRange();
@@ -123,7 +123,7 @@ public:
      *
      * @return bool  : true if set successfully.
      */
-    bool AddOffsetRange(const rctdl_vaddr_t startAddr, const size_t size, const size_t offset);
+    bool AddOffsetRange(const ocsd_vaddr_t startAddr, const size_t size, const size_t offset);
 
     /*!
      * Override in case we have multiple regions in the file.
@@ -132,7 +132,7 @@ public:
      *
      * @return const bool  : true if the address is in range.
      */
-    virtual const bool addrInRange(const rctdl_vaddr_t s_address) const;
+    virtual const bool addrInRange(const ocsd_vaddr_t s_address) const;
 
     /*!
      * test if an address is the start of range for this accessor
@@ -141,7 +141,7 @@ public:
      *
      * @return const bool  : true if the address is start of range.
      */
-    virtual const bool addrStartOfRange(const rctdl_vaddr_t s_address) const;
+    virtual const bool addrStartOfRange(const ocsd_vaddr_t s_address) const;
 
     /*!
      * Test number of bytes available from the start address, up to the number of requested bytes.
@@ -153,7 +153,7 @@ public:
      *
      * @return const uint32_t  : Bytes available, up to reqBytes. 0 is s_address not in range.
      */
-    virtual const uint32_t bytesInRange(const rctdl_vaddr_t s_address, const uint32_t reqBytes) const;
+    virtual const uint32_t bytesInRange(const ocsd_vaddr_t s_address, const uint32_t reqBytes) const;
     
     /*!
      * test is supplied range accessor overlaps this range.
@@ -182,7 +182,7 @@ public:
      *
      * @return TrcMemAccessorFile * : pointer to accessor if successful, 0 if it could not be created.
      */
-    static rctdl_err_t createFileAccessor(TrcMemAccessorFile **p_acc, const std::string &pathToFile, rctdl_vaddr_t startAddr, size_t offset = 0, size_t size = 0);
+    static ocsd_err_t createFileAccessor(TrcMemAccessorFile **p_acc, const std::string &pathToFile, ocsd_vaddr_t startAddr, size_t offset = 0, size_t size = 0);
 
     /*!
      * Destroy supplied accessor. 
@@ -221,7 +221,7 @@ private:
 
 private:
     std::ifstream m_mem_file;   /**< input binary file stream */
-    rctdl_vaddr_t m_file_size;  /**< size of the file */
+    ocsd_vaddr_t m_file_size;  /**< size of the file */
     int m_ref_count;            /**< accessor reference count */
     std::string m_file_path;    /**< path to input file */
     std::list<FileRegionMemAccessor *> m_access_regions;    /**< additional regions in the file at non-zero offsets */

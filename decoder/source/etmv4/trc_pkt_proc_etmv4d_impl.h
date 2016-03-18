@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_etmv4d_impl.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -46,16 +46,16 @@ public:
 
     void Initialise(TrcPktProcEtmV4D *p_interface);
 
-    rctdl_err_t Configure(const EtmV4Config *p_config);
+    ocsd_err_t Configure(const EtmV4Config *p_config);
 
 
-    rctdl_datapath_resp_t processData(  const rctdl_trc_index_t index,
+    ocsd_datapath_resp_t processData(  const ocsd_trc_index_t index,
                                         const uint32_t dataBlockSize,
                                         const uint8_t *pDataBlock,
                                         uint32_t *numBytesProcessed);
-    rctdl_datapath_resp_t onEOT();
-    rctdl_datapath_resp_t onReset();
-    rctdl_datapath_resp_t onFlush();
+    ocsd_datapath_resp_t onEOT();
+    ocsd_datapath_resp_t onReset();
+    ocsd_datapath_resp_t onFlush();
 
 protected:
 

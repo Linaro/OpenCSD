@@ -1,6 +1,6 @@
 /*
  * \file       trc_gen_elem_in_i.h
- * \brief      Reference CoreSight Trace Decoder : Generic Trace Element interface.
+ * \brief      OpenCSD : Generic Trace Element interface.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -43,7 +43,7 @@ class RctdlTraceElement;
   
  * @brief Interface for the input of generic trace elements. 
  *
- * @ingroup rctdl_interfaces
+ * @ingroup ocsd_interfaces
  *
  * This interface is the principal output attachment point for the trace packet decoders.
  * 
@@ -65,9 +65,9 @@ public:
      * @param trc_chan_id : CoreSight Trace ID for this source.
      * @param &elem : Generic trace element generated from the deocde data path
      *
-     * @return rctdl_datapath_resp_t  : Standard data path response.
+     * @return ocsd_datapath_resp_t  : Standard data path response.
      */
-    virtual rctdl_datapath_resp_t TraceElemIn(const rctdl_trc_index_t index_sop,
+    virtual ocsd_datapath_resp_t TraceElemIn(const ocsd_trc_index_t index_sop,
                                               const uint8_t trc_chan_id,
                                               const RctdlTraceElement &elem) = 0;
 };

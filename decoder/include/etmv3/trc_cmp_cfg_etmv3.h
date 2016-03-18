@@ -1,6 +1,6 @@
 /*
  * \file       trc_cmp_cfg_etmv3.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -38,7 +38,7 @@
 
 #include "trc_pkt_types_etmv3.h"
 
-/** @addtogroup rctdl_protocol_cfg
+/** @addtogroup ocsd_protocol_cfg
 @{*/
 
 /** @name ETMV3 configuration
@@ -53,7 +53,7 @@
  * Primarily inlined for efficient code.
  * 
  */
-class EtmV3Config : public rctdl_etmv3_cfg
+class EtmV3Config : public ocsd_etmv3_cfg
 {
 public:
     EtmV3Config(); /**< Default constructor */
@@ -74,7 +74,7 @@ public:
     static const uint32_t IDR_ALTBRANCH = 0x100000;
 
     //! copy assignment operator for base structure into class.
-    EtmV3Config & operator=(const rctdl_etmv3_cfg *p_cfg);
+    EtmV3Config & operator=(const ocsd_etmv3_cfg *p_cfg);
 
     //! combination enum to describe trace mode.
     enum EtmTraceMode {
@@ -116,9 +116,9 @@ public:
 
 /* inlines for the bit interpretations */
 
-inline EtmV3Config & EtmV3Config::operator=(const rctdl_etmv3_cfg *p_cfg)
+inline EtmV3Config & EtmV3Config::operator=(const ocsd_etmv3_cfg *p_cfg)
 {
-    *dynamic_cast<rctdl_etmv3_cfg *>(this) = *p_cfg;
+    *dynamic_cast<ocsd_etmv3_cfg *>(this) = *p_cfg;
     return *this; 
 }
 

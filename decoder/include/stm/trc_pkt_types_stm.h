@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_types_stm.h
- * \brief      Reference CoreSight Trace Decoder : STM decoder
+ * \brief      OpenCSD : STM decoder
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -46,7 +46,7 @@
     Contains both protocol packet types and markers for unsynced processor
     state and bad packet sequences.
 */
-typedef enum _rctdl_stm_pkt_type
+typedef enum _ocsd_stm_pkt_type
 {
 /* markers for unknown packets  / state*/
     STM_PKT_NOTSYNC,            /**< Not synchronised */
@@ -79,27 +79,27 @@ typedef enum _rctdl_stm_pkt_type
     STM_PKT_BAD_SEQUENCE,   /**< Incorrect protocol sequence */
     STM_PKT_RESERVED,       /**< Reserved packet header / not supported by CS-STM */
 
-} rctdl_stm_pkt_type;
+} ocsd_stm_pkt_type;
 
 /** STM timestamp encoding type.
     Extracted from STM version packet.
     CS-STM supports Natural binary and grey encodings.
 */
-typedef enum _rctdl_stm_ts_type
+typedef enum _ocsd_stm_ts_type
 {
     STM_TS_UNKNOWN,     /**< TS encoding unknown at present. */
     STM_TS_NATBINARY,   /**< TS encoding natural binary */
     STM_TS_GREY         /**< TS encoding grey coded. */
-} rctdl_stm_ts_type;
+} ocsd_stm_ts_type;
 
 /** STM trace packet
 
     Structure containing the packet data for a single STM packet, plus
     data persisting between packets (master, channel, last timestamp).
 */
-typedef struct _rctdl_stm_pkt
+typedef struct _ocsd_stm_pkt
 {
-    rctdl_stm_pkt_type type;        /**< STM packet type */
+    ocsd_stm_pkt_type type;        /**< STM packet type */
 
     uint8_t     master;             /**< current master */
     uint16_t    channel;            /**< current channel */
@@ -108,7 +108,7 @@ typedef struct _rctdl_stm_pkt
     uint8_t     pkt_ts_bits;        /**< timestamp bits updated this packet */
     uint8_t     pkt_has_ts;         /**< current packet has associated timestamp (ts bits can be 0 if same value as last time) */
     
-    rctdl_stm_ts_type ts_type;      /**< timestamp encoding type */
+    ocsd_stm_ts_type ts_type;      /**< timestamp encoding type */
 
     uint8_t     pkt_has_marker;     /**< flag to indicate current packet has marker */
 
@@ -119,9 +119,9 @@ typedef struct _rctdl_stm_pkt
         uint64_t D64;   /**< payload for D64 data packet */
     } payload;
 
-    rctdl_stm_pkt_type err_type;    /**< Initial type of packet if type indicates bad sequence. */
+    ocsd_stm_pkt_type err_type;    /**< Initial type of packet if type indicates bad sequence. */
 
-} rctdl_stm_pkt;
+} ocsd_stm_pkt;
 
 /** HW Event trace feature
     Defines if the STM supports or has enabled the HW event trace feature.
@@ -139,7 +139,7 @@ typedef enum _hw_event_feat {
     Contains hardware register values at time of trace capture and HW event feature
     field to enable and control decode of STM trace stream.
 */
-typedef struct _rctdl_stm_cfg
+typedef struct _ocsd_stm_cfg
 {
     uint32_t reg_tcsr;          /**< Contains CoreSight trace ID, HWTEN */
     uint32_t reg_feat3r;        /**< defines number of masters */
@@ -148,7 +148,7 @@ typedef struct _rctdl_stm_cfg
     uint32_t reg_feat1r;        /**< defines HW trace features */
     uint32_t reg_hwev_mast;     /**< master ID for HW event trace */
     hw_event_feat_t hw_event;   /**< status of HW event trace */
-} rctdl_stm_cfg;
+} ocsd_stm_cfg;
 
 /** @}*/
 /** @}*/

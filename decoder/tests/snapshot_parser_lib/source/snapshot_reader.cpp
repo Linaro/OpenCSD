@@ -1,6 +1,6 @@
 /*
  * \file       snapshot_reader.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -218,14 +218,14 @@ void SnapShotReader::setErrorLogger(ITraceErrorLog *err_log)
 void SnapShotReader::LogInfo(const std::string &msg)
 {
     if(m_i_err_log)
-        m_i_err_log->LogMessage(m_errlog_handle, RCTDL_ERR_SEV_INFO, msg);
+        m_i_err_log->LogMessage(m_errlog_handle, OCSD_ERR_SEV_INFO, msg);
 }
 
 void SnapShotReader::LogError(const std::string &msg)
 {
     if(m_i_err_log)
     {
-        rctdlError err(RCTDL_ERR_SEV_ERROR,RCTDL_ERR_TEST_SNAPSHOT_READ,msg);
+        ocsdError err(OCSD_ERR_SEV_ERROR,OCSD_ERR_TEST_SNAPSHOT_READ,msg);
         m_i_err_log->LogError(m_errlog_handle,&err);
     }
 }

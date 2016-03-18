@@ -1,6 +1,6 @@
 /*
- * \file       rctdl_version.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \file       ocsd_version.cpp
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -35,17 +35,17 @@
 #include "ocsd_if_types.h"
 #include "common/ocsd_version.h"
 
-const uint32_t rctdlVersion::vers_num()
+const uint32_t ocsdVersion::vers_num()
 {
-    return ((uint32_t)RCTDL_VER_MAJOR << 16) | (uint32_t)RCTDL_VER_MINOR; 
+    return ((uint32_t)OCSD_VER_MAJOR << 16) | (uint32_t)OCSD_VER_MINOR; 
 }
 
-const char *rctdlVersion::vers_str()
+const char *ocsdVersion::vers_str()
 {
-     return RCTDL_VER_STRING; 
+     return OCSD_VER_STRING; 
 }
 
 
 
 
-/* End of File rctdl_version.cpp */
+/* End of File ocsd_version.cpp */

@@ -1,6 +1,6 @@
 /*
  * \file       trc_cmp_cfg_etmv4.cpp
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -53,9 +53,9 @@ EtmV4Config::EtmV4Config()
     PrivateInit();
 }
 
-EtmV4Config & EtmV4Config::operator=(const rctdl_etmv4_cfg *p_cfg)
+EtmV4Config & EtmV4Config::operator=(const ocsd_etmv4_cfg *p_cfg)
 {
-    *dynamic_cast<rctdl_etmv4_cfg *>(this) = *p_cfg;
+    *dynamic_cast<ocsd_etmv4_cfg *>(this) = *p_cfg;
     PrivateInit();
     return *this;
 }
