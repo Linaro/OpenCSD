@@ -44,7 +44,7 @@
 /*!
  * @class ocsdError   
  * 
- *  This class is the error object for the RCTDL. 
+ *  This class is the error object for the Ocsd. 
  *
  *  Errors are created with a severity (ocsd_err_severity_t) and a standard ocsd_err_t error code.
  *  Errors can optionally be created with a trace index (offset from start of capture buffer), and 

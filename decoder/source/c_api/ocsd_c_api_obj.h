@@ -27,7 +27,7 @@ public:
 
     virtual ocsd_datapath_resp_t TraceElemIn(const ocsd_trc_index_t index_sop,
                                               const uint8_t trc_chan_id,
-                                              const RctdlTraceElement &elem);
+                                              const OcsdTraceElement &elem);
 
 private:
     FnTraceElemIn m_c_api_cb_fn;

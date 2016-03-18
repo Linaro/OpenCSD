@@ -84,7 +84,7 @@ private:
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.
 
 //** output element
-    RctdlTraceElement m_output_elem;
+    OcsdTraceElement m_output_elem;
 };
 
 

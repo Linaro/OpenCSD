@@ -79,7 +79,7 @@ static const char *s_trace_on_reason[] = {
     "debug restart"
 };
 
-void RctdlTraceElement::toString(std::string &str) const
+void OcsdTraceElement::toString(std::string &str) const
 {
     std::ostringstream oss;
     int num_str = ((sizeof(s_elem_descs) / sizeof(const char *)) / 2);
@@ -95,7 +95,7 @@ void RctdlTraceElement::toString(std::string &str) const
             if((int)last_i_type < T_SIZE)
                 oss << instr_type[last_i_type];
             if((last_i_subtype != OCSD_S_INSTR_NONE) && ((int)last_i_subtype < ST_SIZE))
-                oss << instr_sub_type[last_i_type];
+                oss << instr_sub_type[last_i_subtype];
             break;
 
         case OCSD_GEN_TRC_ELEM_ADDR_NACC:
@@ -139,16 +139,16 @@ void RctdlTraceElement::toString(std::string &str) const
     str = oss.str();
 }
 
-RctdlTraceElement &RctdlTraceElement::operator =(const ocsd_generic_trace_elem* p_elem)
+OcsdTraceElement &OcsdTraceElement::operator =(const ocsd_generic_trace_elem* p_elem)
 {
     *dynamic_cast<ocsd_generic_trace_elem*>(this) = *p_elem;
     return *this;
 }
 
 /*
-void RctdlTraceElement::toString(const ocsd_generic_trace_elem *p_elem, std::string &str)
+void OcsdTraceElement::toString(const ocsd_generic_trace_elem *p_elem, std::string &str)
 {
-    RctdlTraceElement elem;
+    OcsdTraceElement elem;
     elem = p_elem;
     elem.toString(str);
 }

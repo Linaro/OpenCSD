@@ -38,6 +38,7 @@
     <ProjectGuid>{7F500891-CC76-405F-933F-F682BC39F923}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ref_trace_decode_lib</RootNamespace>
+    <ProjectName>opencsd_lib</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

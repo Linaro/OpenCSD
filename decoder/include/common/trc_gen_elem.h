@@ -40,16 +40,16 @@
 @{*/
 
 /*!
- * @class RctdlTraceElement
+ * @class OcsdTraceElement
  * @brief Generic trace element class
  * 
  */
-class RctdlTraceElement : public trcPrintableElem, public ocsd_generic_trace_elem
+class OcsdTraceElement : public trcPrintableElem, public ocsd_generic_trace_elem
 {
 public:
-    RctdlTraceElement();
-    RctdlTraceElement(ocsd_gen_trc_elem_t type);
-    virtual ~RctdlTraceElement() {};
+    OcsdTraceElement();
+    OcsdTraceElement(ocsd_gen_trc_elem_t type);
+    virtual ~OcsdTraceElement() {};
 
     void init();
 
@@ -61,33 +61,33 @@ public:
 
     virtual void toString(std::string &str) const;
 
-    RctdlTraceElement &operator =(const ocsd_generic_trace_elem* p_elem);
+    OcsdTraceElement &operator =(const ocsd_generic_trace_elem* p_elem);
 
 };
 
-inline RctdlTraceElement::RctdlTraceElement(ocsd_gen_trc_elem_t type)    
+inline OcsdTraceElement::OcsdTraceElement(ocsd_gen_trc_elem_t type)    
 {
     elem_type = type;
 }
 
-inline RctdlTraceElement::RctdlTraceElement()    
+inline OcsdTraceElement::OcsdTraceElement()    
 {
     elem_type = OCSD_GEN_TRC_ELEM_UNKNOWN;
 }
 
-inline void RctdlTraceElement::setCycleCount(const uint32_t cycleCount)
+inline void OcsdTraceElement::setCycleCount(const uint32_t cycleCount)
 {
     cycle_count = cycleCount;
     has_cc = 1;
 }
 
-inline void RctdlTraceElement::setEvent(const event_t ev_type, const uint16_t number)
+inline void OcsdTraceElement::setEvent(const event_t ev_type, const uint16_t number)
 {
     trace_event.ev_type = (uint16_t)ev_type;
     trace_event.ev_number = ev_type == EVENT_NUMBERED ? number : 0;
 }
 
-inline void RctdlTraceElement::setType(const ocsd_gen_trc_elem_t type) 
+inline void OcsdTraceElement::setType(const ocsd_gen_trc_elem_t type) 
 { 
     // set the type and clear down the per element flags
     elem_type = type;
@@ -98,7 +98,7 @@ inline void RctdlTraceElement::setType(const ocsd_gen_trc_elem_t type)
     exception_number = 0;
 }
 
-inline void RctdlTraceElement::init()
+inline void OcsdTraceElement::init()
 {
     context.ctxt_id_valid = 0;
     context.vmid_valid = 0;

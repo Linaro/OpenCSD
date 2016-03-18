@@ -174,7 +174,7 @@ private:
     bool m_flush_EOT;           //!< true if doing an end of trace flush - cleans up lingering events / TS / CC
 
 //** output element
-    RctdlTraceElement m_output_elem;
+    OcsdTraceElement m_output_elem;
 
 };
 

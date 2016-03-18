@@ -51,7 +51,7 @@
 #define OCSD_VER_MINOR 0x2 /**< Library Minor Version */
 #define OCSD_VER_STRING "0.002"    /**< Library Version string */
 #define OCSD_LIB_NAME "OpenCSD Library"  /**< Library name string */
-#define OCSD_LIB_SHORT_NAME "RCTDL"    /**< Library Short name string */
+#define OCSD_LIB_SHORT_NAME "OCSD"    /**< Library Short name string */
 /** @}*/
 
 /** @name Trace Indexing and Channel IDs

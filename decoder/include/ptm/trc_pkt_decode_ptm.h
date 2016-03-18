@@ -174,7 +174,7 @@ private:
     PtmAtoms m_atoms;           //!< atoms to process in an atom packet
 
 //** output element
-    RctdlTraceElement m_output_elem;
+    OcsdTraceElement m_output_elem;
 };
 
 inline const bool TrcPktDecodePtm::processStateIsCont() const

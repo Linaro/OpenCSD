@@ -46,7 +46,7 @@
 #include "snapshot_parser_util.h"
 #include "snapshot_info.h"
 
-class ITraceErrorLog;   // forward declare the RCTDL error log interface.
+class ITraceErrorLog;   // forward declare the OCSD error log interface.
 
 namespace Parser
 {

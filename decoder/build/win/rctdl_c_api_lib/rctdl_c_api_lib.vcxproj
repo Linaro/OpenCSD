@@ -38,6 +38,7 @@
     <ProjectGuid>{533F929A-A73B-46B6-9D5F-FFCD62F734E3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>rctdl_c_api_lib</RootNamespace>
+    <ProjectName>ocsd_c_api_lib</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

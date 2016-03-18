@@ -36,7 +36,7 @@
 #ifndef ARM_TRC_GEN_ELEM_IN_I_H_INCLUDED
 #define ARM_TRC_GEN_ELEM_IN_I_H_INCLUDED
 
-class RctdlTraceElement;
+class OcsdTraceElement;
 
 /*!
  * @class ITrcGenElemIn
@@ -69,7 +69,7 @@ public:
      */
     virtual ocsd_datapath_resp_t TraceElemIn(const ocsd_trc_index_t index_sop,
                                               const uint8_t trc_chan_id,
-                                              const RctdlTraceElement &elem) = 0;
+                                              const OcsdTraceElement &elem) = 0;
 };
 
 #endif // ARM_TRC_GEN_ELEM_IN_I_H_INCLUDED

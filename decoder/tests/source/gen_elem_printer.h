@@ -45,7 +45,7 @@ public:
 
     virtual ocsd_datapath_resp_t TraceElemIn(const ocsd_trc_index_t index_sop,
                                               const uint8_t trc_chan_id,         
-                                              const RctdlTraceElement &elem);
+                                              const OcsdTraceElement &elem);
 
     // funtionality to test wait / flush mechanism
     void ackWait() { m_needWaitAck = false; };
@@ -63,7 +63,7 @@ inline TrcGenericElementPrinter::TrcGenericElementPrinter() :
 
 inline ocsd_datapath_resp_t TrcGenericElementPrinter::TraceElemIn(const ocsd_trc_index_t index_sop,
                                               const uint8_t trc_chan_id,
-                                              const RctdlTraceElement &elem)
+                                              const OcsdTraceElement &elem)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     std::string elemStr;

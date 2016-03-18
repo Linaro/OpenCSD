@@ -395,7 +395,7 @@ OCSD_C_API ocsd_err_t ocsd_gen_elem_str(const ocsd_generic_trace_elem *p_pkt, ch
     if((buffer == NULL) || (buffer_size < 2))
         return OCSD_ERR_INVALID_PARAM_VAL;
     std::string str;
-    trcPrintElemToString<RctdlTraceElement,ocsd_generic_trace_elem>(p_pkt,str);
+    trcPrintElemToString<OcsdTraceElement,ocsd_generic_trace_elem>(p_pkt,str);
     if(str.size() > 0)
     {
         strncpy(buffer,str.c_str(),buffer_size -1);
@@ -594,7 +594,7 @@ GenTraceElemCBObj::GenTraceElemCBObj(FnTraceElemIn pCBFn, const void *p_context)
 
 ocsd_datapath_resp_t GenTraceElemCBObj::TraceElemIn(const ocsd_trc_index_t index_sop,
                                               const uint8_t trc_chan_id,
-                                              const RctdlTraceElement &elem)
+                                              const OcsdTraceElement &elem)
 {
     return m_c_api_cb_fn(m_p_cb_context, index_sop, trc_chan_id, &elem);
 }

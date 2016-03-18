@@ -83,8 +83,8 @@ protected:
     const bool checkInit();
 
     /* data output */
-    ocsd_datapath_resp_t outputTraceElement(const RctdlTraceElement &elem);    // use current index
-    ocsd_datapath_resp_t outputTraceElementIdx(ocsd_trc_index_t idx, const RctdlTraceElement &elem); // use supplied index (where decoder caches elements) 
+    ocsd_datapath_resp_t outputTraceElement(const OcsdTraceElement &elem);    // use current index
+    ocsd_datapath_resp_t outputTraceElementIdx(ocsd_trc_index_t idx, const OcsdTraceElement &elem); // use supplied index (where decoder caches elements) 
 
     /* target access */
     ocsd_err_t accessMemory(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer);
@@ -139,12 +139,12 @@ inline const bool TrcPktDecodeI::checkInit()
     return m_decode_init_ok;
 }
 
-inline ocsd_datapath_resp_t TrcPktDecodeI::outputTraceElement(const RctdlTraceElement &elem)
+inline ocsd_datapath_resp_t TrcPktDecodeI::outputTraceElement(const OcsdTraceElement &elem)
 {
     return m_trace_elem_out.first()->TraceElemIn(m_index_curr_pkt,getCoreSightTraceID(), elem);
 }
 
-inline ocsd_datapath_resp_t TrcPktDecodeI::outputTraceElementIdx(ocsd_trc_index_t idx, const RctdlTraceElement &elem)
+inline ocsd_datapath_resp_t TrcPktDecodeI::outputTraceElementIdx(ocsd_trc_index_t idx, const OcsdTraceElement &elem)
 {
     return m_trace_elem_out.first()->TraceElemIn(idx, getCoreSightTraceID(), elem);
 }

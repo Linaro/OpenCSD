@@ -38,7 +38,7 @@
 /** @defgroup lib_c_api OpenCSD Library : Library "C" API.
     @brief  "C" API for the OpenCSD Library
 
-    Set of "C" wrapper functions for the RCTDL library.
+    Set of "C" wrapper functions for the OpenCSD library.
 
     Defines API, functions and callback types.
 @{*/
