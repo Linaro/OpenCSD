@@ -37,7 +37,7 @@
 
 #include <map>
 #include <string>
-#include "rctdl_if_types.h"
+#include "ocsd_if_types.h"
 
 class CoreArchProfileMap
 {

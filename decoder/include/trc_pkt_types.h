@@ -1,6 +1,6 @@
 /*!
  * \file       trc_pkt_types.h
- * \brief      Reference CoreSight Trace Decoder : Common "C" types for trace packets.
+ * \brief      OpenCSD: Common "C" types for trace packets.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -37,7 +37,7 @@
 #define ARM_TRC_PKT_TYPES_H_INCLUDED
 
 #include <stdint.h>
-#include "rctdl_if_types.h"
+#include "ocsd_if_types.h"
 
 /** @defgroup trc_pkts  Reference CoreSight Trace Decoder Library : Trace Packet Types
 

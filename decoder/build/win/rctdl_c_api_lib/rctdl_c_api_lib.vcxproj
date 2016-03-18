@@ -295,8 +295,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\include\c_api\rctdl_c_api.h" />
-    <ClInclude Include="..\..\..\include\c_api\rctdl_c_api_types.h" />
+    <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_types.h" />
+    <ClInclude Include="..\..\..\include\c_api\opencsd_c_api.h" />
     <ClInclude Include="..\..\..\source\c_api\rctdl_c_api_obj.h" />
   </ItemGroup>
   <ItemGroup>

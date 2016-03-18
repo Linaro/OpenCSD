@@ -35,11 +35,11 @@
 #include <cstring>
 
 /* pull in the C++ decode library */
-#include "rctdl.h"
+#include "opencsd.h"
 
 /* C-API and wrapper objects */
-#include "c_api/rctdl_c_api.h"
-#include "rctdl_c_api_obj.h"
+#include "c_api/opencsd_c_api.h"
+#include "ocsd_c_api_obj.h"
 
 /** MSVC2010 unwanted export workaround */
 #ifdef WIN32
@@ -67,19 +67,19 @@ static std::map<dcd_tree_handle_t, lib_dt_data_list *> s_data_map;
 /*******************************************************************************/
 
 /** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
-RCTDL_C_API uint32_t rctdl_get_version(void) 
+OCSD_C_API uint32_t rctdl_get_version(void) 
 { 
     return rctdlVersion::vers_num();
 }
 
 /** Get library version string */
-RCTDL_C_API const char * rctdl_get_version_str(void) 
+OCSD_C_API const char * rctdl_get_version_str(void) 
 { 
     return rctdlVersion::vers_str();
 }
 
 
-RCTDL_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags)
+OCSD_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags)
 {
     dcd_tree_handle_t handle = C_API_INVALID_TREE_HANDLE;
     handle = (dcd_tree_handle_t)DecodeTree::CreateDecodeTree(src_type,deformatterCfgFlags); 
@@ -99,7 +99,7 @@ RCTDL_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t s
     return handle;
 }
 
-RCTDL_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle)
+OCSD_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle)
 {
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
@@ -127,7 +127,7 @@ RCTDL_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle)
     }
 }
 
-RCTDL_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t handle,
+OCSD_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t handle,
                                             const rctdl_datapath_op_t op,
                                             const rctdl_trc_index_t index,
                                             const uint32_t dataBlockSize,
@@ -140,7 +140,7 @@ RCTDL_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t 
     return resp;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn, const void *p_context)
+OCSD_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
@@ -171,7 +171,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t 
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *etmv4_cfg)
+OCSD_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *etmv4_cfg)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
@@ -188,7 +188,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t h
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context)
+OCSD_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
@@ -219,7 +219,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t h
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn, const void *p_context)
+OCSD_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
@@ -249,7 +249,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t h
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context)
+OCSD_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
@@ -280,7 +280,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t ha
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context)
+OCSD_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
@@ -310,7 +310,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t han
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context)
+OCSD_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context)
 {
 
     GenTraceElemCBObj * pCBObj = new (std::nothrow)GenTraceElemCBObj(pFn, p_context);
@@ -322,14 +322,14 @@ RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t hand
     return RCTDL_ERR_MEM;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_def_errlog_init(const rctdl_err_severity_t verbosity, const int create_output_logger)
+OCSD_C_API rctdl_err_t rctdl_def_errlog_init(const rctdl_err_severity_t verbosity, const int create_output_logger)
 {
     if(DecodeTree::getDefaultErrorLogger()->initErrorLogger(verbosity,(bool)(create_output_logger != 0)))
         return RCTDL_OK;
     return RCTDL_ERR_NOT_INIT;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, const char *log_file_name)
+OCSD_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, const char *log_file_name)
 {
     rctdlMsgLogger *pLogger = DecodeTree::getDefaultErrorLogger()->getOutputLogger();
     if(pLogger)
@@ -344,7 +344,7 @@ RCTDL_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, c
     return RCTDL_ERR_NOT_INIT;    
 }
 
-RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg)
+OCSD_C_API void rctdl_def_errlog_msgout(const char *msg)
 {
     rctdlMsgLogger *pLogger = DecodeTree::getDefaultErrorLogger()->getOutputLogger();
     if(pLogger)
@@ -352,7 +352,7 @@ RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg)
 }
 
 
-RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, const void *p_pkt, char *buffer, const int buffer_size)
+OCSD_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, const void *p_pkt, char *buffer, const int buffer_size)
 {
     rctdl_err_t err = RCTDL_OK;
     if((buffer == NULL) || (buffer_size < 2))
@@ -389,7 +389,7 @@ RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol,
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt, char *buffer, const int buffer_size)
+OCSD_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt, char *buffer, const int buffer_size)
 {
     rctdl_err_t err = RCTDL_OK;
     if((buffer == NULL) || (buffer_size < 2))
@@ -404,7 +404,7 @@ RCTDL_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const char *filepath)
+OCSD_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const char *filepath)
 {
     rctdl_err_t err = RCTDL_OK;
 
@@ -440,7 +440,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t han
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const rctdl_mem_space_acc_t mem_space, const char *filepath)
+OCSD_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const rctdl_mem_space_acc_t mem_space, const char *filepath)
 {
     rctdl_err_t err = RCTDL_OK;
 
@@ -485,7 +485,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handl
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length)
+OCSD_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length)
 {
     rctdl_err_t err = RCTDL_OK;
 
@@ -520,7 +520,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t hand
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context)
+OCSD_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context)
 {
     rctdl_err_t err = RCTDL_OK;
 
@@ -555,7 +555,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t ha
     return err;
 }
 
-RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space)
+OCSD_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space)
 {
     rctdl_err_t err = RCTDL_OK;
 
@@ -572,7 +572,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, 
     return err;
 }
 
-RCTDL_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle)
+OCSD_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle)
 {
     if(handle != C_API_INVALID_TREE_HANDLE)
     {

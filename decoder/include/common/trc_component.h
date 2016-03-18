@@ -39,7 +39,7 @@
 #include <string>
 #include "comp_attach_pt_t.h"
 #include "interfaces/trc_error_log_i.h"
-#include "rctdl_error.h"
+#include "ocsd_error.h"
 
 class errLogAttachMonitor;
 

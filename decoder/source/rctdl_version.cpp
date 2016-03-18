@@ -32,8 +32,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "rctdl_if_types.h"
-#include "rctdl_version.h"
+#include "ocsd_if_types.h"
+#include "common/ocsd_version.h"
 
 const uint32_t rctdlVersion::vers_num()
 {

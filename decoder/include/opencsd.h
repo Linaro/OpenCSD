@@ -1,6 +1,6 @@
 /*!
- * \file       rctdl.h
- * \brief      Reference CoreSight Trace Decoder : Master include file for C++ library
+ * \file       opencsd.h
+ * \brief      OpenCSD: Open CoreSight Trace Decoder -Master include file for C++ library
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -32,14 +32,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_RCTDL_H_INCLUDED
-#define ARM_RCTDL_H_INCLUDED
+#ifndef ARM_OPENCSD_H_INCLUDED
+#define ARM_OPENCSD_H_INCLUDED
 
-/** C/C++ interface types */
-#include "rctdl_if_types.h"
+/** C interface types */
+#include "ocsd_if_types.h"
 #include "trc_pkt_types.h"
 #include "trc_gen_elem_types.h"
-#include "rctdl_version.h"
 
 /* C++ abstract interfaces */
 #include "interfaces/trc_data_raw_in_i.h"
@@ -55,12 +54,13 @@
 
 
 /* protocol base classes and generic elements */
-#include "rctdl_error.h"
-#include "trc_gen_elem.h"
-#include "trc_core_arch_map.h"
+#include "common/ocsd_version.h"
+#include "common/ocsd_error.h"
+#include "common/trc_gen_elem.h"
+#include "common/trc_core_arch_map.h"
 
 /** Implemented Protocol decoders */
-#include "trc_frame_deformatter.h"
+#include "common/trc_frame_deformatter.h"
 
 #include "etmv3/etmv3_decoder.h"
 #include "etmv4/etmv4_decoder.h"
@@ -68,15 +68,15 @@
 #include "stm/stm_decoder.h"
 
 /** C++ library object types */
-#include "rctdl_error_logger.h"
-#include "rctdl_msg_logger.h"
+#include "common/ocsd_error_logger.h"
+#include "common/ocsd_msg_logger.h"
 #include "i_dec/trc_i_decode.h"
 #include "mem_acc/trc_mem_acc.h"
 
 /** The decode tree */
-#include "rctdl_dcd_tree.h"
+#include "common/ocsd_dcd_tree.h"
 
 
-#endif // ARM_RCTDL_H_INCLUDED
+#endif // ARM_OPENCSD_H_INCLUDED
 
-/* End of File rctdl.h */
+/* End of File opencsd.h */

@@ -33,7 +33,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "rctdl_error.h"
+#include "common/ocsd_error.h"
 #include <sstream>
 #include <iomanip>
 

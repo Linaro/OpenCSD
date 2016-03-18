@@ -37,7 +37,7 @@
 #define ARM_TRC_PKT_PROC_ETMV3_H_INCLUDED
 
 #include "trc_pkt_types_etmv3.h"
-#include "trc_pkt_proc_base.h"
+#include "common/trc_pkt_proc_base.h"
 
 class EtmV3PktProcImpl;
 class EtmV3TrcPacket;

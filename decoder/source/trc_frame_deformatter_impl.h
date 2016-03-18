@@ -35,12 +35,12 @@
 #ifndef ARM_TRC_FRAME_DECODER_IMPL_H_INCLUDED
 #define ARM_TRC_FRAME_DECODER_IMPL_H_INCLUDED
 
-#include "rctdl_if_types.h"
-#include "comp_attach_pt_t.h"
+#include "ocsd_if_types.h"
+#include "common/comp_attach_pt_t.h"
 #include "interfaces/trc_data_raw_in_i.h"
 #include "interfaces/trc_data_rawframe_in_i.h"
 #include "interfaces/trc_indexer_src_i.h"
-#include "trc_component.h"
+#include "common/trc_component.h"
 
 #if 0
 #include "blk_pattern_match.h"

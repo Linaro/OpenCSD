@@ -34,7 +34,7 @@
 #ifndef ARM_GEN_ELEM_PRINTER_H_INCLUDED
 #define ARM_GEN_ELEM_PRINTER_H_INCLUDED
 
-#include "rctdl.h"
+#include "opencsd.h"
 #include "item_printer.h"
 
 class TrcGenericElementPrinter : public ItemPrinter, public ITrcGenElemIn

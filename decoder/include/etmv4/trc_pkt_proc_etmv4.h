@@ -37,7 +37,7 @@
 
 
 #include "trc_pkt_types_etmv4.h"
-#include "trc_pkt_proc_base.h"
+#include "common/trc_pkt_proc_base.h"
 
 class EtmV4IPktProcImpl;    /**< ETMv4 I channel packet processor */
 class EtmV4DPktProcImpl;    /**< ETMv4 D channel packet processor */

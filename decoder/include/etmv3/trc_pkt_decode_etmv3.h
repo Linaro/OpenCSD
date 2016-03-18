@@ -35,10 +35,10 @@
 #ifndef ARM_TRC_PKT_DECODE_ETMV3_H_INCLUDED
 #define ARM_TRC_PKT_DECODE_ETMV3_H_INCLUDED
 
-#include "trc_pkt_decode_base.h"
+#include "common/trc_pkt_decode_base.h"
 #include "etmv3/trc_pkt_elem_etmv3.h"
 #include "etmv3/trc_cmp_cfg_etmv3.h"
-#include "trc_gen_elem.h"
+#include "common/trc_gen_elem.h"
 
 
 

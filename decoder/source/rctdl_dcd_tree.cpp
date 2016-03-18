@@ -33,7 +33,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "rctdl_dcd_tree.h"
+#include "common/ocsd_dcd_tree.h"
 #include "mem_acc/trc_mem_acc_mapper.h"
 
 

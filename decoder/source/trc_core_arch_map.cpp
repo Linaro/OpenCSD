@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "trc_core_arch_map.h"
+#include "common/trc_core_arch_map.h"
 
 static struct _ap_map_elements {
     const char *name;

@@ -1,5 +1,5 @@
 /*!
- * \file       rctdl_error.h
+ * \file       ocsd_error.h
  * \brief      Reference CoreSight Trace Decoder : Library Error class 
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
@@ -36,7 +36,7 @@
 #ifndef ARM_RCTDL_ERROR_H_INCLUDED
 #define ARM_RCTDL_ERROR_H_INCLUDED
 
-#include "rctdl_if_types.h"
+#include "ocsd_if_types.h"
 #include <string>
 /** @ingroup rctdl_infrastructure
 @{*/
@@ -113,4 +113,4 @@ inline rctdlError& rctdlError::operator=(const rctdlError &err)
 
 #endif // ARM_RCTDL_ERROR_H_INCLUDED
 
-/* End of File rctdl_error.h */
+/* End of File ocsd_error.h */

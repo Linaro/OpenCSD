@@ -1,6 +1,6 @@
 /*!
- * \file       rctdl_c_api.h
- * \brief      Reference CoreSight Trace Decoder : "C" API
+ * \file       opencsd_c_api.h
+ * \brief      OpenCSD : "C" API
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -32,8 +32,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ARM_RCTDL_C_API_H_INCLUDED
-#define ARM_RCTDL_C_API_H_INCLUDED
+#ifndef ARM_OPENCSD_C_API_H_INCLUDED
+#define ARM_OPENCSD_C_API_H_INCLUDED
 
 /** @defgroup lib_c_api Reference CoreSight Trace Decoder Library : Library "C" API.
     @brief  "C" API for the Reference CoreSight Trace Decoder Library
@@ -47,47 +47,47 @@
 
 #if defined(WIN32)  /* windows bindings */
     /** Building the C-API DLL **/
-    #ifdef _RCTDL_C_API_DLL_EXPORT
+    #ifdef _OCSD_C_API_DLL_EXPORT
         #ifdef __cplusplus
-            #define RCTDL_C_API extern "C" __declspec(dllexport)
+            #define OCSD_C_API extern "C" __declspec(dllexport)
         #else
-            #define RCTDL_C_API __declspec(dllexport)
+            #define OCSD_C_API __declspec(dllexport)
         #endif
     #else   
         /** building or using the static C-API library **/
-        #if defined(_LIB) || defined(RCTDL_USE_STATIC_C_API)
+        #if defined(_LIB) || defined(OCSD_USE_STATIC_C_API)
             #ifdef __cplusplus
-                #define RCTDL_C_API extern "C"
+                #define OCSD_C_API extern "C"
             #else
-                #define RCTDL_C_API
+                #define OCSD_C_API
             #endif
         #else
         /** using the C-API DLL **/
             #ifdef __cplusplus
-                #define RCTDL_C_API extern "C" __declspec(dllimport)
+                #define OCSD_C_API extern "C" __declspec(dllimport)
             #else
-                #define RCTDL_C_API __declspec(dllimport)
+                #define OCSD_C_API __declspec(dllimport)
             #endif
         #endif
     #endif
 #else           /* linux bindings */
     #ifdef __cplusplus
-        #define RCTDL_C_API extern "C"
+        #define OCSD_C_API extern "C"
     #else
-        #define RCTDL_C_API
+        #define OCSD_C_API
     #endif
 #endif
 
-#include "rctdl_c_api_types.h"
+#include "ocsd_c_api_types.h"
 
 /** @name Library Version API
 
 @{*/
 /** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
-RCTDL_C_API uint32_t rctdl_get_version(void);
+OCSD_C_API uint32_t rctdl_get_version(void);
 
 /** Get library version string */
-RCTDL_C_API const char * rctdl_get_version_str(void);
+OCSD_C_API const char * rctdl_get_version_str(void);
 /** @}*/
 
 /** @name Library Decode Tree API
@@ -101,7 +101,7 @@ RCTDL_C_API const char * rctdl_get_version_str(void);
  *
  * @return dcd_tree_handle_t  : Handle to the decode tree. Handle value set to 0 if creation failed.
  */
-RCTDL_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags);
+OCSD_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t src_type, const uint32_t deformatterCfgFlags);
 
 /*!
  * Destroy a decode tree.
@@ -110,7 +110,7 @@ RCTDL_C_API dcd_tree_handle_t rctdl_create_dcd_tree(const rctdl_dcd_tree_src_t s
  *
  * @param handle : Handle for decode tree to destroy.
  */
-RCTDL_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle);
+OCSD_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle);
 
 /*!
  * Input trace data into the decoder. 
@@ -126,7 +126,7 @@ RCTDL_C_API void rctdl_destroy_dcd_tree(const dcd_tree_handle_t handle);
  *
  * @return rctdl_datapath_resp_t  : Datapath response code
  */
-RCTDL_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t handle,
+OCSD_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t handle,
                                             const rctdl_datapath_op_t op,
                                             const rctdl_trc_index_t index,
                                             const uint32_t dataBlockSize,
@@ -147,7 +147,7 @@ RCTDL_C_API rctdl_datapath_resp_t rctdl_dt_process_data(const dcd_tree_handle_t 
  *
  * @return  rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context);
+OCSD_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context);
 
 /*!
  * Create an ETMv4 instruction trace packet processor only for the supplied configuration. 
@@ -160,7 +160,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_set_gen_elem_outfn(const dcd_tree_handle_t hand
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn, const void *p_context);
+OCSD_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn, const void *p_context);
 
 /*!
  * Creates a packet processor + packet decoder pair for the supplied configuration structure.
@@ -171,7 +171,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t 
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *etmv4_cfg);
+OCSD_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *etmv4_cfg);
 
 /*!
  * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
@@ -183,7 +183,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv4i_decoder(const dcd_tree_handle_t h
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context); 
+OCSD_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context); 
 
 
 /*!
@@ -197,7 +197,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t h
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn, const void *p_context);
+OCSD_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn, const void *p_context);
 
 
 /*!
@@ -211,7 +211,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t h
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context); 
+OCSD_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context); 
 
 
 /*!
@@ -225,7 +225,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t ha
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context);
+OCSD_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context);
 
 
 /** TBD : more C API functions to be added here */    
@@ -252,7 +252,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_create_stm_pkt_proc(const dcd_tree_handle_t han
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
+OCSD_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
 
 /*!
  * Add a binary file based memory range accessor to the decode tree.
@@ -271,7 +271,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_mem_acc(const dcd_tree_handle_t han
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
+OCSD_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const rctdl_mem_space_acc_t mem_space, const char *filepath); 
 
 /*!
  * Add a memory buffer based memory range accessor to the decode tree.
@@ -284,7 +284,7 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_binfile_region_mem_acc(const dcd_tree_handl
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length); 
+OCSD_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t address, const rctdl_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length); 
 
 
 /*!
@@ -298,9 +298,9 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_buffer_mem_acc(const dcd_tree_handle_t hand
  * @param p_cb_func : Callback function
  * @param p_context : opaque context pointer value used in callback function.
  *
- * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return OCSD_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context); 
+OCSD_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_vaddr_t en_address, const rctdl_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context); 
 
 /*!
  * Remove a memory accessor by address and memory space.
@@ -309,16 +309,16 @@ RCTDL_C_API rctdl_err_t rctdl_dt_add_callback_mem_acc(const dcd_tree_handle_t ha
  * @param st_address : Start address of memory accessor. 
  * @param mem_space : Memory space(s) covered by the accessor.
  *
- * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return OCSD_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful.
  */
-RCTDL_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space);
+OCSD_C_API rctdl_err_t rctdl_dt_remove_mem_acc(const dcd_tree_handle_t handle, const rctdl_vaddr_t st_address, const rctdl_mem_space_acc_t mem_space);
 
 /*
  *  Print the mapped memory accessor ranges to the configured logger.
  *
  * @param handle : Handle to decode tree.
  */
-RCTDL_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
+OCSD_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
 
 /** @}*/  
 
@@ -340,7 +340,7 @@ RCTDL_C_API void rctdl_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
  */
-RCTDL_C_API rctdl_err_t rctdl_def_errlog_init(const rctdl_err_severity_t verbosity, const int create_output_logger);
+OCSD_C_API rctdl_err_t rctdl_def_errlog_init(const rctdl_err_severity_t verbosity, const int create_output_logger);
 
 /*!
  * Configure the output logger. Choose STDOUT, STDERR and/or log to file.
@@ -349,9 +349,9 @@ RCTDL_C_API rctdl_err_t rctdl_def_errlog_init(const rctdl_err_severity_t verbosi
  * @param output_flags : OR combination of required  C_API_MSGLOGOUT_FLG_* flags.
  * @param *log_file_name : optional filename if logging to file. Set to NULL if not needed.
  *
- * @return RCTDL_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
+ * @return OCSD_C_API rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
  */
-RCTDL_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, const char *log_file_name);
+OCSD_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, const char *log_file_name);
 
 /*!
  * Print a message via the library output printer - if enabled.
@@ -359,7 +359,7 @@ RCTDL_C_API rctdl_err_t rctdl_def_errlog_config_output(const int output_flags, c
  * @param *msg : Message to output.
  *
  */
-RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg);
+OCSD_C_API void rctdl_def_errlog_msgout(const char *msg);
 
 
 /** @}*/
@@ -380,7 +380,7 @@ RCTDL_C_API void rctdl_def_errlog_msgout(const char *msg);
  *
  * @return  rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
  */
-RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, const void *p_pkt, char *buffer, const int buffer_size);
+OCSD_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol, const void *p_pkt, char *buffer, const int buffer_size);
 
 /*!
  * Get a string representation of the generic trace element.
@@ -391,13 +391,13 @@ RCTDL_C_API rctdl_err_t rctdl_pkt_str(const rctdl_trace_protocol_t pkt_protocol,
  *
  * @return rctdl_err_t  : Library error code -  RCDTL_OK if successful. 
  */
-RCTDL_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt, char *buffer, const int buffer_size);
+OCSD_C_API rctdl_err_t rctdl_gen_elem_str(const rctdl_generic_trace_elem *p_pkt, char *buffer, const int buffer_size);
 
 /** @}*/
 
 /** @}*/
 
-#endif // ARM_RCTDL_C_API_H_INCLUDED
+#endif // ARM_OPENCSD_C_API_H_INCLUDED
 
 
-/* End of File rctdl_c_api.h */
+/* End of File opencsd_c_api.h */

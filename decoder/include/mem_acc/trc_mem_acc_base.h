@@ -35,7 +35,7 @@
 #ifndef ARM_TRC_MEM_ACC_BASE_H_INCLUDED
 #define ARM_TRC_MEM_ACC_BASE_H_INCLUDED
 
-#include "rctdl_if_types.h"
+#include "ocsd_if_types.h"
 #include <string>
 
 /*!

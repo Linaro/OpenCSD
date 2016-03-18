@@ -38,7 +38,7 @@
 #define ARM_TRC_INDEXER_SRC_I_H_INCLUDED
 
 #include <vector>
-#include "rctdl_if_types.h"
+#include "ocsd_if_types.h"
 
 /*!
  * @class ITrcSrcIndexCreator   

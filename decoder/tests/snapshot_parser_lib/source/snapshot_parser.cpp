@@ -47,7 +47,7 @@ using namespace std;
 using namespace Util;
 using namespace Parser;
 
-#include "rctdl.h"
+#include "opencsd.h"
 
 /*************************************************************************
  * Note, this file handles the parsring of the general (device specific) 

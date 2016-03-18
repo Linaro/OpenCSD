@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "trc_gen_elem.h"
+#include "common/trc_gen_elem.h"
 
 #include <string>
 #include <sstream>

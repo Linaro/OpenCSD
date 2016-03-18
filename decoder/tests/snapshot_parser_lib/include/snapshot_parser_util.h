@@ -42,7 +42,7 @@
 #include <cstdlib>
 #include <cstdint>
 
-#include "rctdl_error.h"
+#include "common/ocsd_error.h"
 
 namespace Util
 {

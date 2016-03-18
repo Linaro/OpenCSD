@@ -1,6 +1,6 @@
 /*!
- * \file       rctdl_if_types.h
- * \brief      Reference CoreSight Trace Decoder : Standard Types used in the library interfaces.
+ * \file       ocsd_if_types.h
+ * \brief      OpenCSD : Standard Types used in the library interfaces.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -32,8 +32,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_RCTDL_IF_TYPES_H_INCLUDED
-#define ARM_RCTDL_IF_TYPES_H_INCLUDED
+#ifndef ARM_OCSD_IF_TYPES_H_INCLUDED
+#define ARM_OCSD_IF_TYPES_H_INCLUDED
 
 #include <stdint.h>
 
@@ -474,6 +474,6 @@ typedef uint32_t  (* Fn_MemAcc_CB)(const void *p_context, const rctdl_vaddr_t ad
 
 
 /** @}*/
-#endif // ARM_RCTDL_IF_TYPES_H_INCLUDED
+#endif // ARM_OCSD_IF_TYPES_H_INCLUDED
 
-/* End of File rctdl_if_types.h */
+/* End of File ocsd_if_types.h */

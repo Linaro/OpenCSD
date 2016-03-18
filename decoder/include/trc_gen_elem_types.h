@@ -1,6 +1,6 @@
 /*!
  * \file       trc_gen_elem_types.h
- * \brief      Reference CoreSight Trace Decoder : Decoder Output Generic Element types.
+ * \brief      OpenCSD : Decoder Output Generic Element types.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -41,7 +41,7 @@
   * 
 @{*/
 
-#include "rctdl_if_types.h"
+#include "ocsd_if_types.h"
 
 /**  Enum for generic element types */
 typedef enum _rctdl_gen_trc_elem_t 

@@ -35,7 +35,7 @@
 #ifndef ARM_TRCDATA_RAW_IN_I_H_INCLUDED
 #define ARM_TRCDATA_RAW_IN_I_H_INCLUDED
 
-#include "rctdl_if_types.h"
+#include "ocsd_if_types.h"
 
 /** @class ITrcDataIn
   * 

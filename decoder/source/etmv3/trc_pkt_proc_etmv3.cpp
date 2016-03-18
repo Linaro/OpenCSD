@@ -35,7 +35,7 @@
 
 #include "etmv3/trc_pkt_proc_etmv3.h"
 #include "trc_pkt_proc_etmv3_impl.h"
-#include "rctdl_error.h"
+#include "common/ocsd_error.h"
 
 #ifdef __GNUC__
 // G++ doesn't like the ## pasting

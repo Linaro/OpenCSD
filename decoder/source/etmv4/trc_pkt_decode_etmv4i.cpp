@@ -36,7 +36,7 @@
 #include "etmv4/trc_pkt_decode_etmv4i.h"
 
 #include "trc_etmv4_stack_elem.h"
-#include "trc_gen_elem.h"
+#include "common/trc_gen_elem.h"
 
 
 #define DCD_NAME "DCD_ETMV4"

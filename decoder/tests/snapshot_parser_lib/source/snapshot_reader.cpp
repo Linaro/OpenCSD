@@ -36,7 +36,7 @@
 #include "snapshot_parser.h"
 #include "device_parser.h"
 
-#include "rctdl.h"
+#include "opencsd.h"
 
 #include <fstream>
 #include <iterator>

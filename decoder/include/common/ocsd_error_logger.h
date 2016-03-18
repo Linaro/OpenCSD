@@ -1,5 +1,5 @@
 /*!
- * \file       rctdl_error_logger.h
+ * \file       ocsd_error_logger.h
  * \brief      Reference CoreSight Trace Decoder : Library error logger.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
@@ -40,8 +40,8 @@
 #include <fstream>
 
 #include "interfaces/trc_error_log_i.h"
-#include "rctdl_error.h"
-#include "rctdl_msg_logger.h"
+#include "ocsd_error.h"
+#include "ocsd_msg_logger.h"
 
 class rctdlDefaultErrorLogger : public ITraceErrorLog
 {
@@ -86,4 +86,4 @@ private:
 
 #endif // ARM_RCTDL_ERROR_LOGGER_H_INCLUDED
 
-/* End of File rctdl_error_logger.h */
+/* End of File ocsd_error_logger.h */

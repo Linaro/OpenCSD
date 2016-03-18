@@ -1,6 +1,6 @@
 /*!
- * \file       rctdl_c_api_types.h
- * \brief      Reference CoreSight Trace Decoder : Trace Decoder "C" API types.
+ * \file       ocsd_c_api_types.h
+ * \brief      OpenCSD : Trace Decoder "C" API types.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -32,11 +32,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_RCTDL_C_API_TYPES_H_INCLUDED
-#define ARM_RCTDL_C_API_TYPES_H_INCLUDED
+#ifndef ARM_OCSD_C_API_TYPES_H_INCLUDED
+#define ARM_OCSD_C_API_TYPES_H_INCLUDED
 
 /* select the library types that are C compatible - the interface data types */
-#include "rctdl_if_types.h"
+#include "ocsd_if_types.h"
 #include "trc_gen_elem_types.h"
 #include "trc_pkt_types.h"
 
@@ -116,6 +116,6 @@ typedef struct _file_mem_region {
 
 /** @}*/
 
-#endif // ARM_RCTDL_C_API_TYPES_H_INCLUDED
+#endif // ARM_OCSD_C_API_TYPES_H_INCLUDED
 
-/* End of File rctdl_c_api_types.h */
+/* End of File ocsd_c_api_types.h */

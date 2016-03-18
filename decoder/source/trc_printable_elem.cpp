@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "trc_printable_elem.h"
+#include "common/trc_printable_elem.h"
 #include <cassert>
 #include <cstring>
 

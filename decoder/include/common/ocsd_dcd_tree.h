@@ -1,5 +1,5 @@
 /*!
- * \file       rctdl_dcd_tree.h
+ * \file       ocsd_dcd_tree.h
  * \brief      Reference CoreSight Trace Decoder : Trace Decode Tree.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
@@ -39,7 +39,7 @@
 #include <vector>
 #include <list>
 
-#include "rctdl.h"
+#include "opencsd.h"
 
 
 /** @defgroup dcd_tree Reference CoreSight Trace Decoder Library : Trace Decode Tree.
@@ -50,7 +50,7 @@
 
 @{*/
 
-#include "rctdl_dcd_tree_elem.h"
+#include "ocsd_dcd_tree_elem.h"
 
 /*!
  * @class DecodeTree
@@ -189,4 +189,4 @@ private:
 
 #endif // ARM_RCTDL_DCD_TREE_H_INCLUDED
 
-/* End of File rctdl_dcd_tree.h */
+/* End of File ocsd_dcd_tree.h */

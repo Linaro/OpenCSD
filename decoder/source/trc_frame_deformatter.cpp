@@ -33,7 +33,7 @@
  */ 
 #include <cstring>
 
-#include "trc_frame_deformatter.h"
+#include "common/trc_frame_deformatter.h"
 #include "trc_frame_deformatter_impl.h"
 
 /***************************************************************/

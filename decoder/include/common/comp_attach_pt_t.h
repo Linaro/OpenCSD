@@ -36,7 +36,7 @@
 #define ARM_COMP_ATTACH_PT_T_H_INCLUDED
 
 #include <vector>
-#include "rctdl_if_types.h"
+#include "ocsd_if_types.h"
 
 /** @defgroup rctdl_infrastructure  Reference CoreSight Trace Decoder Library : Library Component Infrastructure
 

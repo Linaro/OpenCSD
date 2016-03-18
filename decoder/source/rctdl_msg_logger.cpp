@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "rctdl_msg_logger.h"
+#include "common/ocsd_msg_logger.h"
 
 #include <iostream>
 #include <sstream>

@@ -41,7 +41,7 @@
 #include <memory>
 #include <cstdio>
 
-#include "rctdl_error.h"
+#include "common/ocsd_error.h"
 
 using namespace std;
 

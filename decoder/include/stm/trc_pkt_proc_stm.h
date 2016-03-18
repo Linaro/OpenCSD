@@ -38,7 +38,7 @@
 #include <vector>
 
 #include "trc_pkt_types_stm.h"
-#include "trc_pkt_proc_base.h"
+#include "common/trc_pkt_proc_base.h"
 #include "trc_pkt_elem_stm.h"
 #include "trc_cmp_cfg_stm.h"
 

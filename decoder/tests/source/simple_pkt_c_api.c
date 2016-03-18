@@ -47,7 +47,7 @@
 #include <stdlib.h>
 
 /* include the C-API library header */
-#include "c_api/rctdl_c_api.h"
+#include "c_api/opencsd_c_api.h"
 
 /* path to juno snapshot, relative to tests/bin/<plat>/<dbg|rel> build output dir */
 #ifdef _WIN32

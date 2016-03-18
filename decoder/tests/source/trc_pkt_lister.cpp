@@ -41,7 +41,7 @@
 #include <sstream>
 #include <cstring>
 
-#include "rctdl.h"              // the library
+#include "opencsd.h"              // the library
 #include "trace_snapshots.h"    // the snapshot reading test library
 
 // include some printers for packet elements

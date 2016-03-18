@@ -37,7 +37,7 @@
 #define ARM_TRC_PKT_PROC_PTM_H_INCLUDED
 
 #include "trc_pkt_types_ptm.h"
-#include "trc_pkt_proc_base.h"
+#include "common/trc_pkt_proc_base.h"
 #include "trc_pkt_elem_ptm.h"
 #include "trc_cmp_cfg_ptm.h"
 

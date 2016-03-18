@@ -38,7 +38,7 @@
 #define ARM_TRC_PKT_ELEM_PTM_H_INCLUDED
 
 #include "trc_pkt_types_ptm.h"
-#include "trc_printable_elem.h"
+#include "common/trc_printable_elem.h"
 
 /** @addtogroup trc_pkts
 @{*/

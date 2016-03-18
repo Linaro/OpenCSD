@@ -37,7 +37,7 @@
 #define ARM_TRC_PKT_ELEM_ETMV4I_H_INCLUDED
 
 #include "trc_pkt_types_etmv4.h"
-#include "trc_printable_elem.h"
+#include "common/trc_printable_elem.h"
 
 /** @addtogroup trc_pkts
 @{*/
