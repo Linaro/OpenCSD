@@ -37,7 +37,7 @@
  *
  * Simple test program to print packets from a single trace source stream.
  * Hard coded configuration based on the Juno r1-1 test snapshot for ETMv4 and
- * STM, TC2 test snapshot for ETMv3
+ * STM, TC2 test snapshot for ETMv3, PTM
  *
  */
 
@@ -74,7 +74,7 @@ file_mem_region_t region_list[4];
 static ocsd_etmv4_cfg trace_config;
 static ocsd_etmv3_cfg trace_config_etmv3;
 static ocsd_stm_cfg trace_config_stm;
-
+static ocsd_ptm_cfg trace_config_ptm;
 
 /* buffer to handle a packet string */
 #define PACKET_STR_LEN 1024
@@ -149,6 +149,11 @@ static void process_cmd_line(int argc, char *argv[])
         else if(strcmp(argv[idx],"-etmv3") == 0)
         {
             test_protocol =  OCSD_PROTOCOL_ETMV3;
+            default_path_to_snapshot = tc2_snapshot;
+        }
+        else if(strcmp(argv[idx],"-ptm") == 0)
+        {
+            test_protocol =  OCSD_PROTOCOL_PTM;
             default_path_to_snapshot = tc2_snapshot;
         }
         else if(strcmp(argv[idx],"-stm") == 0)
@@ -560,6 +565,122 @@ static ocsd_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
 }
 
 /************************************************************************/
+/*** PTM ***/
+/************************************************************************/
+/* hard coded values from snapshot .ini files */
+void set_config_struct_ptm()
+{
+    trace_config_ptm.arch_ver = ARCH_V7;
+    trace_config_ptm.core_prof = profile_CortexA;
+    trace_config_ptm.reg_ccer  = 0x34C01AC2;
+    trace_config_ptm.reg_ctrl  = 0x10001000;
+    trace_config_ptm.reg_idr  = 0x411CF312;
+    trace_config_ptm.reg_trc_id  = 0x013;
+    if(test_trc_id_override != 0)
+    {
+        trace_config_ptm.reg_trc_id = (uint32_t)test_trc_id_override;
+    }
+}
+
+ocsd_datapath_resp_t ptm_packet_handler(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_ptm_pkt *p_packet_in)
+{
+    return packet_handler(op,index_sop,(const void *)p_packet_in);
+}
+
+void ptm_packet_monitor(  const void *p_context,
+                              const ocsd_datapath_op_t op, 
+                              const ocsd_trc_index_t index_sop, 
+                              const ocsd_ptm_pkt *p_packet_in,
+                              const uint32_t size,
+                              const uint8_t *p_data)
+{
+    packet_monitor(op,index_sop,(void *)p_packet_in,size,p_data);
+}
+
+static ocsd_err_t create_decoder_ptm(dcd_tree_handle_t dcd_tree_h)
+{
+    ocsd_err_t ret = OCSD_OK;
+    char mem_file_path[512];
+    int i;
+    uint32_t i0adjust = 0x100;
+
+    /* populate the PTM configuration structure */
+    set_config_struct_ptm();
+
+    if(op == TEST_PKT_PRINT) /* packet printing only */
+    {
+        /* Create a packet processor on the decode tree for the PTM  configuration we have. 
+            We need to supply the configuration, and a packet handling callback.
+        */
+        ret = ocsd_dt_create_ptm_pkt_proc(dcd_tree_h,&trace_config_ptm,&ptm_packet_handler,0);
+    }
+    else
+    {
+        /* Full decode - need decoder, and memory dump */
+
+        /* create the packet decoder and packet processor pair */
+        ret = ocsd_dt_create_ptm_decoder(dcd_tree_h,&trace_config_ptm);
+        if(ret == OCSD_OK)
+        {
+            if((op != TEST_PKT_DECODEONLY) && (ret == OCSD_OK))
+            {
+                    /* print the packets as well as the decode. */
+                ret = ocsd_dt_attach_ptm_pkt_mon(dcd_tree_h, (uint8_t)(trace_config_ptm.reg_trc_id & 0xFF), ptm_packet_monitor,0);
+            }
+        }
+
+        /* trace data file path */
+        strcpy(mem_file_path,default_path_to_snapshot);
+        strcat(mem_file_path,memory_dump_filename);
+
+        if(ret == OCSD_OK)
+        {
+            if(using_mem_acc_cb)
+            {
+                ret = create_mem_acc_cb(dcd_tree_h,mem_file_path);
+            }
+            else
+            {
+                if(use_region_file)
+                {
+                    dump_file = fopen(mem_file_path,"rb");
+                    if(dump_file != NULL)
+                    {
+                        fseek(dump_file,0,SEEK_END);
+                        mem_file_size = ftell(dump_file);
+                        fclose(dump_file);
+                        
+
+                        /* populate the region list - split existing file into four regions */
+                        for(i = 0; i < 4; i++)
+                        {
+                            if(i != 0)
+                                i0adjust = 0;
+                            region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4) + i0adjust;
+                            region_list[i].region_size = (mem_file_size/4) - i0adjust;
+                            region_list[i].file_offset = (i * mem_file_size/4) +  i0adjust;
+                        }
+
+                        /* create a memory file accessor - full binary file */
+                        ret = ocsd_dt_add_binfile_region_mem_acc(dcd_tree_h,&region_list[0],4,OCSD_MEM_SPACE_ANY,mem_file_path);
+
+                    }
+                    else 
+                        ret  = OCSD_ERR_MEM_ACC_FILE_NOT_FOUND;
+                }
+                else
+                {
+                    /* create a memory file accessor - full binary file */
+                    ret = ocsd_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,OCSD_MEM_SPACE_ANY,mem_file_path);
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+
+/************************************************************************/
 /*** STM ***/
 /************************************************************************/
 
@@ -665,6 +786,10 @@ static ocsd_err_t create_decoder(dcd_tree_handle_t dcd_tree_h)
 
     case OCSD_PROTOCOL_STM:
         err = create_decoder_stm(dcd_tree_h);
+        break;
+
+    case OCSD_PROTOCOL_PTM:
+        err = create_decoder_ptm(dcd_tree_h);
         break;
 
     default:

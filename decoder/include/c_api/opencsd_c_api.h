@@ -90,6 +90,8 @@ OCSD_C_API uint32_t ocsd_get_version(void);
 OCSD_C_API const char * ocsd_get_version_str(void);
 /** @}*/
 
+/*---------------------- Trace Decode Tree ----------------------------------------------------------------------------------*/
+
 /** @name Library Decode Tree API
 @{*/
 
@@ -133,6 +135,9 @@ OCSD_C_API ocsd_datapath_resp_t ocsd_dt_process_data(const dcd_tree_handle_t han
                                             const uint8_t *pDataBlock,
                                             uint32_t *numBytesProcessed);
 
+
+/*---------------------- Generic Trace Element Output  --------------------------------------------------------------*/
+
 /*!
  * Set the trace element output callback function. 
  *
@@ -149,6 +154,7 @@ OCSD_C_API ocsd_datapath_resp_t ocsd_dt_process_data(const dcd_tree_handle_t han
  */
 OCSD_C_API ocsd_err_t ocsd_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context);
 
+/*---------------------- ETMv4 Trace ----------------------------------------------------------------------------------*/
 /*!
  * Create an ETMv4 instruction trace packet processor only for the supplied configuration. 
  * Must supply an output callback function which handles the etmv4 packet types, to attach to the packet processor.
@@ -185,7 +191,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv4i_decoder(const dcd_tree_handle_t hand
  */
 OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context); 
 
-
+/*---------------------- ETMv3 trace ----------------------------------------------------------------------------------*/
 /*!
  * Create an ETMv3  trace packet processor only for the supplied configuration. 
  * Must supply an output callback function which handles the etmv3 packet types, to attach to the packet processor.
@@ -213,7 +219,45 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t hand
  */
 OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context); 
 
+/*---------------------- PTM Trace ----------------------------------------------------------------------------------*/
+/*!
+ * Create an PTM instruction trace packet processor only for the supplied configuration. 
+ * Must supply an output callback function which handles the ptm packet types, to attach to the packet processor.
+ *
+ * @param handle : handle a decode tree to create the packet processsor.
+ * @param *ptm_cfg : pointer to valid Ptm configuration structure.
+ * @param pPktFn : pointer to a packet handling callback function.
+ * @param p_context : opaque context pointer value used in callback function..
+ *
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_pkt_proc(const dcd_tree_handle_t handle, const void *ptm_cfg, FnPtmPacketDataIn pPktFn, const void *p_context);
 
+/*!
+ * Creates a packet processor + packet decoder pair for the supplied configuration structure.
+ * Uses the output function set in ocsd_dt_set_gen_elem_outfn() as the output sink.
+ *
+ * @param handle : Handle to decode tree.
+ * @param *ptm_cfg : pointer to valid Ptm configuration structure.
+ *
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_decoder(const dcd_tree_handle_t handle, const void *ptm_cfg);
+
+/*!
+ * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
+ *
+ * @param handle : Handle to decode tree.
+ * @param trc_chan_id : CoreSight Trace ID for packet processor 
+ * @param pPktFn : Function to attach to monitor point.
+ * @param p_context : opaque context pointer value used in callback function.
+ *
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+OCSD_C_API ocsd_err_t ocsd_dt_attach_ptm_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnPtmPktMonDataIn pPktFn, const void *p_context); 
+
+
+/*---------------------- STM Trace ----------------------------------------------------------------------------------*/
 /*!
  * Create an STM  trace packet processor only for the supplied configuration. 
  * Must supply an output callback function which handles the stm packet types, to attach to the packet processor.
@@ -231,7 +275,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle
 /** TBD : more C API functions to be added here */    
     
 /** @}*/
-
+/*---------------------- Memory Access for traced opcodes ----------------------------------------------------------------------------------*/
 /** @name Library Memory Accessor configuration on decode tree.
     @brief Configure the memory regions available for decode.
     
@@ -330,6 +374,7 @@ OCSD_C_API void ocsd_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
 
 @{*/
 
+/*---------------------- Library Logging and debug ----------------------------------------------------------------------------------*/
 /*!
  * Initialise the library error logger. 
  *

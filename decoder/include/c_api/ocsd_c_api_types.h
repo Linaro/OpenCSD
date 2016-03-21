@@ -95,6 +95,19 @@ typedef void (* FnEtmv3PktMonDataIn)(   const void *p_context,
                                         const uint32_t size,
                                         const uint8_t *p_data);
 
+
+/** function pointer type for PTM packet processor output, packet analyser/decoder input */
+typedef ocsd_datapath_resp_t (* FnPtmPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_ptm_pkt *p_packet_in);
+
+/** function pointer type for PTM packet processor monitor output, raw packet monitor / display input  */
+typedef void (* FnPtmPktMonDataIn)(     const void *p_context, 
+                                        const ocsd_datapath_op_t op, 
+                                        const ocsd_trc_index_t index_sop, 
+                                        const ocsd_ptm_pkt *p_packet_in,
+                                        const uint32_t size,
+                                        const uint8_t *p_data);
+
+
 /** function pointer type for STM packet processor output, packet analyser/decoder input */
 typedef ocsd_datapath_resp_t (* FnStmPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_stm_pkt *p_packet_in);
 

@@ -109,6 +109,45 @@ private:
     const void *m_p_cb_context;
 };
 
+
+/************************************************************************/
+/*** PTM ***/
+/************************************************************************/
+
+class PtmCBObj : public IPktDataIn<PtmTrcPacket>, public TraceElemCBBase
+{
+public:
+    PtmCBObj(FnPtmPacketDataIn pCBFn, const void *p_context);
+    virtual ~PtmCBObj() {};
+    
+    virtual ocsd_datapath_resp_t PacketDataIn( const ocsd_datapath_op_t op,
+                                                const ocsd_trc_index_t index_sop,
+                                                const PtmTrcPacket *p_packet_in);
+
+private:
+
+    FnPtmPacketDataIn m_c_api_cb_fn;
+    const void *m_p_cb_context;
+};
+
+class PtmPktMonCBObj : public IPktRawDataMon<PtmTrcPacket>, public TraceElemCBBase
+{
+public:
+    PtmPktMonCBObj(FnPtmPktMonDataIn pCBFn, const void *p_context);
+    virtual ~PtmPktMonCBObj() {};
+    
+    virtual void RawPacketDataMon( const ocsd_datapath_op_t op,
+                                   const ocsd_trc_index_t index_sop,
+                                   const PtmTrcPacket *p_packet_in,
+                                   const uint32_t size,
+                                   const uint8_t *p_data);
+                                   
+private:
+    FnPtmPktMonDataIn m_c_api_cb_fn;
+    const void *m_p_cb_context;
+};
+
+
 /************************************************************************/
 /*** STM ***/
 /************************************************************************/

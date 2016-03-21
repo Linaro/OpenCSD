@@ -280,6 +280,87 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handl
     return err;
 }
 
+
+OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_pkt_proc(const dcd_tree_handle_t handle, const void *ptm_cfg, FnPtmPacketDataIn pPktFn, const void *p_context)
+{
+    ocsd_err_t err = OCSD_OK;
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        PtmConfig cfg;
+        cfg = static_cast<const ocsd_ptm_cfg *>(ptm_cfg);
+        PtmCBObj *p_CBObj = new (std::nothrow) PtmCBObj(pPktFn, p_context);
+
+        if(p_CBObj == 0)
+            err =  OCSD_ERR_MEM;
+
+        if(err == OCSD_OK)
+            err = ((DecodeTree *)handle)->createPTMPktProcessor(&cfg,p_CBObj);
+
+        if(err == OCSD_OK)
+        {
+            std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
+            it = s_data_map.find(handle);
+            if(it != s_data_map.end())
+                it->second->cb_objs.push_back(p_CBObj);
+        }
+        else
+            delete p_CBObj;
+    }
+    else
+        err = OCSD_ERR_INVALID_PARAM_VAL;
+    return err;
+}
+
+OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_decoder(const dcd_tree_handle_t handle, const void *ptm_cfg)
+{
+    ocsd_err_t err = OCSD_OK;
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        PtmConfig cfg;
+        cfg = static_cast<const ocsd_ptm_cfg *>(ptm_cfg);
+        
+        // no need for a spcific CB object here - standard generic elements output used.
+        if(err == OCSD_OK)
+            err = ((DecodeTree *)handle)->createPTMDecoder(&cfg);
+    }
+    else
+        err = OCSD_ERR_INVALID_PARAM_VAL;
+    return err;
+}
+
+OCSD_C_API ocsd_err_t ocsd_dt_attach_ptm_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnPtmPktMonDataIn pPktFn, const void *p_context)
+{
+    ocsd_err_t err = OCSD_OK;
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+        DecodeTreeElement *pDTElem = pDT->getDecoderElement(trc_chan_id);
+        if((pDTElem != 0) && (pDTElem->getProtocol() == OCSD_PROTOCOL_PTM))
+        {
+            PtmPktMonCBObj *pktMonObj = new (std::nothrow) PtmPktMonCBObj(pPktFn, p_context);
+            if(pktMonObj != 0)
+            {
+                pDTElem->getPtmPktProc()->getRawPacketMonAttachPt()->attach(pktMonObj);
+
+                // save object pointer for destruction later.
+                std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
+                it = s_data_map.find(handle);
+                if(it != s_data_map.end())
+                    it->second->cb_objs.push_back(pktMonObj);
+            }
+            else
+                err = OCSD_ERR_MEM;
+        }
+        else
+            err = OCSD_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
+    }
+    else
+        err = OCSD_ERR_INVALID_PARAM_VAL;
+    return err;
+
+}
+
+
 OCSD_C_API ocsd_err_t ocsd_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context)
 {
     ocsd_err_t err = OCSD_OK;
@@ -374,6 +455,10 @@ OCSD_C_API ocsd_err_t ocsd_pkt_str(const ocsd_trace_protocol_t pkt_protocol, con
 
     case OCSD_PROTOCOL_STM:
         trcPrintElemToString<StmTrcPacket,ocsd_stm_pkt>(static_cast<const ocsd_stm_pkt *>(p_pkt), pktStr);
+        break;
+
+    case OCSD_PROTOCOL_PTM:
+        trcPrintElemToString<PtmTrcPacket,ocsd_ptm_pkt>(static_cast<const ocsd_ptm_pkt *>(p_pkt), pktStr);
         break;
 
     default:
@@ -653,6 +738,37 @@ EtmV3PktMonCBObj::EtmV3PktMonCBObj(FnEtmv3PktMonDataIn pCBFn, const void *p_cont
 void EtmV3PktMonCBObj::RawPacketDataMon( const ocsd_datapath_op_t op,
                                    const ocsd_trc_index_t index_sop,
                                    const EtmV3TrcPacket *p_packet_in,
+                                   const uint32_t size,
+                                   const uint8_t *p_data)
+{
+    return m_c_api_cb_fn(m_p_cb_context, op, index_sop, p_packet_in, size, p_data);
+}
+
+
+/****************** Ptm packet processor output callback function  ************/
+PtmCBObj::PtmCBObj(FnPtmPacketDataIn pCBFn, const void *p_context) :
+    m_c_api_cb_fn(pCBFn),
+    m_p_cb_context(p_context)
+{
+}
+
+ocsd_datapath_resp_t PtmCBObj::PacketDataIn( const ocsd_datapath_op_t op,
+                                                 const ocsd_trc_index_t index_sop,
+                                                 const PtmTrcPacket *p_packet_in)
+{
+    return m_c_api_cb_fn(m_p_cb_context, op,index_sop,p_packet_in);
+}
+
+/****************** Ptm packet processor monitor callback function  ***********/
+PtmPktMonCBObj::PtmPktMonCBObj(FnPtmPktMonDataIn pCBFn, const void *p_context) :
+    m_c_api_cb_fn(pCBFn),
+    m_p_cb_context(p_context)
+{
+}
+    
+void PtmPktMonCBObj::RawPacketDataMon( const ocsd_datapath_op_t op,
+                                   const ocsd_trc_index_t index_sop,
+                                   const PtmTrcPacket *p_packet_in,
                                    const uint32_t size,
                                    const uint8_t *p_data)
 {
