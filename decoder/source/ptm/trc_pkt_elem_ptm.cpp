@@ -46,6 +46,12 @@ PtmTrcPacket::~PtmTrcPacket()
 {
 }
 
+PtmTrcPacket &PtmTrcPacket::operator =(const ocsd_ptm_pkt* p_pkt)
+{
+    *dynamic_cast<ocsd_ptm_pkt *>(this) = *p_pkt;
+    return *this;        
+}
+
 void PtmTrcPacket::Clear()
 {
     err_type = PTM_PKT_NOERROR;
