@@ -213,7 +213,7 @@ Trace Decoding with Perf Record
 
 Before working with custom traces it is suggested to use a trace bundle that
 is known to be working properly.  A sample bundle has been made available
-[here][2].  Trace bundles can be extracted anywhere and have no dependencies on
+here [2].  Trace bundles can be extracted anywhere and have no dependencies on
 where the perf tools and openCSD library have been compiled. 
 
     linaro@t430:~/linaro/coresight/bkk16/$ mkdir feb24
@@ -331,8 +331,8 @@ Best regards,
 *The Linaro CoreSight Team*
 
 --------------------------------------
-[1] https://github.com/Linaro/OpenCSD "OpenCSD Github"
+[1]: https://github.com/Linaro/OpenCSD "OpenCSD Github"
 
-[2] wget http://people.linaro.org/~mathieu.poirier/openCSD/uname.v4.user.feb24.tgz 
+[2]: wget http://people.linaro.org/~mathieu.poirier/openCSD/uname.v4.user.feb24.tgz 
  
-[3] Get in touch with us if you know a way to change this.
+[3]: Get in touch with us if you know a way to change this.

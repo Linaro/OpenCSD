@@ -61,8 +61,8 @@ See [HOWTO.md](@ref howto_perf) for details.
 Version and Modification Information
 ====================================
 
-Version 0.001:  Library development - tested with `perf` tools integration - BKK16, 8th March 2016
-Version 0.002:  Library development - added in PTM decoder support. Restructure header dir, replaced ARM rctdl prefix with opencsd/ocsd.
+- _Version 0.001_:  Library development - tested with `perf` tools integration - BKK16, 8th March 2016
+- _Version 0.002_:  Library development - added in PTM decoder support. Restructure header dir, replaced ARM rctdl prefix with opencsd/ocsd.
 
 
 Licence Information
