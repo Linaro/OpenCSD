@@ -194,7 +194,7 @@ directory.  After that a new perf tool binary can be compiled:
 
     linaro@t430:~/linaro/coresight/bkk16/$ cd perf-opencsd-4.5-rc6-bkk16
     linaro@t430:~/linaro/coresight/bkk16/perf-opencsd-4.5-rc6-bkk16/$ export CSTRACE_PATH=~/linaro/coresight/bkk16/opencsd-bkk16/decoder
-    linaro@t430:~/linaro/coresight/bkk16/perf-opencsd-4.5-rc6-bkk16/$ make -C tools/perf ARCH=arm DEBUG=1 NO_LIBPERL=1 
+    linaro@t430:~/linaro/coresight/bkk16/perf-opencsd-4.5-rc6-bkk16/$ make -C tools/perf
     ...
     ...
     linaro@t430:~/linaro/coresight/bkk16/perf-opencsd-4.5-rc6-bkk16/$ ls -l tools/perf/perf
@@ -204,6 +204,10 @@ Since the openCSD library is not part of the pert tools, an environment
 variable telling the build scripts where to find the library is needed.  If
 the `CSTRACE_PATH` variable is not defined the compilation will still be
 successful, but handling of CoreSight trace data won't be supported.
+
+When compiling Perf, some perl libraries may not be present on the host system.
+Adding the "NO_LIBPERL=1" option will prevent the build script from complaining
+too much.
 
 At the end of the compilation a new perf binary is available in `tools/perf/`
 
