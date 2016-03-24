@@ -230,13 +230,13 @@ where the perf tools and openCSD library have been compiled.
     -rw------- 1 linaro linaro   78016 Feb 24 12:21 perf.data
     -rw-rw-r-- 1 linaro linaro 1245881 Feb 24 12:25 uname.v4.user.feb24.tgz 
 
-Perf is expecting files related to the trace capture (`perf.data`) to be located 
+Perf is expecting files related to the trace capture (`perf.data`) to be located
 under `~/.debug` [3].  This example will remove the current `~/.debug` directory
 to be sure everything is clean.  
 
     linaro@t430:~/linaro/coresight/bkk16/feb24/$ rm -rf ~/.debug 
     linaro@t430:~/linaro/coresight/bkk16/feb24/$ cp -dpR .debug ~/
-    linaro@t430:~/linaro/coresight/bkk16/feb24/$ export LD_LIBRARY_PATH=~/linaro/coresight/bkk16/perf-opencsd-4.5-rc6-bkk16/tools/util/cs-etm-decoder/lib
+    linaro@t430:~/linaro/coresight/bkk16/feb24/$ export LD_LIBRARY_PATH=~/linaro/coresight/bkk16/perf-opencsd-4.5-rc6-bkk16/tools/perf/util/cs-etm-decoder/lib
     linaro@t430:~/linaro/coresight/bkk16/feb24/$ ../perf-opencsd-4.5-rc6-bkk16/tools/perf/perf report --stdio 
 
     # To display the perf.data header info, please use --header/--header-only options.
@@ -287,7 +287,7 @@ interesting results.
     linaro@t430:~/linaro/coresight/bkk16/feb24/$ export EXEC_PATH=/home/linaro/coresight/bkk16/perf-opencsd-4.5-rc6-bkk16/tools/perf/ 
     linaro@t430:~/linaro/coresight/bkk16/feb24/$ export SCRIPT_PATH=$EXEC_PATH/scripts/python/ 
     linaro@t430:~/linaro/coresight/bkk16/feb24/$ export XTOOL_PATH=/your/aarch64/toolchain/path/bin/
-    linaro@t430:~/linaro/coresight/bkk16/feb24/$ ../perf-opencsd-4.5-rc6-bkk16/tools/perf/perf -exec-path=${EXEC_PATH} script --script=python:${SCRIPT_PATH}/cs-trace-disasm.py -- -d ${XTOOL_PATH}/aarch64-linux-gnu-objdump
+    linaro@t430:~/linaro/coresight/bkk16/feb24/$ ../perf-opencsd-4.5-rc6-bkk16/tools/perf/perf --exec-path=${EXEC_PATH} script --script=python:${SCRIPT_PATH}/cs-trace-disasm.py -- -d ${XTOOL_PATH}/aarch64-linux-gnu-objdump
 
               7f89f24d80:   910003e0        mov     x0, sp
               7f89f24d84:   94000d53        bl      7f89f282d0 <free@plt+0x3790>
@@ -331,8 +331,8 @@ Best regards,
 *The Linaro CoreSight Team*
 
 --------------------------------------
-[1]: https://github.com/Linaro/OpenCSD "OpenCSD Github"
+[1] https://github.com/Linaro/OpenCSD "OpenCSD Github"
 
 [2] wget http://people.linaro.org/~mathieu.poirier/openCSD/uname.v4.user.feb24.tgz 
  
-[3) Get in touch with us if you know a way to change this.
+[3] Get in touch with us if you know a way to change this.
