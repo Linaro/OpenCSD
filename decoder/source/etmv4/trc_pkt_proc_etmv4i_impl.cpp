@@ -140,7 +140,7 @@ ocsd_datapath_resp_t EtmV4IPktProcImpl::processData(  const ocsd_trc_index_t ind
             else
             {
                 // bail out on any other error.
-                resp = RCDTL_RESP_FATAL_INVALID_DATA;
+                resp = OCSD_RESP_FATAL_INVALID_DATA;
             }
         }
         catch(...)

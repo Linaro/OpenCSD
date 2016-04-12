@@ -179,7 +179,7 @@ typedef enum _ocsd_datapath_resp_t {
     OCSD_RESP_FATAL_NOT_INIT,      /**< Processing Fatal Error :  component unintialised. */
     OCSD_RESP_FATAL_INVALID_OP,    /**< Processing Fatal Error :  invalid data path operation. */
     OCSD_RESP_FATAL_INVALID_PARAM, /**< Processing Fatal Error :  invalid parameter in datapath call. */
-    RCDTL_RESP_FATAL_INVALID_DATA,  /**< Processing Fatal Error :  invalid trace data */
+    OCSD_RESP_FATAL_INVALID_DATA,  /**< Processing Fatal Error :  invalid trace data */
     OCSD_RESP_FATAL_SYS_ERR,       /**< Processing Fatal Error :  internal system error. */
 } ocsd_datapath_resp_t;
 
