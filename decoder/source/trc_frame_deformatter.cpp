@@ -274,7 +274,7 @@ ocsd_datapath_resp_t TraceFmtDcdImpl::processTraceData(
     }
     catch(const ocsdError &err) {
         LogError(err);
-        CollateDataPathResp(RCDTL_RESP_FATAL_INVALID_DATA);
+        CollateDataPathResp(OCSD_RESP_FATAL_INVALID_DATA);
     }
     catch(...) {
         LogError(ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_FAIL));

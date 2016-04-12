@@ -493,13 +493,13 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_UNNUM_DS_MKR:
     /* Q packets */
     case ETM4_PKT_I_Q:
-        resp = RCDTL_RESP_FATAL_INVALID_DATA;
+        resp = OCSD_RESP_FATAL_INVALID_DATA;
         LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,"Unsupported packet type."));
         break;
 
     default:
         // any other packet - bad packet error
-        resp = RCDTL_RESP_FATAL_INVALID_DATA;
+        resp = OCSD_RESP_FATAL_INVALID_DATA;
         LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,"Unknown packet type."));
         break;
 
@@ -517,7 +517,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         }
         else
         {
-            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            resp = OCSD_RESP_FATAL_INVALID_DATA;
             LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,"Expected Address packet to follow exception packet."));
         }
     }
@@ -723,7 +723,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
             if(pElem)
                 err_idx = pElem->getRootIndex();
               
-            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            resp = OCSD_RESP_FATAL_INVALID_DATA;
             LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_COMMIT_PKT_OVERRUN,err_idx,m_CSID,"Not enough elements to commit"));
             bPause = true;
         }
@@ -861,7 +861,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom, bo
         else
         {
             bCont = false;
-            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            resp = OCSD_RESP_FATAL_INVALID_DATA;
             LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,pElem->getRootIndex(),m_CSID,"Error processing atom packet."));  
             return resp;
         }
@@ -941,7 +941,7 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
         if(pElem->getP0Type() != P0_ADDR)
         {
             // no following address element - indicate processing error.
-            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            resp = OCSD_RESP_FATAL_INVALID_DATA;
             LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_PACKET_SEQ,pExceptElem->getRootIndex(),m_CSID,"Address missing in exception packet."));  
         }
         else
@@ -1017,7 +1017,7 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
             }
             else
             {
-                resp = RCDTL_RESP_FATAL_INVALID_DATA;
+                resp = OCSD_RESP_FATAL_INVALID_DATA;
                 LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,m_excep_index,m_CSID,"Error processing exception packet."));  
                 m_excep_proc = EXCEP_POP;  // nothing more to do, reset to start of exception handling
             }
@@ -1172,7 +1172,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::handleBadPacket(const char *reason)
     if(getComponentOpMode() && OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
     {
         // error out - stop decoding
-        resp = RCDTL_RESP_FATAL_INVALID_DATA;
+        resp = OCSD_RESP_FATAL_INVALID_DATA;
         LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,reason));
     }
     else

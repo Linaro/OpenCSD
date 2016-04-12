@@ -506,7 +506,7 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processAtomRange(const ocsd_atm_val A, con
         }
         else
         {
-            resp = RCDTL_RESP_FATAL_INVALID_DATA;
+            resp = OCSD_RESP_FATAL_INVALID_DATA;
             oss << "Error processing " << pkt_msg << " packet.";
             LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,m_index_curr_pkt,m_CSID,oss.str()));  
             return resp;
