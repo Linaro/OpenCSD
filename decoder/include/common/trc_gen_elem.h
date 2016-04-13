@@ -58,6 +58,8 @@ public:
     void setContext(const ocsd_pe_context &new_context) { context = new_context; };
     void setCycleCount(const uint32_t cycleCount);
     void setEvent(const event_t ev_type, const uint16_t number);
+    void setTS(const uint64_t ts, const bool freqChange = false) { timestamp = ts; cpu_freq_change = freqChange ? 1 : 0; };
+    void setExcepMarker() { excep_data_marker = 1; };
 
     virtual void toString(std::string &str) const;
 
@@ -96,6 +98,7 @@ inline void OcsdTraceElement::setType(const ocsd_gen_trc_elem_t type)
     last_i_type = OCSD_INSTR_OTHER;
     excep_ret_addr = 0;
     exception_number = 0;
+    excep_data_marker = 0;
 }
 
 inline void OcsdTraceElement::init()
@@ -108,6 +111,7 @@ inline void OcsdTraceElement::init()
     has_cc = 0;
     last_instr_exec = 0;
     excep_ret_addr = 0;
+    excep_data_marker = 0;
 }
 
 /** @}*/

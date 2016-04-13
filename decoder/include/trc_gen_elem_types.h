@@ -97,6 +97,7 @@ typedef struct _ocsd_generic_trace_elem {
         uint32_t has_cc:1;              /**< 1 if this packet has a valid cycle count included (e.g. cycle count included as part of instruction range packet, always 1 for pure cycle count packet.*/
         uint32_t cpu_freq_change:1;     /**< 1 if this packet indicates a change in CPU frequency */
         uint32_t excep_ret_addr:1;      /**< 1 if en_addr is the preferred exception return address on exception packet type */
+        uint32_t excep_data_marker:1;   /**< 1 if the exception entry packet is a data push marker only, with no address information (used typically in v7M trace for marking data pushed onto stack) */
     };
 
     // packet specific payloads
