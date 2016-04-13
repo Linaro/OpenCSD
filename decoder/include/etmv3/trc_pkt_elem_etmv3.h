@@ -92,16 +92,23 @@ public:
     void SetISyncNoAddr();
 
  // packet status interface - get packet info.
-
+    const ocsd_etmv3_pkt_type getType() const { return type; };
+        
     const int AltISA() const { return context.curr_alt_isa; };
     const ocsd_isa ISA() const { return curr_isa; };
     const bool isBadPacket() const;
 
-// printing
+    const uint32_t getCycleCount() const { return cycle_count; };
+    const uint32_t getCtxtID() const { return context.ctxtID; };
+    const uint32_t getVMID() const { return context.VMID; };
+    const uint64_t getTS() const { return timestamp; };
+    
+    const bool isExcepCancel() const { return (exception.bits.present == 1) && (exception.bits.cancel == 1); };
+
+    // printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
-
-
+    
 private:
     const char *packetTypeName(const ocsd_etmv3_pkt_type type, const char **ppDesc) const;
     void getBranchAddressStr(std::string &valStr) const;

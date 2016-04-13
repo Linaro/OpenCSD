@@ -60,9 +60,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\HOWTO">
-      <Filter>docs-files</Filter>
-    </None>
     <None Include="..\..\..\..\LICENSE">
       <Filter>docs-files</Filter>
     </None>
@@ -283,6 +280,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\trc_pkt_types.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\common\ocsd_pe_context.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

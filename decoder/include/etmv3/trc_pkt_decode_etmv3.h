@@ -39,6 +39,7 @@
 #include "etmv3/trc_pkt_elem_etmv3.h"
 #include "etmv3/trc_cmp_cfg_etmv3.h"
 #include "common/trc_gen_elem.h"
+#include "common/ocsd_pe_context.h"
 
 
 
@@ -62,7 +63,13 @@ protected:
     void initDecoder();      //!< initial state on creation (zeros all config)
     void resetDecoder();     //!< reset state to start of decode. (moves state, retains config)
 
+    ocsd_datapath_resp_t decodePacket(); //!< decode a packet
 
+    ocsd_datapath_resp_t processISync(const bool withCC);
+    ocsd_datapath_resp_t processBranchAddr();
+    ocsd_datapath_resp_t processPHdr();
+    
+    void pendPacket();  //!< save current packet for re-assess next pass
 
 private:
     
@@ -75,13 +82,20 @@ private:
     // trace decode FSM
     typedef enum {
         NO_SYNC,        //!< pre start trace - init state or after reset or overflow, loss of sync.
-        WAIT_SYNC,      //!< waiting for sync packet.
-        DECODE_PKTS,    //!< processing packets - creating decode elements on stack
+        WAIT_ASYNC,     //!< waiting for a-sync packet.
+        WAIT_ISYNC,     //!< waiting for i-sync packet.
+        DECODE_PKTS,    //!< processing a packet
+        PEND_INSTR,     //!< instruction output pended - need to check next packet for cancel - data in output element
+        PEND_PACKET,    //!< packet decode pended - save previous none decoded packet data - prev pended instr had wait response.
     } processor_state_t;
 
     processor_state_t m_curr_state;
 
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.
+
+    OcsdPeContext m_pe_context;   //!< context for the PE
+
+    EtmV3TrcPacket m_pended_packet; //! Saved packet when processing pended.
 
 //** output element
     OcsdTraceElement m_output_elem;

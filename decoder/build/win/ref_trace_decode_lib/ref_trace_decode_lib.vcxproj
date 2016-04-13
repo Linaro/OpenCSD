@@ -294,7 +294,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\HOWTO" />
     <None Include="..\..\..\..\HOWTO.md" />
     <None Include="..\..\..\..\LICENSE" />
     <None Include="..\..\..\..\README.md" />
@@ -310,6 +309,7 @@
     <ClInclude Include="..\..\..\include\common\ocsd_error.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_error_logger.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_msg_logger.h" />
+    <ClInclude Include="..\..\..\include\common\ocsd_pe_context.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_version.h" />
     <ClInclude Include="..\..\..\include\common\trc_component.h" />
     <ClInclude Include="..\..\..\include\common\trc_core_arch_map.h" />
