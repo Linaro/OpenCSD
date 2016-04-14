@@ -725,7 +725,7 @@ ocsd_datapath_resp_t EtmV3CBObj::PacketDataIn( const ocsd_datapath_op_t op,
                                                  const ocsd_trc_index_t index_sop,
                                                  const EtmV3TrcPacket *p_packet_in)
 {
-    return m_c_api_cb_fn(m_p_cb_context, op,index_sop,p_packet_in);
+    return m_c_api_cb_fn(m_p_cb_context, op,index_sop,*p_packet_in);
 }
 
 /****************** Etmv3 packet processor monitor callback function  ***********/
@@ -741,7 +741,7 @@ void EtmV3PktMonCBObj::RawPacketDataMon( const ocsd_datapath_op_t op,
                                    const uint32_t size,
                                    const uint8_t *p_data)
 {
-    return m_c_api_cb_fn(m_p_cb_context, op, index_sop, p_packet_in, size, p_data);
+    return m_c_api_cb_fn(m_p_cb_context, op, index_sop, *p_packet_in, size, p_data);
 }
 
 

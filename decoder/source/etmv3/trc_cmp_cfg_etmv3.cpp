@@ -38,11 +38,16 @@
 EtmV3Config::EtmV3Config()
 {
     // defaults set ETMv3.4, V7A, instruction only.
-    arch_ver = ARCH_V7;
-    core_prof = profile_CortexA;
-    reg_ccer = 0;
-    reg_idr = 0x4100F240;
-    reg_ctrl = 0;
+    m_cfg.arch_ver = ARCH_V7;
+    m_cfg.core_prof = profile_CortexA;
+    m_cfg.reg_ccer = 0;
+    m_cfg.reg_idr = 0x4100F240;
+    m_cfg.reg_ctrl = 0;
+}
+
+EtmV3Config::EtmV3Config(const ocsd_etmv3_cfg *cfg_regs)
+{
+    m_cfg = *cfg_regs;
 }
 
 EtmV3Config::EtmTraceMode const EtmV3Config::GetTraceMode() const
@@ -54,7 +59,7 @@ EtmV3Config::EtmTraceMode const EtmV3Config::GetTraceMode() const
 const int EtmV3Config::CtxtIDBytes() const
 {
     int ctxtIdsizes[] = { 0, 1, 2, 4 };
-    return ctxtIdsizes[(reg_ctrl >> 14) & 0x3];
+    return ctxtIdsizes[(m_cfg.reg_ctrl >> 14) & 0x3];
 }
 
 /* End of File trc_cmp_cfg_etmv3.cpp */

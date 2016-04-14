@@ -36,7 +36,11 @@
 
 #include "ocsd_if_types.h"
 
-/*! Handler for the ocsd_pe_context structure 
+/*! @class OcsdPeContext 
+ *  @brief Handler for the ocsd_pe_context structure.
+ *
+ *  Reads and writes structure values, enforcing interaction rules between values
+ *  and flags.
  */
 class OcsdPeContext 
 {
@@ -67,12 +71,12 @@ private:
     ocsd_pe_context m_context;
 };
 
-OcsdPeContext::OcsdPeContext()
+inline OcsdPeContext::OcsdPeContext()
 {
     resetCtxt();
 }
 
-void OcsdPeContext::resetCtxt()
+inline void OcsdPeContext::resetCtxt()
 {
     // initialise the context
     m_context.bits64 = 0;

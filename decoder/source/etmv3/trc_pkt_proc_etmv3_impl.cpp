@@ -196,16 +196,17 @@ ocsd_datapath_resp_t EtmV3PktProcImpl::outputPacket()
     ocsd_datapath_resp_t dp_resp = OCSD_RESP_FATAL_NOT_INIT;
     if(m_isInit)
     {
+        ocsd_etmv3_pkt_type type = m_curr_packet.getType();
         if(!m_bSendPartPkt) 
         {
-            dp_resp = m_interface->outputOnAllInterfaces(m_packet_index,&m_curr_packet,&m_curr_packet.type,m_currPacketData);
+            dp_resp = m_interface->outputOnAllInterfaces(m_packet_index,&m_curr_packet,&type,m_currPacketData);
             m_process_state = m_bStreamSync ? PROC_HDR : WAIT_SYNC; // need a header next time, or still waiting to sync.
             m_currPacketData.clear();
         }
         else
         {
             // sending part packet, still some data in the main packet
-            dp_resp = m_interface->outputOnAllInterfaces(m_packet_index,&m_curr_packet,&m_curr_packet.type,m_partPktData);
+            dp_resp = m_interface->outputOnAllInterfaces(m_packet_index,&m_curr_packet,&type,m_partPktData);
             m_process_state = m_post_part_pkt_state;
             m_packet_index += m_partPktData.size();
             m_bSendPartPkt = false;
@@ -514,7 +515,7 @@ ocsd_err_t EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 	// pop byte into buffer
     m_currPacketData.push_back(by);
 				
-    switch(m_curr_packet.type) {
+    switch(m_curr_packet.getType()) {
 	default:
         throw ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_PKT_INTERP_FAIL,m_packet_index,m_chanIDCopy,"Interpreter failed - cannot process payload for unexpected or unsupported packet.");
 		break;

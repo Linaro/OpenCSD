@@ -49,16 +49,20 @@
  *  This class represents a single ETMv3 trace packet, along with intra packet state.
  * 
  */
-class EtmV3TrcPacket : public ocsd_etmv3_pkt, trcPrintableElem
+class EtmV3TrcPacket : public trcPrintableElem
 {
 public:
     EtmV3TrcPacket();
     ~EtmV3TrcPacket();
 
+// conversions between C-API struct and C++ object types
+    // assign from C-API struct
     EtmV3TrcPacket &operator =(const ocsd_etmv3_pkt* p_pkt);
+    // allow const cast to C-API struct to pass C++ object
+    operator const ocsd_etmv3_pkt*() const { return &m_pkt_data; };
+    operator const ocsd_etmv3_pkt&() const { return m_pkt_data; };
 
-    // update interface - set packet values
-
+// update interface - set packet values
     void Clear();       //!< clear update data in packet ready for new one.
     void ResetState();  //!< reset intra packet state data -on full decoder reset.
 
@@ -91,21 +95,21 @@ public:
     void SetISyncIsLSiP();
     void SetISyncNoAddr();
 
- // packet status interface - get packet info.
-    const ocsd_etmv3_pkt_type getType() const { return type; };
+// packet status interface - get packet info.
+    const ocsd_etmv3_pkt_type getType() const { return m_pkt_data.type; };
         
-    const int AltISA() const { return context.curr_alt_isa; };
-    const ocsd_isa ISA() const { return curr_isa; };
+    const int AltISA() const { return m_pkt_data.context.curr_alt_isa; };
+    const ocsd_isa ISA() const { return m_pkt_data.curr_isa; };
     const bool isBadPacket() const;
 
-    const uint32_t getCycleCount() const { return cycle_count; };
-    const uint32_t getCtxtID() const { return context.ctxtID; };
-    const uint32_t getVMID() const { return context.VMID; };
-    const uint64_t getTS() const { return timestamp; };
+    const uint32_t getCycleCount() const { return m_pkt_data.cycle_count; };
+    const uint32_t getCtxtID() const { return m_pkt_data.context.ctxtID; };
+    const uint32_t getVMID() const { return m_pkt_data.context.VMID; };
+    const uint64_t getTS() const { return m_pkt_data.timestamp; };
     
-    const bool isExcepCancel() const { return (exception.bits.present == 1) && (exception.bits.cancel == 1); };
+    const bool isExcepCancel() const { return (m_pkt_data.exception.bits.present == 1) && (m_pkt_data.exception.bits.cancel == 1); };
 
-    // printing
+// printing
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
     
@@ -116,100 +120,102 @@ private:
     void getISyncStr(std::string &valStr) const;
     void getISAStr(std::string &isaStr) const;
     void getExcepStr(std::string &excepStr) const;
+
+    ocsd_etmv3_pkt m_pkt_data; 
 };
 
 inline void EtmV3TrcPacket::UpdateNS(const int NS)
 {
-    context.curr_NS = NS;
-    context.updated = 1;
+    m_pkt_data.context.curr_NS = NS;
+    m_pkt_data.context.updated = 1;
 };
 
 inline void EtmV3TrcPacket::UpdateAltISA(const int AltISA)
 {
-    context.curr_alt_isa = AltISA;
-    context.updated = 1;
+    m_pkt_data.context.curr_alt_isa = AltISA;
+    m_pkt_data.context.updated = 1;
 }
 
 inline void EtmV3TrcPacket::UpdateHyp(const int Hyp)
 {
-    context.curr_Hyp = Hyp;
-    context.updated = 1;
+    m_pkt_data.context.curr_Hyp = Hyp;
+    m_pkt_data.context.updated = 1;
 }
 
 inline void EtmV3TrcPacket::UpdateISA(const ocsd_isa isa)
 {
-    prev_isa = curr_isa;
-    curr_isa = isa;
+    m_pkt_data.prev_isa = m_pkt_data.curr_isa;
+    m_pkt_data.curr_isa = isa;
 }
 
 inline void EtmV3TrcPacket::SetType(const ocsd_etmv3_pkt_type p_type)
 {
-    type = p_type;
+    m_pkt_data.type = p_type;
 }
 
 inline void EtmV3TrcPacket::SetErrType(const ocsd_etmv3_pkt_type e_type)
 {
-    err_type = type;
-    type = e_type;
+    m_pkt_data.err_type = m_pkt_data.type;
+    m_pkt_data.type = e_type;
 }
 
 inline const bool EtmV3TrcPacket::isBadPacket() const
 {
-    return (type >= ETM3_PKT_BAD_SEQUENCE);
+    return (m_pkt_data.type >= ETM3_PKT_BAD_SEQUENCE);
 }
 
 inline void EtmV3TrcPacket::SetDataOOOTag(const uint8_t tag)
 {
-    data.ooo_tag = tag;
+    m_pkt_data.data.ooo_tag = tag;
 }
 
 inline void EtmV3TrcPacket::SetDataValue(const uint32_t value)
 {
-    data.value = value;
-    data.update_dval = 1;
+    m_pkt_data.data.value = value;
+    m_pkt_data.data.update_dval = 1;
 }
 
 inline void EtmV3TrcPacket::UpdateContextID(const uint32_t contextID)
 {
-    context.updated_c = 1;
-    context.ctxtID = contextID;
+    m_pkt_data.context.updated_c = 1;
+    m_pkt_data.context.ctxtID = contextID;
 }
 
 inline void EtmV3TrcPacket::UpdateVMID(const uint8_t VMID)
 {
-    context.updated_v = 1;
-    context.VMID = VMID;
+    m_pkt_data.context.updated_v = 1;
+    m_pkt_data.context.VMID = VMID;
 }
 
 inline void EtmV3TrcPacket::UpdateDataEndian(const uint8_t BE_Val)
 {
-    data.be = BE_Val;
-    data.update_be = 1;
+    m_pkt_data.data.be = BE_Val;
+    m_pkt_data.data.update_be = 1;
 }
 
 inline void EtmV3TrcPacket::SetCycleCount(const uint32_t cycleCount)
 {
-    cycle_count = cycleCount;
+    m_pkt_data.cycle_count = cycleCount;
 }
 
 inline void EtmV3TrcPacket::SetISyncReason(const ocsd_iSync_reason reason)
 {
-    isync_info.reason = reason;
+    m_pkt_data.isync_info.reason = reason;
 }
 
 inline void EtmV3TrcPacket::SetISyncHasCC()
 {
-    isync_info.has_cycle_count = 1;
+    m_pkt_data.isync_info.has_cycle_count = 1;
 }
 
 inline void EtmV3TrcPacket::SetISyncIsLSiP()
 {
-    isync_info.has_LSipAddress = 1;
+    m_pkt_data.isync_info.has_LSipAddress = 1;
 }
 
 inline void EtmV3TrcPacket::SetISyncNoAddr()
 {
-    isync_info.no_address = 1;
+    m_pkt_data.isync_info.no_address = 1;
 }
 
 /** @}*/
