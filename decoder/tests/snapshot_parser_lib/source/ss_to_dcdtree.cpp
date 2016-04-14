@@ -297,13 +297,13 @@ bool CreateDcdTreeFromSnapShot::createETMv3Decoder(const std::string &coreName, 
     bool configOK = true;
     
     // generate the config data from the device data.
-    EtmV3Config config;
+    ocsd_etmv3_cfg cfg_regs;
 
     regs_to_access_t regs_to_access[] = {
-        { ETMv3PTMRegIDR, true, &config.reg_idr, 0 },
-        { ETMv3PTMRegCR, true, &config.reg_ctrl, 0 },
-        { ETMv3PTMRegCCER, true, &config.reg_ccer, 0 },
-        { ETMv3PTMRegTraceIDR, true, &config.reg_trc_id, 0}
+        { ETMv3PTMRegIDR, true, &cfg_regs.reg_idr, 0 },
+        { ETMv3PTMRegCR, true, &cfg_regs.reg_ctrl, 0 },
+        { ETMv3PTMRegCCER, true, &cfg_regs.reg_ccer, 0 },
+        { ETMv3PTMRegTraceIDR, true, &cfg_regs.reg_trc_id, 0}
     };
 
     // extract registers
@@ -311,11 +311,12 @@ bool CreateDcdTreeFromSnapShot::createETMv3Decoder(const std::string &coreName, 
 
     // extract core profile
     if(configOK)
-        configOK = getCoreProfile(coreName,config.arch_ver,config.core_prof);
+        configOK = getCoreProfile(coreName,cfg_regs.arch_ver,cfg_regs.core_prof);
 
     // good config - generate the decoder on the tree.
     if(configOK)
     {
+        EtmV3Config config(&cfg_regs);
         ocsd_err_t err = OCSD_OK;
         if(m_bPacketProcOnly)
             err = m_pDecodeTree->createETMv3PktProcessor(&config);

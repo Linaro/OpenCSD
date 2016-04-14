@@ -39,7 +39,7 @@
 
 EtmV3TrcPacket::EtmV3TrcPacket()
 {
-    addr.size = VA_32BIT;   // etm v3 only handles 32 bit addresses.
+    m_pkt_data.addr.size = VA_32BIT;   // etm v3 only handles 32 bit addresses.
 }
 
 EtmV3TrcPacket::~EtmV3TrcPacket()
@@ -51,52 +51,43 @@ EtmV3TrcPacket::~EtmV3TrcPacket()
 // clear this packet info
 void EtmV3TrcPacket::Clear()    
 {
-    addr.pkt_bits = 0;
-    prev_isa = curr_isa;    // mark ISA as not changed
-    exception.bits.present = 0;
-    atom.num = 0;
-    cycle_count = 0;
-    context.updated = 0;
-    context.updated_c = 0;
-    context.updated_v = 0;
-    data.ooo_tag = 0;
-    data.value = 0;
-    data.update_addr = 0;
-    data.update_be = 0;
-    data.update_dval = 0;
-    ts_update_bits = 0;
-    isync_info.has_cycle_count = 0;
-    isync_info.has_LSipAddress = 0;
-    isync_info.no_address = 0;
+    // clear structure flags and counter elements etc, that work per packet.
+    // leave intra packet data unchanged
+    m_pkt_data.addr.pkt_bits = 0;
+    m_pkt_data.prev_isa = m_pkt_data.curr_isa;    // mark ISA as not changed
+    m_pkt_data.exception.bits.present = 0;
+    m_pkt_data.atom.num = 0;
+    m_pkt_data.cycle_count = 0;
+    m_pkt_data.context.updated = 0;
+    m_pkt_data.context.updated_c = 0;
+    m_pkt_data.context.updated_v = 0;
+    m_pkt_data.data.ooo_tag = 0;
+    m_pkt_data.data.value = 0;
+    m_pkt_data.data.update_addr = 0;
+    m_pkt_data.data.update_be = 0;
+    m_pkt_data.data.update_dval = 0;
+    m_pkt_data.ts_update_bits = 0;
+    m_pkt_data.isync_info.has_cycle_count = 0;
+    m_pkt_data.isync_info.has_LSipAddress = 0;
+    m_pkt_data.isync_info.no_address = 0;
 }
 
 // reset all state including intra packet
 void EtmV3TrcPacket::ResetState()   
 {
-    addr.val = 0;
-    addr.valid_bits = 0;
-    curr_isa = prev_isa = ocsd_isa_unknown;
-    context.curr_alt_isa = 0;
-    context.curr_NS = 0;     
-    context.curr_Hyp = 0;  
-    context.VMID = 0;
-    context.ctxtID = 0;    
-    timestamp = 0;
-    data.addr.valid_bits = 0;
-    data.addr.val = 0;
-    data.be = 0;
-    Clear();
+    memset(&m_pkt_data,0,sizeof(ocsd_etmv3_pkt));
+    m_pkt_data.curr_isa = m_pkt_data.prev_isa = ocsd_isa_unknown;
 }
 
 void EtmV3TrcPacket::UpdateAddress(const ocsd_vaddr_t partAddrVal, const int updateBits)
 {
     ocsd_vaddr_t validMask = OCSD_VA_MASK;
     validMask >>= OCSD_MAX_VA_BITSIZE-updateBits;
-    addr.pkt_bits = updateBits;
-    addr.val &= ~validMask;
-    addr.val |= (partAddrVal & validMask);
-    if(updateBits > addr.valid_bits)
-        addr.valid_bits = updateBits;    
+    m_pkt_data.addr.pkt_bits = updateBits;
+    m_pkt_data.addr.val &= ~validMask;
+    m_pkt_data.addr.val |= (partAddrVal & validMask);
+    if(updateBits > m_pkt_data.addr.valid_bits)
+        m_pkt_data.addr.valid_bits = updateBits;    
 }
 
 void EtmV3TrcPacket::UpdateDataAddress(const uint32_t value, const uint8_t valid_bits)
@@ -104,21 +95,21 @@ void EtmV3TrcPacket::UpdateDataAddress(const uint32_t value, const uint8_t valid
     // ETMv3 data addresses 32 bits.
     uint32_t validMask = 0xFFFFFFFF;
     validMask >>= 32-valid_bits;
-    addr.pkt_bits = valid_bits;
-    addr.val &= ~validMask;
-    addr.val |= (value & validMask);
-    if(valid_bits > addr.valid_bits)
-        addr.valid_bits = valid_bits;
-    data.update_addr = 1;
+    m_pkt_data.addr.pkt_bits = valid_bits;
+    m_pkt_data.addr.val &= ~validMask;
+    m_pkt_data.addr.val |= (value & validMask);
+    if(valid_bits > m_pkt_data.addr.valid_bits)
+        m_pkt_data.addr.valid_bits = valid_bits;
+    m_pkt_data.data.update_addr = 1;
 }
 
 void EtmV3TrcPacket::UpdateTimestamp(const uint64_t tsVal, const uint8_t updateBits)
 {
     uint64_t validMask = ~0ULL;
     validMask >>= 64-updateBits;
-    timestamp &= ~validMask;
-    timestamp |= (tsVal & validMask);
-    ts_update_bits = updateBits;
+    m_pkt_data.timestamp &= ~validMask;
+    m_pkt_data.timestamp |= (tsVal & validMask);
+    m_pkt_data.ts_update_bits = updateBits;
 }
 
 
@@ -131,15 +122,15 @@ void EtmV3TrcPacket::SetException(  const ocsd_armv7_exception type,
                                     const int resume /* = 0*/)
 {
     // initial data
-    exception.bits.cancel = cancel ? 1 : 0;
-    exception.bits.cm_irq_n = irq_n;
-    exception.bits.cm_resume = resume;
-    exception.bits.cm_type = cm_type ? 1 : 0;
-    exception.number = number;
-    exception.type = type;
+    m_pkt_data.exception.bits.cancel = cancel ? 1 : 0;
+    m_pkt_data.exception.bits.cm_irq_n = irq_n;
+    m_pkt_data.exception.bits.cm_resume = resume;
+    m_pkt_data.exception.bits.cm_type = cm_type ? 1 : 0;
+    m_pkt_data.exception.number = number;
+    m_pkt_data.exception.type = type;
 
     // mark as valid in this packet
-    exception.bits.present = 1;
+    m_pkt_data.exception.bits.present = 1;
 }
 
 bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccurate)
@@ -152,15 +143,15 @@ bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccu
         {
             E = ((pHdr >> 2) & 0xF);
             N = (pHdr & 0x40) ? 1 : 0;
-            atom.num = E+N;
-            atom.En_bits = (((uint32_t)0x1) << E) - 1;
-            p_hdr_fmt = 1;
+            m_pkt_data.atom.num = E+N;
+            m_pkt_data.atom.En_bits = (((uint32_t)0x1) << E) - 1;
+            m_pkt_data.p_hdr_fmt = 1;
         }
         else if((pHdr & 0x3) == 0x2)
         {
-            atom.num = 2;
-            p_hdr_fmt = 2;
-            atom.En_bits = (pHdr & 0x8 ? 0 : 1) |  (pHdr & 0x4 ? 0 : 0x2);
+            m_pkt_data.atom.num = 2;
+            m_pkt_data.p_hdr_fmt = 2;
+            m_pkt_data.atom.En_bits = (pHdr & 0x8 ? 0 : 1) |  (pHdr & 0x4 ? 0 : 0x2);
         }
         else 
             bValid = false;
@@ -171,14 +162,14 @@ bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccu
         switch(pHdr_code)
         {
         case 0x80:
-            p_hdr_fmt = 1;
+            m_pkt_data.p_hdr_fmt = 1;
             E = ((pHdr >> 2) & 0x7);
             N = (pHdr & 0x40) ? 1 : 0;
-            atom.num = E+N;
-            if(atom.num)
+            m_pkt_data.atom.num = E+N;
+            if(m_pkt_data.atom.num)
             {
-                atom.En_bits = (((uint32_t)0x1) << E) - 1;
-                cycle_count = E+N;
+                m_pkt_data.atom.En_bits = (((uint32_t)0x1) << E) - 1;
+                m_pkt_data.cycle_count = E+N;
             }
             else 
                 bValid = false; // deprecated 8b'10000000 code
@@ -186,28 +177,28 @@ bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccu
             break;
 
         case 0x82:
-            p_hdr_fmt = 2;
+            m_pkt_data.p_hdr_fmt = 2;
             if(pHdr & 0x10)
             {
-                p_hdr_fmt = 4;
-                atom.num = 1;
-                cycle_count  = 0;
-                atom.En_bits = pHdr & 0x04 ? 0 : 1;
+                m_pkt_data.p_hdr_fmt = 4;
+                m_pkt_data.atom.num = 1;
+                m_pkt_data.cycle_count  = 0;
+                m_pkt_data.atom.En_bits = pHdr & 0x04 ? 0 : 1;
             }
             else
             {
-                atom.num = 2;
-                cycle_count  = 1;
-                atom.En_bits = (pHdr & 0x8 ? 0 : 1) |  (pHdr & 0x4 ? 0 : 0x2);
+                m_pkt_data.atom.num = 2;
+                m_pkt_data.cycle_count  = 1;
+                m_pkt_data.atom.En_bits = (pHdr & 0x8 ? 0 : 1) |  (pHdr & 0x4 ? 0 : 0x2);
             }
             break;
 
         case 0xA0:
-            p_hdr_fmt = 3;
-            cycle_count  = ((pHdr >> 2) & 7) + 1;
+            m_pkt_data.p_hdr_fmt = 3;
+            m_pkt_data.cycle_count  = ((pHdr >> 2) & 7) + 1;
             E = pHdr & 0x40 ? 1 : 0;
-            atom.num = E;
-            atom.En_bits = E;
+            m_pkt_data.atom.num = E;
+            m_pkt_data.atom.En_bits = E;
             break;
 
         default:
@@ -221,7 +212,7 @@ bool EtmV3TrcPacket::UpdateAtomFromPHdr(const uint8_t pHdr, const bool cycleAccu
 
 EtmV3TrcPacket &EtmV3TrcPacket::operator =(const ocsd_etmv3_pkt* p_pkt)
 {
-    *dynamic_cast<ocsd_etmv3_pkt *>(this) = *p_pkt;
+    m_pkt_data = *p_pkt;
     return *this;        
 }
 
@@ -232,15 +223,15 @@ void EtmV3TrcPacket::toString(std::string &str) const
     const char *desc;
     std::string valStr, ctxtStr = "";
 
-    name = packetTypeName(type, &desc);
+    name = packetTypeName(m_pkt_data.type, &desc);
     str = name + (std::string)" : " + desc;
     
-    switch(type)
+    switch(m_pkt_data.type)
     {
         // print the original header type for the bad sequences.
     case ETM3_PKT_BAD_SEQUENCE: 
     case ETM3_PKT_BAD_TRACEMODE:
-        name = packetTypeName(err_type,0);
+        name = packetTypeName(m_pkt_data.err_type,0);
         str += "[" + (std::string)name + "]";
         break;
 
@@ -263,7 +254,7 @@ void EtmV3TrcPacket::toString(std::string &str) const
     case ETM3_PKT_CYCLE_COUNT:
         {
             std::ostringstream oss;
-            oss << "; Cycles=" << cycle_count;
+            oss << "; Cycles=" << m_pkt_data.cycle_count;
             str += oss.str();
         }
         break;
@@ -271,7 +262,7 @@ void EtmV3TrcPacket::toString(std::string &str) const
     case ETM3_PKT_CONTEXT_ID:
         {
             std::ostringstream oss;
-            oss << "; CtxtID=" << std::hex << "0x" << context.ctxtID;
+            oss << "; CtxtID=" << std::hex << "0x" << m_pkt_data.context.ctxtID;
             str += oss.str();
         }
         break;
@@ -279,7 +270,7 @@ void EtmV3TrcPacket::toString(std::string &str) const
     case ETM3_PKT_VMID:
         {
             std::ostringstream oss;
-            oss << "; VMID=" << std::hex << "0x" << context.VMID;
+            oss << "; VMID=" << std::hex << "0x" << m_pkt_data.context.VMID;
             str += oss.str();
         }
         break;
@@ -287,7 +278,7 @@ void EtmV3TrcPacket::toString(std::string &str) const
     case ETM3_PKT_TIMESTAMP:
         {
             std::ostringstream oss;
-            oss << "; TS=" << std::hex << "0x" << timestamp << " (" << std::dec << timestamp << ") ";
+            oss << "; TS=" << std::hex << "0x" << m_pkt_data.timestamp << " (" << std::dec << m_pkt_data.timestamp << ") ";
             str += oss.str();
         }
         break;
@@ -295,43 +286,46 @@ void EtmV3TrcPacket::toString(std::string &str) const
     case ETM3_PKT_OOO_DATA:
         {
             std::ostringstream oss;
-            oss << "; Val=" << std::hex << "0x" << data.value;
-            oss << "; OO_Tag=" << std::hex << "0x" << data.ooo_tag;
+            oss << "; Val=" << std::hex << "0x" << m_pkt_data.data.value;
+            oss << "; OO_Tag=" << std::hex << "0x" << m_pkt_data.data.ooo_tag;
             str += oss.str();
         }
         break;
 
     case ETM3_PKT_VAL_NOT_TRACED:
-        if(data.update_addr)
+        if(m_pkt_data.data.update_addr)
         {
-            trcPrintableElem::getValStr(valStr,32, data.addr.valid_bits, data.addr.val,true,data.addr.pkt_bits);
+            trcPrintableElem::getValStr(valStr,32, m_pkt_data.data.addr.valid_bits, 
+                m_pkt_data.data.addr.val,true,m_pkt_data.data.addr.pkt_bits);
             str += "; Addr=" + valStr;
         }
         break;
 
     case ETM3_PKT_OOO_ADDR_PLC:
-        if(data.update_addr)
+        if(m_pkt_data.data.update_addr)
         {
-            trcPrintableElem::getValStr(valStr,32, data.addr.valid_bits, data.addr.val,true,data.addr.pkt_bits);
+            trcPrintableElem::getValStr(valStr,32, m_pkt_data.data.addr.valid_bits, 
+                m_pkt_data.data.addr.val,true,m_pkt_data.data.addr.pkt_bits);
             str += "; Addr=" + valStr;
         }
         {
             std::ostringstream oss;
-            oss << "; OO_Tag=" << std::hex << "0x" << data.ooo_tag;
+            oss << "; OO_Tag=" << std::hex << "0x" << m_pkt_data.data.ooo_tag;
             str += oss.str();
         }
         break;
 
     case ETM3_PKT_NORM_DATA:
-        if(data.update_addr)
+        if(m_pkt_data.data.update_addr)
         {
-            trcPrintableElem::getValStr(valStr,32, data.addr.valid_bits, data.addr.val,true,data.addr.pkt_bits);
+            trcPrintableElem::getValStr(valStr,32, m_pkt_data.data.addr.valid_bits, 
+                m_pkt_data.data.addr.val,true,m_pkt_data.data.addr.pkt_bits);
             str += "; Addr=" + valStr;
         }
-        if(data.update_dval)
+        if(m_pkt_data.data.update_dval)
         {
             std::ostringstream oss;
-            oss << "; Val=" << std::hex << "0x" << data.value;
+            oss << "; Val=" << std::hex << "0x" << m_pkt_data.data.value;
             str += oss.str();
         }
         break;
@@ -490,25 +484,26 @@ void EtmV3TrcPacket::getBranchAddressStr(std::string &valStr) const
     std::string subStr;
 
     // print address.
-    trcPrintableElem::getValStr(subStr,32,addr.valid_bits,addr.val,true,addr.pkt_bits);
+    trcPrintableElem::getValStr(subStr,32,m_pkt_data.addr.valid_bits,
+        m_pkt_data.addr.val,true,m_pkt_data.addr.pkt_bits);
     oss << "Addr=" << subStr << "; ";
 
     // current ISA if changed.
-    if(curr_isa != prev_isa)
+    if(m_pkt_data.curr_isa != m_pkt_data.prev_isa)
     {
         getISAStr(subStr);
         oss << subStr;
     }
 
     // S / NS etc if changed.
-    if(context.updated)
+    if(m_pkt_data.context.updated)
     {
-        oss << (context.curr_NS ? "NS; " : "S; ");
-        oss << (context.curr_Hyp ? "Hyp; " : "");
+        oss << (m_pkt_data.context.curr_NS ? "NS; " : "S; ");
+        oss << (m_pkt_data.context.curr_Hyp ? "Hyp; " : "");
     }
     
     // exception? 
-    if(exception.bits.present)
+    if(m_pkt_data.exception.bits.present)
     {
         getExcepStr(subStr);
         oss << subStr;
@@ -519,11 +514,11 @@ void EtmV3TrcPacket::getBranchAddressStr(std::string &valStr) const
 void EtmV3TrcPacket::getAtomStr(std::string &valStr) const
 {   
     std::ostringstream oss;
-    uint32_t bitpattern = atom.En_bits; // arranged LSBit oldest, MSbit newest
+    uint32_t bitpattern = m_pkt_data.atom.En_bits; // arranged LSBit oldest, MSbit newest
 
-    if(!cycle_count)
+    if(!m_pkt_data.cycle_count)
     {
-        for(int i = 0; i < atom.num; i++)
+        for(int i = 0; i < m_pkt_data.atom.num; i++)
         {
             oss << ((bitpattern & 0x1) ? "E" : "N"); // in spec read L->R, oldest->newest
             bitpattern >>= 1;
@@ -531,10 +526,10 @@ void EtmV3TrcPacket::getAtomStr(std::string &valStr) const
     }
     else
     {
-        switch(p_hdr_fmt)
+        switch(m_pkt_data.p_hdr_fmt)
         {
         case 1:
-            for(int i = 0; i < atom.num; i++)
+            for(int i = 0; i < m_pkt_data.atom.num; i++)
             {
                 oss << ((bitpattern & 0x1) ? "WE" : "WN"); // in spec read L->R, oldest->newest
                 bitpattern >>= 1;
@@ -543,7 +538,7 @@ void EtmV3TrcPacket::getAtomStr(std::string &valStr) const
 
         case 2:
             oss << "W";
-            for(int i = 0; i < atom.num; i++)
+            for(int i = 0; i < m_pkt_data.atom.num; i++)
             {
                 oss << ((bitpattern & 0x1) ? "E" : "N"); // in spec read L->R, oldest->newest
                 bitpattern >>= 1;
@@ -551,13 +546,13 @@ void EtmV3TrcPacket::getAtomStr(std::string &valStr) const
             break;
 
         case 3:
-            for(uint32_t i = 0; i < cycle_count; i++)
+            for(uint32_t i = 0; i < m_pkt_data.cycle_count; i++)
                 oss << "W";
-            if(atom.num)
+            if(m_pkt_data.atom.num)
                 oss << ((bitpattern & 0x1) ? "E" : "N"); // in spec read L->R, oldest->newest
             break;
         }
-        oss << "; Cycles=" << cycle_count;
+        oss << "; Cycles=" << m_pkt_data.cycle_count;
     }
     valStr = oss.str();
 }
@@ -568,27 +563,27 @@ void EtmV3TrcPacket::getISyncStr(std::string &valStr) const
     static const char *reason[] = { "Periodic", "Trace Enable", "Restart Overflow", "Debug Exit" };
 
     // reason.
-    oss << "(" << reason[(int)isync_info.reason] << "); ";
+    oss << "(" << reason[(int)m_pkt_data.isync_info.reason] << "); ";
 
     // full address.
-    if(!isync_info.no_address)
+    if(!m_pkt_data.isync_info.no_address)
     {
-        if(isync_info.has_LSipAddress)
+        if(m_pkt_data.isync_info.has_LSipAddress)
             oss << "Data Instr Addr=0x";
         else
             oss << "Addr=0x";
-        oss << std::hex << std::setfill('0') << std::setw(8) << addr.val << "; ";
+        oss << std::hex << std::setfill('0') << std::setw(8) << m_pkt_data.addr.val << "; ";
     }
     
-    oss << (context.curr_NS ? "NS; " : "S; ");
-    oss << (context.curr_Hyp ? "Hyp; " : " ");
+    oss << (m_pkt_data.context.curr_NS ? "NS; " : "S; ");
+    oss << (m_pkt_data.context.curr_Hyp ? "Hyp; " : " ");
     
-    if(context.updated_c)
+    if(m_pkt_data.context.updated_c)
     {
-        oss << "CtxtID=" << std::hex << context.ctxtID << "; ";
+        oss << "CtxtID=" << std::hex << m_pkt_data.context.ctxtID << "; ";
     }
 
-    if(isync_info.no_address)
+    if(m_pkt_data.isync_info.no_address)
     {
         valStr = oss.str();
         return;     // bail out at this point if a data only ISYNC
@@ -598,17 +593,18 @@ void EtmV3TrcPacket::getISyncStr(std::string &valStr) const
     getISAStr(isaStr);
     oss << isaStr;
 
-    if(isync_info.has_cycle_count)
+    if(m_pkt_data.isync_info.has_cycle_count)
     {
-        oss << "Cycles=" << std::dec << cycle_count << "; ";
+        oss << "Cycles=" << std::dec << m_pkt_data.cycle_count << "; ";
     }
 
-    if(isync_info.has_LSipAddress)
+    if(m_pkt_data.isync_info.has_LSipAddress)
     {
         std::string addrStr;
 
         // extract address updata.
-        trcPrintableElem::getValStr(addrStr,32,data.addr.valid_bits,data.addr.val,true,data.addr.pkt_bits);
+        trcPrintableElem::getValStr(addrStr,32,m_pkt_data.data.addr.valid_bits,
+            m_pkt_data.data.addr.val,true,m_pkt_data.data.addr.pkt_bits);
         oss << "Curr Instr Addr=" << addrStr << ";";        
     }    
     valStr = oss.str();
@@ -618,7 +614,7 @@ void EtmV3TrcPacket::getISAStr(std::string &isaStr) const
 {
     std::ostringstream oss;
     oss << "ISA=";
-    switch(curr_isa)
+    switch(m_pkt_data.curr_isa)
     {
     case ocsd_isa_arm: 
         oss << "ARM(32); ";
@@ -669,21 +665,21 @@ void EtmV3TrcPacket::getExcepStr(std::string &excepStr) const
     std::ostringstream oss;
     oss << "Exception=";
 
-    if(exception.bits.cm_type)
+    if(m_pkt_data.exception.bits.cm_type)
     {
-        if(exception.number < 0x18)
-            oss << MExcep[exception.number];
+        if(m_pkt_data.exception.number < 0x18)
+            oss << MExcep[m_pkt_data.exception.number];
         else
-            oss << "IRQ" << std::dec << (exception.number - 0x10);
-        if(exception.bits.cm_resume)
-            oss << "; Resume=" << exception.bits.cm_resume;
-        if(exception.bits.cancel)
+            oss << "IRQ" << std::dec << (m_pkt_data.exception.number - 0x10);
+        if(m_pkt_data.exception.bits.cm_resume)
+            oss << "; Resume=" << m_pkt_data.exception.bits.cm_resume;
+        if(m_pkt_data.exception.bits.cancel)
             oss << "; Cancel prev instr";
     }
     else
     {
-        oss << ARv7Excep[exception.number] << "; ";
-        if(exception.bits.cancel)
+        oss << ARv7Excep[m_pkt_data.exception.number] << "; ";
+        if(m_pkt_data.exception.bits.cancel)
             oss << "; Cancel prev instr";
     }
     excepStr = oss.str();

@@ -53,10 +53,11 @@
  * Primarily inlined for efficient code.
  * 
  */
-class EtmV3Config : public ocsd_etmv3_cfg
+class EtmV3Config //: public ocsd_etmv3_cfg
 {
 public:
     EtmV3Config(); /**< Default constructor */
+    EtmV3Config(const ocsd_etmv3_cfg *cfg_regs);
     ~EtmV3Config() {}; /**< Default destructor */
 
     /* register bit constants. */
@@ -73,8 +74,15 @@ public:
 
     static const uint32_t IDR_ALTBRANCH = 0x100000;
 
-    //! copy assignment operator for base structure into class.
+// operations to convert to and from C-API structure
+
+    //! copy assignment operator for C-API base structure into class.
     EtmV3Config & operator=(const ocsd_etmv3_cfg *p_cfg);
+
+    //! cast operator returning struct const reference
+    operator const ocsd_etmv3_cfg &() const { return m_cfg; };
+    //! cast operator returning struct const pointer
+    operator const ocsd_etmv3_cfg *() const { return &m_cfg; };
 
     //! combination enum to describe trace mode.
     enum EtmTraceMode {
@@ -111,6 +119,9 @@ public:
 
     const uint8_t getTraceID() const; //!< CoreSight Trace ID for this device.
 
+private:
+    ocsd_etmv3_cfg m_cfg;
+
 };     
 
 
@@ -118,86 +129,86 @@ public:
 
 inline EtmV3Config & EtmV3Config::operator=(const ocsd_etmv3_cfg *p_cfg)
 {
-    *dynamic_cast<ocsd_etmv3_cfg *>(this) = *p_cfg;
+    m_cfg = *p_cfg;
     return *this; 
 }
 
 inline const bool  EtmV3Config::isCycleAcc() const
 {
-    return (bool)((reg_ctrl & CTRL_CYCLEACC) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_CYCLEACC) != 0);
 }
 
 //! return X revision in 3.X
 inline const int EtmV3Config::MinorRev() const
 {
-    return ((int)reg_idr & 0xF0) >> 4;
+    return ((int)m_cfg.reg_idr & 0xF0) >> 4;
 }
  
 inline const bool EtmV3Config::isInstrTrace() const
 {    
-    return (bool)((reg_ctrl & CTRL_DATAONLY) == 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_DATAONLY) == 0);
 }  
 
 inline const bool EtmV3Config::isDataValTrace() const
 {
-    return (bool)((reg_ctrl & CTRL_DATAVAL) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_DATAVAL) != 0);
 }
 
 inline const bool EtmV3Config::isDataAddrTrace() const
 {
-    return (bool)((reg_ctrl & CTRL_DATAADDR) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_DATAADDR) != 0);
 }
 
 //! either or both data trace present
 inline const bool EtmV3Config::isDataTrace() const 
 { 
-    return (bool)((reg_ctrl & (CTRL_DATAADDR | CTRL_DATAVAL)) != 0);
+    return (bool)((m_cfg.reg_ctrl & (CTRL_DATAADDR | CTRL_DATAVAL)) != 0);
 }
 
 inline const bool EtmV3Config::isV7MArch() const 
 {    
-    return (bool)((arch_ver == ARCH_V7) && (core_prof == profile_CortexM));
+    return (bool)((m_cfg.arch_ver == ARCH_V7) && (m_cfg.core_prof == profile_CortexM));
 }
 
 //! has alternate branch encoding
 inline const bool EtmV3Config::isAltBranch() const 
 {
-    return (bool)(((reg_idr & IDR_ALTBRANCH) != 0) && (MinorRev() >= 4));
+    return (bool)(((m_cfg.reg_idr & IDR_ALTBRANCH) != 0) && (MinorRev() >= 4));
 }
 
 //! processor implements virtualisation extensions.
 inline const bool EtmV3Config::hasVirtExt() const 
 {    
-    return (bool)((reg_ccer & CCER_VIRTEXT) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_VIRTEXT) != 0);
 }
 
 //! TS packet is 64 bit.
 inline const bool EtmV3Config::TSPkt64() const 
 {
-    return (bool)((reg_ccer & CCER_TS64BIT) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_TS64BIT) != 0);
 }
 
 //! TS implemented.
 inline const bool EtmV3Config::hasTS() const 
 {
-    return (bool)((reg_ccer & CCER_HAS_TS) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_HAS_TS) != 0);
 }
 
 //! TS is enabled in the trace
 inline const bool EtmV3Config::isTSEnabled() const 
 {
-    return (bool)((reg_ctrl & CTRL_TS_ENA) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_TS_ENA) != 0);
 }
 
 //! tracing VMID
 inline const bool EtmV3Config::isVMIDTrace() const 
 { 
-    return (bool)((reg_ctrl & CTRL_VMID_ENA) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_VMID_ENA) != 0);
 }
 
 inline const uint8_t EtmV3Config::getTraceID() const
 {
-    return (uint8_t)(reg_trc_id & 0x7F);
+    return (uint8_t)(m_cfg.reg_trc_id & 0x7F);
 }
 
 /** @}*/
