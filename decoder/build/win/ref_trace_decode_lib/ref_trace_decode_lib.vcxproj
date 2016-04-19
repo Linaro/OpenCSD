@@ -304,6 +304,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\include\common\comp_attach_notifier_i.h" />
     <ClInclude Include="..\..\..\include\common\comp_attach_pt_t.h" />
+    <ClInclude Include="..\..\..\include\common\ocsd_code_follower.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_dcd_tree.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_dcd_tree_elem.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_error.h" />
@@ -390,6 +391,7 @@
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_cb.cpp" />
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_file.cpp" />
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_mapper.cpp" />
+    <ClCompile Include="..\..\..\source\ocsd_code_follower.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_dcd_tree.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_error.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_error_logger.cpp" />

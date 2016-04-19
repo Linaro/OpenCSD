@@ -110,6 +110,7 @@ typedef enum _ocsd_err_t {
     OCSD_ERR_UNSUPP_DECODE_PKT,        /**< Packet not supported in decoder */
     OCSD_ERR_BAD_DECODE_PKT,           /**< reserved or unknown packet in decoder. */
     OCSD_ERR_COMMIT_PKT_OVERRUN,       /**< overrun in commit packet stack - tried to commit more than available */
+    OCSD_ERR_MEM_NACC,                 /**< unable to access required memory address */
     /* decode tree errors */
     OCSD_ERR_DCDT_NO_FORMATTER,         /**< No formatter in use - operation not valid. */
     /* target memory access errors */
@@ -330,6 +331,7 @@ typedef enum _ocsd_sec_level
 */
 typedef enum _ocsd_ex_level
 {
+    ocsd_EL_unknown = -1, /**< EL unknown / unsupported in trace */
     ocsd_EL0 = 0,  /**< EL0 */
     ocsd_EL1,      /**< EL1 */
     ocsd_EL2,      /**< EL2 */

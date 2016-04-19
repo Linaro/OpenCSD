@@ -51,7 +51,7 @@ public:
     void resetCtxt();
 
     void setSecLevel(const ocsd_sec_level sl) { m_context.security_level = sl; };
-    void setEL(const ocsd_ex_level el) { m_context.exception_level = el; m_context.el_valid = 1; };
+    void setEL(const ocsd_ex_level el) { m_context.exception_level = el; m_context.el_valid = el > ocsd_EL_unknown ? 1 : 0; };
     void setCtxtID(const uint32_t id) { m_context.context_id = id; m_context.ctxt_id_valid = 1; };
     void setVMID(const uint32_t id) { m_context.vmid = id; m_context.vmid_valid = 1; };
     void set64bit(const bool is64bit) { m_context.bits64 = is64bit ? 1 : 0; };
@@ -83,7 +83,7 @@ inline void OcsdPeContext::resetCtxt()
     m_context.context_id = 0;
     m_context.ctxt_id_valid = 0;
     m_context.el_valid = 0;
-    m_context.exception_level = ocsd_EL0;
+    m_context.exception_level = ocsd_EL_unknown;
     m_context.security_level = ocsd_sec_secure;
     m_context.vmid = 0;
     m_context.vmid_valid = 0;
