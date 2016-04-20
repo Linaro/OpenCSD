@@ -166,6 +166,13 @@ ocsd_err_t TrcPktDecodeEtmV3::onProtocolConfig()
             err = OCSD_ERR_HW_CFG_UNSUPP;
             LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv3 trace decoder : data trace decode not yet supported"));
         }
+
+        // need to set up core profile info in follower
+        ocsd_arch_profile_t arch_profile;
+        arch_profile.arch = m_config->getArchVersion();
+        arch_profile.profile = m_config->getCoreProfile();
+        m_code_follower.setArchProfile(arch_profile);
+        m_code_follower.setMemSpaceCSID(m_CSID);
     }
     else
         err = OCSD_ERR_NOT_INIT;
@@ -179,6 +186,7 @@ void TrcPktDecodeEtmV3::initDecoder()
 {
     m_CSID = 0;
     resetDecoder();
+    m_code_follower.initInterfaces(getMemoryAccessAttachPt(),getInstrDecodeAttachPt());
 }
 
 // reset for first use / re-use.
@@ -310,7 +318,37 @@ void TrcPktDecodeEtmV3::pendPacket()
     m_pended_packet = *m_curr_packet_in;
     m_curr_state = PEND_PACKET;
 }
+    
+ocsd_datapath_resp_t TrcPktDecodeEtmV3::processISync(const bool withCC)
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    // look for context changes....
+    if(m_curr_packet_in->isCtxtIDUpdated())
+    {
 
+    }
+
+    if(m_config->CtxtIDBytes())
+    {
+
+    }
+
+    return resp;
+}
+
+ocsd_datapath_resp_t TrcPktDecodeEtmV3::processBranchAddr()
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+
+    return resp;
+}
+
+ocsd_datapath_resp_t TrcPktDecodeEtmV3::processPHdr()
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+
+    return resp;
+}
 
 
 /* End of File trc_pkt_decode_etmv3.cpp */

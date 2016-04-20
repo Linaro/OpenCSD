@@ -36,11 +36,12 @@
 #define ARM_TRC_PKT_DECODE_ETMV3_H_INCLUDED
 
 #include "common/trc_pkt_decode_base.h"
-#include "etmv3/trc_pkt_elem_etmv3.h"
-#include "etmv3/trc_cmp_cfg_etmv3.h"
 #include "common/trc_gen_elem.h"
 #include "common/ocsd_pe_context.h"
+#include "common/ocsd_code_follower.h"
 
+#include "etmv3/trc_pkt_elem_etmv3.h"
+#include "etmv3/trc_cmp_cfg_etmv3.h"
 
 
 class TrcPktDecodeEtmV3 :  public TrcPktDecodeBase<EtmV3TrcPacket, EtmV3Config>
@@ -75,9 +76,14 @@ private:
     
 //** intra packet state;
 
-    
+    OcsdCodeFollower m_code_follower;   //!< code follower for instruction trace
 
-//** Other processor state;
+    ocsd_vaddr_t m_IAddr;           //!< next instruction address
+    OcsdPeContext m_pe_context;     //!< context for the PE
+
+    EtmV3TrcPacket m_pended_packet; //! Saved packet when processing pended.
+
+//** Other packet decoder state;
 
     // trace decode FSM
     typedef enum {
@@ -92,10 +98,6 @@ private:
     processor_state_t m_curr_state;
 
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.
-
-    OcsdPeContext m_pe_context;   //!< context for the PE
-
-    EtmV3TrcPacket m_pended_packet; //! Saved packet when processing pended.
 
 //** output element
     OcsdTraceElement m_output_elem;

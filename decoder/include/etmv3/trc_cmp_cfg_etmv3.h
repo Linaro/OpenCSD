@@ -119,6 +119,9 @@ public:
 
     const uint8_t getTraceID() const; //!< CoreSight Trace ID for this device.
 
+    const ocsd_arch_version_t getArchVersion() const;   //!< architecture version
+    const ocsd_core_profile_t getCoreProfile() const;   //!< core profile.
+
 private:
     ocsd_etmv3_cfg m_cfg;
 

@@ -60,7 +60,7 @@ public:
     
 // set information for decode operation - static or occasionally changing settings
 // per decode values are passed as parameters into the decode API calls.
-    void setCoreProfile(const ocsd_arch_profile_t profile);             //!< core profile
+    void setArchProfile(const ocsd_arch_profile_t profile);             //!< core profile
     void setMemSpaceAccess(const ocsd_mem_space_acc_t mem_acc_rule);    //!< memory space to use for access (filtered by S/NS, EL etc).
     void setMemSpaceCSID(const uint8_t csid);                           //!< memory spaces might be partitioned by CSID
     void setISA(const ocsd_isa isa);    //!< set the ISA for the decode.
@@ -129,7 +129,7 @@ private:
 #endif // ARM_OCSD_CODE_FOLLOWER_H_INCLUDED
 
 //*********** setup API
-inline void OcsdCodeFollower::setCoreProfile(const ocsd_arch_profile_t profile)
+inline void OcsdCodeFollower::setArchProfile(const ocsd_arch_profile_t profile)
 {
     m_instr_info.pe_type = profile;
 }
