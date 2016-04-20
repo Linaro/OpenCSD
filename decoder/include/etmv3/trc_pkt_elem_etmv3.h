@@ -62,7 +62,7 @@ public:
     operator const ocsd_etmv3_pkt*() const { return &m_pkt_data; };
     operator const ocsd_etmv3_pkt&() const { return m_pkt_data; };
 
-// update interface - set packet values
+// update interace - set packet values
     void Clear();       //!< clear update data in packet ready for new one.
     void ResetState();  //!< reset intra packet state data -on full decoder reset.
 
@@ -97,16 +97,26 @@ public:
 
 // packet status interface - get packet info.
     const ocsd_etmv3_pkt_type getType() const { return m_pkt_data.type; };
+    const bool isBadPacket() const;
         
     const int AltISA() const { return m_pkt_data.context.curr_alt_isa; };
     const ocsd_isa ISA() const { return m_pkt_data.curr_isa; };
-    const bool isBadPacket() const;
+    const bool changedISA() const { return m_pkt_data.curr_isa != m_pkt_data.prev_isa; };
+
+    const bool isNS() const { return m_pkt_data.context.curr_NS; };
+    const bool isHyp() const { return m_pkt_data.context.curr_Hyp; };
+
+    const bool isCtxtIDUpdated() const { return (m_pkt_data.context.updated_c == 1); }
+    const uint32_t getCtxtID() const { return m_pkt_data.context.ctxtID; };
+    const bool isVMIDUpdated() const { return (m_pkt_data.context.updated_v == 1); }
+    const uint32_t getVMID() const { return m_pkt_data.context.VMID; };
 
     const uint32_t getCycleCount() const { return m_pkt_data.cycle_count; };
-    const uint32_t getCtxtID() const { return m_pkt_data.context.ctxtID; };
-    const uint32_t getVMID() const { return m_pkt_data.context.VMID; };
     const uint64_t getTS() const { return m_pkt_data.timestamp; };
     
+    const bool isExcepPkt() const { return (m_pkt_data.exception.bits.present == 1); };
+    const ocsd_armv7_exception excepType() const { return m_pkt_data.exception.type; };
+    const uint16_t excepNum() const { return m_pkt_data.exception.number; };
     const bool isExcepCancel() const { return (m_pkt_data.exception.bits.present == 1) && (m_pkt_data.exception.bits.cancel == 1); };
 
 // printing
