@@ -621,6 +621,7 @@ static int cs_etm__synth_instruction_sample(struct cs_etm_queue *etmq,
         sample.cpu = etmq->cpu;
         sample.flags = 0; // etmq->flags;
         sample.insn_len = 1; // etmq->insn_len;
+	sample.cpumode = event->header.misc;
 
         //etmq->last_insn_cnt = etmq->state->tot_insn_cnt;
 
