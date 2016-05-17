@@ -49,7 +49,7 @@ typedef struct _decoder_elements
     union {
         struct {
             TrcPktProcEtmV3 *proc;
-            void * /*TrcPktDecodeEtmV3 * */ dcd; //** TBD
+            TrcPktDecodeEtmV3 *dcd;
         } etmv3;    /**< ETMv3 decoders */
         struct {
             TrcPktProcEtmV4I *proc;
@@ -155,7 +155,7 @@ public:
         switch(protocol) 
         {
         case OCSD_PROTOCOL_ETMV3:
-            //pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv3.dcd);
+            pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv3.dcd);
             break;
         case OCSD_PROTOCOL_ETMV4I:
             pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv4i.dcd);

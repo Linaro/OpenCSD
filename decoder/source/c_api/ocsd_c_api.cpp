@@ -249,6 +249,23 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t hand
     return err;
 }
 
+OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_decoder(const dcd_tree_handle_t handle, const void *etmv3_cfg)
+{
+    ocsd_err_t err = OCSD_OK;
+    if(handle != C_API_INVALID_TREE_HANDLE)
+    {
+        EtmV3Config cfg;
+        cfg = static_cast<const ocsd_etmv3_cfg *>(etmv3_cfg);
+        
+        // no need for a spcific CB object here - standard generic elements output used.
+        if(err == OCSD_OK)
+            err = ((DecodeTree *)handle)->createETMv3Decoder(&cfg);
+    }
+    else
+        err = OCSD_ERR_INVALID_PARAM_VAL;
+    return err;
+}
+
 OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context)
 {
     ocsd_err_t err = OCSD_OK;

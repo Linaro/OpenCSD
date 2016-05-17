@@ -61,7 +61,7 @@ void DecodeTreeElement::DestroyElem()
         case OCSD_PROTOCOL_ETMV3:
             delete decoder.etmv3.proc;
             decoder.etmv3.proc = 0;
-            //TBD:            delete decoder.etmv3.dcd;
+            delete decoder.etmv3.dcd;
             decoder.etmv3.dcd = 0;
             break;
 
@@ -533,16 +533,33 @@ ocsd_err_t DecodeTree::createSTMPktProcessor(STMConfig *p_config, IPktDataIn<Stm
 ocsd_err_t DecodeTree::createETMv3Decoder(EtmV3Config *p_config)
 {
     ocsd_err_t err = OCSD_ERR_NOT_INIT;
-#if 0 //TBD:
     uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
     if(usingFormatter())
         CSID = p_config->getTraceID();
-    /* err = */ createETMv3PktProcessor(p_config);
-    if(err == OCSD_OK) // created the packet processor and the decoder element*/
+
+    TrcPktDecodeEtmV3 *pProc = 0;
+    pProc = new (std::nothrow) TrcPktDecodeEtmV3(CSID);
+    if(!pProc)
+        return OCSD_ERR_MEM;
+
+    err = createETMv3PktProcessor(p_config,pProc);
+    if(err == OCSD_OK)
     {
-            //** TBD
+        m_decode_elements[CSID]->SetDecoderElement(pProc);
+        err = pProc->setProtocolConfig(p_config);
+        if(m_i_instr_decode && (err == OCSD_OK))
+            err = pProc->getInstrDecodeAttachPt()->attach(m_i_instr_decode);
+        if(m_i_mem_access && (err == OCSD_OK))
+            err = pProc->getMemoryAccessAttachPt()->attach(m_i_mem_access);
+        if( m_i_gen_elem_out && (err == OCSD_OK))
+            err = pProc->getTraceElemOutAttachPt()->attach(m_i_gen_elem_out);
+        if(err == OCSD_OK)
+            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
+
+        if(err != OCSD_OK)
+            destroyDecodeElement(CSID);
     }
-#endif
+
     return err;
 }
 

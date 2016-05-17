@@ -309,6 +309,7 @@
     <ClInclude Include="..\..\..\include\common\ocsd_dcd_tree_elem.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_error.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_error_logger.h" />
+    <ClInclude Include="..\..\..\include\common\ocsd_gen_elem_list.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_msg_logger.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_pe_context.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_version.h" />
@@ -395,6 +396,7 @@
     <ClCompile Include="..\..\..\source\ocsd_dcd_tree.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_error.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_error_logger.cpp" />
+    <ClCompile Include="..\..\..\source\ocsd_gen_elem_list.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_msg_logger.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_version.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp" />

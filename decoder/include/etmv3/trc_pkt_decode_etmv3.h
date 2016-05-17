@@ -39,11 +39,151 @@
 #include "common/trc_gen_elem.h"
 #include "common/ocsd_pe_context.h"
 #include "common/ocsd_code_follower.h"
+#include "common/ocsd_gen_elem_list.h"
 
 #include "etmv3/trc_pkt_elem_etmv3.h"
 #include "etmv3/trc_cmp_cfg_etmv3.h"
 
+/**************** Atom handling class **************************************/
+class Etmv3Atoms
+{
+public:
+    Etmv3Atoms(const bool isCycleAcc);
+    ~Etmv3Atoms() {};
 
+    //! initialise the atom and index values
+    void initAtomPkt(const EtmV3TrcPacket *in_pkt, const ocsd_trc_index_t &root_index);
+    
+    const ocsd_atm_val getCurrAtomVal() const;
+    const int numAtoms() const; //!< number of atoms
+    const ocsd_trc_index_t pktIndex() const; //!< originating packet index
+
+    const bool hasAtomCC() const;   //!< cycle count for current atom?
+    const uint32_t getAtomCC() const;   //!< cycle count for current atom
+    const uint32_t getRemainCC() const; //!< get residual cycle count for remaining atoms
+
+    void clearAtom();   //!< clear the current atom, set the next.
+    void clearAll();    //!< clear all    
+
+private:
+    ocsd_pkt_atom m_atom;         /**< atom elements - non zero number indicates valid atom count */
+    uint8_t m_p_hdr_fmt;          /**< if atom elements, associated phdr format */
+    uint32_t m_cycle_count;       
+    ocsd_trc_index_t m_root_index; //!< root index for the atom packet
+    bool m_isCCPacket;
+};
+
+inline Etmv3Atoms::Etmv3Atoms(const bool isCycleAcc)
+{
+    m_isCCPacket = isCycleAcc;
+}
+
+//! initialise the atom and index values
+inline void Etmv3Atoms::initAtomPkt(const EtmV3TrcPacket *in_pkt, const ocsd_trc_index_t &root_index)
+{
+    m_atom = in_pkt->getAtom();
+    m_p_hdr_fmt = in_pkt->getPHdrFmt();
+    m_cycle_count = in_pkt->getCycleCount();
+}
+    
+inline const ocsd_atm_val Etmv3Atoms::getCurrAtomVal() const
+{
+    return (m_atom.En_bits & 0x1) ? ATOM_E : ATOM_N;
+}
+
+inline const int Etmv3Atoms::numAtoms() const
+{
+    return m_atom.num;
+}
+
+inline const ocsd_trc_index_t Etmv3Atoms::pktIndex() const
+{
+    return  m_root_index;
+}
+
+inline const bool Etmv3Atoms::hasAtomCC() const
+{
+    bool hasCC = false;
+    if(m_isCCPacket)
+    {
+        switch(m_p_hdr_fmt)
+        {
+        case 4:
+        default: 
+            break;
+
+        case 3:
+        case 1: 
+            hasCC = true;
+            break;
+
+        case 2:
+            hasCC = (m_atom.num > 1);   // first of 2 has W state
+            break;
+        }
+    }
+    return hasCC;
+}
+
+inline const uint32_t Etmv3Atoms::getAtomCC() const
+{
+    uint32_t CC = 0;
+    if(m_isCCPacket)
+    {
+        switch(m_p_hdr_fmt)
+        {
+        case 4: // no CC in format 4
+        default:  break;
+
+        case 3: // single CC with optional E atom
+            CC = m_cycle_count; break;
+
+        case 2: // single W on first of 2 atoms
+            CC = (m_atom.num > 1) ? 1: 0; break;
+
+        case 1: // each atom has 1 CC.
+            CC = 1; break;
+        }
+    }
+    return CC;
+}
+
+inline const uint32_t Etmv3Atoms::getRemainCC() const
+{
+    uint32_t CC = 0;
+    if(m_isCCPacket)
+    {
+        switch(m_p_hdr_fmt)
+        {
+        case 4: // no CC in format 4
+        default:  break;
+
+        case 3:
+            CC = m_cycle_count; break;
+
+        case 2:
+            CC = (m_atom.num > 1) ? 1: 0; break;
+
+        case 1:
+            CC = m_atom.num; break;
+        }
+    }
+    return CC;
+}
+
+inline void Etmv3Atoms::clearAtom()
+{
+    m_atom.En_bits >>=1;
+    if(m_atom.num)
+        m_atom.num--;
+}
+
+inline void Etmv3Atoms::clearAll()
+{
+    m_atom.num = 0;
+}
+
+/********** Main decode class ****************************************************/
 class TrcPktDecodeEtmV3 :  public TrcPktDecodeBase<EtmV3TrcPacket, EtmV3Config>
 {
 public:
@@ -64,24 +204,33 @@ protected:
     void initDecoder();      //!< initial state on creation (zeros all config)
     void resetDecoder();     //!< reset state to start of decode. (moves state, retains config)
 
-    ocsd_datapath_resp_t decodePacket(); //!< decode a packet
+    ocsd_datapath_resp_t decodePacket(bool &pktDone); //!< decode a packet 
 
-    ocsd_datapath_resp_t processISync(const bool withCC);
+    ocsd_datapath_resp_t processISync(const bool withCC, const bool firstSync = false);
     ocsd_datapath_resp_t processBranchAddr();
     ocsd_datapath_resp_t processPHdr();
     
-    void pendPacket();  //!< save current packet for re-assess next pass
+    ocsd_datapath_resp_t sendUnsyncPacket();    //!< send an initial unsync packet when decoder starts
+
+    OcsdTraceElement *GetNextOpElem(ocsd_datapath_resp_t &resp);    //!< get the next element from the element list.
 
 private:
-    
+    void setNeedAddr(bool bNeedAddr);
+    void pendExceptionReturn();
+    bool preISyncValid(ocsd_etmv3_pkt_type pkt_type);
 //** intra packet state;
 
     OcsdCodeFollower m_code_follower;   //!< code follower for instruction trace
 
     ocsd_vaddr_t m_IAddr;           //!< next instruction address
-    OcsdPeContext m_pe_context;     //!< context for the PE
+    bool m_bNeedAddr;               //!< true if an address is needed (current out of date / invalid)
+    bool m_bSentUnknown;            //!< true if we have sent an unknown address packet for this phase of needing an address.
+    bool m_bWaitISync;              //!< true if waiting for first ISync packet
 
-    EtmV3TrcPacket m_pended_packet; //! Saved packet when processing pended.
+    OcsdPeContext m_PeContext;      //!< save context data before sending in output packet
+
+    OcsdGenElemList m_outputElemList;   //!< list of output elements
+
 
 //** Other packet decoder state;
 
@@ -91,16 +240,12 @@ private:
         WAIT_ASYNC,     //!< waiting for a-sync packet.
         WAIT_ISYNC,     //!< waiting for i-sync packet.
         DECODE_PKTS,    //!< processing a packet
-        PEND_INSTR,     //!< instruction output pended - need to check next packet for cancel - data in output element
-        PEND_PACKET,    //!< packet decode pended - save previous none decoded packet data - prev pended instr had wait response.
+        SEND_PKTS,      //!< sending packets.
     } processor_state_t;
 
     processor_state_t m_curr_state;
 
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.
-
-//** output element
-    OcsdTraceElement m_output_elem;
 };
 
 

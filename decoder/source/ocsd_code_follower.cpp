@@ -99,7 +99,7 @@ ocsd_err_t OcsdCodeFollower::followSingleAtom(const ocsd_vaddr_t addrStart, cons
     ocsd_err_t err = OCSD_ERR_NOT_INIT;
     if(initFollowerState())
     {
-        m_st_range_addr = m_instr_info.instr_addr = addrStart;
+        m_en_range_addr = m_st_range_addr = m_instr_info.instr_addr = addrStart;
         err = decodeSingleOpCode();
         if(err == OCSD_OK)
         {
@@ -127,7 +127,6 @@ ocsd_err_t OcsdCodeFollower::followSingleAtom(const ocsd_vaddr_t addrStart, cons
     }
     return err;
 }
-
 
 ocsd_err_t OcsdCodeFollower::decodeSingleOpCode()
 {

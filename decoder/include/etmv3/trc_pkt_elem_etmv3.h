@@ -62,7 +62,7 @@ public:
     operator const ocsd_etmv3_pkt*() const { return &m_pkt_data; };
     operator const ocsd_etmv3_pkt&() const { return m_pkt_data; };
 
-// update interace - set packet values
+// update interface - set packet values
     void Clear();       //!< clear update data in packet ready for new one.
     void ResetState();  //!< reset intra packet state data -on full decoder reset.
 
@@ -103,6 +103,9 @@ public:
     const ocsd_isa ISA() const { return m_pkt_data.curr_isa; };
     const bool changedISA() const { return m_pkt_data.curr_isa != m_pkt_data.prev_isa; };
 
+    // any of the context elements updated?
+    const bool isCtxtUpdated() const; 
+    const bool isCtxtFlagsUpdated() const { return (m_pkt_data.context.updated == 1); };
     const bool isNS() const { return m_pkt_data.context.curr_NS; };
     const bool isHyp() const { return m_pkt_data.context.curr_Hyp; };
 
@@ -118,6 +121,18 @@ public:
     const ocsd_armv7_exception excepType() const { return m_pkt_data.exception.type; };
     const uint16_t excepNum() const { return m_pkt_data.exception.number; };
     const bool isExcepCancel() const { return (m_pkt_data.exception.bits.present == 1) && (m_pkt_data.exception.bits.cancel == 1); };
+
+    const ocsd_iSync_reason getISyncReason() const { return m_pkt_data.isync_info.reason; };
+    const bool getISyncHasCC() const { return m_pkt_data.isync_info.has_cycle_count; };
+    const bool getISyncIsLSiPAddr() const { return m_pkt_data.isync_info.has_LSipAddress; };
+    const bool getISyncNoAddr() const { return m_pkt_data.isync_info.no_address; };
+
+    const ocsd_vaddr_t getAddr() const { return  m_pkt_data.addr.val; };
+    const ocsd_vaddr_t getDataAddr() const { return  m_pkt_data.data.addr.val; };
+
+    const ocsd_pkt_atom &getAtom() const { return m_pkt_data.atom; };
+    const uint8_t getPHdrFmt() const { return m_pkt_data.p_hdr_fmt; };
+
 
 // printing
     virtual void toString(std::string &str) const;
@@ -226,6 +241,13 @@ inline void EtmV3TrcPacket::SetISyncIsLSiP()
 inline void EtmV3TrcPacket::SetISyncNoAddr()
 {
     m_pkt_data.isync_info.no_address = 1;
+}
+
+inline const bool EtmV3TrcPacket::isCtxtUpdated() const
+{
+     return (m_pkt_data.context.updated_v == 1) ||
+            (m_pkt_data.context.updated == 1) ||
+            (m_pkt_data.context.updated_c == 1);
 }
 
 /** @}*/

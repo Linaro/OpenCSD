@@ -214,6 +214,16 @@ inline const uint8_t EtmV3Config::getTraceID() const
     return (uint8_t)(m_cfg.reg_trc_id & 0x7F);
 }
 
+inline const ocsd_arch_version_t EtmV3Config::getArchVersion() const
+{
+    return m_cfg.arch_ver;
+}
+
+inline const ocsd_core_profile_t EtmV3Config::getCoreProfile() const
+{
+    return m_cfg.core_prof;
+}
+
 /** @}*/
 
 /** @}*/

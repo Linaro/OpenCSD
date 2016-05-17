@@ -66,10 +66,11 @@ static const char *s_errorCodeDescs[][2] = {
     {"OCSD_ERR_PKT_INTERP_FAIL","Interpreter failed - cannot recover - bad data or sequence"},
     /* packet decoder errors */
     {"OCSD_ERR_UNSUPPORTED_ISA","ISA not supported in decoder"},
-    {"OCSD_ERR_HW_CFG_UNSUPP","Programmed trace configuration not supported by decoder."},
+    {"OCSD_ERR_HW_CFG_UNSUPP","Programmed trace configuration not supported by decodUer."},
     {"OCSD_ERR_UNSUPP_DECODE_PKT","Packet not supported in decoder"},
     {"OCSD_ERR_BAD_DECODE_PKT","Reserved or unknown packet in decoder."}, 
     {"OCSD_ERR_COMMIT_PKT_OVERRUN","Overrun in commit packet stack - tried to commit more than available"},
+    {"OCSD_ERR_MEM_NACC","Unable to access required memory address."},
     /* decode tree errors */
     {"OCSD_ERR_DCDT_NO_FORMATTER","No formatter in use - operation not valid."},
     /* target memory access errors */

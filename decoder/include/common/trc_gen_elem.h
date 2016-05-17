@@ -36,6 +36,8 @@
 
 #include "trc_gen_elem_types.h"
 #include "trc_printable_elem.h"
+#include "ocsd_pe_context.h"
+
 /** @addtogroup gen_trc_elem 
 @{*/
 
@@ -53,17 +55,46 @@ public:
 
     void init();
 
-    const ocsd_gen_trc_elem_t getType() const { return elem_type; };
-    void setType(const ocsd_gen_trc_elem_t type);
+// set elements API
+
+    void setType(const ocsd_gen_trc_elem_t type);       //!< set type and init flags
+    void updateType(const ocsd_gen_trc_elem_t type);    //!< change type only - no init
+
     void setContext(const ocsd_pe_context &new_context) { context = new_context; };
+    void setISA(const ocsd_isa isa_update);
+    
     void setCycleCount(const uint32_t cycleCount);
     void setEvent(const event_t ev_type, const uint16_t number);
     void setTS(const uint64_t ts, const bool freqChange = false) { timestamp = ts; cpu_freq_change = freqChange ? 1 : 0; };
+
     void setExcepMarker() { excep_data_marker = 1; };
+    void setExceptionNum(uint32_t excepNum) { exception_number = excepNum; };
+
+
+    void setTraceOnReason(const trace_on_reason_t reason);
+
+    void setAddrRange(const ocsd_vaddr_t  st_addr, const ocsd_vaddr_t en_addr);
+    void setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype);
+    void setAddrStart(const ocsd_vaddr_t  st_addr) { this->st_addr = st_addr; };
+
+
+
+// stringize the element
 
     virtual void toString(std::string &str) const;
 
+// get elements API
+
     OcsdTraceElement &operator =(const ocsd_generic_trace_elem* p_elem);
+
+    const ocsd_gen_trc_elem_t getType() const { return elem_type; };
+
+    // return current context
+    const ocsd_pe_context &getContext() const {  return context; };
+
+    
+private:
+    void clearPerPktData(); //!< clear flags that indicate validity / have values on a per packet basis
 
 };
 
@@ -89,16 +120,30 @@ inline void OcsdTraceElement::setEvent(const event_t ev_type, const uint16_t num
     trace_event.ev_number = ev_type == EVENT_NUMBERED ? number : 0;
 }
 
+inline void OcsdTraceElement::setAddrRange(const ocsd_vaddr_t  st_addr, const ocsd_vaddr_t en_addr)
+{
+    this->st_addr = st_addr;
+    this->en_addr = en_addr;
+}
+
+inline void OcsdTraceElement::setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype)
+{
+    last_instr_exec = exec ? 1 : 0;
+    this->last_i_type = last_i_type;
+    this->last_i_subtype = last_i_subtype;
+}
+
 inline void OcsdTraceElement::setType(const ocsd_gen_trc_elem_t type) 
 { 
     // set the type and clear down the per element flags
     elem_type = type;
-    has_cc = 0;
-    last_instr_exec = 0;
-    last_i_type = OCSD_INSTR_OTHER;
-    excep_ret_addr = 0;
-    exception_number = 0;
-    excep_data_marker = 0;
+
+    clearPerPktData();
+}
+
+inline void OcsdTraceElement::updateType(const ocsd_gen_trc_elem_t type)
+{
+    elem_type = type;
 }
 
 inline void OcsdTraceElement::init()
@@ -107,11 +152,30 @@ inline void OcsdTraceElement::init()
     context.vmid_valid = 0;
     context.el_valid = 0;
 
+    last_i_type = OCSD_INSTR_OTHER;
+    last_i_subtype = OCSD_S_INSTR_NONE;
+
+    clearPerPktData();
+}
+
+inline void OcsdTraceElement::clearPerPktData()
+{
     cpu_freq_change = 0;
     has_cc = 0;
     last_instr_exec = 0;
     excep_ret_addr = 0;
+    exception_number = 0;       // union with trace_on_reason / trace_event
     excep_data_marker = 0;
+}
+
+inline void OcsdTraceElement::setTraceOnReason(const trace_on_reason_t reason)
+{
+    trace_on_reason = reason;
+}
+
+inline void OcsdTraceElement::setISA(const ocsd_isa isa_update)
+{
+    isa = isa_update;
 }
 
 /** @}*/
