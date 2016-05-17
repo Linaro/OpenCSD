@@ -138,14 +138,14 @@ typedef struct _ocsd_etmv3_pkt
     ocsd_isa curr_isa;         /**< current ISA */
     ocsd_isa prev_isa;         /**< ISA in previous packet */
 
-    etmv3_context_t context;    /**< current context */
+    etmv3_context_t context;   /**< current context */
     ocsd_pkt_vaddr addr;       /**< current Addr */
 
     etmv3_isync_t isync_info;
     
     ocsd_etmv3_excep exception;
     
-    ocsd_pkt_atom atom;        /**< atom elements - non zerom number indicates valid atom count */
+    ocsd_pkt_atom atom;         /**< atom elements - non zerom number indicates valid atom count */
     uint8_t p_hdr_fmt;          /**< if atom elements, associated phdr format */
     uint32_t cycle_count;       /**< cycle count associated with this packet (ETMv3 has counts in atom packets and as individual packets */
     
@@ -160,10 +160,10 @@ typedef struct _ocsd_etmv3_pkt
 
 typedef struct _ocsd_etmv3_cfg 
 {
-    uint32_t                reg_idr;    /**< ID register */
-    uint32_t                reg_ctrl;   /**< Control Register */
-    uint32_t                reg_ccer;   /**< CCER register */
-    uint32_t                reg_trc_id; /**< Trace Stream ID register */
+    uint32_t               reg_idr;    /**< ID register */
+    uint32_t               reg_ctrl;   /**< Control Register */
+    uint32_t               reg_ccer;   /**< CCER register */
+    uint32_t               reg_trc_id; /**< Trace Stream ID register */
     ocsd_arch_version_t    arch_ver;   /**< Architecture version */
     ocsd_core_profile_t    core_prof;  /**< Core Profile */
 } ocsd_etmv3_cfg;

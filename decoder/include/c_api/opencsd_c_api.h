@@ -207,6 +207,19 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t hand
 
 
 /*!
+ * Creates a packet processor + packet decoder pair for the supplied configuration structure.
+ * Uses the output function set in ocsd_dt_set_gen_elem_outfn() as the output sink.
+ *
+ * @param handle : Handle to decode tree.
+ * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.
+ *
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_decoder(const dcd_tree_handle_t handle, const void *etmv3_cfg);
+
+
+
+/*!
  * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
  * Packet processor must exist for the trace ID and be an ETMv3 processor.
  *

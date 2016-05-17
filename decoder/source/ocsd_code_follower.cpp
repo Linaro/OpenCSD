@@ -97,57 +97,63 @@ bool OcsdCodeFollower::initFollowerState()
 ocsd_err_t OcsdCodeFollower::followSingleAtom(const ocsd_vaddr_t addrStart, const ocsd_atm_val A)
 {
     ocsd_err_t err = OCSD_ERR_NOT_INIT;
-    if(initFollowerState())
-    {
-        m_st_range_addr = m_instr_info.instr_addr = addrStart;
-        err = decodeSingleOpCode();
-        if(err == OCSD_OK)
-        {
-            // set end range - always after the instruction executed.
-            m_en_range_addr = m_instr_info.instr_addr + m_instr_info.instr_size;
+
+    if(!initFollowerState())
+        return err;
+
+    m_en_range_addr = m_st_range_addr = m_instr_info.instr_addr = addrStart;
+    err = decodeSingleOpCode();
+   
+    if(err != OCSD_OK)
+        return err;
+
+    // set end range - always after the instruction executed.
+    m_en_range_addr = m_instr_info.instr_addr + m_instr_info.instr_size;
                     
-            // assume next addr is the instruction after
-            m_next_addr = m_en_range_addr;
-            m_b_next_valid = true;
+    // assume next addr is the instruction after
+    m_next_addr = m_en_range_addr;
+    m_b_next_valid = true;
 
-            // case when next address is different
-            switch(m_instr_info.type)                        
-            {
-            case OCSD_INSTR_BR:
-                if(A == ATOM_E) // executed the direct branch
-                    m_next_addr = m_instr_info.branch_addr;
-                break;
+    // case when next address is different
+    switch(m_instr_info.type)                        
+    {
+    case OCSD_INSTR_BR:
+        if(A == ATOM_E) // executed the direct branch
+            m_next_addr = m_instr_info.branch_addr;
+        break;
 
-            case OCSD_INSTR_BR_INDIRECT:
-                if(A == ATOM_E) // executed indirect branch
-                    m_b_next_valid = false;
-                break;
-            }
-        }
+    case OCSD_INSTR_BR_INDIRECT:
+        if(A == ATOM_E) // executed indirect branch
+            m_b_next_valid = false;
+        break;
     }
     return err;
 }
 
-
 ocsd_err_t OcsdCodeFollower::decodeSingleOpCode()
 {
     ocsd_err_t err = OCSD_OK;
-    uint32_t bytesReq = 4;
-    uint32_t opcode;
+    // request 4 bytes for the opcode - even for Thumb which may be T32
+    uint32_t bytesReq = 4;  
+    uint32_t opcode;    // buffer for opcode
+
+    // read memory location for opcode 
     err = m_pMemAccess->first()->ReadTargetMemory(m_instr_info.instr_addr,m_mem_space_csid,m_mem_acc_rule,&bytesReq,(uint8_t *)&opcode);
-    if(err == OCSD_OK)
+
+    // operational error (not access problem - that is indicated by 0 bytes returned)
+    if(err != OCSD_OK)
+        return err;
+
+    if(bytesReq == 4)       // check that we got all memory requested.
     {
-        if(bytesReq == 4)       // got memory.
-        {
-            m_instr_info.opcode = opcode;
-            err = m_pIDecode->first()->DecodeInstruction(&m_instr_info);
-        }
-        else       // memory unavailable.
-        {
-            m_b_nacc_err = true;
-            m_nacc_address = m_instr_info.instr_addr;
-            err = OCSD_ERR_MEM_NACC;
-        }
+        m_instr_info.opcode = opcode;
+        err = m_pIDecode->first()->DecodeInstruction(&m_instr_info);
+    }
+    else       // otherwise memory unavailable.
+    {
+        m_b_nacc_err = true;
+        m_nacc_address = m_instr_info.instr_addr;
+        err = OCSD_ERR_MEM_NACC;
     }
     return err;
 }

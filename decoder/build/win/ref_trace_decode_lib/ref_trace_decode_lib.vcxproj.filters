@@ -287,6 +287,9 @@
     <ClInclude Include="..\..\..\include\common\ocsd_code_follower.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\common\ocsd_gen_elem_list.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -392,6 +395,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\ocsd_code_follower.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ocsd_gen_elem_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

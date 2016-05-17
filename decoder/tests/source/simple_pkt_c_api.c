@@ -62,7 +62,8 @@ const char *tc2_snapshot = "../../../snapshots/TC2/";
 const char *trace_data_filename = "cstrace.bin";
 const char *stmtrace_data_filename = "cstraceitm.bin";
 const char *memory_dump_filename = "kernel_dump.bin";
-const ocsd_vaddr_t mem_dump_address=0xFFFFFFC000081000;
+ocsd_vaddr_t mem_dump_address=0xFFFFFFC000081000;
+const ocsd_vaddr_t mem_dump_address_tc2=0xC0008000;
 
 static int using_mem_acc_cb = 0;
 static int use_region_file = 0;
@@ -150,11 +151,13 @@ static void process_cmd_line(int argc, char *argv[])
         {
             test_protocol =  OCSD_PROTOCOL_ETMV3;
             default_path_to_snapshot = tc2_snapshot;
+            mem_dump_address = mem_dump_address_tc2;
         }
         else if(strcmp(argv[idx],"-ptm") == 0)
         {
             test_protocol =  OCSD_PROTOCOL_PTM;
             default_path_to_snapshot = tc2_snapshot;
+            mem_dump_address = mem_dump_address_tc2;
         }
         else if(strcmp(argv[idx],"-stm") == 0)
         {
@@ -506,7 +509,8 @@ ocsd_datapath_resp_t etm_v3_packet_handler(const void *p_context, const ocsd_dat
     return packet_handler(op,index_sop,(const void *)p_packet_in);
 }
 
-void etm_v3_packet_monitor(   const ocsd_datapath_op_t op, 
+void etm_v3_packet_monitor(   const void *p_context, 
+                              const ocsd_datapath_op_t op, 
                               const ocsd_trc_index_t index_sop, 
                               const ocsd_etmv3_pkt *p_packet_in,
                               const uint32_t size,
@@ -518,7 +522,7 @@ void etm_v3_packet_monitor(   const ocsd_datapath_op_t op,
 static ocsd_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
 {
     ocsd_err_t ret = OCSD_OK;
-    /*char mem_file_path[512];*/
+    char mem_file_path[512];
 
     /* populate the ETMv3 configuration structure */
     set_config_struct_etmv3();
@@ -536,14 +540,14 @@ static ocsd_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
         /* Full decode - need decoder, and memory dump */
         /* not supported in library at present */
         
-#if 0
+
         /* create the packet decoder and packet processor pair */
         ret = ocsd_dt_create_etmv3_decoder(dcd_tree_h,&trace_config_etmv3);
         if(ret == OCSD_OK)
         {
             if((op != TEST_PKT_DECODEONLY) && (ret == OCSD_OK))
             {
-                    ret = ocsd_dt_attach_etmv3_pkt_mon(dcd_tree_h, (uint8_t)(trace_config_etmv3.reg_trc_id & 0x7F), etm_v4i_packet_monitor);
+                    ret = ocsd_dt_attach_etmv3_pkt_mon(dcd_tree_h, (uint8_t)(trace_config_etmv3.reg_trc_id & 0x7F), etm_v3_packet_monitor,0);
             }
         }
 
@@ -556,10 +560,6 @@ static ocsd_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
             /* create a memory file accessor */
             ret = ocsd_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,OCSD_MEM_SPACE_ANY,mem_file_path);
         }
-#else
-        printf("ETMv3 Full decode not supported in library at present. Packet print only\n");
-        ret = OCSD_ERR_RDR_NO_DECODER;
-#endif
     }
     return ret;
 }

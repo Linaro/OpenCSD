@@ -47,6 +47,7 @@ static const char *s_elem_descs[][2] =
     {"OCSD_GEN_TRC_ELEM_PE_CONTEXT","PE status update / change (arch, ctxtid, vmid etc)."},
     {"OCSD_GEN_TRC_ELEM_INSTR_RANGE","Traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key"},
     {"OCSD_GEN_TRC_ELEM_ADDR_NACC","Tracing in inaccessible memory area."},
+    {"OCSD_GEN_TRC_ELEM_ADDR_UNKNOWN","Tracing unknown address area."},
     {"OCSD_GEN_TRC_ELEM_EXCEPTION","Exception"},
     {"OCSD_GEN_TRC_ELEM_EXCEPTION_RET","Expection return"},
     {"OCSD_GEN_TRC_ELEM_TIMESTAMP","Timestamp - preceding elements happeded before this time."},
@@ -79,6 +80,16 @@ static const char *s_trace_on_reason[] = {
     "debug restart"
 };
 
+
+static const char *s_isa_str[] = {
+   "A32",      /**< V7 ARM 32, V8 AArch32 */  
+   "T32",          /**< Thumb2 -> 16/32 bit instructions */  
+   "A64",      /**< V8 AArch64 */
+   "TEE",          /**< Thumb EE - unsupported */  
+   "Jaz",      /**< Jazelle - unsupported in trace */  
+   "Unk"       /**< ISA not yet known */
+};
+
 void OcsdTraceElement::toString(std::string &str) const
 {
     std::ostringstream oss;
@@ -91,6 +102,7 @@ void OcsdTraceElement::toString(std::string &str) const
         {
         case OCSD_GEN_TRC_ELEM_INSTR_RANGE:
             oss << "exec range=0x" << std::hex << st_addr << ":[0x" << en_addr << "] ";
+            oss << "(ISA=" << s_isa_str[(int)isa] << ") ";
             oss << ((last_instr_exec == 1) ? "E " : "N ");
             if((int)last_i_type < T_SIZE)
                 oss << instr_type[last_i_type];
@@ -111,7 +123,12 @@ void OcsdTraceElement::toString(std::string &str) const
             break;
 
         case OCSD_GEN_TRC_ELEM_PE_CONTEXT:
-            oss << "EL" << std::dec << (int)(context.exception_level) << (context.security_level == ocsd_sec_secure ? " S; " : "N; ") << (context.bits64 ? "AArch64; " : "AArch32; ");
+            oss << "(ISA=" << s_isa_str[(int)isa] << ") ";
+            if(context.exception_level >= 0)
+            {
+                oss << "EL" << std::dec << (int)(context.exception_level);
+            }
+            oss << (context.security_level == ocsd_sec_secure ? " S; " : "N; ") << (context.bits64 ? "64-bit; " : "32-bit; ");
             if(context.vmid_valid)
                 oss << "VMID=0x" << std::hex << context.vmid << "; ";
             if(context.ctxt_id_valid)

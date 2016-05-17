@@ -93,7 +93,7 @@ typedef struct _ocsd_pkt_atom
 
 /** Isync Reason - common to PTM and ETMv3 **/
 typedef enum _ocsd_iSync_reason {
-    iSync_Periodic,
+    iSync_Periodic = 0,
     iSync_TraceEnable,
     iSync_TraceRestartAfterOverflow,
     iSync_DebugExit

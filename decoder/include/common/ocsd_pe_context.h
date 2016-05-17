@@ -46,7 +46,11 @@ class OcsdPeContext
 {
 public:
     OcsdPeContext();
+    OcsdPeContext(const ocsd_pe_context *context);
     ~OcsdPeContext() {};
+
+    OcsdPeContext &operator =(const OcsdPeContext &ctxt);
+    OcsdPeContext &operator =(const ocsd_pe_context *context);
 
     void resetCtxt();
 
@@ -76,6 +80,11 @@ inline OcsdPeContext::OcsdPeContext()
     resetCtxt();
 }
 
+inline OcsdPeContext::OcsdPeContext(const ocsd_pe_context *context)
+{
+    m_context = *context;
+}
+
 inline void OcsdPeContext::resetCtxt()
 {
     // initialise the context
@@ -88,6 +97,19 @@ inline void OcsdPeContext::resetCtxt()
     m_context.vmid = 0;
     m_context.vmid_valid = 0;
 }
+
+inline OcsdPeContext & OcsdPeContext::operator =(const OcsdPeContext &ctxt)
+{
+    m_context = ctxt;
+    return *this;
+}
+
+inline OcsdPeContext & OcsdPeContext::operator =(const ocsd_pe_context *context)
+{
+    m_context = *context;
+    return *this;
+}
+
 
 #endif // ARM_OCSD_PE_CONTEXT_H_INCLUDED
 

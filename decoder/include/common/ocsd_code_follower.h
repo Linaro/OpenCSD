@@ -83,6 +83,7 @@ public:
 //*********************** results API
     const ocsd_vaddr_t getRangeSt() const;  //!< inclusive start address of decoded range (value passed in)
     const ocsd_vaddr_t getRangeEn() const;  //!< exclusive end address of decoded range (first instruction _not_ executed / potential next instruction).
+    const bool hasRange() const;            //!< we have a valid range executed (may be false if nacc).
 
     const bool hasNextAddr() const;         //!< we have calulated the next address - otherwise this is needed from trace packets.
     const ocsd_vaddr_t getNextAddr() const; //!< next address - valid if hasNextAddr() true.
@@ -163,6 +164,11 @@ inline const ocsd_vaddr_t OcsdCodeFollower::getRangeSt() const
 inline const ocsd_vaddr_t OcsdCodeFollower::getRangeEn() const
 {
     return m_en_range_addr;
+}
+
+inline const bool OcsdCodeFollower::hasRange() const
+{
+    return m_st_range_addr < m_en_range_addr;
 }
 
 inline const bool OcsdCodeFollower::hasNextAddr() const
