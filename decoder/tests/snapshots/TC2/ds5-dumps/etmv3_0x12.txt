@@ -99,6 +99,7 @@ Instruction	93	S:0xC00214AC	0xBD10	5	POP      {r4,pc}	true
 Instruction	94	S:0xC0026348	0x4638	1	MOV      r0,r7	false	
 Instruction	95	S:0xC002634A	0x4631	0	MOV      r1,r6	false	
 Instruction	96	S:0xC002634C	0xF04AFA1A	1	BL       {pc}+0x4a438 ; 0xc0070784	true	
+Cycle Count				1003	Tracing disabled		
 Info					Tracing enabled		
 Instruction	97	S:0xC0021480	0xB510	1	PUSH     {r4,lr}	false	
 Instruction	98	S:0xC0021482	0xB500	1	PUSH     {lr}	false	
@@ -134,6 +135,7 @@ Instruction	127	S:0xC00214A2	0xF02303FF	1	BIC      r3,r3,#0xff	false
 Instruction	128	S:0xC00214A6	0xB113	1	CBZ      r3,{pc}+8 ; 0xc00214ae	true	fail
 Instruction	129	S:0xC00214A8	0xF3848100	8	MSR      CPSR_c,r4	false	
 Instruction	130	S:0xC00214AC	0xBD10	5	POP      {r4,pc}	true	
+Cycle Count				17	Tracing disabled		
 Info					Tracing enabled		
 Instruction	131	S:0xC0026350	0x6862	1	LDR      r2,[r4,#4]	false	
 Instruction	132	S:0xC0026352	0x2300	0	MOVS     r3,#0	false	
@@ -141,8 +143,9 @@ Instruction	133	S:0xC0026354	0xF2C033FF	1	MOVT     r3,#0x3ff	false
 Instruction	134	S:0xC0026358	0x4013	1	ANDS     r3,r3,r2	false	
 Instruction	135	S:0xC002635A	0xB10B	1	CBZ      r3,{pc}+6 ; 0xc0026360	true	fail
 Instruction	136	S:0xC002635C	0xF05CFA84	1	BL       {pc}+0x5c50c ; 0xc0082868	true	
+Cycle Count				215	Tracing disabled		
 Info					Tracing enabled		
-Instruction	137	S:0xC0026360	0xF016FC22	65	BL       {pc}+0x16848 ; 0xc003cba8	true	
+Instruction	137	S:0xC0026360	0xF016FC22	1	BL       {pc}+0x16848 ; 0xc003cba8	true	
 Instruction	138	S:0xC003CBA8	0xE92D4FF0	3	PUSH     {r4-r11,lr}	false	
 Instruction	139	S:0xC003CBAC	0xB083	7	SUB      sp,sp,#0xc	false	
 Instruction	140	S:0xC003CBAE	0xAF00	1	ADD      r7,sp,#0	false	
@@ -162,6 +165,7 @@ Instruction	153	S:0xC003CBD8	0x4620	1	MOV      r0,r4	false
 Instruction	154	S:0xC003CBDA	0xF8D4C460	14	LDR      r12,[r4,#0x460]	false	
 Instruction	155	S:0xC003CBDE	0xF8C7C004	3	STR      r12,[r7,#4]	false	
 Instruction	156	S:0xC003CBE2	0xF3A7FCE9	0	BL       {pc}+0x3a79d6 ; 0xc03e45b8	true	
+Cycle Count				62	Tracing disabled		
 Info					Tracing enabled		
 Instruction	157	S:0xC003CBE6	0x4620	1	MOV      r0,r4	false	
 Instruction	158	S:0xC003CBE8	0xF7FEFDCE	1	BL       {pc}-0x1460 ; 0xc003b788	true	
@@ -190,8 +194,9 @@ Instruction	180	S:0xC00113F4	0xB510	1	PUSH     {r4,lr}	false
 Instruction	181	S:0xC00113F6	0x681B	6	LDR      r3,[r3,#0]	false	
 Instruction	182	S:0xC00113F8	0x4798	1	BLX      r3	true	
 Timestamp					Timestamp: 562536983984		
+Cycle Count				24	Tracing disabled		
 Info					Tracing enabled		
-Instruction	183	S:0xC00113FA	0xF24C5320	9	MOV      r3,#0xc520	false	
+Instruction	183	S:0xC00113FA	0xF24C5320	1	MOV      r3,#0xc520	false	
 Instruction	184	S:0xC00113FE	0xF2CC035F	1	MOVT     r3,#0xc05f	false	
 Instruction	185	S:0xC0011402	0x681C	3	LDR      r4,[r3,#0]	false	
 Instruction	186	S:0xC0011404	0xFBA02304	3	UMULL    r2,r3,r0,r4	false	
@@ -652,6 +657,7 @@ Instruction	640	S:0xC00403C2	0x3401	0	ADDS     r4,#1	false
 Instruction	641	S:0xC00403C4	0x4621	1	MOV      r1,r4	false	
 Instruction	642	S:0xC00403C6	0xFB00F008	2	MUL      r0,r0,r8	false	
 Instruction	643	S:0xC00403CA	0xF211F883	1	BL       {pc}+0x21110a ; 0xc02514d4	true	
+Cycle Count				168	Tracing disabled		
 Info					Tracing enabled		
 Instruction	644	S:0xC00403CE	0x4B27	1	LDR      r3,[pc,#156] ; [0xC004046C] = 0xC0635FF4	false	
 Instruction	645	S:0xC00403D0	0x685A	18	LDR      r2,[r3,#4]	false	
@@ -661,6 +667,7 @@ Instruction	648	S:0xC00403D8	0xB98A	1	CBNZ     r2,{pc}+0x26 ; 0xc00403fe	true	fa
 Instruction	649	S:0xC00403DA	0xEA4F2088	1	LSL      r0,r8,#10	false	
 Instruction	650	S:0xC00403DE	0x4621	0	MOV      r1,r4	false	
 Instruction	651	S:0xC00403E0	0xF211F878	1	BL       {pc}+0x2110f4 ; 0xc02514d4	true	
+Cycle Count				80	Tracing disabled		
 Info					Tracing enabled		
 Instruction	652	S:0xC00403E4	0x4607	1	MOV      r7,r0	false	
 Instruction	653	S:0xC00403E6	0xF8C6014C	1	STR      r0,[r6,#0x14c]	false	
@@ -931,6 +938,7 @@ Instruction	916	S:0xC004332A	0x9003	1	STR      r0,[sp,#0xc]	false
 Instruction	917	S:0xC004332C	0x4640	0	MOV      r0,r8	false	
 Instruction	918	S:0xC004332E	0xF8DD802C	3	LDR      r8,[sp,#0x2c]	false	
 Instruction	919	S:0xC0043332	0xF20DFD2D	0	BL       {pc}+0x20da5e ; 0xc0250d90	true	
+Cycle Count				289	Tracing disabled		
 Info					Tracing enabled		
 Instruction	920	S:0xC0043336	0x1C6C	1	ADDS     r4,r5,#1	false	
 Instruction	921	S:0xC0043338	0x9D03	1	LDR      r5,[sp,#0xc]	false	
@@ -942,6 +950,7 @@ Instruction	926	S:0xC004334A	0x2100	0	MOVS     r1,#0	false
 Instruction	927	S:0xC004334C	0x02A8	1	LSLS     r0,r5,#10	false	
 Instruction	928	S:0xC004334E	0xF8D850DC	1	LDR      r5,[r8,#0xdc]	false	
 Instruction	929	S:0xC0043352	0xF20DFD1D	0	BL       {pc}+0x20da3e ; 0xc0250d90	true	
+Cycle Count				218	Tracing disabled		
 Info					Tracing enabled		
 Instruction	930	S:0xC0043356	0xEBBA1F99	1	CMP      r10,r9,LSR #6	false	
 Instruction	931	S:0xC004335A	0xEBC60202	1	RSB      r2,r6,r2	false	
@@ -988,6 +997,7 @@ Instruction	971	S:0xC003CC5C	0xF8253008	1	STRH     r3,[r5,r8]	false
 Instruction	972	S:0xC003CC60	0xF3BF8F4F	31	DSB      	false	
 Instruction	973	S:0xC003CC64	0xF3AF8004	1	SEV.W    	false	
 Instruction	974	S:0xC003CC68	0xF049FF64	1	BL       {pc}+0x49ecc ; 0xc0086b34	true	
+Cycle Count				139	Tracing disabled		
 Info					Tracing enabled		
 Instruction	975	S:0xC003CC6C	0xF85A2026	1	LDR      r2,[r10,r6,LSL #2]	false	
 Instruction	976	S:0xC003CC70	0x464B	0	MOV      r3,r9	false	
@@ -1074,6 +1084,7 @@ Instruction	1056	S:0xC0046A66	0xF8DFA128	1	LDR      r10,[pc,#296] ; [0xC0046B90]
 Instruction	1057	S:0xC0046A6A	0xF85E2002	14	LDR      r2,[lr,r2]	false	
 Instruction	1058	S:0xC0046A6E	0x9300	3	STR      r3,[sp,#0]	false	
 Instruction	1059	S:0xC0046A70	0xF20BFD48	0	BL       {pc}+0x20ba94 ; 0xc0252504	true	
+Cycle Count				186	Tracing disabled		
 Info					Tracing enabled		
 Instruction	1060	S:0xC0046A74	0x683A	1	LDR      r2,[r7,#0]	false	
 Instruction	1061	S:0xC0046A76	0x9B00	1	LDR      r3,[sp,#0]	false	
@@ -1268,6 +1279,7 @@ Instruction	1249	S:0xC0035110	0x2A00	1	CMP      r2,#0	false
 Instruction	1250	S:0xC0035112	0xD116	0	BNE      {pc}+0x30 ; 0xc0035142	true	fail
 Instruction	1251	S:0xC0035114	0x4630	1	MOV      r0,r6	false	
 Instruction	1252	S:0xC0035116	0xF3AFFA4F	0	BL       {pc}+0x3af4a2 ; 0xc03e45b8	true	
+Cycle Count				49	Tracing disabled		
 Info					Tracing enabled		
 Instruction	1253	S:0xC003511A	0xF1B80F00	1	CMP      r8,#0	false	
 Instruction	1254	S:0xC003511E	0xD006	0	BEQ      {pc}+0x10 ; 0xc003512e	true	fail
@@ -1288,6 +1300,7 @@ Instruction	1268	S:0xC0034D64	0xB9A2	2	CBNZ     r2,{pc}+0x2c ; 0xc0034d90	true	f
 Instruction	1269	S:0xC0034D66	0xF106000C	1	ADD      r0,r6,#0xc	false	
 Instruction	1270	S:0xC0034D6A	0x4629	0	MOV      r1,r5	false	
 Instruction	1271	S:0xC0034D6C	0xF222F8FE	1	BL       {pc}+0x222200 ; 0xc0256f6c	true	
+Cycle Count				229	Tracing disabled		
 Info					Tracing enabled		
 Instruction	1272	S:0xC0034D70	0x6833	1	LDR      r3,[r6,#0]	false	
 Instruction	1273	S:0xC0034D72	0x6871	1	LDR      r1,[r6,#4]	false	
@@ -1435,6 +1448,7 @@ Instruction	1414	S:0xC004F56A	0xEB4373E4	1	ADC      r3,r3,r4,ASR #31	false
 Instruction	1415	S:0xC004F56E	0xE9CD2306	1	STRD     r2,r3,[sp,#0x18]	false	
 Instruction	1416	S:0xC004F572	0x4788	1	BLX      r1	true	
 Timestamp					Timestamp: 562536984369		
+Cycle Count				34	Tracing disabled		
 Info					Tracing enabled		
 Instruction	1417	S:0xC004F574	0xE9D62302	1	LDRD     r2,r3,[r6,#8]	false	
 Instruction	1418	S:0xC004F578	0xF8DBC004	1	LDR      r12,[r11,#4]	false	
@@ -1522,8 +1536,9 @@ Instruction	1499	S:0xC00542EC	0x4310	1	ORRS     r0,r0,r2	false
 Instruction	1500	S:0xC00542EE	0xF8D82004	1	LDR      r2,[r8,#4]	false	
 Instruction	1501	S:0xC00542F2	0x4790	1	BLX      r2	true	
 Timestamp					Timestamp: 562536984382		
+Cycle Count				51	Tracing disabled		
 Info					Tracing enabled		
-Instruction	1502	S:0xC00542F4	0x2800	9	CMP      r0,#0	false	
+Instruction	1502	S:0xC00542F4	0x2800	1	CMP      r0,#0	false	
 Instruction	1503	S:0xC00542F6	0xBF0C	0	ITE      EQ	false	
 Timestamp					Timestamp: 562536984386		
 Instruction	1504	S:0xC00542F8	0x2300	1	MOVS     r3,#0	false	
@@ -1540,8 +1555,9 @@ Instruction	1514	S:0xC0035B02	0xF8CA301C	3	STR      r3,[r10,#0x1c]	false
 Instruction	1515	S:0xC0035B06	0xE7D9	1	B        {pc}-0x4a ; 0xc0035abc	true	
 Instruction	1516	S:0xC0035ABC	0xB011	2	ADD      sp,sp,#0x44	false	
 Instruction	1517	S:0xC0035ABE	0xE8BD8FF0	3	POP      {r4-r11,pc}	true	
+Cycle Count				204	Tracing disabled		
 Info					Tracing enabled		
-Instruction	1518	S:0xC000D60C	0xF013FDDA	25	BL       {pc}+0x13bb8 ; 0xc00211c4	true	
+Instruction	1518	S:0xC000D60C	0xF013FDDA	1	BL       {pc}+0x13bb8 ; 0xc00211c4	true	
 Instruction	1519	S:0xC00211C4	0xB510	3	PUSH     {r4,lr}	false	
 Instruction	1520	S:0xC00211C6	0xB500	1	PUSH     {lr}	false	
 Instruction	1521	S:0xC00211C8	0xF85DEB04	2	POP      {lr}	false	
@@ -1679,6 +1695,7 @@ Instruction	1651	S:0xC0025AE6	0x2B00	1	CMP      r3,#0	false
 Instruction	1652	S:0xC0025AE8	0xDB7F	0	BLT      {pc}+0x102 ; 0xc0025bea	true	fail
 Instruction	1653	S:0xC0025AEA	0x4620	1	MOV      r0,r4	false	
 Instruction	1654	S:0xC0025AEC	0xF3BEFD9A	0	BL       {pc}+0x3beb38 ; 0xc03e4624	true	
+Cycle Count				40	Tracing disabled		
 Info					Tracing enabled		
 Instruction	1655	S:0xC0025AF0	0xF24602C0	1	MOV      r2,#0x60c0	false	
 Instruction	1656	S:0xC0025AF4	0xF2CC025F	1	MOVT     r2,#0xc05f	false	
@@ -1768,8 +1785,9 @@ Instruction	1739	S:0xC0020F0C	0x4299	2	CMP      r1,r3	false
 Instruction	1740	S:0xC0020F0E	0xD149	0	BNE      {pc}+0x96 ; 0xc0020fa4	true	fail
 Instruction	1741	S:0xC0020F10	0x9804	1	LDR      r0,[sp,#0x10]	false	
 Instruction	1742	S:0xC0020F12	0xF04FF8C1	0	BL       {pc}+0x4f186 ; 0xc0070098	true	
+Cycle Count				57	Tracing disabled		
 Info					Tracing enabled		
-Instruction	1743	S:0xC0020F16	0x0864	9	LSRS     r4,r4,#1	false	
+Instruction	1743	S:0xC0020F16	0x0864	1	LSRS     r4,r4,#1	false	
 Instruction	1744	S:0xC0020F18	0xF1060604	0	ADD      r6,r6,#4	false	
 Instruction	1745	S:0xC0020F1C	0xF1070704	1	ADD      r7,r7,#4	false	
 Instruction	1746	S:0xC0020F20	0xD1CB	0	BNE      {pc}-0x66 ; 0xc0020eba	true	
@@ -1861,8 +1879,9 @@ Instruction	1831	S:0xC0020EF4	0xD148	0	BNE      {pc}+0x94 ; 0xc0020f88	true	fail
 Instruction	1832	S:0xC0020EF6	0xF8573C04	21	LDR      r3,[r7,#-4]	false	
 Instruction	1833	S:0xC0020EFA	0x4640	0	MOV      r0,r8	false	
 Instruction	1834	S:0xC0020EFC	0x4798	1	BLX      r3	true	
+Cycle Count				939	Tracing disabled		
 Info					Tracing enabled		
-Instruction	1835	S:0xC0020EFE	0xF8DA3018	41	LDR      r3,[r10,#0x18]	false	
+Instruction	1835	S:0xC0020EFE	0xF8DA3018	1	LDR      r3,[r10,#0x18]	false	
 Instruction	1836	S:0xC0020F02	0x2B00	2	CMP      r3,#0	false	
 Instruction	1837	S:0xC0020F04	0xD165	0	BNE      {pc}+0xce ; 0xc0020fd2	true	fail
 Instruction	1838	S:0xC0020F06	0xF8D93004	11	LDR      r3,[r9,#4]	false	
@@ -1871,6 +1890,7 @@ Instruction	1840	S:0xC0020F0C	0x4299	2	CMP      r1,r3	false
 Instruction	1841	S:0xC0020F0E	0xD149	0	BNE      {pc}+0x96 ; 0xc0020fa4	true	fail
 Instruction	1842	S:0xC0020F10	0x9804	1	LDR      r0,[sp,#0x10]	false	
 Instruction	1843	S:0xC0020F12	0xF04FF8C1	0	BL       {pc}+0x4f186 ; 0xc0070098	true	
+Cycle Count				15	Tracing disabled		
 Info					Tracing enabled		
 Instruction	1844	S:0xC0020F16	0x0864	1	LSRS     r4,r4,#1	false	
 Instruction	1845	S:0xC0020F18	0xF1060604	0	ADD      r6,r6,#4	false	
@@ -1938,6 +1958,7 @@ Instruction	1906	S:0xC003CF32	0x4770	1	BX       lr	true
 Instruction	1907	S:0xC0021200	0xB140	1	CBZ      r0,{pc}+0x14 ; 0xc0021214	true	
 Instruction	1908	S:0xC0021214	0xE8BD4010	8	POP      {r4,lr}	false	
 Instruction	1909	S:0xC0021218	0xF04EBF4E	1	B.W      {pc}+0x4eea0 ; 0xc00700b8	true	
+Cycle Count				224	Tracing disabled		
 Info					Tracing enabled		
 Instruction	1910	S:0xC000D610	0x4623	1	MOV      r3,r4	false	
 Instruction	1911	S:0xC000D612	0xEE1D2F90	1	MRC      p15,#0x0,r2,c13,c0,#4	false	
