@@ -56,6 +56,7 @@ CPP_INCLUDES= \
 				-I$(OCSD_SOURCE)
 
 ETMV3OBJ=	$(BUILD_DIR)/trc_cmp_cfg_etmv3.o \
+			$(BUILD_DIR)/trc_pkt_decode_etmv3.o \
 			$(BUILD_DIR)/trc_pkt_elem_etmv3.o \
 			$(BUILD_DIR)/trc_pkt_proc_etmv3.o \
 			$(BUILD_DIR)/trc_pkt_proc_etmv3_impl.o
@@ -84,9 +85,11 @@ MEMACCOBJ=	$(BUILD_DIR)/trc_mem_acc_mapper.o \
 STMOBJ=		$(BUILD_DIR)/trc_pkt_elem_stm.o \
 			$(BUILD_DIR)/trc_pkt_proc_stm.o
 
-OBJECTS=$(BUILD_DIR)/ocsd_dcd_tree.o \
+OBJECTS=$(BUILD_DIR)/ocsd_code_follower.o \
+		$(BUILD_DIR)/ocsd_dcd_tree.o \
 		$(BUILD_DIR)/ocsd_error.o \
 		$(BUILD_DIR)/ocsd_error_logger.o \
+		$(BUILD_DIR)/ocsd_gen_elem_list.o \
 		$(BUILD_DIR)/ocsd_msg_logger.o \
 		$(BUILD_DIR)/ocsd_version.o \
 		$(BUILD_DIR)/trc_component.o \
