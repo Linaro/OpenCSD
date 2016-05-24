@@ -1,6 +1,11 @@
-In about this order (assuming PTM decode pushed quite soon).
-
-* ETMv3 full decode.
+* Decode Tree API updates.
+-> Re-factor the decode tree API to:
+   1)  remove the per decoder type creation functions  - CreateETMv4Decoder(...),
+   replacing with a single CreateDecoder("Type"). 
+   2) Use new structure to enable custom decoders - may be proprietary / binaries to 
+   be used in the decoder structure.
+   3) Make it easier to add a new decoder to the library source, without the overhead of 
+   doing all the creation fns.
 
 * STM "full decode".
 -> This is simply to come up with a generic packet format that will consist of
