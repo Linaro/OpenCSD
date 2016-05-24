@@ -14,18 +14,18 @@ The library is implemented in C++ with an optional "C" API.
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.002_
+_Current Version 0.003_
 
 ### Current support:
 
 - ETMv4 instruction trace - packet processing and packet decode.
 - PTM instruction trace - packet processing and packet decode.
-- ETMv3 instruction and data trace - packet processing.
+- ETMv3 instruction trace - packet processing and packet decode.
+- ETMv3 data trace - packet processing.
 - STM software trace - packet processing.
 
 ### Support to be added:
 
-- ETMv3 instruction trace - packet decode.
 - ITM software trace - packet processing.
 - ETMv3 data trace - packet decode.
 - ETMv4 data trace - packet processing and decode.
