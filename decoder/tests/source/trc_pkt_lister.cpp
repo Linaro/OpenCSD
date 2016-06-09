@@ -181,10 +181,10 @@ void print_help()
 {
     std::ostringstream oss;
     oss << "Trace Packet Lister - commands\n\n";
-    oss << "Snapshot:\n";
+    oss << "Snapshot:\n\n";
     oss << "-ss_dir <dir>       Set the directory path to a trace snapshot\n";
     oss << "-ss_verbose         Verbose output when reading the snapshot\n";
-    oss << "Decode:\n";
+    oss << "\nDecode:\n\n";
     oss << "-id <n>             Set an ID to list (may be used mutiple times) - default if no id set is for all IDs to be printed\n";
     oss << "-src_name <name>    List packets from a given snapshot source name (defaults to first source found)\n";
     oss << "-decode             Full decode of the packets from the trace snapshot (default is to list undecoded packets only\n";
@@ -192,6 +192,14 @@ void print_help()
     oss << "-o_raw_packed       Output raw packed trace frames\n";
     oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
     oss << "-test_waits <N>     Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder\n";
+    oss << "\nOutput:\n";
+    oss << "   Setting any of these options cancels the default output to file & stdout,\n   using _only_ the options supplied.\n\n";
+    oss << "-logstdout          Output to stdout -> console.\n";
+    oss << "-logstderr          Output to stderr.\n";
+    oss << "-logfile            Output to default file - " << logfileName << "\n";
+    oss << "-logfilename <name> Output to file <name> \n";
+
+
     logger.LogMsg(oss.str());
 }
 
@@ -381,7 +389,7 @@ bool process_cmd_line_opts(int argc, char* argv[])
                 no_undecoded_packets = true;
                 decode = true; 
             }
-            else if(strcmp(argv[optIdx], "-help") == 0)
+            else if((strcmp(argv[optIdx], "-help") == 0) || (strcmp(argv[optIdx], "--help") == 0) || (strcmp(argv[optIdx], "-h") == 0))
             {
                 print_help();
                 bOptsOK = false;

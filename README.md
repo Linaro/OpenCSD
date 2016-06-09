@@ -14,7 +14,7 @@ The library is implemented in C++ with an optional "C" API.
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.003_
+_Current Version 0.004_
 
 ### Current support:
 
@@ -26,9 +26,14 @@ _Current Version 0.003_
 
 ### Support to be added:
 
-- ITM software trace - packet processing.
+- STM software trace - packet decode.
+- ITM software trace - packet processing and decode.
 - ETMv3 data trace - packet decode.
 - ETMv4 data trace - packet processing and decode.
+
+Note: for ITM and STM, packet decode is combining Master+Channel+Marker+Payload packets into a single generic
+output packet.
+
 
 Note on the Git Repository.
 ---------------------------
@@ -78,6 +83,7 @@ Version and Modification Information
 - _Version 0.001_:  Library development - tested with `perf` tools integration - BKK16, 8th March 2016
 - _Version 0.002_:  Library development - added in PTM decoder support. Restructure header dir, replaced ARM rctdl prefix with opencsd/ocsd.
 - _Version 0.003_:  Library development - added in ETMv3 instruction decoder support.
+- _Version 0.004_:  In development - decode tree api updates.
 
 Licence Information
 ===================
