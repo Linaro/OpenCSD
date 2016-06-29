@@ -36,26 +36,26 @@
 
 EtmV4Config::EtmV4Config()   
 {
-    reg_idr0 = 0x28000EA1;
-    reg_idr1 = 0x4100F403;   
-    reg_idr2 = 0x00000488;       
-    reg_idr8 = 0;    
-    reg_idr9 = 0;   
-    reg_idr10 = 0;   
-    reg_idr11 = 0;   
-    reg_idr12 = 0;   
-    reg_idr13 = 0;   
-    reg_configr = 0xC1; 
-    reg_traceidr = 0;
-    arch_ver = ARCH_V7;
-    core_prof = profile_CortexA;
+    m_cfg.reg_idr0 = 0x28000EA1;
+    m_cfg.reg_idr1 = 0x4100F403;   
+    m_cfg.reg_idr2 = 0x00000488;       
+    m_cfg.reg_idr8 = 0;    
+    m_cfg.reg_idr9 = 0;   
+    m_cfg.reg_idr10 = 0;   
+    m_cfg.reg_idr11 = 0;   
+    m_cfg.reg_idr12 = 0;   
+    m_cfg.reg_idr13 = 0;   
+    m_cfg.reg_configr = 0xC1; 
+    m_cfg.reg_traceidr = 0;
+    m_cfg.arch_ver = ARCH_V7;
+    m_cfg.core_prof = profile_CortexA;
 
     PrivateInit();
 }
 
 EtmV4Config & EtmV4Config::operator=(const ocsd_etmv4_cfg *p_cfg)
 {
-    *dynamic_cast<ocsd_etmv4_cfg *>(this) = *p_cfg;
+    m_cfg = *p_cfg;
     PrivateInit();
     return *this;
 }
@@ -79,15 +79,15 @@ void EtmV4Config::CalcQSupp()
         Q_NO_ICOUNT_ONLY,
         Q_FULL
     };
-    uint8_t Qsupp = (reg_idr0 >> 15) & 0x3;
+    uint8_t Qsupp = (m_cfg.reg_idr0 >> 15) & 0x3;
     m_QSuppType = qtypes[Qsupp];
-    m_QSuppFilter = (bool)((reg_idr0 & 0x4000) == 0x4000) && (m_QSuppType != Q_NONE);
+    m_QSuppFilter = (bool)((m_cfg.reg_idr0 & 0x4000) == 0x4000) && (m_QSuppType != Q_NONE);
     m_QSuppCalc = true;
 }
 
 void EtmV4Config::CalcVMIDSize()
 {
-    uint32_t vmidszF = (reg_idr2 >> 10) & 0x1F;
+    uint32_t vmidszF = (m_cfg.reg_idr2 >> 10) & 0x1F;
     if(vmidszF == 1)
         m_VMIDSize = 8;
     else if(MinVersion() > 0)

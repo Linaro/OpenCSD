@@ -37,6 +37,7 @@
 #define ARM_TRC_CMP_CFG_PTM_H_INCLUDED
 
 #include "trc_pkt_types_ptm.h"
+#include "common/trc_cs_config.h"
 
 /** @defgroup ocsd_protocol_cfg  OpenCSD Library : Protcol Generator Configuration.
 
@@ -58,10 +59,11 @@
  * Provides quick value interpretation methods for the PTM config register values.
  * Primarily inlined for efficient code.
  */
-class PtmConfig : public ocsd_ptm_cfg
+class PtmConfig : public CSConfig // public ocsd_ptm_cfg
 {
 public:
     PtmConfig();    /**< Default constructor */
+    PtmConfig(const ocsd_ptm_cfg *cfg_regs);
     ~PtmConfig() {}; /**< Default destructor */
 
     /* register bit constants. */
@@ -79,9 +81,18 @@ public:
     static const uint32_t CCER_TS_ENC_NAT   = (0x1 << 28);
     static const uint32_t CCER_TS_64BIT     = (0x1 << 29);
 
+// operations to convert to and from C-API structure
+
     //! copy assignment operator for base structure into class.
     PtmConfig & operator=(const ocsd_ptm_cfg *p_cfg);
  
+    //! cast operator returning struct const reference
+    operator const ocsd_ptm_cfg &() const { return m_cfg; };
+    //! cast operator returning struct const pointer
+    operator const ocsd_ptm_cfg *() const { return &m_cfg; };
+
+// access functions
+
     const bool enaBranchBCast() const; //!< Branch broadcast enabled.
     const bool enaCycleAcc() const;  //!< cycle accurate tracing enabled.
 
@@ -102,7 +113,13 @@ public:
     const bool dmsbGenTS() const;   //!< TS generated for DMB and DSB 
     const bool dmsbWayPt() const;   //!< DMB and DSB are waypoint instructions.
 
-    const uint8_t getTraceID() const; //!< CoreSight Trace ID for this device.
+    virtual const uint8_t getTraceID() const; //!< CoreSight Trace ID for this device.
+
+    const ocsd_core_profile_t &coreProfile() const { return m_cfg.core_prof; };
+    const ocsd_arch_version_t &archVersion() const { return m_cfg.arch_ver; };
+
+private:
+    ocsd_ptm_cfg m_cfg;
 };
 
 /* inlines */
@@ -110,80 +127,80 @@ public:
 inline PtmConfig & PtmConfig::operator=(const ocsd_ptm_cfg *p_cfg)
 {
     // object of base class ocsd_ptm_cfg 
-    *dynamic_cast<ocsd_ptm_cfg *>(this) = *p_cfg;
+    m_cfg = *p_cfg;
     return *this;
 }
 
 inline const bool PtmConfig::enaBranchBCast() const
 {
-    return (bool)((reg_ctrl & CTRL_BRANCH_BCAST) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_BRANCH_BCAST) != 0);
 }
 
 inline const bool PtmConfig::enaCycleAcc() const
 {
-    return (bool)((reg_ctrl & CTRL_CYCLEACC) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_CYCLEACC) != 0);
 }
 
 inline const bool PtmConfig::enaRetStack() const
 {
-    return (bool)((reg_ctrl & CTRL_RETSTACK_ENA) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_RETSTACK_ENA) != 0);
 }
 
 inline const bool PtmConfig::hasRetStack() const
 {
-    return (bool)((reg_ccer & CCER_RESTACK_IMPL) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_RESTACK_IMPL) != 0);
 }
 
 inline const int PtmConfig::MinorRev() const    
 {
-    return ((int)reg_idr & 0xF0) >> 4;
+    return ((int)m_cfg.reg_idr & 0xF0) >> 4;
 }
 
 inline const bool PtmConfig::hasTS() const
 {
-    return (bool)((reg_ccer & CCER_TS_IMPL) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_TS_IMPL) != 0);
 }
 
 inline const bool PtmConfig::enaTS() const         
 {
-    return (bool)((reg_ctrl & CTRL_TS_ENA) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_TS_ENA) != 0);
 }
 
 inline const bool PtmConfig::TSPkt64() const       
 {
     if(MinorRev() == 0) return false;
-    return (bool)((reg_ccer & CCER_TS_64BIT) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_TS_64BIT) != 0);
 }
 
 inline const bool PtmConfig::TSBinEnc() const      
 {
     if(MinorRev() == 0) return false;
-    return (bool)((reg_ccer & CCER_TS_ENC_NAT) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_TS_ENC_NAT) != 0);
 }
 
 inline const bool PtmConfig::hasVirtExt() const    
 {
-    return (bool)((reg_ccer & CCER_VIRTEXT) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_VIRTEXT) != 0);
 }
 
 inline const bool PtmConfig::enaVMID() const       
 {
-    return (bool)((reg_ctrl & CTRL_VMID_ENA) != 0);
+    return (bool)((m_cfg.reg_ctrl & CTRL_VMID_ENA) != 0);
 }
 
 inline const bool PtmConfig::dmsbGenTS() const     
 {
-    return (bool)((reg_ccer & CCER_TS_DMSB) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_TS_DMSB) != 0);
 }
 
 inline const bool PtmConfig::dmsbWayPt() const     
 {
-    return (bool)((reg_ccer & CCER_DMSB_WPT) != 0);
+    return (bool)((m_cfg.reg_ccer & CCER_DMSB_WPT) != 0);
 }
 
 inline const uint8_t PtmConfig::getTraceID() const
 {
-    return (uint8_t)(reg_trc_id & 0x7F);
+    return (uint8_t)(m_cfg.reg_trc_id & 0x7F);
 }
 
 /** @}*/

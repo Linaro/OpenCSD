@@ -37,6 +37,8 @@
 #define ARM_TRC_CMP_CFG_ETMV3_H_INCLUDED
 
 #include "trc_pkt_types_etmv3.h"
+#include "common/trc_cs_config.h"
+
 
 /** @addtogroup ocsd_protocol_cfg
 @{*/
@@ -53,7 +55,7 @@
  * Primarily inlined for efficient code.
  * 
  */
-class EtmV3Config //: public ocsd_etmv3_cfg
+class EtmV3Config : public CSConfig
 {
 public:
     EtmV3Config(); /**< Default constructor */
@@ -117,7 +119,7 @@ public:
     const bool isTSEnabled() const; //!< Timestamp trace is enabled. 
     const bool TSPkt64() const;     //!< timestamp packet is 64 bits in size.
 
-    const uint8_t getTraceID() const; //!< CoreSight Trace ID for this device.
+    virtual const uint8_t getTraceID() const; //!< CoreSight Trace ID for this device.
 
     const ocsd_arch_version_t getArchVersion() const;   //!< architecture version
     const ocsd_core_profile_t getCoreProfile() const;   //!< core profile.

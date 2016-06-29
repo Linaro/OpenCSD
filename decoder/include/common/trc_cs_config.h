@@ -1,9 +1,12 @@
 /*
- * \file       trc_cmp_cfg_ptm.cpp
- * \brief      OpenCSD : 
+ * \file       trc_cs_config.h
+ * \brief      OpenCSD : Trace component config base class. 
  * 
- * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
+ * \copyright  Copyright (c) 2016, ARM Limited. All Rights Reserved.
  */
+#ifndef ARM_TRC_CS_CONFIG_H_INCLUDED
+#define ARM_TRC_CS_CONFIG_H_INCLUDED
+
 
 /* 
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -32,28 +35,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "ptm/trc_cmp_cfg_ptm.h"
-
-PtmConfig::PtmConfig()
+/*!
+ * @class CSConfig : Base class for configuration data on CoreSight trace component.
+ * 
+ *  Defines common access functionality, common to all components.
+ *  (e.g. trace ID).
+ * 
+ */
+class CSConfig
 {
-    // defaults set ETMv1.1, V7A
-    m_cfg.arch_ver = ARCH_V7;
-    m_cfg.core_prof = profile_CortexA;
-    m_cfg.reg_ccer = 0;
-    m_cfg.reg_idr = 0x4100F310;
-    m_cfg.reg_ctrl = 0;
-}
+public:
+    CSConfig() {};
+    virtual ~CSConfig() {};
 
-PtmConfig::PtmConfig(const ocsd_ptm_cfg *cfg_regs)
-{
-    m_cfg = *cfg_regs;
-}
+    virtual const uint8_t getTraceID() const = 0; //!< CoreSight Trace ID for this device.
+};
 
-const int PtmConfig::CtxtIDBytes() const
-{
-    int ctxtIdsizes[] = { 0, 1, 2, 4 };
-    return ctxtIdsizes[(m_cfg.reg_ctrl >> 14) & 0x3];
-}
+#endif // ARM_TRC_CS_CONFIG_H_INCLUDED
 
-
-/* End of File trc_cmp_cfg_ptm.cpp */
+/* End of File trc_cs_config.h */

@@ -165,8 +165,8 @@ ocsd_err_t TrcPktDecodePtm::onProtocolConfig()
     m_CSID = m_config->getTraceID();
 
     // config options affecting decode
-    m_instr_info.pe_type.profile = m_config->core_prof;
-    m_instr_info.pe_type.arch = m_config->arch_ver;
+    m_instr_info.pe_type.profile = m_config->coreProfile();
+    m_instr_info.pe_type.arch = m_config->archVersion();
     m_instr_info.dsb_dmb_waypoints = m_config->dmsbWayPt() ? 1 : 0;
     return err;
 }

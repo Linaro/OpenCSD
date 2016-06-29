@@ -243,7 +243,7 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
     bool configOK = true;
     
     // generate the config data from the device data.
-    EtmV4Config config;
+    ocsd_etmv4_cfg config;
 
     regs_to_access_t regs_to_access[] = {
         { ETMv4RegCfg, true, &config.reg_configr, 0 },
@@ -270,16 +270,18 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
     if(configOK)
     {
         ocsd_err_t err = OCSD_OK;
+        EtmV4Config configObj(&config);
+
         if(m_bPacketProcOnly)
         {
             if(bDataChannel)
-                err = m_pDecodeTree->createETMv4DPktProcessor(&config);
+                err = m_pDecodeTree->createETMv4DPktProcessor(&configObj);
             else
-                err = m_pDecodeTree->createETMv4IPktProcessor(&config);
+                err = m_pDecodeTree->createETMv4IPktProcessor(&configObj);
         }
         else
         {
-            err = m_pDecodeTree->createETMv4Decoder(&config,bDataChannel);
+            err = m_pDecodeTree->createETMv4Decoder(&configObj,bDataChannel);
         }
         if(err ==  OCSD_OK)
             createdDecoder = true;
@@ -337,7 +339,8 @@ bool CreateDcdTreeFromSnapShot::createPTMDecoder(const std::string &coreName, Pa
     bool configOK = true;
     
     // generate the config data from the device data.
-    PtmConfig config;
+    
+    ocsd_ptm_cfg config;
 
     regs_to_access_t regs_to_access[] = {
         { ETMv3PTMRegIDR, true, &config.reg_idr, 0 },
@@ -356,11 +359,12 @@ bool CreateDcdTreeFromSnapShot::createPTMDecoder(const std::string &coreName, Pa
     // good config - generate the decoder on the tree.
     if(configOK)
     {
+        PtmConfig configObj(&config);
         ocsd_err_t err = OCSD_OK;
         if(m_bPacketProcOnly)
-            err = m_pDecodeTree->createPTMPktProcessor(&config);
+            err = m_pDecodeTree->createPTMPktProcessor(&configObj);
         else
-            err = m_pDecodeTree->createPTMDecoder(&config);
+            err = m_pDecodeTree->createPTMDecoder(&configObj);
 
         if(err ==  OCSD_OK)
             createdDecoder = true;
@@ -395,7 +399,8 @@ bool CreateDcdTreeFromSnapShot::createSTMDecoder(Parser::Parsed *devSrc)
     bool configOK = true;
 
     // generate the config data from the device data.
-    STMConfig config;
+    
+     ocsd_stm_cfg config;
 
     regs_to_access_t regs_to_access[] = {
         { STMRegTCSR, true, &config.reg_tcsr, 0 }
@@ -405,8 +410,9 @@ bool CreateDcdTreeFromSnapShot::createSTMDecoder(Parser::Parsed *devSrc)
     if(configOK)
     {
         ocsd_err_t err = OCSD_OK;
+        STMConfig configObj(&config);
         if(m_bPacketProcOnly)
-            err = m_pDecodeTree->createSTMPktProcessor(&config);
+            err = m_pDecodeTree->createSTMPktProcessor(&configObj);
         else
             err = OCSD_ERR_TEST_SS_TO_DECODER;
 

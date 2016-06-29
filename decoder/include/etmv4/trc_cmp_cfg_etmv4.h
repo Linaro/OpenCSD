@@ -37,7 +37,7 @@
 #define ARM_TRC_CMP_CFG_ETMV4_H_INCLUDED
 
 #include "trc_pkt_types_etmv4.h"
-
+#include "common/trc_cs_config.h"
 
 
 /** @addtogroup ocsd_protocol_cfg
@@ -53,17 +53,25 @@
  * Provides quick value interpretation methods for the ETMv4 config register values.
  * Primarily inlined for efficient code. 
  */
-class EtmV4Config : public ocsd_etmv4_cfg
+class EtmV4Config : public CSConfig // public ocsd_etmv4_cfg
 {
 public:
     EtmV4Config();  /**< Default constructor */
+    EtmV4Config(const ocsd_etmv4_cfg *cfg_regs);  
     ~EtmV4Config() {}; /**< Default destructor */
+
+// operations to convert to and from C-API structure
 
     //! copy assignment operator for base structure into class.
     EtmV4Config & operator=(const ocsd_etmv4_cfg *p_cfg);
 
-    const ocsd_core_profile_t &coreProfile() const { return core_prof; };
-    const ocsd_arch_version_t &archVersion() const { return arch_ver; };
+    //! cast operator returning struct const reference
+    operator const ocsd_etmv4_cfg &() const { return m_cfg; };
+    //! cast operator returning struct const pointer
+    operator const ocsd_etmv4_cfg *() const { return &m_cfg; };
+
+    const ocsd_core_profile_t &coreProfile() const { return m_cfg.core_prof; };
+    const ocsd_arch_version_t &archVersion() const { return m_cfg.arch_ver; };
 
     /* idr 0 */
     const bool LSasInstP0() const;
@@ -120,7 +128,7 @@ public:
     const uint32_t CondKeyMaxIncr() const;
  
     /* trace idr */
-    const uint8_t getTraceID() const;
+    virtual const uint8_t getTraceID() const; //!< CoreSight Trace ID for this device.
 
     /* config R */
     const bool enabledDVTrace() const;
@@ -171,47 +179,49 @@ private:
 
     bool m_condTraceCalc;
     CondITrace_t m_CondTrace;
+
+    ocsd_etmv4_cfg m_cfg;
 };
 
 /* idr 0 */
 inline const bool EtmV4Config::LSasInstP0() const
 {
-    return (bool)((reg_idr0 & 0x6) == 0x6);
+    return (bool)((m_cfg.reg_idr0 & 0x6) == 0x6);
 }
 
 inline const bool EtmV4Config::hasDataTrace() const
 {
-    return (bool)((reg_idr0 & 0x18) == 0x18);
+    return (bool)((m_cfg.reg_idr0 & 0x18) == 0x18);
 }
 
 inline const bool EtmV4Config::hasBranchBroadcast() const
 {
-    return (bool)((reg_idr0 & 0x20) == 0x20);
+    return (bool)((m_cfg.reg_idr0 & 0x20) == 0x20);
 }
 
 inline const bool EtmV4Config::hasCondTrace() const
 {
-    return (bool)((reg_idr0 & 0x40) == 0x40);
+    return (bool)((m_cfg.reg_idr0 & 0x40) == 0x40);
 }
 
 inline const bool EtmV4Config::hasCycleCountI() const
 {
-    return (bool)((reg_idr0 & 0x80) == 0x80);
+    return (bool)((m_cfg.reg_idr0 & 0x80) == 0x80);
 }
 
 inline const bool EtmV4Config::hasRetStack() const
 {
-    return (bool)((reg_idr0 & 0x200) == 0x200);
+    return (bool)((m_cfg.reg_idr0 & 0x200) == 0x200);
 }
 
 inline const uint8_t EtmV4Config::numEvents() const
 {
-    return ((reg_idr0 >> 10) & 0x3) + 1;
+    return ((m_cfg.reg_idr0 >> 10) & 0x3) + 1;
 }
 
 inline const EtmV4Config::condType EtmV4Config::hasCondType() const
 {
-    return ((reg_idr0 & 0x3000) == 0x1000) ? EtmV4Config::COND_HAS_ASPR : EtmV4Config::COND_PASS_FAIL;
+    return ((m_cfg.reg_idr0 & 0x3000) == 0x1000) ? EtmV4Config::COND_HAS_ASPR : EtmV4Config::COND_PASS_FAIL;
 }
 
 inline const EtmV4Config::QSuppType EtmV4Config::getQSuppType()
@@ -234,12 +244,12 @@ inline const bool EtmV4Config::hasQFilter()
 
 inline const bool EtmV4Config::hasTrcExcpData() const
 {
-    return (bool)((reg_idr0 & 0x20000) == 0x20000);
+    return (bool)((m_cfg.reg_idr0 & 0x20000) == 0x20000);
 }
 
 inline const uint32_t EtmV4Config::TimeStampSize() const
 {
-    uint32_t tsSizeF = (reg_idr0 >> 24) & 0x1F;
+    uint32_t tsSizeF = (m_cfg.reg_idr0 >> 24) & 0x1F;
     if(tsSizeF == 0x6)
         return 48;
     if(tsSizeF == 0x8)
@@ -249,30 +259,30 @@ inline const uint32_t EtmV4Config::TimeStampSize() const
 
 inline const bool EtmV4Config::commitOpt1() const
 {
-    return (bool)((reg_idr0 & 0x20000000) == 0x20000000) && hasCycleCountI();
+    return (bool)((m_cfg.reg_idr0 & 0x20000000) == 0x20000000) && hasCycleCountI();
 }
 
     /* idr 1 */
 inline const uint8_t EtmV4Config::MajVersion() const
 {
-    return (uint8_t)((reg_idr1 >> 8) & 0xF);
+    return (uint8_t)((m_cfg.reg_idr1 >> 8) & 0xF);
 }
 
 inline const uint8_t EtmV4Config::MinVersion() const
 {
-    return (uint8_t)((reg_idr1 >> 4) & 0xF);
+    return (uint8_t)((m_cfg.reg_idr1 >> 4) & 0xF);
 }
 
 
 /* idr 2 */
 inline const uint32_t EtmV4Config::iaSizeMax() const
 {
-    return ((reg_idr2 & 0x1F) == 0x8) ? 64 : 32;
+    return ((m_cfg.reg_idr2 & 0x1F) == 0x8) ? 64 : 32;
 }
 
 inline const uint32_t EtmV4Config::cidSize() const
 {
-    return (((reg_idr2 >> 5) & 0x1F) == 0x4) ? 32 : 0;
+    return (((m_cfg.reg_idr2 >> 5) & 0x1F) == 0x4) ? 32 : 0;
 }
 
 inline const uint32_t EtmV4Config::vmidSize()
@@ -286,81 +296,81 @@ inline const uint32_t EtmV4Config::vmidSize()
 
 inline const uint32_t EtmV4Config::daSize() const
 {
-    uint32_t daSizeF = ((reg_idr2 >> 15) & 0x1F);
+    uint32_t daSizeF = ((m_cfg.reg_idr2 >> 15) & 0x1F);
     if(daSizeF)
-        return (((reg_idr2 >> 15) & 0x1F) == 0x8) ? 64 : 32;
+        return (((m_cfg.reg_idr2 >> 15) & 0x1F) == 0x8) ? 64 : 32;
     return 0;
 }
 
 inline const uint32_t EtmV4Config::dvSize() const
 {
-    uint32_t dvSizeF = ((reg_idr2 >> 20) & 0x1F);
+    uint32_t dvSizeF = ((m_cfg.reg_idr2 >> 20) & 0x1F);
     if(dvSizeF)
-        return (((reg_idr2 >> 20) & 0x1F) == 0x8) ? 64 : 32;
+        return (((m_cfg.reg_idr2 >> 20) & 0x1F) == 0x8) ? 64 : 32;
     return 0;
 }
 
 inline const uint32_t EtmV4Config::ccSize() const
 {
-    return ((reg_idr2 >> 25) & 0xF) + 12;
+    return ((m_cfg.reg_idr2 >> 25) & 0xF) + 12;
 }
 
 inline const bool EtmV4Config::vmidOpt() const
 {
-    return (bool)((reg_idr2 & 0x20000000) == 0x20000000) && (MinVersion() > 0);
+    return (bool)((m_cfg.reg_idr2 & 0x20000000) == 0x20000000) && (MinVersion() > 0);
 }
 
 /* id regs 8-13*/
 
 inline const uint32_t EtmV4Config::MaxSpecDepth() const
 {
-    return reg_idr8;
+    return m_cfg.reg_idr8;
 }
 
 inline const uint32_t EtmV4Config::P0_Key_Max() const
 {
-    return (reg_idr9 == 0) ? 1 : reg_idr9;
+    return (m_cfg.reg_idr9 == 0) ? 1 : m_cfg.reg_idr9;
 }
 
 inline const uint32_t EtmV4Config::P1_Key_Max() const
 {
-    return reg_idr10;
+    return m_cfg.reg_idr10;
 }
 
 inline const uint32_t  EtmV4Config::P1_Spcl_Key_Max() const
 {
-    return reg_idr11;
+    return m_cfg.reg_idr11;
 }
 
 inline const uint32_t EtmV4Config::CondKeyMax() const
 {
-    return reg_idr12;
+    return m_cfg.reg_idr12;
 }
 
 inline const uint32_t EtmV4Config::CondSpecKeyMax() const
 {
-    return reg_idr13;
+    return m_cfg.reg_idr13;
 }
 
 inline const uint32_t EtmV4Config::CondKeyMaxIncr() const
 {
-    return reg_idr12 - reg_idr13;
+    return m_cfg.reg_idr12 - m_cfg.reg_idr13;
 }
 
 inline const uint8_t EtmV4Config::getTraceID() const
 {
-    return (uint8_t)(reg_traceidr & 0x7F);
+    return (uint8_t)(m_cfg.reg_traceidr & 0x7F);
 }
 
     /* config R */
 inline const bool EtmV4Config::enabledDVTrace() const
 {
-    return hasDataTrace() && enabledLSP0Trace() && ((reg_configr & (0x1 << 17)) != 0);
+    return hasDataTrace() && enabledLSP0Trace() && ((m_cfg.reg_configr & (0x1 << 17)) != 0);
 }
 
 inline const bool EtmV4Config::enabledDATrace() const
 {
-    return hasDataTrace() && enabledLSP0Trace() && ((reg_configr & (0x1 << 16)) != 0);
+    return hasDataTrace() && enabledLSP0Trace() && ((m_cfg.reg_configr & (0x1 << 16)) != 0);
 }
 
 inline const bool EtmV4Config::enabledDataTrace() const
@@ -370,39 +380,39 @@ inline const bool EtmV4Config::enabledDataTrace() const
 
 inline const bool EtmV4Config::enabledLSP0Trace() const
 {
-    return ((reg_configr & 0x6) != 0);
+    return ((m_cfg.reg_configr & 0x6) != 0);
 }
 
 inline const EtmV4Config::LSP0_t EtmV4Config::LSP0Type() const
 {
-    return (LSP0_t)((reg_configr & 0x6) >> 1);
+    return (LSP0_t)((m_cfg.reg_configr & 0x6) >> 1);
 }
     
 inline const bool EtmV4Config::enabledBrBroad() const
 {
-    return ((reg_configr & (0x1 << 3)) != 0);
+    return ((m_cfg.reg_configr & (0x1 << 3)) != 0);
 }
 
 inline const bool EtmV4Config::enabledCCI() const
 {
-    return ((reg_configr & (0x1 << 4)) != 0);
+    return ((m_cfg.reg_configr & (0x1 << 4)) != 0);
 }
 
 inline const bool EtmV4Config::enabledCID() const
 {
-    return ((reg_configr & (0x1 << 6)) != 0);
+    return ((m_cfg.reg_configr & (0x1 << 6)) != 0);
 }
 
 inline const bool EtmV4Config::enabledVMID() const
 {
-    return ((reg_configr & (0x1 << 7)) != 0);
+    return ((m_cfg.reg_configr & (0x1 << 7)) != 0);
 }
 
 inline const EtmV4Config::CondITrace_t EtmV4Config::enabledCondITrace()
 {
     if(!m_condTraceCalc)
     {
-        switch((reg_configr >> 8) & 0x7)
+        switch((m_cfg.reg_configr >> 8) & 0x7)
         {
         default:
         case 0: m_CondTrace = COND_TR_DIS; break;
@@ -418,17 +428,17 @@ inline const EtmV4Config::CondITrace_t EtmV4Config::enabledCondITrace()
 
 inline const bool EtmV4Config::enabledTS() const
 {
-    return ((reg_configr & (0x1 << 11)) != 0);
+    return ((m_cfg.reg_configr & (0x1 << 11)) != 0);
 }
 
 inline const bool EtmV4Config::enabledRetStack() const
 {
-    return ((reg_configr & (0x1 << 12)) != 0);
+    return ((m_cfg.reg_configr & (0x1 << 12)) != 0);
 }
 
 inline const bool EtmV4Config::enabledQE() const
 {
-       return ((reg_configr & (0x3 << 13)) != 0);
+       return ((m_cfg.reg_configr & (0x3 << 13)) != 0);
 }
 
 /** @}*/

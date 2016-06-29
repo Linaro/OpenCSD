@@ -36,6 +36,7 @@
 #define ARM_TRC_CMP_CFG_STM_H_INCLUDED
 
 #include "trc_pkt_types_stm.h"
+#include "common/trc_cs_config.h"
 
 /** @addtogroup ocsd_protocol_cfg
 @{*/
@@ -56,17 +57,26 @@
  *
  *  Can also be initialised with a fully populated ocsd_stm_cfg structure.
  */
-class STMConfig : public ocsd_stm_cfg
+class STMConfig : public CSConfig // public ocsd_stm_cfg
 {
 public:
     STMConfig();    //!< Constructor - creates a default configuration
+    STMConfig(const ocsd_stm_cfg *cfg_regs); 
     ~STMConfig() {};    
 
+// operations to convert to and from C-API structure
+
     STMConfig & operator=(const ocsd_stm_cfg *p_cfg);  //!< set from full configuration structure.
+    //! cast operator returning struct const reference
+    operator const ocsd_stm_cfg &() const { return m_cfg; };
+    //! cast operator returning struct const pointer
+    operator const ocsd_stm_cfg *() const { return &m_cfg; };
+
+// access functions 
     void setTraceID(const uint8_t traceID);     //!< Set the CoreSight trace ID.
     void setHWTraceFeat(const hw_event_feat_t hw_feat); //!< set usage of STM HW event trace.
     
-    const uint8_t getTraceID() const;           //!< Get the CoreSight trace ID.
+    virtual const uint8_t getTraceID() const;   //!< Get the CoreSight trace ID.
     const uint8_t getMaxMasterIdx() const;      //!< Get the maximum master index
     const uint16_t getMaxChannelIdx() const;    //!< Get the maximum channel index.
     const uint16_t getHWTraceMasterIdx() const; //!< Get the master used for HW event trace.
@@ -74,22 +84,29 @@ public:
 
 private:
     bool m_bHWTraceEn;  
+    ocsd_stm_cfg m_cfg;
 };
 
 inline STMConfig::STMConfig()
 {
-    reg_tcsr = 0;
-    reg_devid = 0xFF;   // default to 256 masters.
-    reg_feat3r = 0x10000; // default to 65536 channels.
-    reg_feat1r = 0x0;
-    reg_hwev_mast = 0;    // default hwtrace master = 0;
-    hw_event = HwEvent_Unknown_Disabled; // default to not present / disabled.
+    m_cfg.reg_tcsr = 0;
+    m_cfg.reg_devid = 0xFF;   // default to 256 masters.
+    m_cfg.reg_feat3r = 0x10000; // default to 65536 channels.
+    m_cfg.reg_feat1r = 0x0;
+    m_cfg.reg_hwev_mast = 0;    // default hwtrace master = 0;
+    m_cfg.hw_event = HwEvent_Unknown_Disabled; // default to not present / disabled.
     m_bHWTraceEn = false;
 }
   
+inline STMConfig::STMConfig(const ocsd_stm_cfg *cfg_regs)
+{
+    m_cfg = *cfg_regs;
+    setHWTraceFeat(m_cfg.hw_event);
+}
+
 inline STMConfig & STMConfig::operator=(const ocsd_stm_cfg *p_cfg)
 {
-    *dynamic_cast<ocsd_stm_cfg *>(this) = *p_cfg;
+    m_cfg = *p_cfg;
     setHWTraceFeat(p_cfg->hw_event);
     return *this;
 }
@@ -97,36 +114,36 @@ inline STMConfig & STMConfig::operator=(const ocsd_stm_cfg *p_cfg)
 inline void STMConfig::setTraceID(const uint8_t traceID)
 {
     uint32_t IDmask = 0x007F0000;
-    reg_tcsr &= ~IDmask;
-    reg_tcsr |= (((uint32_t)traceID) << 16) & IDmask;
+    m_cfg.reg_tcsr &= ~IDmask;
+    m_cfg.reg_tcsr |= (((uint32_t)traceID) << 16) & IDmask;
 }
 
 inline void STMConfig::setHWTraceFeat(const hw_event_feat_t hw_feat)
 {
-    hw_event = hw_feat;
-    m_bHWTraceEn = (hw_event == HwEvent_Enabled);
-    if(hw_event == HwEvent_UseRegisters)
-        m_bHWTraceEn = (((reg_feat1r & 0xC0000) == 0x80000) && ((reg_tcsr & 0x8) == 0x8));
+    m_cfg.hw_event = hw_feat;
+    m_bHWTraceEn = (m_cfg.hw_event == HwEvent_Enabled);
+    if(m_cfg.hw_event == HwEvent_UseRegisters)
+        m_bHWTraceEn = (((m_cfg.reg_feat1r & 0xC0000) == 0x80000) && ((m_cfg.reg_tcsr & 0x8) == 0x8));
 }
 
 inline const uint8_t STMConfig::getTraceID() const
 {
-    return (uint8_t)((reg_tcsr >> 16) & 0x7F);
+    return (uint8_t)((m_cfg.reg_tcsr >> 16) & 0x7F);
 }
 
 inline const uint8_t STMConfig::getMaxMasterIdx() const
 {
-    return (uint8_t)(reg_devid & 0xFF);
+    return (uint8_t)(m_cfg.reg_devid & 0xFF);
 }
 
 inline const uint16_t STMConfig::getMaxChannelIdx() const
 {
-    return (uint16_t)(reg_feat3r - 1);
+    return (uint16_t)(m_cfg.reg_feat3r - 1);
 }
 
 inline const uint16_t STMConfig::getHWTraceMasterIdx() const
 {
-    return (uint16_t)(reg_hwev_mast & 0xFFFF);
+    return (uint16_t)(m_cfg.reg_hwev_mast & 0xFFFF);
 }
 
 inline bool STMConfig::getHWTraceEn() const
