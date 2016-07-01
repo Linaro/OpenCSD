@@ -290,6 +290,33 @@
     <ClInclude Include="..\..\..\include\common\ocsd_gen_elem_list.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\common\trc_cs_config.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\common\ocsd_dcd_mngr.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\common\ocsd_dcd_mngr_i.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\common\ocsd_lib_dcd_register.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\interfaces\trc_abs_typed_base_i.h">
+      <Filter>interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\etmv4\trc_dcd_mngr_etmv4i.h">
+      <Filter>Header Files\etmv4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\etmv3\trc_dcd_mngr_etmv3.h">
+      <Filter>Source Files\etmv3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\ptm\trc_dcd_mngr_ptm.h">
+      <Filter>Header Files\ptm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\stm\trc_dcd_mngr_stm.h">
+      <Filter>Header Files\stm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -398,6 +425,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\ocsd_gen_elem_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ocsd_lib_dcd_register.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

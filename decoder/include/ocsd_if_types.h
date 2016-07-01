@@ -86,6 +86,7 @@ typedef enum _ocsd_err_t {
     OCSD_ERR_INVALID_ID,           /**< Invalid CoreSight Trace Source ID.  */
     OCSD_ERR_BAD_HANDLE,           /**< Invalid handle passed to component. */
     OCSD_ERR_INVALID_PARAM_VAL,    /**< Invalid value parameter passed to component. */
+    OCSD_ERR_INVALID_PARAM_TYPE,   /**< Type mismatch on abstract interface */
     OCSD_ERR_FILE_ERROR,           /**< File access error */
     OCSD_ERR_NO_PROTOCOL,          /**< Trace protocol unsupported */
     /* attachment point errors */
@@ -123,6 +124,11 @@ typedef enum _ocsd_err_t {
     OCSD_ERR_TEST_SNAPSHOT_PARSE_INFO,  /**< test snapshot file parse information */
     OCSD_ERR_TEST_SNAPSHOT_READ,        /**< test snapshot reader error */
     OCSD_ERR_TEST_SS_TO_DECODER,        /**< test snapshot to decode tree conversion error */
+    /* decoder registration */
+    OCSD_ERR_DCDREG_NAME_REPEAT,        /**< attempted to register a decoder with the same name as another one */
+    OCSD_ERR_DCDREG_NAME_UNKNOWN,       /**< attempted to find a decoder with a name that is not known in the library */
+    /* decoder config */
+    OCSD_ERR_DCD_INTERFACE_UNUSED,      /**< Attempt to connect or use and inteface not supported by this decoder. */
     /* end marker*/
     OCSD_ERR_LAST
 } ocsd_err_t;
@@ -201,19 +207,6 @@ typedef enum _ocsd_datapath_resp_t {
 
 /** @name Trace Decode component types 
 @{*/
-
-/*! Trace Protocol Types - used to create appropriate decoder.
- */
-typedef enum _ocsd_trace_protocol_t {
-    OCSD_PROTOCOL_EXTERN,  /**< Custom external decoder attached to the decode tree - protocol unknown */
-    OCSD_PROTOCOL_ETMV3,   /**< ETMV3 instruction and data trace protocol decoder. */
-    OCSD_PROTOCOL_ETMV4I,  /**< ETMV4 instruction trace protocol decoder. */
-    OCSD_PROTOCOL_ETMV4D,  /**< ETMV4 data trace protocol decoder. */
-    OCSD_PROTOCOL_PTM,     /**< PTM program flow instruction trace protocol decoder. */
-    OCSD_PROTOCOL_STM,     /**< STM system trace protocol decoder. */
-    /* others to be added here */
-    OCSD_PROTOCOL_END      /**< Invalid protocol - protocol types end marker */
-} ocsd_trace_protocol_t;
 
 
 /** Raw frame element data types 
@@ -474,6 +467,39 @@ typedef uint32_t  (* Fn_MemAcc_CB)(const void *p_context, const ocsd_vaddr_t add
 
 /** @}*/
 
+/** @name Decoder creation information
+
+    Flags to use when creating decoders by name
+
+    Builtin decoder names.
+
+    Protocol type enum
+@{*/
+
+#define OCSD_CREATE_FLG_PACKET_PROC     0x01    /**< Create packet processor only.              */
+#define OCSD_CREATE_FLG_FULL_DECODER    0x02    /**< Create packet processor + decoder pair     */
+#define OCSD_CREATE_FLG_INST_ID         0x04    /**< Use instance ID in decoder instance name   */
+
+#define OCSD_BUILTIN_DCD_STM        "STM"       /**< STM decoder */
+#define OCSD_BUILTIN_DCD_ETMV3      "ETMV3"     /**< ETMv3 decoder */
+#define OCSD_BUILTIN_DCD_ETMV4I     "ETMV4I"    /**< ETMv4 instruction decoder */
+#define OCSD_BUILTIN_DCD_ETMV4D     "ETMV4D"    /**< ETMv4 data decoder */
+#define OCSD_BUILTIN_DCD_PTM        "PTM"       /**< PTM decoder */
+
+/*! Trace Protocol Builtin Types + extern
+ */
+typedef enum _ocsd_trace_protocol_t {
+    OCSD_PROTOCOL_EXTERN,  /**< Custom external decoder attached to the decode tree - protocol unknown */
+    OCSD_PROTOCOL_ETMV3,   /**< ETMV3 instruction and data trace protocol decoder. */
+    OCSD_PROTOCOL_ETMV4I,  /**< ETMV4 instruction trace protocol decoder. */
+    OCSD_PROTOCOL_ETMV4D,  /**< ETMV4 data trace protocol decoder. */
+    OCSD_PROTOCOL_PTM,     /**< PTM program flow instruction trace protocol decoder. */
+    OCSD_PROTOCOL_STM,     /**< STM system trace protocol decoder. */
+    /* others to be added here */
+    OCSD_PROTOCOL_END      /**< Invalid protocol - protocol types end marker */
+} ocsd_trace_protocol_t;
+
+/** @}*/
 
 /** @}*/
 #endif // ARM_OCSD_IF_TYPES_H_INCLUDED
