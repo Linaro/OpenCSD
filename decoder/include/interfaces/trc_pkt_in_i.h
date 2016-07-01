@@ -36,6 +36,8 @@
 #ifndef ARM_TRC_PKT_IN_I_H_INCLUDED
 #define ARM_TRC_PKT_IN_I_H_INCLUDED
 
+#include "trc_abs_typed_base_i.h"
+
 /*!
  * @class IPktDataIn
  * @ingroup ocsd_interfaces
@@ -49,7 +51,7 @@
  * 
  */
 template<class P>
-class IPktDataIn 
+class IPktDataIn : public ITrcTypedBase
 {
 public:
     IPktDataIn() {}; /**< Default constructor. */

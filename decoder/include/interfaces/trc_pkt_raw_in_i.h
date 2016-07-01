@@ -36,6 +36,8 @@
 #ifndef ARM_TRC_PKT_RAW_IN_I_H_INCLUDED
 #define ARM_TRC_PKT_RAW_IN_I_H_INCLUDED
 
+#include "trc_abs_typed_base_i.h"
+
 /*!
  * @class IPktRawDataMon
  * 
@@ -52,7 +54,7 @@
  * 
  */
 template<class P>
-class IPktRawDataMon
+class IPktRawDataMon : public ITrcTypedBase
 {
 public:
     IPktRawDataMon() {}; /**< Default constructor. */

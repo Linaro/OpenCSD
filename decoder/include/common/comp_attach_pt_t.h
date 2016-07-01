@@ -81,6 +81,10 @@ public:
      */
     virtual ocsd_err_t detach(T* component);
 
+
+    // detach current first if anything attached, connect supplied pointer, remain unattached if pointer 0
+    virtual ocsd_err_t replace_first(T* component);
+
     /*!
      * Detach all components.
      */
@@ -168,6 +172,17 @@ template<class T> ocsd_err_t componentAttachPt<T>::attach(T* component)
     if(m_notifier) m_notifier->attachNotify(1);
     m_hasAttached = true;
     return OCSD_OK;
+}
+
+template<class T>  ocsd_err_t componentAttachPt<T>::replace_first(T* component)
+{
+    if(m_hasAttached)
+        detach(m_comp);
+
+    if(component == 0)
+        return OCSD_OK;
+    
+    return attach(component);
 }
 
 template<class T> ocsd_err_t componentAttachPt<T>::detach(T* component)

@@ -43,7 +43,6 @@
 #include "interfaces/trc_tgt_mem_access_i.h"
 #include "interfaces/trc_instr_decode_i.h"
 
-
 /** @defgroup ocsd_pkt_decode OpenCSD Library : Packet Decoders.
 
     @brief Classes providing Protocol Packet Decoding capability.
@@ -64,11 +63,17 @@ class TrcPktDecodeI : public TraceComponent
 public:
     TrcPktDecodeI(const char *component_name);
     TrcPktDecodeI(const char *component_name, int instIDNum);
+    virtual ~TrcPktDecodeI() {};
 
     componentAttachPt<ITrcGenElemIn> *getTraceElemOutAttachPt() { return &m_trace_elem_out; };
     componentAttachPt<ITargetMemAccess> *getMemoryAccessAttachPt() { return &m_mem_access; };
     componentAttachPt<IInstrDecode> *getInstrDecodeAttachPt() { return &m_instr_decode; };
 
+    void setUsesMemAccess(bool bUsesMemaccess) { m_uses_memaccess = bUsesMemaccess; };
+    const bool getUsesMemAccess() const { return m_uses_memaccess; };
+
+    void setUsesIDecode(bool bUsesIDecode) { m_uses_idecode = bUsesIDecode; };
+    const bool getUsesIDecode() const { return m_uses_idecode; };
 
 protected:
 
@@ -103,13 +108,18 @@ protected:
 
     std::string init_err_msg;    //!< error message for init error
 
+    bool m_uses_memaccess;
+    bool m_uses_idecode;
+
 };
 
 inline TrcPktDecodeI::TrcPktDecodeI(const char *component_name) : 
     TraceComponent(component_name),
     m_index_curr_pkt(0),
     m_decode_init_ok(false),
-    m_config_init_ok(false)
+    m_config_init_ok(false),
+    m_uses_memaccess(true),
+    m_uses_idecode(true)
 {
 }
 
@@ -117,7 +127,9 @@ inline TrcPktDecodeI::TrcPktDecodeI(const char *component_name, int instIDNum) :
     TraceComponent(component_name, instIDNum),
     m_index_curr_pkt(0),
     m_decode_init_ok(false),
-    m_config_init_ok(false)
+    m_config_init_ok(false),
+    m_uses_memaccess(true),
+    m_uses_idecode(true)
 {
 }
 
@@ -129,9 +141,9 @@ inline const bool TrcPktDecodeI::checkInit()
             init_err_msg = "No decoder configuration information";
         else if(!m_trace_elem_out.hasAttachedAndEnabled())
             init_err_msg = "No element output interface attached and enabled";
-        else if(!m_mem_access.hasAttachedAndEnabled())
+        else if(m_uses_memaccess && !m_mem_access.hasAttachedAndEnabled())
             init_err_msg = "No memory access interface attached and enabled";
-        else if(!m_instr_decode.hasAttachedAndEnabled())
+        else if(m_uses_idecode && !m_instr_decode.hasAttachedAndEnabled())
             init_err_msg = "No instruction decoder interface attached and enabled";
         else
             m_decode_init_ok = true;
@@ -151,17 +163,19 @@ inline ocsd_datapath_resp_t TrcPktDecodeI::outputTraceElementIdx(ocsd_trc_index_
 
 inline ocsd_err_t TrcPktDecodeI::instrDecode(ocsd_instr_info *instr_info)
 {
-    return m_instr_decode.first()->DecodeInstruction(instr_info);
+    if(m_uses_idecode)
+        return m_instr_decode.first()->DecodeInstruction(instr_info);
+    return OCSD_ERR_DCD_INTERFACE_UNUSED;
 }
 
 inline ocsd_err_t TrcPktDecodeI::accessMemory(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer)
 {
-    return m_mem_access.first()->ReadTargetMemory(address,getCoreSightTraceID(),mem_space, num_bytes,p_buffer);
+    if(m_uses_memaccess)
+        return m_mem_access.first()->ReadTargetMemory(address,getCoreSightTraceID(),mem_space, num_bytes,p_buffer);
+    return OCSD_ERR_DCD_INTERFACE_UNUSED;
 }
 
-
 /**********************************************************************/
-
 template <class P, class Pc>
 class TrcPktDecodeBase : public TrcPktDecodeI, public IPktDataIn<P>
 {
@@ -176,7 +190,7 @@ public:
     
 
     /* protocol configuration */
-    ocsd_err_t setProtocolConfig(Pc *config); 
+    ocsd_err_t setProtocolConfig(const Pc *config); 
     const Pc *  getProtocolConfig() const { return  m_config; };
     
 protected:
@@ -255,7 +269,7 @@ template <class P, class Pc> ocsd_datapath_resp_t TrcPktDecodeBase<P, Pc>::Packe
 }
 
     /* protocol configuration */
-template <class P, class Pc>  ocsd_err_t TrcPktDecodeBase<P, Pc>::setProtocolConfig(Pc *config)
+template <class P, class Pc>  ocsd_err_t TrcPktDecodeBase<P, Pc>::setProtocolConfig(const Pc *config)
 {
     ocsd_err_t err = OCSD_ERR_INVALID_PARAM_VAL;
     if(config != 0)

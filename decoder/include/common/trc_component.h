@@ -58,7 +58,7 @@ class TraceComponent
 public:
     TraceComponent(const std::string &name);
     TraceComponent(const std::string &name, int instIDNum);
-    ~TraceComponent(); /**< Default Destructor */
+    virtual ~TraceComponent(); /**< Default Destructor */
 
     const std::string &getComponentName() const { return m_name; };
     void setComponentName(const std::string &name)  { m_name = name; };
@@ -94,6 +94,22 @@ public:
      */
     const uint32_t getSupportedOpModes() const { return m_supported_op_flags; };  
 
+    /*!
+     * Set associated trace component - used by generic code to track 
+     * packet processor / packet decoder pairs.
+     *
+     * @param *assocComp : pointer to the associated component
+     */
+    void setAssocComponent(TraceComponent *assocComp) {  m_assocComp = assocComp; };
+
+
+    /*!
+     * get associated trace component pointer
+     *
+     * @return TraceComponent  *: associated component.
+     */
+    TraceComponent *getAssocComponent() { return m_assocComp; };
+
 protected:
     friend class errLogAttachMonitor;
 
@@ -114,7 +130,9 @@ private:
     ocsd_err_severity_t m_errVerbosity;
     errLogAttachMonitor *m_pErrAttachMon;
 
-    std::string m_name;  
+    std::string m_name; 
+
+    TraceComponent *m_assocComp;    //!< associated component -> if this is a pkt decoder, associated pkt processor.
 };
 /** @}*/
 #endif // ARM_TRC_COMPONENT_H_INCLUDED
