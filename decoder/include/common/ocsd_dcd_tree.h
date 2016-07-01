@@ -116,6 +116,9 @@ public:
     ocsd_err_t createETMv4Decoder(EtmV4Config *p_config, bool bDataChannel = false);
     ocsd_err_t createPTMDecoder(PtmConfig *p_config);
 
+    /*! Create a decoder by registered name */
+    ocsd_err_t createDecoder(const std::string &decoderName, const int createFlags, const CSConfig *pConfig);
+
     /* remove a decoder / packet processor attached to an ID  - allows another decoder to be substituted. */
     ocsd_err_t removeDecoder(const uint8_t CSID);
 

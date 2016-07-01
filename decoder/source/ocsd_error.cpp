@@ -46,6 +46,7 @@ static const char *s_errorCodeDescs[][2] = {
     {"OCSD_ERR_INVALID_ID","Invalid CoreSight Trace Source ID."},
     {"OCSD_ERR_BAD_HANDLE","Invalid handle passed to component."},
     {"OCSD_ERR_INVALID_PARAM_VAL","Invalid value parameter passed to component."},
+    {"OCSD_ERR_INVALID_PARAM_TYPE","Type mismatch on abstract interface."},
     {"OCSD_ERR_FILE_ERROR","File access error"},
     {"OCSD_ERR_NO_PROTOCOL","Trace protocol unsupported"},
     /* attachment point errors */
@@ -83,6 +84,11 @@ static const char *s_errorCodeDescs[][2] = {
     {"OCSD_ERR_TEST_SNAPSHOT_PARSE_INFO", "Test snapshot file parse information"},
     {"OCSD_ERR_TEST_SNAPSHOT_READ","test snapshot reader error"},
     {"OCSD_ERR_TEST_SS_TO_DECODER","test snapshot to decode tree conversion error"},
+    /* decoder registration */
+    {"OCSD_ERR_DCDREG_NAME_REPEAT","Attempted to register a decoder with the same name as another one."},
+    {"OCSD_ERR_DCDREG_NAME_UNKNOWN","Attempted to find a decoder with a name that is not known in the library."},
+    /* decoder config */
+    {"OCSD_ERR_DCD_INTERFACE_UNUSED","Attempt to connect or use and inteface not supported by this decoder."},
     /* end marker*/
     {"OCSD_ERR_LAST", "No error - error code end marker"}
 };

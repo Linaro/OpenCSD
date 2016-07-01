@@ -53,6 +53,12 @@ EtmV4Config::EtmV4Config()
     PrivateInit();
 }
 
+EtmV4Config::EtmV4Config(const ocsd_etmv4_cfg *cfg_regs)
+{
+    m_cfg = *cfg_regs;
+    PrivateInit();
+}
+
 EtmV4Config & EtmV4Config::operator=(const ocsd_etmv4_cfg *p_cfg)
 {
     m_cfg = *p_cfg;

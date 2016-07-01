@@ -272,6 +272,13 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
         ocsd_err_t err = OCSD_OK;
         EtmV4Config configObj(&config);
 
+
+        // test new infrastructure
+        // 
+        err = m_pDecodeTree->createDecoder("ETMV4I", m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER,&configObj);
+            
+
+
         if(m_bPacketProcOnly)
         {
             if(bDataChannel)
@@ -283,6 +290,8 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
         {
             err = m_pDecodeTree->createETMv4Decoder(&configObj,bDataChannel);
         }
+
+        
         if(err ==  OCSD_OK)
             createdDecoder = true;
         else
@@ -372,7 +381,6 @@ bool CreateDcdTreeFromSnapShot::createPTMDecoder(const std::string &coreName, Pa
             LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
     }
     return createdDecoder;
-
 }
 
 bool CreateDcdTreeFromSnapShot::createSTDecoder(Parser::Parsed *devSrc)

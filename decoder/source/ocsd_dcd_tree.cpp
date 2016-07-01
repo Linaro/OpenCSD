@@ -34,6 +34,7 @@
  */ 
 
 #include "common/ocsd_dcd_tree.h"
+#include "common/ocsd_lib_dcd_register.h"
 #include "mem_acc/trc_mem_acc_mapper.h"
 
 
@@ -631,6 +632,85 @@ ocsd_err_t DecodeTree::createPTMDecoder(PtmConfig *p_config)
     }
     return err;
 }
+
+ocsd_err_t DecodeTree::createDecoder(const std::string &decoderName, const int createFlags, const CSConfig *pConfig)
+{
+    ocsd_err_t err = OCSD_OK;
+    IDecoderMngr *pDecoderMngr = 0;
+    TraceComponent *pTraceComp = 0;
+    int crtFlags = createFlags;
+
+    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
+    if(usingFormatter())
+    {
+        CSID = pConfig->getTraceID();
+        crtFlags |= OCSD_CREATE_FLG_INST_ID;
+    }
+
+    // create the decode element to attach to the channel.
+    if((err = createDecodeElement(CSID)) != OCSD_OK)
+        return err;
+
+    // get the libary decoder register.
+    OcsdLibDcdRegister * lib_reg = OcsdLibDcdRegister::getDecoderRegister();
+    if(lib_reg == 0)
+        return OCSD_ERR_NOT_INIT;
+
+    // find the named decoder
+    if((err = lib_reg->getDecoderMngrByName(decoderName,&pDecoderMngr)) != OCSD_OK)
+        return err;
+
+    // got the decoder...
+    err = pDecoderMngr->createDecoder(crtFlags,(int)CSID,pConfig,&pTraceComp);
+
+    // TBD: set decode element
+    // when elements accept new pointer types -> component handle and decoder manager.
+    // m_decode_elements[CSID]->SetDecoderElement(pTraceComp, pDecoderMngr);
+
+    // always attach an error logger
+    if(err == OCSD_OK)
+        err = pDecoderMngr->attachErrorLogger(pTraceComp,DecodeTree::s_i_error_logger);
+
+    // if we created a packet decoder it may need additional components.
+    if(crtFlags &  OCSD_CREATE_FLG_FULL_DECODER)
+    {
+        if(m_i_instr_decode && (err == OCSD_OK))
+            err = pDecoderMngr->attachInstrDecoder(pTraceComp,m_i_instr_decode);
+        
+        if(err == OCSD_ERR_DCD_INTERFACE_UNUSED)    // ignore if instruction decoder refused
+            err = OCSD_OK;
+
+        if(m_i_mem_access && (err == OCSD_OK))
+            err = pDecoderMngr->attachMemAccessor(pTraceComp,m_i_mem_access);
+
+        if(err == OCSD_ERR_DCD_INTERFACE_UNUSED)    // ignore if mem accessor refused
+            err = OCSD_OK;
+
+        if( m_i_gen_elem_out && (err == OCSD_OK))
+            err = pDecoderMngr->attachOutputSink(pTraceComp,m_i_gen_elem_out);
+    }
+
+    // finally attach the packet processor input to the demux output channel
+    if(err == OCSD_OK)
+    {
+        ITrcDataIn *pDataIn = 0;
+        if((err = pDecoderMngr->getDataInputI(pTraceComp,&pDataIn)) == OCSD_OK)
+        {
+            // got the interface -> attach to demux, or direct to input of decode tree
+            if(usingFormatter())
+                err = m_frame_deformatter_root->getIDStreamAttachPt(CSID)->attach(pDataIn);
+            else
+                m_i_decoder_root = pDataIn;
+        }
+    }
+
+    if(err != OCSD_OK)
+    {
+        // TBD: destroyDecodeElement(CSID); // will destroy decoder as well.       
+    }
+    return err;
+}
+
 
 
 ocsd_err_t DecodeTree::removeDecoder(const uint8_t CSID)
