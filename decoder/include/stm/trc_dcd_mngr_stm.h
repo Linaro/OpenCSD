@@ -45,7 +45,7 @@ class DecoderMngrStm : public DecodeMngrPktProc< StmTrcPacket,
                                                  TrcPktProcStm>
 {
 public:
-    DecoderMngrStm(const std::string &name) : DecodeMngrPktProc(name) {};
+    DecoderMngrStm(const std::string &name) : DecodeMngrPktProc(name,OCSD_PROTOCOL_STM) {};
     virtual ~DecoderMngrStm() {};
 };
 

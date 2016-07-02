@@ -47,7 +47,7 @@ class DecoderMngrPtm : public DecodeMngrFullDcd< PtmTrcPacket,
                                                  TrcPktDecodePtm>
 {
 public:
-    DecoderMngrPtm(const std::string &name) : DecodeMngrFullDcd(name) {};
+    DecoderMngrPtm(const std::string &name) : DecodeMngrFullDcd(name,OCSD_PROTOCOL_PTM) {};
     virtual ~DecoderMngrPtm() {};
 };
 

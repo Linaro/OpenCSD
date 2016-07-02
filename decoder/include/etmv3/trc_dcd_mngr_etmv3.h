@@ -47,7 +47,7 @@ class DecoderMngrEtmV3 : public DecodeMngrFullDcd< EtmV3TrcPacket,
                                                     TrcPktDecodeEtmV3>
 {
 public:
-    DecoderMngrEtmV3(const std::string &name) : DecodeMngrFullDcd(name) {};
+    DecoderMngrEtmV3(const std::string &name) : DecodeMngrFullDcd(name,OCSD_PROTOCOL_ETMV3) {};
     virtual ~DecoderMngrEtmV3() {};
 };
 

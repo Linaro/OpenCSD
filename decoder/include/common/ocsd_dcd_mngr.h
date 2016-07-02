@@ -45,16 +45,18 @@ template <class P, class Pt, class Pc>
 class DecoderMngrBase : public IDecoderMngr
 {
 public:
-    DecoderMngrBase(const std::string &decoderTypeName);
+    DecoderMngrBase(const std::string &decoderTypeName, ocsd_trace_protocol_t builtInProtocol);
     virtual ~DecoderMngrBase() {};
 
     // create decoder interface.
     virtual ocsd_err_t createDecoder(const int create_flags, const int instID, const CSConfig *p_config,  TraceComponent **p_component);
     virtual ocsd_err_t destroyDecoder(TraceComponent *p_component);
 
+    virtual const ocsd_trace_protocol_t getProtocolType() const { return m_builtInProtocol; }
+
 // common    
     virtual ocsd_err_t attachErrorLogger(TraceComponent *pComponent, ITraceErrorLog *pIErrorLog);
-
+    
 // pkt decoder
     virtual ocsd_err_t attachInstrDecoder(TraceComponent *pComponent, IInstrDecode *pIInstrDec);
     virtual ocsd_err_t attachMemAccessor(TraceComponent *pComponent, ITargetMemAccess *pMemAccessor);
@@ -71,16 +73,19 @@ public:
 // implemented by decoder handler derived classes
     virtual TraceComponent *createPktProc(const bool useInstID, const int instID) = 0;
     virtual TraceComponent *createPktDecode(const bool useInstID, const int instID) { return 0; };
+
+private:
+    ocsd_trace_protocol_t m_builtInProtocol;    //!< Protocol ID if built in type.
 };
 
 template <class P, class Pt, class Pc>
-DecoderMngrBase<P,Pt,Pc>::DecoderMngrBase(const std::string &decoderTypeName)
+DecoderMngrBase<P,Pt,Pc>::DecoderMngrBase(const std::string &decoderTypeName, ocsd_trace_protocol_t builtInProtocol)
 {
     OcsdLibDcdRegister *pDcdReg = OcsdLibDcdRegister::getDecoderRegister();
     if(pDcdReg)
         pDcdReg->registerDecoderTypeByName(decoderTypeName,this);
+    m_builtInProtocol = builtInProtocol;
 }
-
 
 template <class P, class Pt, class Pc>
 ocsd_err_t  DecoderMngrBase<P,Pt,Pc>::createDecoder(const int create_flags, const int instID, const CSConfig *pConfig,  TraceComponent **ppTrcComp)
@@ -306,7 +311,9 @@ template<   class P,            // Packet class.
 class DecodeMngrFullDcd : public DecoderMngrBase<P,Pt,Pc>
 {
 public:
-    DecodeMngrFullDcd (const std::string &name) : DecoderMngrBase(name) {};
+    DecodeMngrFullDcd (const std::string &name, ocsd_trace_protocol_t builtInProtocol) 
+        : DecoderMngrBase(name,builtInProtocol) {};
+
     virtual ~DecodeMngrFullDcd() {};
 
     virtual TraceComponent *createPktProc(const bool useInstID, const int instID)
@@ -341,7 +348,9 @@ template<   class P,            // Packet class.
 class DecodeMngrPktProc : public DecoderMngrBase<P,Pt,Pc>
 {
 public:
-    DecodeMngrPktProc (const std::string &name) : DecoderMngrBase(name) {};
+    DecodeMngrPktProc (const std::string &name, ocsd_trace_protocol_t builtInProtocol) 
+        : DecoderMngrBase(name,builtInProtocol) {};
+
     virtual ~DecodeMngrPktProc() {};
 
     virtual TraceComponent *createPktProc(const bool useInstID, const int instID)

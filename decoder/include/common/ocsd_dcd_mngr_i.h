@@ -56,6 +56,9 @@ public:
     virtual ocsd_err_t createDecoder(const int create_flags, const int instID, const CSConfig *p_config,  TraceComponent **ppComponent) = 0;
     virtual ocsd_err_t destroyDecoder(TraceComponent *pComponent) = 0;
 
+    //! Get the built in protocol type ID managed by this instance - extern for custom decoders
+    virtual const ocsd_trace_protocol_t getProtocolType() const = 0;
+
 // connect decoders to other components - (replace current /  0 pointer value to detach );
 // compatible with all decoders
     //!attach error logger to ptk-processor, or both of pkt processor and pkt decoder pair
