@@ -271,31 +271,17 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
     {
         ocsd_err_t err = OCSD_OK;
         EtmV4Config configObj(&config);
+        const char *decoderName = bDataChannel ? OCSD_BUILTIN_DCD_ETMV4D : OCSD_BUILTIN_DCD_ETMV4I;
 
-
-        // test new infrastructure
-        // 
-        err = m_pDecodeTree->createDecoder("ETMV4I", m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER,&configObj);
-            
-
-
-        if(m_bPacketProcOnly)
-        {
-            if(bDataChannel)
-                err = m_pDecodeTree->createETMv4DPktProcessor(&configObj);
-            else
-                err = m_pDecodeTree->createETMv4IPktProcessor(&configObj);
-        }
-        else
-        {
-            err = m_pDecodeTree->createETMv4Decoder(&configObj,bDataChannel);
-        }
-
+        err = m_pDecodeTree->createDecoder(decoderName, m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER,&configObj);
         
         if(err ==  OCSD_OK)
             createdDecoder = true;
         else
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
+        {
+            std::string msg = "Snapshot processor : failed to create " +  (std::string)decoderName + " decoder on decode tree.";
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,msg));
+        }
     }
 
     return createdDecoder;
@@ -329,15 +315,12 @@ bool CreateDcdTreeFromSnapShot::createETMv3Decoder(const std::string &coreName, 
     {
         EtmV3Config config(&cfg_regs);
         ocsd_err_t err = OCSD_OK;
-        if(m_bPacketProcOnly)
-            err = m_pDecodeTree->createETMv3PktProcessor(&config);
-        else
-            err = m_pDecodeTree->createETMv3Decoder(&config);
+        err = m_pDecodeTree->createDecoder(OCSD_BUILTIN_DCD_ETMV3, m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER,&config);
 
         if(err ==  OCSD_OK)
             createdDecoder = true;
         else
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create ETMV3 decoder on decode tree."));
     }
     return createdDecoder;
 }
@@ -370,15 +353,12 @@ bool CreateDcdTreeFromSnapShot::createPTMDecoder(const std::string &coreName, Pa
     {
         PtmConfig configObj(&config);
         ocsd_err_t err = OCSD_OK;
-        if(m_bPacketProcOnly)
-            err = m_pDecodeTree->createPTMPktProcessor(&configObj);
-        else
-            err = m_pDecodeTree->createPTMDecoder(&configObj);
+        err = m_pDecodeTree->createDecoder(OCSD_BUILTIN_DCD_PTM, m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER,&configObj);
 
         if(err ==  OCSD_OK)
             createdDecoder = true;
         else
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create decoder on decode tree."));
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create PTM decoder on decode tree."));
     }
     return createdDecoder;
 }
@@ -408,7 +388,7 @@ bool CreateDcdTreeFromSnapShot::createSTMDecoder(Parser::Parsed *devSrc)
 
     // generate the config data from the device data.
     
-     ocsd_stm_cfg config;
+    ocsd_stm_cfg config;
 
     regs_to_access_t regs_to_access[] = {
         { STMRegTCSR, true, &config.reg_tcsr, 0 }
@@ -419,10 +399,8 @@ bool CreateDcdTreeFromSnapShot::createSTMDecoder(Parser::Parsed *devSrc)
     {
         ocsd_err_t err = OCSD_OK;
         STMConfig configObj(&config);
-        if(m_bPacketProcOnly)
-            err = m_pDecodeTree->createSTMPktProcessor(&configObj);
-        else
-            err = OCSD_ERR_TEST_SS_TO_DECODER;
+
+        err = m_pDecodeTree->createDecoder(OCSD_BUILTIN_DCD_STM, m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER,&configObj);
 
         if(err ==  OCSD_OK)
             createdDecoder = true;

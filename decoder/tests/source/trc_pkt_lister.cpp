@@ -471,10 +471,10 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                     {
                         // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
                         if(decode || pkt_mon)
-                            pElement->getEtmV4IPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                            pElement->getDecoderMngr()->attachPktMonitor(pElement->getDecoderHandle(),(IPktRawDataMon<EtmV4ITrcPacket> *)pPrinter);
                         else
                         {
-                            pElement->getEtmV4IPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            pElement->getDecoderMngr()->attachPktSink(pElement->getDecoderHandle(),(IPktDataIn<EtmV4ITrcPacket> *)pPrinter);
                             if(test_waits)
                                 pPrinter->setTestWaits(test_waits);
                         }
@@ -494,10 +494,10 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                     {
                         // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
                         if(decode || pkt_mon)
-                            pElement->getEtmV3PktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                            pElement->getDecoderMngr()->attachPktMonitor(pElement->getDecoderHandle(),(IPktRawDataMon<EtmV3TrcPacket> *)pPrinter);
                         else
                         {
-                            pElement->getEtmV3PktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            pElement->getDecoderMngr()->attachPktSink(pElement->getDecoderHandle(),(IPktDataIn<EtmV3TrcPacket> *)pPrinter);
                             if(test_waits)
                                 pPrinter->setTestWaits(test_waits);
                         }
@@ -516,10 +516,10 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                     {
                         // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
                         if(decode || pkt_mon)
-                            pElement->getPtmPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                            pElement->getDecoderMngr()->attachPktMonitor(pElement->getDecoderHandle(),(IPktRawDataMon<PtmTrcPacket> *)pPrinter);
                         else
                         {
-                            pElement->getPtmPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            pElement->getDecoderMngr()->attachPktSink(pElement->getDecoderHandle(),(IPktDataIn<PtmTrcPacket> *)pPrinter);
                             if(test_waits)
                                 pPrinter->setTestWaits(test_waits);
                         }
@@ -539,10 +539,10 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                     {
                         // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
                         if(decode || pkt_mon)
-                            pElement->getStmPktProc()->getRawPacketMonAttachPt()->attach(pPrinter);
+                            pElement->getDecoderMngr()->attachPktMonitor(pElement->getDecoderHandle(),(IPktRawDataMon<StmTrcPacket> *)pPrinter);
                         else
                         {
-                            pElement->getStmPktProc()->getPacketOutAttachPt()->attach(pPrinter);
+                            pElement->getDecoderMngr()->attachPktSink(pElement->getDecoderHandle(),(IPktDataIn<StmTrcPacket> *)pPrinter);
                             if(test_waits)
                                 pPrinter->setTestWaits(test_waits);
                         }

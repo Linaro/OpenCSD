@@ -98,33 +98,11 @@ public:
                                                const uint8_t *pDataBlock,
                                                uint32_t *numBytesProcessed);
 
-
-
-    /* create packet processing element only - attach to CSID in config
-       optionally attach the output interface
-       */
-    ocsd_err_t createETMv3PktProcessor(EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout = 0);
-    ocsd_err_t createETMv4IPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout = 0);
-    ocsd_err_t createETMv4DPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout = 0);
-    ocsd_err_t createPTMPktProcessor(PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout = 0);
-    ocsd_err_t createSTMPktProcessor(STMConfig *p_config, IPktDataIn<StmTrcPacket> *p_Iout = 0);
-
-    /* create full decoder - packet processor + packet decoder  - attach to CSID in config 
-       All use the standard generic elements output interface.
-    */
-    ocsd_err_t createETMv3Decoder(EtmV3Config *p_config);
-    ocsd_err_t createETMv4Decoder(EtmV4Config *p_config, bool bDataChannel = false);
-    ocsd_err_t createPTMDecoder(PtmConfig *p_config);
-
     /*! Create a decoder by registered name */
     ocsd_err_t createDecoder(const std::string &decoderName, const int createFlags, const CSConfig *pConfig);
 
     /* remove a decoder / packet processor attached to an ID  - allows another decoder to be substituted. */
     ocsd_err_t removeDecoder(const uint8_t CSID);
-
-    /* attach custom / external decoders  */
-    ocsd_err_t  attachExternPktProcessor(const uint8_t CSID, ITrcDataIn* ext_data_in, void *p_pkt_proc_obj);
-    ocsd_err_t  attachExternDecoder(const uint8_t CSID, ITrcDataIn* ext_data_in, void *p_pkt_proc_obj, void *p_decoder_obj);
 
     /* set key interfaces - attach / replace on any existing tree components? */
     void setInstrDecoder(IInstrDecode *i_instr_decode);

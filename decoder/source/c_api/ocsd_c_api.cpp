@@ -49,6 +49,10 @@ namespace std { const nothrow_t nothrow = nothrow_t(); }
 #endif
 #endif
 
+/*******************************************************************************/
+/* C API internal helper function declarations                                 */
+/*******************************************************************************/
+static ocsd_err_t ocsd_dt_attach_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, ocsd_trace_protocol_t protocol, ITrcTypedBase *pPktMonIf, TraceElemCBBase *pCBObj);
 
 /*******************************************************************************/
 /* C library data - additional data on top of the C++ library objects          */
@@ -153,8 +157,17 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t han
             err =  OCSD_ERR_MEM;
 
         if(err == OCSD_OK)
-            err = ((DecodeTree *)handle)->createETMv4IPktProcessor(&cfg,p_CBObj);
-
+        {
+            err = ((DecodeTree *)handle)->createDecoder(OCSD_BUILTIN_DCD_ETMV4I,OCSD_CREATE_FLG_PACKET_PROC,&cfg);
+            if(err == OCSD_OK)
+            {
+                DecodeTreeElement *pTElem = ((DecodeTree *)handle)->getDecoderElement(cfg.getTraceID());
+                if(pTElem)
+                    err = pTElem->getDecoderMngr()->attachPktSink(pTElem->getDecoderHandle(),p_CBObj);
+                else
+                    err = OCSD_ERR_INVALID_PARAM_VAL;
+            }
+        }
         if(err == OCSD_OK)
         {
             std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
@@ -181,7 +194,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv4i_decoder(const dcd_tree_handle_t hand
         
         // no need for a spcific CB object here - standard generic elements output used.
         if(err == OCSD_OK)
-            err = ((DecodeTree *)handle)->createETMv4Decoder(&cfg);
+            err = ((DecodeTree *)handle)->createDecoder(OCSD_BUILTIN_DCD_ETMV4I,OCSD_CREATE_FLG_FULL_DECODER,&cfg);
     }
     else
         err = OCSD_ERR_INVALID_PARAM_VAL;
@@ -200,13 +213,18 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t hand
             EtmV4IPktMonCBObj *pktMonObj = new (std::nothrow) EtmV4IPktMonCBObj(pPktFn, p_context);
             if(pktMonObj != 0)
             {
-                pDTElem->getEtmV4IPktProc()->getRawPacketMonAttachPt()->attach(pktMonObj);
+                err = pDTElem->getDecoderMngr()->attachPktMonitor(pDTElem->getDecoderHandle(),pktMonObj);
 
-                // save object pointer for destruction later.
-                std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
-                it = s_data_map.find(handle);
-                if(it != s_data_map.end())
-                    it->second->cb_objs.push_back(pktMonObj);
+                if(err == OCSD_OK)
+                {
+                    // save object pointer for destruction later.
+                    std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
+                    it = s_data_map.find(handle);
+                    if(it != s_data_map.end())
+                        it->second->cb_objs.push_back(pktMonObj);
+                }
+                else
+                    delete pktMonObj;
             }
             else
                 err = OCSD_ERR_MEM;
@@ -232,7 +250,17 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t hand
             err =  OCSD_ERR_MEM;
 
         if(err == OCSD_OK)
-            err = ((DecodeTree *)handle)->createETMv3PktProcessor(&cfg,p_CBObj);
+        {
+            err = ((DecodeTree *)handle)->createDecoder(OCSD_BUILTIN_DCD_ETMV3,OCSD_CREATE_FLG_PACKET_PROC,&cfg);
+            if(err == OCSD_OK)
+            {
+                DecodeTreeElement *pTElem = ((DecodeTree *)handle)->getDecoderElement(cfg.getTraceID());
+                if(pTElem)
+                    err = pTElem->getDecoderMngr()->attachPktSink(pTElem->getDecoderHandle(),p_CBObj);
+                else
+                    err = OCSD_ERR_INVALID_PARAM_VAL;
+            }
+        }
 
         if(err == OCSD_OK)
         {
@@ -259,7 +287,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_decoder(const dcd_tree_handle_t handl
         
         // no need for a spcific CB object here - standard generic elements output used.
         if(err == OCSD_OK)
-            err = ((DecodeTree *)handle)->createETMv3Decoder(&cfg);
+            err = ((DecodeTree *)handle)->createDecoder(OCSD_BUILTIN_DCD_ETMV3,OCSD_CREATE_FLG_FULL_DECODER,&cfg);
     }
     else
         err = OCSD_ERR_INVALID_PARAM_VAL;
@@ -278,13 +306,18 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handl
             EtmV3PktMonCBObj *pktMonObj = new (std::nothrow) EtmV3PktMonCBObj(pPktFn, p_context);
             if(pktMonObj != 0)
             {
-                pDTElem->getEtmV3PktProc()->getRawPacketMonAttachPt()->attach(pktMonObj);
+                err = pDTElem->getDecoderMngr()->attachPktMonitor(pDTElem->getDecoderHandle(),pktMonObj);
 
-                // save object pointer for destruction later.
-                std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
-                it = s_data_map.find(handle);
-                if(it != s_data_map.end())
-                    it->second->cb_objs.push_back(pktMonObj);
+                if(err == OCSD_OK)
+                {
+                    // save object pointer for destruction later.
+                    std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
+                    it = s_data_map.find(handle);
+                    if(it != s_data_map.end())
+                        it->second->cb_objs.push_back(pktMonObj);
+                }
+                else
+                    delete pktMonObj;
             }
             else
                 err = OCSD_ERR_MEM;
@@ -311,7 +344,17 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_pkt_proc(const dcd_tree_handle_t handle
             err =  OCSD_ERR_MEM;
 
         if(err == OCSD_OK)
-            err = ((DecodeTree *)handle)->createPTMPktProcessor(&cfg,p_CBObj);
+        {
+            err = ((DecodeTree *)handle)->createDecoder(OCSD_BUILTIN_DCD_PTM,OCSD_CREATE_FLG_PACKET_PROC,&cfg);
+            if(err == OCSD_OK)
+            {
+                DecodeTreeElement *pTElem = ((DecodeTree *)handle)->getDecoderElement(cfg.getTraceID());
+                if(pTElem)
+                    err = pTElem->getDecoderMngr()->attachPktSink(pTElem->getDecoderHandle(),p_CBObj);
+                else
+                    err = OCSD_ERR_INVALID_PARAM_VAL;
+            }
+        }
 
         if(err == OCSD_OK)
         {
@@ -338,7 +381,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_decoder(const dcd_tree_handle_t handle,
         
         // no need for a spcific CB object here - standard generic elements output used.
         if(err == OCSD_OK)
-            err = ((DecodeTree *)handle)->createPTMDecoder(&cfg);
+            err = ((DecodeTree *)handle)->createDecoder(OCSD_BUILTIN_DCD_PTM,OCSD_CREATE_FLG_FULL_DECODER,&cfg);
     }
     else
         err = OCSD_ERR_INVALID_PARAM_VAL;
@@ -347,7 +390,14 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_decoder(const dcd_tree_handle_t handle,
 
 OCSD_C_API ocsd_err_t ocsd_dt_attach_ptm_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnPtmPktMonDataIn pPktFn, const void *p_context)
 {
+
     ocsd_err_t err = OCSD_OK;
+    PtmPktMonCBObj *pktMonObj = new (std::nothrow) PtmPktMonCBObj(pPktFn, p_context);
+    err = ocsd_dt_attach_pkt_mon(handle,trc_chan_id,OCSD_PROTOCOL_PTM,pktMonObj,pktMonObj);
+    if(err != OCSD_OK)
+        delete pktMonObj;
+
+#if 0
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
         DecodeTree *pDT = static_cast<DecodeTree *>(handle);
@@ -357,13 +407,18 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_ptm_pkt_mon(const dcd_tree_handle_t handle,
             PtmPktMonCBObj *pktMonObj = new (std::nothrow) PtmPktMonCBObj(pPktFn, p_context);
             if(pktMonObj != 0)
             {
-                pDTElem->getPtmPktProc()->getRawPacketMonAttachPt()->attach(pktMonObj);
-
-                // save object pointer for destruction later.
-                std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
-                it = s_data_map.find(handle);
-                if(it != s_data_map.end())
-                    it->second->cb_objs.push_back(pktMonObj);
+                err = pDTElem->getDecoderMngr()->attachPktMonitor(pDTElem->getDecoderHandle(),pktMonObj);
+                
+                if(err == OCSD_OK)
+                {
+                    // save object pointer for destruction later.
+                    std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
+                    it = s_data_map.find(handle);
+                    if(it != s_data_map.end())
+                        it->second->cb_objs.push_back(pktMonObj);
+                }
+                else
+                    delete pktMonObj;
             }
             else
                 err = OCSD_ERR_MEM;
@@ -373,10 +428,10 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_ptm_pkt_mon(const dcd_tree_handle_t handle,
     }
     else
         err = OCSD_ERR_INVALID_PARAM_VAL;
+#endif
+
     return err;
-
 }
-
 
 OCSD_C_API ocsd_err_t ocsd_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context)
 {
@@ -391,7 +446,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle
             err =  OCSD_ERR_MEM;
 
         if(err == OCSD_OK)
-            err = ((DecodeTree *)handle)->createSTMPktProcessor(&cfg,p_CBObj);
+            err = ((DecodeTree *)handle)->createDecoder(OCSD_BUILTIN_DCD_STM,OCSD_CREATE_FLG_FULL_DECODER,&cfg);
 
         if(err == OCSD_OK)
         {
@@ -681,6 +736,39 @@ OCSD_C_API void ocsd_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle)
         DecodeTree *pDT = static_cast<DecodeTree *>(handle);
         pDT->logMappedRanges();
     }
+}
+
+/*******************************************************************************/
+/* C API local fns                                                             */
+/*******************************************************************************/
+static ocsd_err_t ocsd_dt_attach_pkt_mon(   const dcd_tree_handle_t handle, 
+                                            const uint8_t trc_chan_id, 
+                                            ocsd_trace_protocol_t protocol, 
+                                            ITrcTypedBase *pPktMonIf, 
+                                            TraceElemCBBase *pCBObj)
+{
+    ocsd_err_t err = OCSD_OK;
+    if(handle == C_API_INVALID_TREE_HANDLE)
+        return OCSD_ERR_INVALID_PARAM_VAL;
+
+    DecodeTree *pDT = static_cast<DecodeTree *>(handle);
+    DecodeTreeElement *pDTElem = pDT->getDecoderElement(trc_chan_id);
+    if((pDTElem != 0) && (pDTElem->getProtocol() == protocol))
+    {
+        err = pDTElem->getDecoderMngr()->attachPktMonitor(pDTElem->getDecoderHandle(),pPktMonIf);
+                
+        if(err == OCSD_OK)
+        {
+            // save object pointer for destruction later.
+            std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
+            it = s_data_map.find(handle);
+            if(it != s_data_map.end())
+                it->second->cb_objs.push_back(pCBObj);
+        }
+    }
+    else
+        err = OCSD_ERR_INVALID_PARAM_VAL; // trace ID not found or not match for element protocol type.
+    return err;
 }
 
 /*******************************************************************************/

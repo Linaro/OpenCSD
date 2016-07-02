@@ -35,6 +35,9 @@
 #ifndef ARM_OCSD_DCD_TREE_ELEM_H_INCLUDED
 #define ARM_OCSD_DCD_TREE_ELEM_H_INCLUDED
 
+#include "common/ocsd_dcd_mngr_i.h"
+#include "common/trc_component.h"
+
 /** @class decoder_elements 
  *  @brief Decode tree element base structure.
  *  @addtogroup dcd_tree
@@ -46,32 +49,9 @@
  */
 typedef struct _decoder_elements 
 {
-    union {
-        struct {
-            TrcPktProcEtmV3 *proc;
-            TrcPktDecodeEtmV3 *dcd;
-        } etmv3;    /**< ETMv3 decoders */
-        struct {
-            TrcPktProcEtmV4I *proc;
-            TrcPktDecodeEtmV4I *dcd; 
-        } etmv4i;   /**< ETMv4 Decoders */
-        struct {
-            TrcPktProcEtmV4D *proc;
-            void * /*TrcPktDecodeEtmV4 **/ dcd; //** TBD
-        } etmv4d;
-        struct {
-            TrcPktProcPtm *proc;
-            TrcPktDecodePtm *dcd;
-        } ptm;
-        struct {
-            TrcPktProcStm *proc;
-            void * /*TrcPktDecodeStm **/ dcd; //** TBD
-        } stm;
-        struct {
-            void * proc;
-            void * dcd;
-        } extern_custom;
-    } decoder;
+    std::string dcd_name;
+    TraceComponent *dcd_handle;
+    IDecoderMngr *dcd_mngr;
     ocsd_trace_protocol_t protocol;
     bool created;  /**< decode tree created this element (destroy it on tree destruction) */
 } decoder_element;
@@ -83,111 +63,45 @@ typedef struct _decoder_elements
  *
  *   
  */
-class DecodeTreeElement : public decoder_element
+class DecodeTreeElement : protected decoder_element
 {
 public:
     DecodeTreeElement();
     ~DecodeTreeElement() {};
 
-    void SetProcElement(const ocsd_trace_protocol_t elem_type, void *pkt_proc, const bool created);
-    void SetDecoderElement(void *pkt_decode);
+    void SetDecoderElement(const std::string &name, IDecoderMngr *dcdMngr, TraceComponent *pHandle, bool bCreated);
     void DestroyElem();
 
-    TrcPktProcEtmV3 *  getEtmV3PktProc() const
-    {
-        if(protocol == OCSD_PROTOCOL_ETMV3)
-            return decoder.etmv3.proc;
-        return 0;
-    }
-
-    TrcPktProcEtmV4I *  getEtmV4IPktProc() const
-    {
-        if(protocol == OCSD_PROTOCOL_ETMV4I)
-            return decoder.etmv4i.proc;
-        return 0;
-    }
-
-    TrcPktDecodeEtmV4I *  getEtmV4IPktDecoder() const
-    {
-        if(protocol == OCSD_PROTOCOL_ETMV4I)
-            return decoder.etmv4i.dcd;
-        return 0;
-    }
-
-    TrcPktProcEtmV4D *  getEtmV4DPktProc() const
-    {
-        if(protocol == OCSD_PROTOCOL_ETMV4D)
-            return decoder.etmv4d.proc;
-        return 0;
-    }
-
-    TrcPktProcPtm *     getPtmPktProc() const
-    {
-        if(protocol == OCSD_PROTOCOL_PTM)
-            return decoder.ptm.proc;
-        return 0;
-    }
-    
-    TrcPktDecodePtm *   getPtmPktDecoder() const
-    {
-        if(protocol == OCSD_PROTOCOL_PTM)
-            return decoder.ptm.dcd;
-        return 0;
-    }
-
-    TrcPktProcStm *     getStmPktProc() const
-    {
-        if(protocol == OCSD_PROTOCOL_STM)
-            return decoder.stm.proc;
-        return 0;
-    }
-
-    void  *             getExternPktProc() const
-    {
-        if(protocol == OCSD_PROTOCOL_EXTERN)
-            return decoder.extern_custom.proc;
-        return 0;
-    }
-
-    TrcPktDecodeI *   getDecoderBaseI() const 
-    {
-        TrcPktDecodeI *pDecoder = 0;
-        switch(protocol) 
-        {
-        case OCSD_PROTOCOL_ETMV3:
-            pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv3.dcd);
-            break;
-        case OCSD_PROTOCOL_ETMV4I:
-            pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv4i.dcd);
-            break;
-        case OCSD_PROTOCOL_ETMV4D:
-            //pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.etmv4d.dcd);
-            break;
-        case OCSD_PROTOCOL_PTM:
-            pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.ptm.dcd);
-            break;
-        case OCSD_PROTOCOL_STM:
-            //pDecoder = dynamic_cast<TrcPktDecodeI *>(decoder.stm.dcd);
-            break;
-        case OCSD_PROTOCOL_EXTERN:
-            pDecoder = static_cast<TrcPktDecodeI *>(decoder.extern_custom.dcd);
-            break;
-        }
-        return pDecoder;
-    }
-
-
+    const std::string &getDecoderTypeName()  { return dcd_name; };
+    IDecoderMngr *getDecoderMngr() { return dcd_mngr; };
     ocsd_trace_protocol_t getProtocol() const { return protocol; };
-
+    TraceComponent *getDecoderHandle() { return dcd_handle; };
 };
 
 inline DecodeTreeElement::DecodeTreeElement()
 {
-    // set one element in union to zero all.
-    decoder.extern_custom.dcd = 0;
-    decoder.extern_custom.proc = 0;
+    dcd_name = "unknown";
+    dcd_mngr = 0;
+    dcd_handle = 0;
     protocol = OCSD_PROTOCOL_END;  
     created = false;
+}
+
+inline void DecodeTreeElement::SetDecoderElement(const std::string &name, IDecoderMngr *dcdMngr, TraceComponent *pHandle, bool bCreated)
+{
+    dcd_name = name;
+    dcd_mngr = dcdMngr;
+    dcd_handle = pHandle;
+    protocol = OCSD_PROTOCOL_EXTERN;  
+    if(dcd_mngr)
+        protocol = dcd_mngr->getProtocolType();
+    created = bCreated;
+}
+
+inline void DecodeTreeElement::DestroyElem()
+{
+    if(created && (dcd_mngr != 0) && (dcd_handle != 0))
+        dcd_mngr->destroyDecoder(dcd_handle);
 }
 
 #endif // ARM_OCSD_DCD_TREE_ELEM_H_INCLUDED

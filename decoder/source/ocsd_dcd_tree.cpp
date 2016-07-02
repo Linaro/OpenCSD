@@ -37,67 +37,6 @@
 #include "common/ocsd_lib_dcd_register.h"
 #include "mem_acc/trc_mem_acc_mapper.h"
 
-
-void DecodeTreeElement::SetProcElement(const ocsd_trace_protocol_t protocol_type, void *pkt_proc, const bool decoder_created)
-{
-     created = decoder_created;
-     protocol = protocol_type;
-
-     // as pointers are in a union, assume types OK and just set the extern void types.
-     decoder.extern_custom.proc = pkt_proc;
-
-}
- 
-void DecodeTreeElement::SetDecoderElement(void *pkt_decode)
-{
-    decoder.extern_custom.dcd = pkt_decode;
-}
-// destroy the elements using correctly typed pointers to ensure destructors are called.
-void DecodeTreeElement::DestroyElem()
-{
-    if(created)
-    {
-        switch(protocol)
-        {
-        case OCSD_PROTOCOL_ETMV3:
-            delete decoder.etmv3.proc;
-            decoder.etmv3.proc = 0;
-            delete decoder.etmv3.dcd;
-            decoder.etmv3.dcd = 0;
-            break;
-
-        case OCSD_PROTOCOL_ETMV4I:
-            delete decoder.etmv4i.proc;
-            decoder.etmv4i.proc = 0;
-            delete decoder.etmv4i.dcd;
-            decoder.etmv4i.dcd = 0;
-            break;
-
-        case OCSD_PROTOCOL_ETMV4D:
-            delete decoder.etmv4d.proc;
-            decoder.etmv4d.proc = 0;
-            //TBD: delete decoder.etmv4d.dcd;
-            decoder.etmv4d.dcd = 0;
-            break;
-
-        case OCSD_PROTOCOL_PTM:
-            delete decoder.ptm.proc;
-            decoder.ptm.proc = 0;
-            delete decoder.ptm.dcd;
-            decoder.ptm.dcd  = 0;
-            break;
-
-        case OCSD_PROTOCOL_STM:
-            delete decoder.stm.proc;
-            decoder.stm.proc = 0;
-            // TBD: delete decoder.stm.dcd;
-            decoder.stm.dcd  = 0;
-            break;
-        }
-    }
-}
-
-
 /***************************************************************/
 ITraceErrorLog *DecodeTree::s_i_error_logger = &DecodeTree::s_error_logger; 
 std::list<DecodeTree *> DecodeTree::s_trace_dcd_trees;  /**< list of pointers to decode tree objects */
@@ -192,16 +131,11 @@ void DecodeTree::setInstrDecoder(IInstrDecode *i_instr_decode)
 {
     uint8_t elemID;
     DecodeTreeElement *pElem = 0;
-    TrcPktDecodeI *pDecoder;
 
     pElem = getFirstElement(elemID);
     while(pElem != 0)
     {
-        pDecoder = pElem->getDecoderBaseI();
-        if(pDecoder)
-        {
-            pDecoder->getInstrDecodeAttachPt()->attach(i_instr_decode);
-        }
+        pElem->getDecoderMngr()->attachInstrDecoder(pElem->getDecoderHandle(),i_instr_decode);
         pElem = getNextElement(elemID);
     }
 }
@@ -210,16 +144,11 @@ void DecodeTree::setMemAccessI(ITargetMemAccess *i_mem_access)
 {
     uint8_t elemID;
     DecodeTreeElement *pElem = 0;
-    TrcPktDecodeI *pDecoder;
-
+   
     pElem = getFirstElement(elemID);
     while(pElem != 0)
     {
-        pDecoder = pElem->getDecoderBaseI();
-        if(pDecoder)
-        {
-            pDecoder->getMemoryAccessAttachPt()->attach(i_mem_access);
-        }
+        pElem->getDecoderMngr()->attachMemAccessor(pElem->getDecoderHandle(),i_mem_access);
         pElem = getNextElement(elemID);
     }
     m_i_mem_access = i_mem_access;
@@ -229,16 +158,11 @@ void DecodeTree::setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem)
 {
     uint8_t elemID;
     DecodeTreeElement *pElem = 0;
-    TrcPktDecodeI *pDecoder;
 
     pElem = getFirstElement(elemID);
     while(pElem != 0)
     {
-        pDecoder = pElem->getDecoderBaseI();
-        if(pDecoder)
-        {
-            pDecoder->getTraceElemOutAttachPt()->attach(i_gen_trace_elem);
-        }
+        pElem->getDecoderMngr()->attachOutputSink(pElem->getDecoderHandle(),i_gen_trace_elem);
         pElem = getNextElement(elemID);
     }
 }
@@ -311,328 +235,6 @@ void DecodeTree::logMappedRanges()
         m_default_mapper->logMappedRanges();
 }
 
-/* create packet processing element only - attach to CSID in config */
-ocsd_err_t DecodeTree::createETMv3PktProcessor(EtmV3Config *p_config, IPktDataIn<EtmV3TrcPacket> *p_Iout /*= 0*/)
-{
-    ocsd_err_t err = OCSD_OK;
-
-    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
-    if(usingFormatter())
-        CSID = p_config->getTraceID();
-
-    // see if we can attach to the desire CSID point
-    if((err = createDecodeElement(CSID)) == OCSD_OK)
-    {
-
-        TrcPktProcEtmV3 *pProc = new (std::nothrow) TrcPktProcEtmV3(CSID);
-        if(!pProc)
-            return OCSD_ERR_MEM;
-
-        // set the configuration
-        err = pProc->setProtocolConfig(p_config);
-
-        // attach the decoder if passed in.
-        if((err == OCSD_OK) && p_Iout)
-            err = pProc->getPacketOutAttachPt()->attach(p_Iout);
-
-        // attach the error logger
-        if(err == OCSD_OK)
-             pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-        // attach to the frame demuxer.
-        if(usingFormatter() && (err == OCSD_OK))
-            err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
-
-        if(err != OCSD_OK)
-        {
-            // unable to attach as in use - delete the processor and return.
-            delete pProc;
-            destroyDecodeElement(CSID);
-        }
-        else
-        {
-            if(!usingFormatter())
-                setSingleRoot(pProc);
-            m_decode_elements[CSID]->SetProcElement(OCSD_PROTOCOL_ETMV3,pProc,true);
-        }        
-    }
-    return err;
-}
-
-ocsd_err_t DecodeTree::createETMv4IPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4ITrcPacket> *p_Iout/* = 0*/)
-{
-    ocsd_err_t err = OCSD_ERR_NOT_INIT;
-    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
-    if(usingFormatter())
-        CSID = p_config->getTraceID();
-
-    // see if we can attach to the desired CSID point
-    if((err = createDecodeElement(CSID)) == OCSD_OK)
-    {
-        TrcPktProcEtmV4I *pProc = 0;
-        pProc = new (std::nothrow) TrcPktProcEtmV4I(CSID);
-        if(!pProc)
-            return OCSD_ERR_MEM;
-
-        err = pProc->setProtocolConfig(p_config);
-
-        if((err == OCSD_OK) && p_Iout)
-            err = pProc->getPacketOutAttachPt()->attach(p_Iout);       
-
-        if(err == OCSD_OK)
-            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-        if(usingFormatter() && (err == OCSD_OK))
-            err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
-
-        if(err != OCSD_OK)
-        {
-            // error - delete the processor and return
-            delete pProc;
-            destroyDecodeElement(CSID);
-        }
-        else
-        {
-            // register with decode element list
-            if(!usingFormatter())
-                setSingleRoot(pProc);
-            m_decode_elements[CSID]->SetProcElement(OCSD_PROTOCOL_ETMV4I,pProc,true);
-        }
-    }    
-    return err;
-}
-
-ocsd_err_t DecodeTree::createETMv4DPktProcessor(EtmV4Config *p_config, IPktDataIn<EtmV4DTrcPacket> *p_Iout/* = 0*/)
-{
-    ocsd_err_t err = OCSD_ERR_NOT_INIT;
-    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
-    if(usingFormatter())
-        CSID = p_config->getTraceID();
-
-    // see if we can attach to the desired CSID point
-    if((err = createDecodeElement(CSID)) == OCSD_OK)
-    {
-        TrcPktProcEtmV4D *pProc = 0;
-        err = pProc->setProtocolConfig(p_config);
-
-        if((err == OCSD_OK) && p_Iout)
-            err = pProc->getPacketOutAttachPt()->attach(p_Iout);       
-
-        if(err == OCSD_OK)
-            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-        if(usingFormatter() && (err == OCSD_OK))
-            err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
-
-        if(err != OCSD_OK)
-        {
-            // error - delete the processor and return
-            delete pProc;
-            destroyDecodeElement(CSID);
-        }
-        else
-        {
-            // register with decode element list
-            if(!usingFormatter())
-                setSingleRoot(pProc);
-            m_decode_elements[CSID]->SetProcElement(OCSD_PROTOCOL_ETMV4D,pProc,true);
-        }
-    }
-    return err;
-}
-
-ocsd_err_t DecodeTree::createPTMPktProcessor(PtmConfig *p_config, IPktDataIn<PtmTrcPacket> *p_Iout /*= 0*/)
-{
-    ocsd_err_t err = OCSD_OK;
-
-    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
-    if(usingFormatter())
-        CSID = p_config->getTraceID();
-
-    // see if we can attach to the desire CSID point
-    if((err = createDecodeElement(CSID)) == OCSD_OK)
-    {
-        TrcPktProcPtm *pProc = new (std::nothrow) TrcPktProcPtm(CSID);
-        if(!pProc)
-            return OCSD_ERR_MEM;
-
-        // set the configuration
-        err = pProc->setProtocolConfig(p_config);
-
-        // attach the decoder if passed in.
-        if((err == OCSD_OK) && p_Iout)
-            err = pProc->getPacketOutAttachPt()->attach(p_Iout);
-
-        // attach the error logger
-        if(err == OCSD_OK)
-             pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-        // attach to the frame demuxer.
-        if(usingFormatter() && (err == OCSD_OK))
-            err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
-
-        if(err != OCSD_OK)
-        {
-            // unable to attach as in use - delete the processor and return.
-            delete pProc;
-            destroyDecodeElement(CSID);
-        }
-        else
-        {
-            if(!usingFormatter())
-                setSingleRoot(pProc);
-            m_decode_elements[CSID]->SetProcElement(OCSD_PROTOCOL_PTM,pProc,true);
-        }        
-    }
-    return err;
-}
-
-ocsd_err_t DecodeTree::createSTMPktProcessor(STMConfig *p_config, IPktDataIn<StmTrcPacket> *p_Iout/* = 0*/)
-{
-    ocsd_err_t err = OCSD_ERR_NOT_INIT;
-    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
-    if(usingFormatter())
-        CSID = p_config->getTraceID();
-
-    // see if we can attach to the desired CSID point
-    if((err = createDecodeElement(CSID)) == OCSD_OK)
-    {
-        TrcPktProcStm *pProc = 0;
-        pProc = new (std::nothrow) TrcPktProcStm(CSID);
-        if(!pProc)
-            return OCSD_ERR_MEM;
-
-        err = pProc->setProtocolConfig(p_config);
-
-        if((err == OCSD_OK) && p_Iout)
-            err = pProc->getPacketOutAttachPt()->attach(p_Iout);       
-
-        if(err == OCSD_OK)
-            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-        if(usingFormatter() && (err == OCSD_OK))
-            err = m_frame_deformatter_root->getIDStreamAttachPt(p_config->getTraceID())->attach(pProc);            
-
-        if(err != OCSD_OK)
-        {
-            // error - delete the processor and return
-            delete pProc;
-            destroyDecodeElement(CSID);
-        }
-        else
-        {
-            // register with decode element list
-            if(!usingFormatter())
-                setSingleRoot(pProc);
-            m_decode_elements[CSID]->SetProcElement(OCSD_PROTOCOL_STM,pProc,true);
-        }
-    }    
-    return err;
-}
-
-/* create full decoder - packet processor + packet decoder  - attach to CSID in config */
-ocsd_err_t DecodeTree::createETMv3Decoder(EtmV3Config *p_config)
-{
-    ocsd_err_t err = OCSD_ERR_NOT_INIT;
-    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
-    if(usingFormatter())
-        CSID = p_config->getTraceID();
-
-    TrcPktDecodeEtmV3 *pProc = 0;
-    pProc = new (std::nothrow) TrcPktDecodeEtmV3(CSID);
-    if(!pProc)
-        return OCSD_ERR_MEM;
-
-    err = createETMv3PktProcessor(p_config,pProc);
-    if(err == OCSD_OK)
-    {
-        m_decode_elements[CSID]->SetDecoderElement(pProc);
-        err = pProc->setProtocolConfig(p_config);
-        if(m_i_instr_decode && (err == OCSD_OK))
-            err = pProc->getInstrDecodeAttachPt()->attach(m_i_instr_decode);
-        if(m_i_mem_access && (err == OCSD_OK))
-            err = pProc->getMemoryAccessAttachPt()->attach(m_i_mem_access);
-        if( m_i_gen_elem_out && (err == OCSD_OK))
-            err = pProc->getTraceElemOutAttachPt()->attach(m_i_gen_elem_out);
-        if(err == OCSD_OK)
-            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-        if(err != OCSD_OK)
-            destroyDecodeElement(CSID);
-    }
-
-    return err;
-}
-
-ocsd_err_t DecodeTree::createETMv4Decoder(EtmV4Config *p_config, bool bDataChannel /*= false*/)
-{
-    ocsd_err_t err = OCSD_ERR_NOT_INIT;
-    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
-    if(usingFormatter())
-        CSID = p_config->getTraceID();
-
-
-    if(!bDataChannel)
-    {
-        TrcPktDecodeEtmV4I *pProc = 0;
-        pProc = new (std::nothrow) TrcPktDecodeEtmV4I(CSID);
-        if(!pProc)
-            return OCSD_ERR_MEM;
-
-        err = createETMv4IPktProcessor(p_config,pProc);
-        if(err == OCSD_OK)
-        {
-            m_decode_elements[CSID]->SetDecoderElement(pProc);
-            err = pProc->setProtocolConfig(p_config);
-            if(m_i_instr_decode && (err == OCSD_OK))
-                err = pProc->getInstrDecodeAttachPt()->attach(m_i_instr_decode);
-            if(m_i_mem_access && (err == OCSD_OK))
-                err = pProc->getMemoryAccessAttachPt()->attach(m_i_mem_access);
-            if( m_i_gen_elem_out && (err == OCSD_OK))
-                err = pProc->getTraceElemOutAttachPt()->attach(m_i_gen_elem_out);
-            if(err == OCSD_OK)
-                err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-            if(err != OCSD_OK)
-                destroyDecodeElement(CSID);
-        }
-
-    }
-    return err;
-}
-
-ocsd_err_t DecodeTree::createPTMDecoder(PtmConfig *p_config)
-{
-    ocsd_err_t err = OCSD_ERR_NOT_INIT;
-    uint8_t CSID = 0;   // default for single stream decoder (no deformatter) - we ignore the ID
-    if(usingFormatter())
-        CSID = p_config->getTraceID();
-
-    TrcPktDecodePtm *pProc = 0;
-    pProc = new (std::nothrow) TrcPktDecodePtm(CSID);
-    if(!pProc)
-        return OCSD_ERR_MEM;
-
-    err = createPTMPktProcessor(p_config,pProc);
-    if(err == OCSD_OK)
-    {
-        m_decode_elements[CSID]->SetDecoderElement(pProc);
-        err = pProc->setProtocolConfig(p_config);
-        if(m_i_instr_decode && (err == OCSD_OK))
-            err = pProc->getInstrDecodeAttachPt()->attach(m_i_instr_decode);
-        if(m_i_mem_access && (err == OCSD_OK))
-            err = pProc->getMemoryAccessAttachPt()->attach(m_i_mem_access);
-        if( m_i_gen_elem_out && (err == OCSD_OK))
-            err = pProc->getTraceElemOutAttachPt()->attach(m_i_gen_elem_out);
-        if(err == OCSD_OK)
-            err = pProc->getErrorLogAttachPt()->attach(DecodeTree::s_i_error_logger);
-
-        if(err != OCSD_OK)
-            destroyDecodeElement(CSID);
-    }
-    return err;
-}
-
 ocsd_err_t DecodeTree::createDecoder(const std::string &decoderName, const int createFlags, const CSConfig *pConfig)
 {
     ocsd_err_t err = OCSD_OK;
@@ -661,11 +263,10 @@ ocsd_err_t DecodeTree::createDecoder(const std::string &decoderName, const int c
         return err;
 
     // got the decoder...
-    err = pDecoderMngr->createDecoder(crtFlags,(int)CSID,pConfig,&pTraceComp);
+    if((err = pDecoderMngr->createDecoder(crtFlags,(int)CSID,pConfig,&pTraceComp)) != OCSD_OK)
+        return err;
 
-    // TBD: set decode element
-    // when elements accept new pointer types -> component handle and decoder manager.
-    // m_decode_elements[CSID]->SetDecoderElement(pTraceComp, pDecoderMngr);
+    m_decode_elements[CSID]->SetDecoderElement(decoderName, pDecoderMngr, pTraceComp, true);
 
     // always attach an error logger
     if(err == OCSD_OK)
@@ -706,12 +307,10 @@ ocsd_err_t DecodeTree::createDecoder(const std::string &decoderName, const int c
 
     if(err != OCSD_OK)
     {
-        // TBD: destroyDecodeElement(CSID); // will destroy decoder as well.       
+        destroyDecodeElement(CSID); // will destroy decoder as well.       
     }
     return err;
 }
-
-
 
 ocsd_err_t DecodeTree::removeDecoder(const uint8_t CSID)
 {
