@@ -883,9 +883,8 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom, bo
             break;
         }
         m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
-        m_output_elem.last_instr_exec = (atom == ATOM_E) ? 1 : 0;
-        m_output_elem.last_i_type = m_instr_info.type;
-        m_output_elem.last_i_subtype = m_instr_info.sub_type;
+        m_output_elem.setLastInstrInfo((atom == ATOM_E),m_instr_info.type, m_instr_info.sub_type);
+        m_output_elem.setISA(m_instr_info.isa);
         resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
 
     }
@@ -898,6 +897,8 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom, bo
         {
             // some trace before we were out of memory access range
             m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
+            m_output_elem.setLastInstrInfo(true,m_instr_info.type, m_instr_info.sub_type);
+            m_output_elem.setISA(m_instr_info.isa);
             resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
         }
 
@@ -1040,9 +1041,8 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
                 }
             }
             m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
-            m_output_elem.last_instr_exec = 1;
-            m_output_elem.last_i_type = m_instr_info.type;
-            m_output_elem.last_i_subtype = m_instr_info.sub_type;
+            m_output_elem.setLastInstrInfo(true,m_instr_info.type, m_instr_info.sub_type);
+            m_output_elem.setISA(m_instr_info.isa);
             resp = outputTraceElementIdx(m_excep_index, m_output_elem);
             m_excep_proc = EXCEP_EXCEP;
         }
@@ -1055,6 +1055,8 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
             {
                 // some trace before we were out of memory access range
                 m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
+                m_output_elem.setLastInstrInfo(true,m_instr_info.type, m_instr_info.sub_type);
+                m_output_elem.setISA(m_instr_info.isa);
                 resp = outputTraceElementIdx(m_excep_index,m_output_elem);
             }
 

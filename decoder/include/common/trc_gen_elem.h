@@ -148,6 +148,12 @@ inline void OcsdTraceElement::updateType(const ocsd_gen_trc_elem_t type)
 
 inline void OcsdTraceElement::init()
 {
+    st_addr = en_addr = (ocsd_vaddr_t)-1;
+    isa = ocsd_isa_unknown;
+
+    cycle_count = 0;
+    timestamp = 0;
+
     context.ctxt_id_valid = 0;
     context.vmid_valid = 0;
     context.el_valid = 0;
