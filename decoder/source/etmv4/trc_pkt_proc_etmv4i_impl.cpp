@@ -375,67 +375,66 @@ void EtmV4IPktProcImpl::iPktASync()
 void EtmV4IPktProcImpl::iPktTraceInfo()
 {
     uint8_t lastByte = m_currPacketData.back();
-    if(m_currPacketData.size() == 1)
+    if(m_currPacketData.size() == 1)    // header
     {
         //clear flags
-        m_ctrlSect = m_infoSect = m_keySect = m_specSect = m_cyctSect = false;
+        m_tinfo_sections.sectFlags = 0; // mark all sections as incomplete.
+        m_tinfo_sections.ctrlBytes = 1; // assume only a single control section byte for now
+        
     }
-    else if(m_currPacketData.size() == 2)
+    else if(m_currPacketData.size() == 2) // first payload control byte
     {
-        // figure out which sections are absent and set to true;
-        m_infoSect = (bool)((lastByte & 0x1) == 0x0);
-        m_keySect =  (bool)((lastByte & 0x2) == 0x0);
-        m_specSect = (bool)((lastByte & 0x4) == 0x0);
-        m_cyctSect = (bool)((lastByte & 0x8) == 0x0);
+        // figure out which sections are absent and set to true - opposite of bitfeild in byte;
+        m_tinfo_sections.sectFlags = (~lastByte) & TINFO_ALL_SECT;
 
         // see if there is an extended control section, otherwise this byte is it.
-        m_ctrlSect = (bool)((lastByte & 0x80) == 0x0);  
+        if((lastByte & 0x80) == 0x0)
+            m_tinfo_sections.sectFlags |= TINFO_CTRL;
+ 
     }
     else
     {
-        if(!m_ctrlSect)
-            m_ctrlSect = (bool)((lastByte & 0x80) == 0x0);
-        else if(!m_infoSect)
-            m_infoSect = (bool)((lastByte & 0x80) == 0x0);
-        else if(!m_keySect)
-            m_keySect = (bool)((lastByte & 0x80) == 0x0);
-        else if(!m_specSect)
-            m_specSect = (bool)((lastByte & 0x80) == 0x0);
-        else if(!m_cyctSect)
-            m_cyctSect = (bool)((lastByte & 0x80) == 0x0);        
+        if(!(m_tinfo_sections.sectFlags & TINFO_CTRL))
+        {
+            m_tinfo_sections.sectFlags |= (lastByte & 0x80) ? 0 : TINFO_CTRL;
+            m_tinfo_sections.ctrlBytes++;
+        }
+        else if(!(m_tinfo_sections.sectFlags & TINFO_INFO_SECT))
+            m_tinfo_sections.sectFlags |= (lastByte & 0x80) ? 0 : TINFO_INFO_SECT;
+        else if(!(m_tinfo_sections.sectFlags & TINFO_KEY_SECT))
+            m_tinfo_sections.sectFlags |= (lastByte & 0x80) ? 0 : TINFO_KEY_SECT;
+        else if(!(m_tinfo_sections.sectFlags & TINFO_SPEC_SECT))
+            m_tinfo_sections.sectFlags |= (lastByte & 0x80) ? 0 : TINFO_SPEC_SECT;
+        else if(!(m_tinfo_sections.sectFlags & TINFO_CYCT_SECT))
+            m_tinfo_sections.sectFlags |= (lastByte & 0x80) ? 0 : TINFO_CYCT_SECT;
     }
 
     // all sections accounted for?
-    if(m_ctrlSect && m_infoSect && m_keySect && m_specSect && m_cyctSect)
+    if(m_tinfo_sections.sectFlags == TINFO_ALL)
     {
-        unsigned idx = 2;
+        // index of first section is number of payload control bytes + 1 for header byte
+        unsigned idx = m_tinfo_sections.ctrlBytes + 1;
         uint32_t fieldVal = 0;
-
-        // now need to know which sections to look for, so re-examine the flags byte...
-        lastByte = m_currPacketData[1];
-        m_infoSect = (bool)((lastByte & 0x1) == 0x1);
-        m_keySect =  (bool)((lastByte & 0x2) == 0x2);
-        m_specSect = (bool)((lastByte & 0x4) == 0x4);
-        m_cyctSect = (bool)((lastByte & 0x8) == 0x8);
+        uint8_t presSect = m_currPacketData[1] & TINFO_ALL_SECT;  // first payload control byte
 
         m_curr_packet.clearTraceInfo();
 
-        if(m_infoSect && (idx < m_currPacketData.size()))
+        if((presSect & TINFO_INFO_SECT) && (idx < m_currPacketData.size()))
         {
-            m_curr_packet.setTraceInfo((uint32_t)m_currPacketData[idx]);
-            idx++;
+            idx += extractContField(m_currPacketData,idx,fieldVal);
+            m_curr_packet.setTraceInfo(fieldVal);
         }
-        if(m_keySect && (idx < m_currPacketData.size()))
+        if((presSect & TINFO_KEY_SECT) && (idx < m_currPacketData.size()))
         {
             idx += extractContField(m_currPacketData,idx,fieldVal);
             m_curr_packet.setTraceInfoKey(fieldVal);
         }
-        if(m_specSect && (idx < m_currPacketData.size()))
+        if((presSect & TINFO_SPEC_SECT) && (idx < m_currPacketData.size()))
         {
             idx += extractContField(m_currPacketData,idx,fieldVal);
             m_curr_packet.setTraceInfoSpec(fieldVal);
         }
-        if(m_cyctSect && (idx < m_currPacketData.size()))
+        if((presSect & TINFO_CYCT_SECT) && (idx < m_currPacketData.size()))
         {
             idx += extractContField(m_currPacketData,idx,fieldVal);
             m_curr_packet.setTraceInfoCyct(fieldVal);
@@ -443,6 +442,7 @@ void EtmV4IPktProcImpl::iPktTraceInfo()
         m_process_state = SEND_PKT;
         m_first_trace_info = true;
     }
+
 }
 
 void EtmV4IPktProcImpl::iPktTimestamp()

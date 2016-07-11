@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_proc_etmv4i_impl.h
- * \brief      OpenCSD : 
+ * \brief      OpenCSD : Implementation of ETMv4 packet processing
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
@@ -100,12 +100,20 @@ private:
     // current processing state data - counts and flags to determine if a packet is complete.
 
     // TraceInfo Packet
-    // flags to indicate processing for these sections is complete.
-    bool m_ctrlSect;
-    bool m_infoSect;   
-    bool m_keySect;
-    bool m_specSect;
-    bool m_cyctSect;
+    // flags to indicate processing progress for these sections is complete.
+    struct _t_info_pkt_prog {
+        uint8_t sectFlags;
+        uint8_t ctrlBytes;                 
+    }  m_tinfo_sections;
+
+    #define TINFO_INFO_SECT 0x01
+    #define TINFO_KEY_SECT  0x02 
+    #define TINFO_SPEC_SECT 0x04
+    #define TINFO_CYCT_SECT 0x08
+    #define TINFO_CTRL      0x10
+    #define TINFO_ALL_SECT  0x0F
+    #define TINFO_ALL       0x1F
+
 
     // address and context packets 
     int m_addrBytes;
