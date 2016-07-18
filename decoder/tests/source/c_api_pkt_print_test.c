@@ -1,8 +1,8 @@
 /*
- * \file       simple_pkt_c_api.c
- * \brief      OpenCSD : 
+ * \file       c_api_pkt_print_test.c
+ * \brief      OpenCSD : C-API test program
  * 
- * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
+ * \copyright  Copyright (c) 2016, ARM Limited. All Rights Reserved.
  */
 
 /* 
@@ -33,12 +33,16 @@
  */ 
 
 /*
- * Example of using the library with the C-API
+ * Example of using the library with the C-API. Used to validate that the C-API 
+ * functions work.
  *
- * Simple test program to print packets from a single trace source stream.
+ * Simple test program to print packets from a single trace ID source stream.
  * Hard coded configuration based on the Juno r1-1 test snapshot for ETMv4 and
- * STM, TC2 test snapshot for ETMv3, PTM
+ * STM, TC2 test snapshot for ETMv3, PTM.
  *
+ * The test source can be set from the command line, but will default to the 
+ * ETMv4 trace for trace ID 0x10 on the juno r1-1 test snapshot.
+ * This example uses the updated C-API functionality from library version 0v004 onwards.
  */
 
 #include <stdio.h>
@@ -46,11 +50,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define OPENCSD_INC_DEPRECATED_API
 /* include the C-API library header */
 #include "c_api/opencsd_c_api.h"
 
-/* path to juno snapshot, relative to tests/bin/<plat>/<dbg|rel> build output dir */
+/* path to test snapshots, relative to tests/bin/<plat>/<dbg|rel> build output dir */
 #ifdef _WIN32
 const char *default_path_to_snapshot = "..\\..\\..\\snapshots\\juno_r1_1\\";
 const char *tc2_snapshot = "..\\..\\..\\snapshots\\TC2\\";
@@ -66,17 +69,9 @@ const char *memory_dump_filename = "kernel_dump.bin";
 ocsd_vaddr_t mem_dump_address=0xFFFFFFC000081000;
 const ocsd_vaddr_t mem_dump_address_tc2=0xC0008000;
 
-static int using_mem_acc_cb = 0;
-static int use_region_file = 0;
-
-/* region list to test region file API */
-file_mem_region_t region_list[4];
-
-/* trace configuration structures - contains programmed register values of trace hardware */
-static ocsd_etmv4_cfg trace_config;
-static ocsd_etmv3_cfg trace_config_etmv3;
-static ocsd_stm_cfg trace_config_stm;
-static ocsd_ptm_cfg trace_config_ptm;
+/* test variables - set by command line to feature test API */
+static int using_mem_acc_cb = 0;    /* test the memory access callback function */
+static int use_region_file = 0;     /* test multi region memory files */
 
 /* buffer to handle a packet string */
 #define PACKET_STR_LEN 1024
@@ -84,48 +79,19 @@ static char packet_str[PACKET_STR_LEN];
 
 /* decide if we decode & monitor, decode only or packet print */
 typedef enum _test_op {
-    TEST_PKT_PRINT,
-    TEST_PKT_DECODE,
-    TEST_PKT_DECODEONLY
+    TEST_PKT_PRINT,     // process trace input into discrete packets and print.
+    TEST_PKT_DECODE,    // process and decode trace packets, printing discrete packets and generic output.
+    TEST_PKT_DECODEONLY // process and decode trace packets, printing generic output packets only.
 } test_op_t;
 
-static test_op_t op = TEST_PKT_PRINT;
-static ocsd_trace_protocol_t test_protocol = OCSD_PROTOCOL_ETMV4I;
-static uint8_t test_trc_id_override = 0x00;
+// Default test operations
+static test_op_t op = TEST_PKT_PRINT;   // default operation is to packet print
+static ocsd_trace_protocol_t test_protocol = OCSD_PROTOCOL_ETMV4I; // ETMV4 protocl
+static uint8_t test_trc_id_override = 0x00; // no trace ID override.
 
-static int print_data_array(const uint8_t *p_array, const int array_size, char *p_buffer, int buf_size)
-{
-    int chars_printed = 0;
-    int bytes_processed;
-    p_buffer[0] = 0;
-    
-    if(buf_size > 9)
-    {
-        /* set up the header */
-        strcat(p_buffer,"[ ");
-        chars_printed+=2;
 
-        for(bytes_processed = 0; bytes_processed < array_size; bytes_processed++)
-        {
-           sprintf(p_buffer+chars_printed,"0x%02X ", p_array[bytes_processed]);
-           chars_printed += 5;
-           if((chars_printed + 5) > buf_size)
-               break;
-        }
-
-        strcat(p_buffer,"];");
-        chars_printed+=2;
-    }
-    else if(buf_size >= 4)
-    {
-        sprintf(p_buffer,"[];");
-        chars_printed+=3;
-    }
-    return chars_printed;
-}
-
-/*  choose the operation to use for the test. */
-static void process_cmd_line(int argc, char *argv[])
+/* Process command line options - choose the operation to use for the test. */
+static int process_cmd_line(int argc, char *argv[])
 {
     int idx = 1;
 
@@ -168,65 +134,47 @@ static void process_cmd_line(int argc, char *argv[])
         else if(strcmp(argv[idx],"-test_cb") == 0)
         {
             using_mem_acc_cb = 1;
+            use_region_file = 0;
         }
         else if(strcmp(argv[idx],"-test_region_file") == 0)
         {
             use_region_file = 1;
+            using_mem_acc_cb = 0;
+        }
+        else if(strcmp(argv[idx],"-help") == 0)
+        {
+            return -1;
         }
         else 
             printf("Ignored unknown argument %s\n", argv[idx]);
         idx++;
     }
+    return 0;
 }
 
-/* Callback function to process the packets in the stream - 
-   simply print them out in this case 
- */
-ocsd_datapath_resp_t packet_handler(const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const void *p_packet_in)
+static void print_cmd_line_help()
 {
-    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
-    int offset = 0;
-
-    switch(op)
-    {
-    default: break;
-    case OCSD_OP_DATA:
-        sprintf(packet_str,"Idx:%ld; ", index_sop);
-        offset = strlen(packet_str);
-   
-        /* got a packet - convert to string and use the libraries' message output to print to file and stdoout */
-        if(ocsd_pkt_str(test_protocol,p_packet_in,packet_str+offset,PACKET_STR_LEN-offset) == OCSD_OK)
-        {
-            /* add in <CR> */
-            if(strlen(packet_str) == PACKET_STR_LEN - 1) /* maximum length */
-                packet_str[PACKET_STR_LEN-2] = '\n';
-            else
-                strcat(packet_str,"\n");
-
-            /* print it using the library output logger. */
-            ocsd_def_errlog_msgout(packet_str);
-        }
-        else
-            resp = OCSD_RESP_FATAL_INVALID_PARAM;  /* mark fatal error */
-        break;
-
-    case OCSD_OP_EOT:
-        sprintf(packet_str,"**** END OF TRACE ****\n");
-        ocsd_def_errlog_msgout(packet_str);
-        break;
-    }
-
-    return resp;
+    printf("Usage:\n-etmv3|-stm|-ptm  : choose protocol (one only, default etmv4)\n");
+    printf("-id <ID> : decode source for id <ID> (default 0x10)\n");
+    printf("-decode | -decode_only : full decode + trace packets / full decode packets only (default trace packets only)\n");
+    printf("-test_region_file | -test_cb : mem accessor - test multi region file API | test callback API (default single memroy file)\n\n");
 }
 
-/* decode memory access using a CB function 
-* tests CB API and add / remove mem acc API.
-*/
-static FILE *dump_file = NULL;
-static ocsd_mem_space_acc_t dump_file_mem_space = OCSD_MEM_SPACE_ANY;
-static long mem_file_size = 0;
+
+
+/************************************************************************/
+/* Memory accessor functionality */
+/************************************************************************/
+
+static FILE *dump_file = NULL;  /* pointer to the file providing the opcode memory */
+static ocsd_mem_space_acc_t dump_file_mem_space = OCSD_MEM_SPACE_ANY;   /* memory space used by the dump file */
+static long mem_file_size = 0;                /* size of the memory file */
 static ocsd_vaddr_t mem_file_en_address = 0;  /* end address last inclusive address in file. */
 
+
+/* decode memory access using a CallBack function 
+* tests CB API and add / remove mem acc API.
+*/
 static uint32_t  mem_acc_cb(const void *p_context, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
 {
     uint32_t read_bytes = 0;
@@ -263,6 +211,7 @@ static uint32_t  mem_acc_cb(const void *p_context, const ocsd_vaddr_t address, c
     return read_bytes;
 }
 
+/* Create the memory accessor using the callback function and attach to decode tree */
 static ocsd_err_t create_mem_acc_cb(dcd_tree_handle_t dcd_tree_h, const char *mem_file_path)
 {
     ocsd_err_t err = OCSD_OK;
@@ -286,6 +235,7 @@ static ocsd_err_t create_mem_acc_cb(dcd_tree_handle_t dcd_tree_h, const char *me
     return err;
 }
 
+/* remove the callback memory accessor from decode tree */
 static void destroy_mem_acc_cb(dcd_tree_handle_t dcd_tree_h)
 {
     if(dump_file != NULL)
@@ -296,6 +246,153 @@ static void destroy_mem_acc_cb(dcd_tree_handle_t dcd_tree_h)
     }
 }
 
+/* create and attach the memory accessor according to required test parameters */
+static ocsd_err_t create_test_memory_acc(dcd_tree_handle_t handle)
+{
+    ocsd_err_t ret = OCSD_OK;
+    char mem_file_path[512];
+    uint32_t i0adjust = 0x100;
+    int i = 0;
+
+    /* region list to test multi region memory file API */
+    file_mem_region_t region_list[4];
+
+    /* path to the file containing the memory image traced - raw binary data in the snapshot  */
+    strcpy(mem_file_path,default_path_to_snapshot);
+    strcat(mem_file_path,memory_dump_filename);
+
+    /* 
+    * decide how to handle the file - test the normal memory accessor (contiguous binary file), 
+    * a callback accessor or a multi-region file (e.g. similar to using the code region in a .so) 
+    *
+    * The same memory dump file is used in each case, we just present it differently
+    * to test the API functions.
+    */
+
+    /* memory access callback */
+    if(using_mem_acc_cb)
+    {
+        ret = create_mem_acc_cb(handle,mem_file_path);
+    }
+    /* multi region file */
+    else if(use_region_file)
+    {
+
+        dump_file = fopen(mem_file_path,"rb");
+        if(dump_file != NULL)
+        {
+            fseek(dump_file,0,SEEK_END);
+            mem_file_size = ftell(dump_file);
+            fclose(dump_file);
+
+            /* populate the region list - split existing file into four regions */
+            for(i = 0; i < 4; i++)
+            {
+                if(i != 0)
+                    i0adjust = 0;
+                region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4) + i0adjust;
+                region_list[i].region_size = (mem_file_size/4) - i0adjust;
+                region_list[i].file_offset = (i * mem_file_size/4) +  i0adjust;
+            }
+
+            /* create a memory file accessor - full binary file */
+            ret = ocsd_dt_add_binfile_region_mem_acc(handle,&region_list[0],4,OCSD_MEM_SPACE_ANY,mem_file_path);
+        }
+        else 
+            ret  = OCSD_ERR_MEM_ACC_FILE_NOT_FOUND;
+    }
+    /* create a memory file accessor - simple contiguous full binary file */
+    else
+    {        
+        ret = ocsd_dt_add_binfile_mem_acc(handle,mem_dump_address,OCSD_MEM_SPACE_ANY,mem_file_path);
+    }
+    return ret;
+}
+
+/************************************************************************/
+/** Packet printers */
+/************************************************************************/
+
+/* 
+* Callback function to process the packets in the packet processor output stream  - 
+* simply print them out in this case to the library message/error logger.
+*/
+ocsd_datapath_resp_t packet_handler(void *context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const void *p_packet_in)
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    int offset = 0;
+
+    switch(op)
+    {
+    default: break;
+    case OCSD_OP_DATA:
+        sprintf(packet_str,"Idx:%ld; ", index_sop);
+        offset = strlen(packet_str);
+   
+        /* 
+        * got a packet - convert to string and use the libraries' message output to print to file and stdoout 
+        * Since the test always prints a single ID, we know the protocol type.
+        */
+        if(ocsd_pkt_str(test_protocol,p_packet_in,packet_str+offset,PACKET_STR_LEN-offset) == OCSD_OK)
+        {
+            /* add in <CR> */
+            if(strlen(packet_str) == PACKET_STR_LEN - 1) /* maximum length */
+                packet_str[PACKET_STR_LEN-2] = '\n';
+            else
+                strcat(packet_str,"\n");
+
+            /* print it using the library output logger. */
+            ocsd_def_errlog_msgout(packet_str);
+        }
+        else
+            resp = OCSD_RESP_FATAL_INVALID_PARAM;  /* mark fatal error */
+        break;
+
+    case OCSD_OP_EOT:
+        sprintf(packet_str,"**** END OF TRACE ****\n");
+        ocsd_def_errlog_msgout(packet_str);
+        break;
+    }
+
+    return resp;
+}
+
+/* print an array of hex data - used by the packet monitor to print hex data from packet.*/
+static int print_data_array(const uint8_t *p_array, const int array_size, char *p_buffer, int buf_size)
+{
+    int chars_printed = 0;
+    int bytes_processed;
+    p_buffer[0] = 0;
+    
+    if(buf_size > 9)
+    {
+        /* set up the header */
+        strcat(p_buffer,"[ ");
+        chars_printed+=2;
+
+        for(bytes_processed = 0; bytes_processed < array_size; bytes_processed++)
+        {
+           sprintf(p_buffer+chars_printed,"0x%02X ", p_array[bytes_processed]);
+           chars_printed += 5;
+           if((chars_printed + 5) > buf_size)
+               break;
+        }
+
+        strcat(p_buffer,"];");
+        chars_printed+=2;
+    }
+    else if(buf_size >= 4)
+    {
+        sprintf(p_buffer,"[];");
+        chars_printed+=3;
+    }
+    return chars_printed;
+}
+
+/*
+* Callback function to process packets and packet data from the monitor output of the 
+* packet processor. Again print them to the library error logger. 
+*/
 void packet_monitor(const ocsd_datapath_op_t op, 
                               const ocsd_trc_index_t index_sop, 
                               const void *p_packet_in,
@@ -333,6 +430,10 @@ void packet_monitor(const ocsd_datapath_op_t op,
     }
 }
 
+
+/*
+* printer for the generic trace elements when decoder output is being processed
+*/
 ocsd_datapath_resp_t gen_trace_elem_print(const void *p_context, const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const ocsd_generic_trace_elem *elem)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
@@ -361,12 +462,69 @@ ocsd_datapath_resp_t gen_trace_elem_print(const void *p_context, const ocsd_trc_
 }
 
 /************************************************************************/
-/*** ETMV4 ***/
-/************************************************************************/
+/** decoder creation **/
 
-/* hard coded values from snapshot .ini files */
-void set_config_struct_etmv4()
+/*** generic ***/
+static ocsd_err_t create_generic_decoder(dcd_tree_handle_t handle, const char *p_name, const void *p_cfg, const void *p_context)
 {
+    ocsd_err_t ret = OCSD_OK;
+    uint8_t CSID = 0;
+
+    if(op == TEST_PKT_PRINT) /* test operation set to packet printing only */
+    {
+        /* 
+         * Create a packet processor on the decode tree for the configuration we have. 
+         *  We need to supply the configuration 
+         */
+        ret = ocsd_dt_create_decoder(handle,p_name,OCSD_CREATE_FLG_PACKET_PROC,p_cfg,&CSID);
+        if(ret == OCSD_OK)
+        {
+            /* Attach the packet handler to the output of the packet processor - referenced by CSID */
+            ret = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,&packet_handler,p_context);
+            if(ret != OCSD_OK)
+                ocsd_dt_remove_decoder(handle,CSID); /* if the attach failed then destroy the decoder. */
+        }
+    }
+    else
+    {
+        /* Full decode - need decoder, and memory dump */
+
+        /* create the packet decoder and packet processor pair from the supplied name */
+        ret = ocsd_dt_create_decoder(handle,p_name,OCSD_CREATE_FLG_FULL_DECODER,p_cfg,&CSID);
+        if(ret == OCSD_OK)
+        {
+            if((op != TEST_PKT_DECODEONLY) && (ret == OCSD_OK))
+            {
+                /* 
+                * print the packets as well as the decode - use the packet processors monitor 
+                * output this time, as the main output is attached to the packet decoder. 
+                */
+                ret = ocsd_dt_attach_packet_callback(handle,CSID,OCSD_C_API_CB_PKT_MON,packet_monitor,p_context);
+            }
+
+            /* attach a memory accessor */
+            if(ret == OCSD_OK)
+                ret = create_test_memory_acc(handle);
+
+            /* if the attach failed then destroy the decoder. */
+            if(ret != OCSD_OK)
+                ocsd_dt_remove_decoder(handle,CSID); 
+        }
+    }
+    return ret;
+}
+
+/*** ETMV4 specific settings ***/
+static ocsd_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
+{
+    ocsd_err_t ret = OCSD_OK;
+    ocsd_etmv4_cfg trace_config;
+
+    /* 
+    * populate the ETMv4 configuration structure with
+    * hard coded values from snapshot .ini files.
+    */
+
     trace_config.arch_ver   = ARCH_V8;
     trace_config.core_prof  = profile_CortexA;
 
@@ -387,112 +545,22 @@ void set_config_struct_etmv4()
     trace_config.reg_idr11  = 0x0;
     trace_config.reg_idr12  = 0x0;
     trace_config.reg_idr13  = 0x0;
+
+    /* create an ETMV4 decoder - no context needed as we have a single stream to a single handler. */
+    return create_generic_decoder(dcd_tree_h,OCSD_BUILTIN_DCD_ETMV4I,(void *)&trace_config,0);
 }
 
-ocsd_datapath_resp_t etm_v4i_packet_handler(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_etmv4_i_pkt *p_packet_in)
-{
-    return packet_handler(op,index_sop,(const void *)p_packet_in);
-}
-
-
-void etm_v4i_packet_monitor(  const void *p_context,
-                              const ocsd_datapath_op_t op, 
-                              const ocsd_trc_index_t index_sop, 
-                              const ocsd_etmv4_i_pkt *p_packet_in,
-                              const uint32_t size,
-                              const uint8_t *p_data)
-{
-    packet_monitor(op,index_sop,(void *)p_packet_in,size,p_data);
-}
-
-static ocsd_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
+/*** ETMV3 specific settings ***/
+static ocsd_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
 {
     ocsd_err_t ret = OCSD_OK;
-    char mem_file_path[512];
-    int i;
-    uint32_t i0adjust = 0x100;
+    ocsd_etmv3_cfg trace_config_etmv3;
 
-    /* populate the ETMv4 configuration structure */
-    set_config_struct_etmv4();
+    /* 
+    * populate the ETMv3 configuration structure with
+    * hard coded values from snapshot .ini files.
+    */
 
-    if(op == TEST_PKT_PRINT) /* packet printing only */
-    {
-        /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
-            We need to supply the configuration, and a packet handling callback.
-        */
-        ret = ocsd_dt_create_etmv4i_pkt_proc(dcd_tree_h,&trace_config,&etm_v4i_packet_handler,0);
-    }
-    else
-    {
-        /* Full decode - need decoder, and memory dump */
-
-        /* create the packet decoder and packet processor pair */
-        ret = ocsd_dt_create_etmv4i_decoder(dcd_tree_h,&trace_config);
-        if(ret == OCSD_OK)
-        {
-            if((op != TEST_PKT_DECODEONLY) && (ret == OCSD_OK))
-            {
-                    /* print the packets as well as the decode. */
-                    ret = ocsd_dt_attach_etmv4i_pkt_mon(dcd_tree_h, (uint8_t)(trace_config.reg_traceidr & 0xFF), etm_v4i_packet_monitor,0);
-            }
-        }
-
-        /* trace data file path */
-        strcpy(mem_file_path,default_path_to_snapshot);
-        strcat(mem_file_path,memory_dump_filename);
-
-        if(ret == OCSD_OK)
-        {
-            if(using_mem_acc_cb)
-            {
-                ret = create_mem_acc_cb(dcd_tree_h,mem_file_path);
-            }
-            else
-            {
-                if(use_region_file)
-                {
-                    dump_file = fopen(mem_file_path,"rb");
-                    if(dump_file != NULL)
-                    {
-                        fseek(dump_file,0,SEEK_END);
-                        mem_file_size = ftell(dump_file);
-                        fclose(dump_file);
-                        
-
-                        /* populate the region list - split existing file into four regions */
-                        for(i = 0; i < 4; i++)
-                        {
-                            if(i != 0)
-                                i0adjust = 0;
-                            region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4) + i0adjust;
-                            region_list[i].region_size = (mem_file_size/4) - i0adjust;
-                            region_list[i].file_offset = (i * mem_file_size/4) +  i0adjust;
-                        }
-
-                        /* create a memory file accessor - full binary file */
-                        ret = ocsd_dt_add_binfile_region_mem_acc(dcd_tree_h,&region_list[0],4,OCSD_MEM_SPACE_ANY,mem_file_path);
-
-                    }
-                    else 
-                        ret  = OCSD_ERR_MEM_ACC_FILE_NOT_FOUND;
-                }
-                else
-                {
-                    /* create a memory file accessor - full binary file */
-                    ret = ocsd_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,OCSD_MEM_SPACE_ANY,mem_file_path);
-                }
-            }
-        }
-    }
-    return ret;
-}
-
-/************************************************************************/
-/*** ETMV3 ***/
-/************************************************************************/
-
-static void set_config_struct_etmv3()
-{
     trace_config_etmv3.arch_ver = ARCH_V7;
     trace_config_etmv3.core_prof = profile_CortexA;
     trace_config_etmv3.reg_ccer  = 0x344008F2;
@@ -503,74 +571,22 @@ static void set_config_struct_etmv3()
     {
         trace_config_etmv3.reg_trc_id = (uint32_t)test_trc_id_override;
     }
+
+    /* create an ETMV3 decoder - no context needed as we have a single stream to a single handler. */
+    return create_generic_decoder(dcd_tree_h,OCSD_BUILTIN_DCD_ETMV3,(void *)&trace_config_etmv3,0);
 }
 
-ocsd_datapath_resp_t etm_v3_packet_handler(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_etmv3_pkt *p_packet_in)
-{
-    return packet_handler(op,index_sop,(const void *)p_packet_in);
-}
-
-void etm_v3_packet_monitor(   const void *p_context, 
-                              const ocsd_datapath_op_t op, 
-                              const ocsd_trc_index_t index_sop, 
-                              const ocsd_etmv3_pkt *p_packet_in,
-                              const uint32_t size,
-                              const uint8_t *p_data)
-{
-    packet_monitor(op,index_sop,(void *)p_packet_in,size,p_data);
-}
-
-static ocsd_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
+/*** PTM specific settings ***/
+static ocsd_err_t create_decoder_ptm(dcd_tree_handle_t dcd_tree_h)
 {
     ocsd_err_t ret = OCSD_OK;
-    char mem_file_path[512];
+    ocsd_ptm_cfg trace_config_ptm;
 
-    /* populate the ETMv3 configuration structure */
-    set_config_struct_etmv3();
+    /* 
+    * populate the PTM configuration structure with
+    * hard coded values from snapshot .ini files.
+    */
 
-
-    if(op == TEST_PKT_PRINT) /* packet printing only */
-    {
-        /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
-            We need to supply the configuration, and a packet handling callback.
-        */
-        ret = ocsd_dt_create_etmv3_pkt_proc(dcd_tree_h,&trace_config_etmv3,&etm_v3_packet_handler,0);
-    }
-    else
-    {
-        /* Full decode - need decoder, and memory dump */
-        /* not supported in library at present */
-        
-
-        /* create the packet decoder and packet processor pair */
-        ret = ocsd_dt_create_etmv3_decoder(dcd_tree_h,&trace_config_etmv3);
-        if(ret == OCSD_OK)
-        {
-            if((op != TEST_PKT_DECODEONLY) && (ret == OCSD_OK))
-            {
-                    ret = ocsd_dt_attach_etmv3_pkt_mon(dcd_tree_h, (uint8_t)(trace_config_etmv3.reg_trc_id & 0x7F), etm_v3_packet_monitor,0);
-            }
-        }
-
-        /* trace data file path */
-        strcpy(mem_file_path,tc2_snapshot);
-        strcat(mem_file_path,memory_dump_filename);
-
-        if(ret == OCSD_OK)
-        {
-            /* create a memory file accessor */
-            ret = ocsd_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,OCSD_MEM_SPACE_ANY,mem_file_path);
-        }
-    }
-    return ret;
-}
-
-/************************************************************************/
-/*** PTM ***/
-/************************************************************************/
-/* hard coded values from snapshot .ini files */
-void set_config_struct_ptm()
-{
     trace_config_ptm.arch_ver = ARCH_V7;
     trace_config_ptm.core_prof = profile_CortexA;
     trace_config_ptm.reg_ccer  = 0x34C01AC2;
@@ -581,114 +597,25 @@ void set_config_struct_ptm()
     {
         trace_config_ptm.reg_trc_id = (uint32_t)test_trc_id_override;
     }
+
+    /* create an PTM decoder - no context needed as we have a single stream to a single handler. */
+    return create_generic_decoder(dcd_tree_h,OCSD_BUILTIN_DCD_PTM,(void *)&trace_config_ptm,0);
+
 }
 
-ocsd_datapath_resp_t ptm_packet_handler(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_ptm_pkt *p_packet_in)
-{
-    return packet_handler(op,index_sop,(const void *)p_packet_in);
-}
-
-void ptm_packet_monitor(  const void *p_context,
-                              const ocsd_datapath_op_t op, 
-                              const ocsd_trc_index_t index_sop, 
-                              const ocsd_ptm_pkt *p_packet_in,
-                              const uint32_t size,
-                              const uint8_t *p_data)
-{
-    packet_monitor(op,index_sop,(void *)p_packet_in,size,p_data);
-}
-
-static ocsd_err_t create_decoder_ptm(dcd_tree_handle_t dcd_tree_h)
+/*** STM specific settings ***/
+static ocsd_err_t create_decoder_stm(dcd_tree_handle_t dcd_tree_h)
 {
     ocsd_err_t ret = OCSD_OK;
-    char mem_file_path[512];
-    int i;
-    uint32_t i0adjust = 0x100;
+    ocsd_stm_cfg trace_config_stm;
 
-    /* populate the PTM configuration structure */
-    set_config_struct_ptm();
+    /* 
+    * populate the STM configuration structure with
+    * hard coded values from snapshot .ini files.
+    */
+    #define STMTCSR_TRC_ID_MASK     0x007F0000
+    #define STMTCSR_TRC_ID_SHIFT    16
 
-    if(op == TEST_PKT_PRINT) /* packet printing only */
-    {
-        /* Create a packet processor on the decode tree for the PTM  configuration we have. 
-            We need to supply the configuration, and a packet handling callback.
-        */
-        ret = ocsd_dt_create_ptm_pkt_proc(dcd_tree_h,&trace_config_ptm,&ptm_packet_handler,0);
-    }
-    else
-    {
-        /* Full decode - need decoder, and memory dump */
-
-        /* create the packet decoder and packet processor pair */
-        ret = ocsd_dt_create_ptm_decoder(dcd_tree_h,&trace_config_ptm);
-        if(ret == OCSD_OK)
-        {
-            if((op != TEST_PKT_DECODEONLY) && (ret == OCSD_OK))
-            {
-                    /* print the packets as well as the decode. */
-                ret = ocsd_dt_attach_ptm_pkt_mon(dcd_tree_h, (uint8_t)(trace_config_ptm.reg_trc_id & 0xFF), ptm_packet_monitor,0);
-            }
-        }
-
-        /* trace data file path */
-        strcpy(mem_file_path,default_path_to_snapshot);
-        strcat(mem_file_path,memory_dump_filename);
-
-        if(ret == OCSD_OK)
-        {
-            if(using_mem_acc_cb)
-            {
-                ret = create_mem_acc_cb(dcd_tree_h,mem_file_path);
-            }
-            else
-            {
-                if(use_region_file)
-                {
-                    dump_file = fopen(mem_file_path,"rb");
-                    if(dump_file != NULL)
-                    {
-                        fseek(dump_file,0,SEEK_END);
-                        mem_file_size = ftell(dump_file);
-                        fclose(dump_file);
-                        
-
-                        /* populate the region list - split existing file into four regions */
-                        for(i = 0; i < 4; i++)
-                        {
-                            if(i != 0)
-                                i0adjust = 0;
-                            region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4) + i0adjust;
-                            region_list[i].region_size = (mem_file_size/4) - i0adjust;
-                            region_list[i].file_offset = (i * mem_file_size/4) +  i0adjust;
-                        }
-
-                        /* create a memory file accessor - full binary file */
-                        ret = ocsd_dt_add_binfile_region_mem_acc(dcd_tree_h,&region_list[0],4,OCSD_MEM_SPACE_ANY,mem_file_path);
-
-                    }
-                    else 
-                        ret  = OCSD_ERR_MEM_ACC_FILE_NOT_FOUND;
-                }
-                else
-                {
-                    /* create a memory file accessor - full binary file */
-                    ret = ocsd_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,OCSD_MEM_SPACE_ANY,mem_file_path);
-                }
-            }
-        }
-    }
-    return ret;
-}
-
-
-/************************************************************************/
-/*** STM ***/
-/************************************************************************/
-
-#define STMTCSR_TRC_ID_MASK     0x007F0000
-#define STMTCSR_TRC_ID_SHIFT    16
-static void set_config_struct_stm()
-{
     trace_config_stm.reg_tcsr = 0x00A00005;
     if(test_trc_id_override != 0)
     {
@@ -702,72 +629,21 @@ static void set_config_struct_stm()
     trace_config_stm.reg_hwev_mast = 0;
     trace_config_stm.reg_feat1r = 0;
     trace_config_stm.hw_event = HwEvent_Unknown_Disabled;
-}
 
-ocsd_datapath_resp_t stm_packet_handler(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_stm_pkt *p_packet_in)
-{
-    return packet_handler(op,index_sop,(const void *)p_packet_in);
-}
-
-void stm_packet_monitor(  const ocsd_datapath_op_t op, 
-                              const ocsd_trc_index_t index_sop, 
-                              const ocsd_stm_pkt *p_packet_in,
-                              const uint32_t size,
-                              const uint8_t *p_data)
-{
-    packet_monitor(op,index_sop,(void *)p_packet_in,size,p_data);
-}
-
-static ocsd_err_t create_decoder_stm(dcd_tree_handle_t dcd_tree_h)
-{
-    ocsd_err_t ret = OCSD_OK;
-    /*char mem_file_path[512];*/
-
-    /* populate the STM configuration structure */
-    set_config_struct_stm();
-
-
+    /* STM only has packet processor at present */
     if(op == TEST_PKT_PRINT) /* packet printing only */
     {
-        /* Create a packet processor on the decode tree for the ETM v4 configuration we have. 
-            We need to supply the configuration, and a packet handling callback.
-        */
-        ret = ocsd_dt_create_stm_pkt_proc(dcd_tree_h,&trace_config_stm,&stm_packet_handler,0);
+        ret = create_generic_decoder(dcd_tree_h,OCSD_BUILTIN_DCD_STM,(void *)&trace_config_stm,0);
     }
     else
     {
         /* Full decode */
         /* not supported in library at present */
-        
-#if 0
-        /* create the packet decoder and packet processor pair */
-        ret = ocsd_dt_create_stm_decoder(dcd_tree_h,&trace_config_stm);
-        if(ret == OCSD_OK)
-        {
-            if((op != TEST_PKT_DECODEONLY) && (ret == OCSD_OK))
-            {
-                    ret = ocsd_dt_attach_stm_pkt_mon(dcd_tree_h, (uint8_t)((trace_config_stm.reg_tcsr & STMTCSR_TRC_ID_MASK) >> STMTCSR_TRC_ID_SHIFT), stm_packet_monitor);
-            }
-        }
-
-        /* trace data file path */
-        strcpy(mem_file_path,);
-        strcat(mem_file_path,memory_dump_filename);
-
-        if(ret == OCSD_OK)
-        {
-            /* create a memory file accessor */
-            ret = ocsd_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,OCSD_MEM_SPACE_ANY,mem_file_path);
-        }
-#else
         printf("STM Full decode not supported in library at present. Packet print only\n");
         ret = OCSD_ERR_RDR_NO_DECODER;
-#endif
     }
     return ret;
 }
-
-
 
 /************************************************************************/
 
@@ -907,7 +783,11 @@ int main(int argc, char *argv[])
     char message[512];
 
     /* command line params */
-    process_cmd_line(argc,argv);
+    if(process_cmd_line(argc,argv) != 0)
+    {
+        print_cmd_line_help();
+        return -2;
+    }
     
     /* trace data file path */
     strcpy(trace_file_path,default_path_to_snapshot);

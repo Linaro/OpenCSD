@@ -15,24 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\c_api\opencsd_c_api.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\source\c_api\ocsd_c_api_obj.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_deprc_fn.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\source\c_api\ocsd_c_api.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\c_api\ocsd_c_api_deprc_fn.cpp">
+    <ClCompile Include="..\..\..\source\c_api_pkt_print_test.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

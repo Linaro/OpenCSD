@@ -147,142 +147,66 @@ OCSD_C_API ocsd_datapath_resp_t ocsd_dt_process_data(const dcd_tree_handle_t han
  * A single function is used for all trace source IDs in the decode tree.
  *
  * @param handle : Handle to decode tree.
- * @param pFn : Pointer to the callback functions.
+ * @param pFn : Pointer to the callback function.
  * @param p_context : opaque context pointer value used in callback function.
  *
- * @return  ocsd_err_t  : Library error code -  RCDTL_OK if successful.
+ * @return  ocsd_err_t  : Library error code -  OCSD_OK if successful.
  */
 OCSD_C_API ocsd_err_t ocsd_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle, FnTraceElemIn pFn, const void *p_context);
 
-/*---------------------- ETMv4 Trace ----------------------------------------------------------------------------------*/
+/*---------------------- Trace Decoders ----------------------------------------------------------------------------------*/
 /*!
- * Create an ETMv4 instruction trace packet processor only for the supplied configuration. 
- * Must supply an output callback function which handles the etmv4 packet types, to attach to the packet processor.
- *
- * @param handle : handle a decode tree to create the packet processsor.
- * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.
- * @param pPktFn : pointer to a packet handling callback function.
- * @param p_context : opaque context pointer value used in callback function..
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t handle, const void *etmv4_cfg, FnEtmv4IPacketDataIn pPktFn, const void *p_context);
+* <Detailed description of the method>
+*
+* @param handle : Handle to decode tree.
+* @param *decoder_name : 
+* @param create_flags : 
+* @param *decoder_cfg : 
+* @param *pCSID : Pointer to location to return the configured CoreSight trace ID for the decoder.
+*
+* @return ocsd_err_t  : 
+*/
+OCSD_C_API ocsd_err_t ocsd_dt_create_decoder(const dcd_tree_handle_t handle,
+                                             const char *decoder_name,
+                                             const int create_flags,
+                                             const void *decoder_cfg,
+                                             unsigned char *pCSID
+                                             );
 
 /*!
- * Creates a packet processor + packet decoder pair for the supplied configuration structure.
- * Uses the output function set in ocsd_dt_set_gen_elem_outfn() as the output sink.
- *
- * @param handle : Handle to decode tree.
- * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_create_etmv4i_decoder(const dcd_tree_handle_t handle, const void *etmv4_cfg);
-
-/*!
- * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
- *
- * @param handle : Handle to decode tree.
- * @param trc_chan_id : CoreSight Trace ID for packet processor 
- * @param pPktFn : Function to attach to monitor point.
- * @param p_context : opaque context pointer value used in callback function.
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv4IPktMonDataIn pPktFn, const void *p_context); 
-
-/*---------------------- ETMv3 trace ----------------------------------------------------------------------------------*/
-/*!
- * Create an ETMv3  trace packet processor only for the supplied configuration. 
- * Must supply an output callback function which handles the etmv3 packet types, to attach to the packet processor.
- *
- * @param handle : handle a decode tree to create the packet processsor.
- * @param *etmv3_cfg : pointer to valid Etmv3 configuration structure.
- * @param pPktFn : pointer to a packet handling callback function.
- * @param p_context : opaque context pointer value used in callback function.
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t handle, const void *etmv3_cfg, FnEtmv3PacketDataIn pPktFn, const void *p_context);
+* <Detailed description of the method>
+*
+* @param handle :  Handle to decode tree.
+* @param CSID : Configured CoreSight trace ID for the decoder.
+*
+* @return ocsd_err_t  : 
+*/
+OCSD_C_API ocsd_err_t ocsd_dt_remove_decoder(   const dcd_tree_handle_t handle, 
+                                                const unsigned char CSID);
 
 
 /*!
- * Creates a packet processor + packet decoder pair for the supplied configuration structure.
- * Uses the output function set in ocsd_dt_set_gen_elem_outfn() as the output sink.
- *
- * @param handle : Handle to decode tree.
- * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_decoder(const dcd_tree_handle_t handle, const void *etmv3_cfg);
+* Attach a callback function to the packet processor.
+* 
+* The callback_type defines the attachment point:-
+* 
+*
+* @param handle : Handle to decode tree.
+* @param CSID : Configured CoreSight trace ID for the decoder.
+* @param callback_type : 
+* @param p_fn_pkt_data_in : Pointer to the callback function.
+* @param p_context : Opaque context pointer value used in callback function.
+*
+* @return ocsd_err_t  : 
+*/
+OCSD_C_API ocsd_err_t ocsd_dt_attach_packet_callback(  const dcd_tree_handle_t handle, 
+                                                const unsigned char CSID,
+                                                const ocsd_c_api_cb_types callback_type, 
+                                                void *p_fn_callback_data,
+                                                const void *p_context);
 
 
 
-/*!
- * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
- * Packet processor must exist for the trace ID and be an ETMv3 processor.
- *
- * @param handle : Handle to decode tree.
- * @param trc_chan_id : CoreSight Trace ID for packet processor 
- * @param pPktFn : Function to attach to monitor point.
- * @param p_context : opaque context pointer value used in callback function.
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnEtmv3PktMonDataIn pPktFn, const void *p_context); 
-
-/*---------------------- PTM Trace ----------------------------------------------------------------------------------*/
-/*!
- * Create an PTM instruction trace packet processor only for the supplied configuration. 
- * Must supply an output callback function which handles the ptm packet types, to attach to the packet processor.
- *
- * @param handle : handle a decode tree to create the packet processsor.
- * @param *ptm_cfg : pointer to valid Ptm configuration structure.
- * @param pPktFn : pointer to a packet handling callback function.
- * @param p_context : opaque context pointer value used in callback function..
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_pkt_proc(const dcd_tree_handle_t handle, const void *ptm_cfg, FnPtmPacketDataIn pPktFn, const void *p_context);
-
-/*!
- * Creates a packet processor + packet decoder pair for the supplied configuration structure.
- * Uses the output function set in ocsd_dt_set_gen_elem_outfn() as the output sink.
- *
- * @param handle : Handle to decode tree.
- * @param *ptm_cfg : pointer to valid Ptm configuration structure.
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_decoder(const dcd_tree_handle_t handle, const void *ptm_cfg);
-
-/*!
- * Attach a callback function to the packet processor monitor point defined by the CoreSight ID.
- *
- * @param handle : Handle to decode tree.
- * @param trc_chan_id : CoreSight Trace ID for packet processor 
- * @param pPktFn : Function to attach to monitor point.
- * @param p_context : opaque context pointer value used in callback function.
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_attach_ptm_pkt_mon(const dcd_tree_handle_t handle, const uint8_t trc_chan_id, FnPtmPktMonDataIn pPktFn, const void *p_context); 
-
-
-/*---------------------- STM Trace ----------------------------------------------------------------------------------*/
-/*!
- * Create an STM  trace packet processor only for the supplied configuration. 
- * Must supply an output callback function which handles the stm packet types, to attach to the packet processor.
- *
- * @param handle : handle a decode tree to create the packet processsor.
- * @param *stm_cfg : pointer to valid Stm configuration structure.
- * @param pPktFn : pointer to a packet handling callback function.
- * @param p_context : opaque context pointer value used in callback function.
- *
- * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
- */
-OCSD_C_API ocsd_err_t ocsd_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context);
 
 
 /** TBD : more C API functions to be added here */    
@@ -454,6 +378,10 @@ OCSD_C_API ocsd_err_t ocsd_gen_elem_str(const ocsd_generic_trace_elem *p_pkt, ch
 /** @}*/
 
 /** @}*/
+
+#ifdef OPENCSD_INC_DEPRECATED_API
+#include "ocsd_c_api_deprc_fn.h"
+#endif
 
 #endif // ARM_OPENCSD_C_API_H_INCLUDED
 

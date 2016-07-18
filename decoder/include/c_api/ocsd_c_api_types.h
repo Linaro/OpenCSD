@@ -58,7 +58,6 @@ typedef void * dcd_tree_handle_t;
 /** define invalid handle value for decode tree handle */
 #define C_API_INVALID_TREE_HANDLE (dcd_tree_handle_t)0
 
-
 /** Logger output printer - no output. */
 #define C_API_MSGLOGOUT_FLG_NONE   0x0
 /** Logger output printer - output to file. */
@@ -71,7 +70,24 @@ typedef void * dcd_tree_handle_t;
 #define C_API_MSGLOGOUT_MASK       0x7
 
 /** function pointer type for decoder outputs. all protocols, generic data element input */
-typedef ocsd_datapath_resp_t (* FnTraceElemIn)(const void *p_context, const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const ocsd_generic_trace_elem *elem); 
+typedef ocsd_datapath_resp_t (* FnTraceElemIn)( const void *p_context, 
+                                                const ocsd_trc_index_t index_sop, 
+                                                const uint8_t trc_chan_id, 
+                                                const ocsd_generic_trace_elem *elem); 
+
+/** function pointer type for packet processor packet output sink, packet analyser/decoder input - generic declaration */
+typedef ocsd_datapath_resp_t (* FnDefPktDataIn)(const void *p_context, 
+                                                const ocsd_datapath_op_t op, 
+                                                const ocsd_trc_index_t index_sop, 
+                                                const void *p_packet_in);
+
+/** function pointer type for packet processor packet monitor sink, raw packet monitor / display input - generic declaration */
+typedef void (* FnDefPktDataMon)(const void *p_context,
+                                                 const ocsd_datapath_op_t op,
+                                                 const ocsd_trc_index_t index_sop,
+                                                 const void *p_packet_in,
+                                                 const uint32_t size,
+                                                 const uint8_t *p_data);
 
 /** function pointer type for ETMv4 instruction packet processor output, packet analyser/decoder input */
 typedef ocsd_datapath_resp_t (* FnEtmv4IPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_etmv4_i_pkt *p_packet_in);
@@ -126,6 +142,12 @@ typedef struct _file_mem_region {
     ocsd_vaddr_t           start_address;  /**< Start address of memory region */
     size_t                  region_size;    /**< size in bytes of memory region */
 } file_mem_region_t;
+
+typedef enum _ocsd_c_api_cb_types {
+    OCSD_C_API_CB_PKT_SINK,
+    OCSD_C_API_CB_PKT_MON,
+} ocsd_c_api_cb_types;
+
 
 /** @}*/
 
