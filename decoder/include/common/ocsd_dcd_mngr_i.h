@@ -88,6 +88,9 @@ public:
     //! get raw data input interface from packet processor
     virtual ocsd_err_t getDataInputI(TraceComponent *pComponent, ITrcDataIn **ppDataIn) = 0;
 
+// create configuration from data structure
+    virtual ocsd_err_t createConfigFromDataStruct(CSConfig **pConfigBase, const void *pDataStruct) = 0;
+
 };
 
 #endif // ARM_OCSD_DCD_MNGR_I_H_INCLUDED

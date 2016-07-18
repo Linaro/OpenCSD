@@ -43,6 +43,7 @@
 class DecoderMngrPtm : public DecodeMngrFullDcd< PtmTrcPacket, 
                                                  ocsd_ptm_pkt_type,
                                                  PtmConfig,
+                                                 ocsd_ptm_cfg,
                                                  TrcPktProcPtm,
                                                  TrcPktDecodePtm>
 {

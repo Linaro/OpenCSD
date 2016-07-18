@@ -70,10 +70,15 @@ public:
 // data input connection interface
     virtual ocsd_err_t getDataInputI(TraceComponent *pComponent, ITrcDataIn **ppDataIn);
 
+// generate a Config object from opaque config struct pointer.
+    virtual ocsd_err_t createConfigFromDataStruct(CSConfig **pConfigBase, const void *pDataStruct);
+
 // implemented by decoder handler derived classes
     virtual TraceComponent *createPktProc(const bool useInstID, const int instID) = 0;
     virtual TraceComponent *createPktDecode(const bool useInstID, const int instID) { return 0; };
+    virtual CSConfig *createConfig(const void *pDataStruct) = 0;
 
+    
 private:
     ocsd_trace_protocol_t m_builtInProtocol;    //!< Protocol ID if built in type.
 };
@@ -298,6 +303,15 @@ ocsd_err_t DecoderMngrBase<P,Pt,Pc>::attachPktSink(TraceComponent *pComponent, I
     return  pPktProcBase->getPacketOutAttachPt()->replace_first(pkt_in_i);
 }
 
+template <class P, class Pt, class Pc>
+ocsd_err_t DecoderMngrBase<P,Pt,Pc>::createConfigFromDataStruct(CSConfig **pConfigBase, const void *pDataStruct)
+{
+    CSConfig *pConfig = createConfig(pDataStruct);
+    if(!pConfig)
+        return OCSD_ERR_MEM;
+    *pConfigBase = pConfig;
+    return OCSD_OK;
+}
 
 /****************************************************************************************************/
 /* Full decoder / packet process pair, templated base for creating decoder objects                  */
@@ -306,6 +320,7 @@ ocsd_err_t DecoderMngrBase<P,Pt,Pc>::attachPktSink(TraceComponent *pComponent, I
 template<   class P,            // Packet class.
             class Pt,           // Packet enum type ID.
             class Pc,           // Processor config class.
+            class PcSt,         // Processor config struct type
             class PktProc,      // Packet processor class.
             class PktDcd>       // Packet decoder class.
 class DecodeMngrFullDcd : public DecoderMngrBase<P,Pt,Pc>
@@ -335,6 +350,11 @@ public:
             pComp = new (std::nothrow)PktDcd();
         return pComp;
     }
+
+    virtual CSConfig *createConfig(const void *pDataStruct)
+    {
+       return new (std::nothrow) Pc((PcSt *)pDataStruct);
+    }
 };
 
 /****************************************************************************************************/
@@ -344,6 +364,7 @@ public:
 template<   class P,            // Packet class.
             class Pt,           // Packet enum type ID.
             class Pc,           // Processor config class.
+            class PcSt,         // Processor config struct type
             class PktProc>      // Packet processor class.
 class DecodeMngrPktProc : public DecoderMngrBase<P,Pt,Pc>
 {
@@ -361,6 +382,11 @@ public:
         else
             pComp = new (std::nothrow) PktProc();
         return pComp;
+    }
+
+    virtual CSConfig *createConfig(const void *pDataStruct)
+    {
+       return new (std::nothrow) Pc((PcSt *)pDataStruct);
     }
 };
 

@@ -489,15 +489,36 @@ typedef uint32_t  (* Fn_MemAcc_CB)(const void *p_context, const ocsd_vaddr_t add
 /*! Trace Protocol Builtin Types + extern
  */
 typedef enum _ocsd_trace_protocol_t {
-    OCSD_PROTOCOL_EXTERN,  /**< Custom external decoder attached to the decode tree - protocol unknown */
+    OCSD_PROTOCOL_UNKNOWN = 0, /**< Protocol unknown */
+
+/* Built in library decoders */
     OCSD_PROTOCOL_ETMV3,   /**< ETMV3 instruction and data trace protocol decoder. */
     OCSD_PROTOCOL_ETMV4I,  /**< ETMV4 instruction trace protocol decoder. */
     OCSD_PROTOCOL_ETMV4D,  /**< ETMV4 data trace protocol decoder. */
     OCSD_PROTOCOL_PTM,     /**< PTM program flow instruction trace protocol decoder. */
     OCSD_PROTOCOL_STM,     /**< STM system trace protocol decoder. */
-    /* others to be added here */
+
+/* others to be added here */
+    OCSD_PROTOCOL_BUILTIN_END,  /**< Invalid protocol - built-in protocol types end marker */
+
+/* Custom / external decoders */
+    OCSD_PROTOCOL_CUSTOM_0 = 100,
+    OCSD_PROTOCOL_CUSTOM_1,
+    OCSD_PROTOCOL_CUSTOM_2,
+    OCSD_PROTOCOL_CUSTOM_3,
+    OCSD_PROTOCOL_CUSTOM_4,
+    OCSD_PROTOCOL_CUSTOM_5,
+    OCSD_PROTOCOL_CUSTOM_6,
+    OCSD_PROTOCOL_CUSTOM_7,
+    OCSD_PROTOCOL_CUSTOM_8,
+    OCSD_PROTOCOL_CUSTOM_9,
+
     OCSD_PROTOCOL_END      /**< Invalid protocol - protocol types end marker */
 } ocsd_trace_protocol_t;
+
+#define OCSD_PROTOCOL_IS_BUILTIN(P) ((P > OCSD_PROTOCOL_UNKNOWN) && (P < OCSD_PROTOCOL_BUILTIN_END))
+#define OCSD_PROTOCOL_IS_CUSTOM(P)  ((P > OCSD_PROTOCOL_CUSTOM_0) && (P < OCSD_PROTOCOL_END ))
+
 
 /** @}*/
 

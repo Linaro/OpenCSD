@@ -43,9 +43,8 @@
  *  @addtogroup dcd_tree
  *
  *  Element describes the protocol supported for this element and 
- *  contains pointers to packet processor and decoder for the protocol.
- * 
- *  Union of all recognised decoders, plus an attachment point for an external decoder.
+ *  contains pointers to the decoder manager interface and component handle.
+ *  
  */
 typedef struct _decoder_elements 
 {
@@ -92,7 +91,7 @@ inline void DecodeTreeElement::SetDecoderElement(const std::string &name, IDecod
     dcd_name = name;
     dcd_mngr = dcdMngr;
     dcd_handle = pHandle;
-    protocol = OCSD_PROTOCOL_EXTERN;  
+    protocol = OCSD_PROTOCOL_UNKNOWN;  
     if(dcd_mngr)
         protocol = dcd_mngr->getProtocolType();
     created = bCreated;

@@ -42,6 +42,7 @@
 class DecoderMngrStm : public DecodeMngrPktProc< StmTrcPacket, 
                                                  ocsd_stm_pkt_type,
                                                  STMConfig,
+                                                 ocsd_stm_cfg,
                                                  TrcPktProcStm>
 {
 public:

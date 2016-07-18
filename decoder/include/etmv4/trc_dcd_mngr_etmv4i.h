@@ -17,6 +17,7 @@
 class DecoderMngrEtmV4I : public DecodeMngrFullDcd< EtmV4ITrcPacket, 
                                                     ocsd_etmv4_i_pkt_type,
                                                     EtmV4Config,
+                                                    ocsd_etmv4_cfg,
                                                     TrcPktProcEtmV4I,
                                                     TrcPktDecodeEtmV4I>
 {

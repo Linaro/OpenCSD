@@ -73,7 +73,8 @@
 #include "i_dec/trc_i_decode.h"
 #include "mem_acc/trc_mem_acc.h"
 
-/** The decode tree */
+/** The decode tree and decoder register*/
+#include "common/ocsd_lib_dcd_register.h"
 #include "common/ocsd_dcd_tree.h"
 
 

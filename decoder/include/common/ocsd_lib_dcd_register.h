@@ -60,17 +60,22 @@ public:
 
     const ocsd_err_t registerDecoderTypeByName(const std::string &name, IDecoderMngr *p_decoder_fact);  //!< register a decoder manager interface   
     const ocsd_err_t getDecoderMngrByName(const std::string &name, IDecoderMngr **p_decoder_mngr);
+    const ocsd_err_t getDecoderMngrByType(const ocsd_trace_protocol_t decoderType, IDecoderMngr **p_decoder_mngr);
 
     const bool isRegisteredDecoder(const std::string &name);
     const bool getFirstNamedDecoder(std::string &name); 
     const bool getNextNamedDecoder(std::string &name);
 
+    const bool isRegisteredDecoderType(const ocsd_trace_protocol_t decoderType);
+
 private:
     void registerBuiltInDecoders();         //!< register the list of build in decoder managers on first access of getDecoderMngrByName.
 
-    std::map<const std::string, IDecoderMngr *> m_decoder_mngrs;            //!< map linking names to decoder manager interfaces.
-    std::map<const std::string,  IDecoderMngr *>::const_iterator m_iter;    //!< iterator for name search.
-  
+    std::map<const std::string, IDecoderMngr *> m_decoder_mngrs;                    //!< map linking names to decoder manager interfaces.
+    std::map<const std::string, IDecoderMngr *>::const_iterator m_iter;             //!< iterator for name search.
+
+    std::map<const ocsd_trace_protocol_t, IDecoderMngr *> m_typed_decoder_mngrs;    //!< map linking decoder managers to protocol type ID
+
     // singleton pattern - need just one of these in the library - ensure all default constructors are private.
     OcsdLibDcdRegister();
     OcsdLibDcdRegister(OcsdLibDcdRegister const &) {};

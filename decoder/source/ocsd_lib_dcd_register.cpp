@@ -70,6 +70,7 @@ OcsdLibDcdRegister::OcsdLibDcdRegister()
 OcsdLibDcdRegister::~OcsdLibDcdRegister()
 {
     m_decoder_mngrs.clear();
+    m_typed_decoder_mngrs.clear();
 }
 
 
@@ -78,6 +79,7 @@ const ocsd_err_t OcsdLibDcdRegister::registerDecoderTypeByName(const std::string
     if(isRegisteredDecoder(name))
         return OCSD_ERR_DCDREG_NAME_REPEAT;
     m_decoder_mngrs.emplace(std::pair<const std::string, IDecoderMngr *>(name,p_decoder_fact));
+    m_typed_decoder_mngrs.emplace(std::pair<const ocsd_trace_protocol_t, IDecoderMngr *>(p_decoder_fact->getProtocolType(),p_decoder_fact));
     return OCSD_OK;
 }
 
@@ -121,10 +123,33 @@ const ocsd_err_t OcsdLibDcdRegister::getDecoderMngrByName(const std::string &nam
     return OCSD_OK;
 }
 
+const ocsd_err_t OcsdLibDcdRegister::getDecoderMngrByType(const ocsd_trace_protocol_t decoderType, IDecoderMngr **p_decoder_mngr)
+{
+    if(!m_b_registeredBuiltins)
+    {
+        registerBuiltInDecoders();
+        if(!m_b_registeredBuiltins)
+            return OCSD_ERR_MEM;
+    }
+    std::map<const ocsd_trace_protocol_t, IDecoderMngr *>::const_iterator iter = m_typed_decoder_mngrs.find(decoderType);
+    if(iter !=  m_typed_decoder_mngrs.end())
+        return OCSD_ERR_DCDREG_NAME_UNKNOWN;
+    *p_decoder_mngr = iter->second;
+    return OCSD_OK;
+}
+
 const bool OcsdLibDcdRegister::isRegisteredDecoder(const std::string &name)
 {
     std::map<const std::string,  IDecoderMngr *>::const_iterator iter = m_decoder_mngrs.find(name);
     if(iter != m_decoder_mngrs.end())
+        return true;
+    return false;
+}
+
+const bool OcsdLibDcdRegister::isRegisteredDecoderType(const ocsd_trace_protocol_t decoderType)
+{
+    std::map<const ocsd_trace_protocol_t, IDecoderMngr *>::const_iterator iter = m_typed_decoder_mngrs.find(decoderType);
+    if(iter !=  m_typed_decoder_mngrs.end())
         return true;
     return false;
 }

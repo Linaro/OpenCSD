@@ -43,6 +43,7 @@
 class DecoderMngrEtmV3 : public DecodeMngrFullDcd< EtmV3TrcPacket, 
                                                     ocsd_etmv3_pkt_type,
                                                     EtmV3Config,
+                                                    ocsd_etmv3_cfg,
                                                     TrcPktProcEtmV3,
                                                     TrcPktDecodeEtmV3>
 {
