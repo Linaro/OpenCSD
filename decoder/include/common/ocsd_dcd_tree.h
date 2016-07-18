@@ -109,14 +109,19 @@ public:
     void setMemAccessI(ITargetMemAccess *i_mem_access);
     void setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem);
 
-    /* create mapper within the decode tree. */ 
+    /* create mapper within the decode tree - also allows direct manipulation of the mapper object to set up custom arrangements of accessors. */ 
     ocsd_err_t createMemAccMapper(memacc_mapper_t type = MEMACC_MAP_GLOBAL);
-    ocsd_err_t addMemAccessorToMap(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id);
-    ocsd_err_t removeMemAccessor(TrcMemAccessorBase *p_accessor);
-    ocsd_err_t removeMemAccessorByAddress(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id);
+    TrcMemAccMapper *getMemAccMapper() const { return m_default_mapper; };
+    void setExternMemAccMapper(TrcMemAccMapper * pMapper);
     const bool hasMemAccMapper() const { return (bool)(m_default_mapper != 0); };
     void logMappedRanges();
 
+    /*  create and destroy accessor types - all using global CSID value - on default accessor */
+    ocsd_err_t addBufferMemAcc(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length);
+    ocsd_err_t addBinFileMemAcc(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const std::string &filepath);
+    ocsd_err_t addBinFileRegionMemAcc(const ocsd_file_mem_region_t *region_array, const int num_regions, const ocsd_mem_space_acc_t mem_space, const std::string &filepath);
+    ocsd_err_t addCallbackMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context); 
+    ocsd_err_t removeMemAccByAddress(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space);
 
     /* get decoder elements currently in use  */
     DecodeTreeElement *getDecoderElement(const uint8_t CSID) const;
@@ -153,7 +158,8 @@ private:
 
     uint8_t m_decode_elem_iter;
 
-    TrcMemAccMapper *m_default_mapper;
+    TrcMemAccMapper *m_default_mapper;  //!< the mem acc mapper to use
+    bool m_created_mapper;              //!< true if created by decode tree object
 
     /* global error logger  - all sources */ 
     static ITraceErrorLog *s_i_error_logger;

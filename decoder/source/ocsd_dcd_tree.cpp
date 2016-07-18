@@ -96,8 +96,8 @@ DecodeTree::DecodeTree() :
     m_i_decoder_root(0),
     m_frame_deformatter_root(0),
     m_decode_elem_iter(0),
-    m_default_mapper(0)
-
+    m_default_mapper(0),
+    m_created_mapper(false)
 {
     for(int i = 0; i < 0x80; i++)
         m_decode_elements[i] = 0;
@@ -167,7 +167,7 @@ void DecodeTree::setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem)
     }
 }
 
-ocsd_err_t DecodeTree::createMemAccMapper(memacc_mapper_t type)
+ocsd_err_t DecodeTree::createMemAccMapper(memacc_mapper_t type /* = MEMACC_MAP_GLOBAL*/ )
 {
     // clean up any old one
     destroyMemAccMapper();
@@ -184,6 +184,7 @@ ocsd_err_t DecodeTree::createMemAccMapper(memacc_mapper_t type)
     // set the access interface
     if(m_default_mapper)
     {
+        m_created_mapper = true;
         setMemAccessI(m_default_mapper);
         m_default_mapper->setErrorLog(s_i_error_logger);
     }
@@ -191,48 +192,160 @@ ocsd_err_t DecodeTree::createMemAccMapper(memacc_mapper_t type)
     return (m_default_mapper != 0) ? OCSD_OK : OCSD_ERR_MEM;
 }
 
-ocsd_err_t DecodeTree::addMemAccessorToMap(TrcMemAccessorBase *p_accessor, const uint8_t cs_trace_id)
+void DecodeTree::setExternMemAccMapper(TrcMemAccMapper* pMapper)
 {
-    ocsd_err_t err= OCSD_ERR_NOT_INIT;
-    if(m_default_mapper)
-        err = m_default_mapper->AddAccessor(p_accessor,cs_trace_id);
-    return err;
+    destroyMemAccMapper();  // destroy any existing mapper - if decode tree created it.
+    m_default_mapper = pMapper;
 }
 
 void DecodeTree::destroyMemAccMapper()
 {
-    if(m_default_mapper)
+    if(m_default_mapper && m_created_mapper)
     {
         m_default_mapper->RemoveAllAccessors();
         delete m_default_mapper;
         m_default_mapper = 0;
+        m_created_mapper = false;
     }
-}
-
-ocsd_err_t DecodeTree::removeMemAccessor(TrcMemAccessorBase *p_accessor)
-{
-    ocsd_err_t err= OCSD_ERR_NOT_INIT;
-    if(m_default_mapper)
-    {
-        err = m_default_mapper->RemoveAccessor(p_accessor);
-    }
-    return err;
-}
-
-ocsd_err_t DecodeTree::removeMemAccessorByAddress(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id)
-{
-    ocsd_err_t err= OCSD_ERR_NOT_INIT;
-    if(m_default_mapper)
-    {
-        err = m_default_mapper->RemoveAccessorByAddress(address,mem_space,cs_trace_id);
-    }
-    return err;
 }
 
 void DecodeTree::logMappedRanges()
 {
     if(m_default_mapper)
         m_default_mapper->logMappedRanges();
+}
+
+/* Memory accessor creation - all on default mem accessor using the 0 CSID for global core space. */
+ocsd_err_t DecodeTree::addBufferMemAcc(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length)
+{
+    if(!hasMemAccMapper())
+        return OCSD_ERR_NOT_INIT;
+
+    // need a valid memory buffer, and a least enough bytes for one opcode.
+    if((p_mem_buffer == 0) || (mem_length < 4))
+        return OCSD_ERR_INVALID_PARAM_VAL;
+
+    TrcMemAccessorBase *p_accessor;
+    ocsd_err_t err = TrcMemAccFactory::CreateBufferAccessor(&p_accessor, address, p_mem_buffer, mem_length);
+    if(err == OCSD_OK)
+    {
+        TrcMemAccBufPtr *pMBuffAcc = dynamic_cast<TrcMemAccBufPtr *>(p_accessor);
+        if(pMBuffAcc)
+        {
+            pMBuffAcc->setMemSpace(mem_space);
+            err = m_default_mapper->AddAccessor(p_accessor,0);
+        }
+        else
+            err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
+
+        if(err != OCSD_OK)
+            TrcMemAccFactory::DestroyAccessor(p_accessor);
+    }
+    return err;
+}
+
+ocsd_err_t DecodeTree::addBinFileMemAcc(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const std::string &filepath)
+{
+    if(!hasMemAccMapper())
+        return OCSD_ERR_NOT_INIT;
+    
+    if(filepath.length() == 0)
+        return OCSD_ERR_INVALID_PARAM_VAL;
+
+    TrcMemAccessorBase *p_accessor;
+    ocsd_err_t err = TrcMemAccFactory::CreateFileAccessor(&p_accessor,filepath,address);
+
+    if(err == OCSD_OK)
+    {
+        TrcMemAccessorFile *pAcc = dynamic_cast<TrcMemAccessorFile *>(p_accessor);
+        if(pAcc)
+        {
+            pAcc->setMemSpace(mem_space);
+            err = m_default_mapper->AddAccessor(pAcc,0);
+        }
+        else
+            err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
+
+        if(err != OCSD_OK)
+            TrcMemAccFactory::DestroyAccessor(p_accessor);
+    }
+    return err;
+
+}
+
+ocsd_err_t DecodeTree::addBinFileRegionMemAcc(const ocsd_file_mem_region_t *region_array, const int num_regions, const ocsd_mem_space_acc_t mem_space, const std::string &filepath)
+{
+    if(!hasMemAccMapper())
+        return OCSD_ERR_NOT_INIT;
+
+    if((region_array == 0) || (num_regions == 0) || (filepath.length() == 0))
+        return OCSD_ERR_INVALID_PARAM_VAL;
+
+    TrcMemAccessorBase *p_accessor;
+    int curr_region_idx = 0;
+
+    // add first region during the creation of the file accessor.
+    ocsd_err_t err = TrcMemAccFactory::CreateFileAccessor(&p_accessor,filepath,region_array[curr_region_idx].start_address,region_array[curr_region_idx].file_offset, region_array[curr_region_idx].region_size);            
+    if(err == OCSD_OK)
+    {
+        TrcMemAccessorFile *pAcc = dynamic_cast<TrcMemAccessorFile *>(p_accessor);
+        if(pAcc)
+        {
+            // add additional regions to the file accessor.
+            curr_region_idx++;
+            while(curr_region_idx < num_regions)
+            {
+                pAcc->AddOffsetRange(region_array[curr_region_idx].start_address, 
+                                        region_array[curr_region_idx].region_size,
+                                        region_array[curr_region_idx].file_offset);
+                curr_region_idx++;
+            }
+            pAcc->setMemSpace(mem_space);
+
+            // add the accessor to the map.
+            err = m_default_mapper->AddAccessor(pAcc,0);
+        }
+        else
+            err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
+
+        if(err != OCSD_OK)
+            TrcMemAccFactory::DestroyAccessor(p_accessor);
+    }
+    return err;
+}
+
+ocsd_err_t DecodeTree::addCallbackMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context)
+{
+    if(!hasMemAccMapper())
+        return OCSD_ERR_NOT_INIT;
+
+    if(p_cb_func == 0)
+        return OCSD_ERR_INVALID_PARAM_VAL;
+
+    TrcMemAccessorBase *p_accessor;
+    ocsd_err_t err = TrcMemAccFactory::CreateCBAccessor(&p_accessor, st_address, en_address, mem_space);
+    if(err == OCSD_OK)
+    {
+        TrcMemAccCB *pCBAcc = dynamic_cast<TrcMemAccCB *>(p_accessor);
+        if(pCBAcc)
+        {
+            pCBAcc->setCBIfFn(p_cb_func, p_context);
+            err = m_default_mapper->AddAccessor(p_accessor,0);
+        }
+        else
+            err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
+
+        if(err != OCSD_OK)
+            TrcMemAccFactory::DestroyAccessor(p_accessor);
+    }
+    return err;
+}
+
+ocsd_err_t DecodeTree::removeMemAccByAddress(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space)
+{
+    if(!hasMemAccMapper())
+        return OCSD_ERR_NOT_INIT;
+    return m_default_mapper->RemoveAccessorByAddress(address,mem_space,0);
 }
 
 ocsd_err_t DecodeTree::createDecoder(const std::string &decoderName, const int createFlags, const CSConfig *pConfig)

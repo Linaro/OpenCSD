@@ -135,19 +135,11 @@ typedef void (* FnStmPktMonDataIn)(     const void *p_context,
                                         const uint32_t size,
                                         const uint8_t *p_data);
 
-
-/** memory region type for adding multi-region binary files to memory access interface */
-typedef struct _file_mem_region {
-    size_t                  file_offset;    /**< Offset from start of file for memory region */
-    ocsd_vaddr_t           start_address;  /**< Start address of memory region */
-    size_t                  region_size;    /**< size in bytes of memory region */
-} file_mem_region_t;
-
+/** Callback interface type when attaching monitor/sink to packet processor */
 typedef enum _ocsd_c_api_cb_types {
     OCSD_C_API_CB_PKT_SINK,
     OCSD_C_API_CB_PKT_MON,
 } ocsd_c_api_cb_types;
-
 
 /** @}*/
 

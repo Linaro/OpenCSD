@@ -168,6 +168,10 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_ptm_pkt_mon(const dcd_tree_handle_t handle,
  */
 OCSD_C_API ocsd_err_t ocsd_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle, const void *stm_cfg, FnStmPacketDataIn pPktFn, const void *p_context);
 
+
+
+/** deprecated memory region type for adding multi-region binary files to memory access interface */
+typedef ocsd_file_mem_region_t file_mem_region_t;
 /** @}*/
 
 #endif // ARM_OCSD_C_API_DEPRC_FN_H_INCLUDED

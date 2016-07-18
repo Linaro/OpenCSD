@@ -435,6 +435,14 @@ typedef enum _ocsd_mem_space_acc_t {
  */
 typedef uint32_t  (* Fn_MemAcc_CB)(const void *p_context, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer);
 
+
+/** memory region type for adding multi-region binary files to memory access interface */
+typedef struct _ocsd_file_mem_region {
+    size_t                  file_offset;    /**< Offset from start of file for memory region */
+    ocsd_vaddr_t           start_address;  /**< Start address of memory region */
+    size_t                  region_size;    /**< size in bytes of memory region */
+} ocsd_file_mem_region_t;
+
 /** @}*/
 
 /** @name Packet Processor Operation Control Flags

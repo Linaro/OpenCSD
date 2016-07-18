@@ -255,7 +255,7 @@ static ocsd_err_t create_test_memory_acc(dcd_tree_handle_t handle)
     int i = 0;
 
     /* region list to test multi region memory file API */
-    file_mem_region_t region_list[4];
+    ocsd_file_mem_region_t region_list[4];
 
     /* path to the file containing the memory image traced - raw binary data in the snapshot  */
     strcpy(mem_file_path,default_path_to_snapshot);

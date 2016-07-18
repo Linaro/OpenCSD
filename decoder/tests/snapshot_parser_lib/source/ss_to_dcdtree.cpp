@@ -509,16 +509,9 @@ void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &d
         dumpFilePathName = m_pReader->getSnapShotDir() + it->path;
         if(!TrcMemAccessorFile::isExistingFileAccessor(dumpFilePathName))
         {
-            TrcMemAccessorBase *p_acc;
-            // not already a file accessor on this tree (n.b. assume only one tree in use)
-            ocsd_err_t err = TrcMemAccFactory::CreateFileAccessor(&p_acc, dumpFilePathName,it->address);
-                
-            if(err == OCSD_OK)
-            { 
-                err = m_pDecodeTree->addMemAccessorToMap(p_acc,0);
-            }
-            else
-            {                
+            ocsd_err_t err = m_pDecodeTree->addBinFileMemAcc(it->address,OCSD_MEM_SPACE_ANY,dumpFilePathName);
+            if(err != OCSD_OK)
+            {                            
                 std::ostringstream oss;
                 oss << "Failed to create memory accessor for file " << dumpFilePathName << ".";
                 LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,oss.str()));

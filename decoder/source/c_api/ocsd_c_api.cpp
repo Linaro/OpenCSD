@@ -55,6 +55,7 @@ namespace std { const nothrow_t nothrow = nothrow_t(); }
 
 static ocsd_err_t ocsd_create_pkt_sink_cb(ocsd_trace_protocol_t protocol, FnDefPktDataIn pPktInFn, const void *p_context, ITrcTypedBase **ppCBObj );
 static ocsd_err_t ocsd_create_pkt_mon_cb(ocsd_trace_protocol_t protocol, FnDefPktDataMon pPktInFn, const void *p_context, ITrcTypedBase **ppCBObj );
+static ocsd_err_t ocsd_check_and_add_mem_acc_mapper(const dcd_tree_handle_t handle, DecodeTree **ppDT);
 
 /*******************************************************************************/
 /* C library data - additional data on top of the C++ library objects          */
@@ -332,156 +333,45 @@ OCSD_C_API ocsd_err_t ocsd_gen_elem_str(const ocsd_generic_trace_elem *p_pkt, ch
 }
 
 
-/*** Decode tree -- memeory accessor control */
+/*** Decode tree -- memory accessor control */
 
 OCSD_C_API ocsd_err_t ocsd_dt_add_binfile_mem_acc(const dcd_tree_handle_t handle, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const char *filepath)
 {
     ocsd_err_t err = OCSD_OK;
-
-    if(handle != C_API_INVALID_TREE_HANDLE)
-    {
-        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
-        if(!pDT->hasMemAccMapper())
-            err = pDT->createMemAccMapper();
-
-        if(err == OCSD_OK)
-        {
-            TrcMemAccessorBase *p_accessor;
-            std::string pathToFile = filepath;
-            err = TrcMemAccFactory::CreateFileAccessor(&p_accessor,pathToFile,address);            
-            if(err == OCSD_OK)
-            {
-                TrcMemAccessorFile *pAcc = dynamic_cast<TrcMemAccessorFile *>(p_accessor);
-                if(pAcc)
-                {
-                    pAcc->setMemSpace(mem_space);
-                    err = pDT->addMemAccessorToMap(pAcc,0);
-                }
-                else
-                    err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
-
-                if(err != OCSD_OK)
-                    TrcMemAccFactory::DestroyAccessor(p_accessor);
-            }
-        }
-    }
-    else
-        err = OCSD_ERR_INVALID_PARAM_VAL;
+    DecodeTree *pDT;
+    err = ocsd_check_and_add_mem_acc_mapper(handle,&pDT);
+    if(err == OCSD_OK)
+        err = pDT->addBinFileMemAcc(address,mem_space,filepath);
     return err;
 }
 
-OCSD_C_API ocsd_err_t ocsd_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const file_mem_region_t *region_array, const int num_regions, const ocsd_mem_space_acc_t mem_space, const char *filepath)
+OCSD_C_API ocsd_err_t ocsd_dt_add_binfile_region_mem_acc(const dcd_tree_handle_t handle, const ocsd_file_mem_region_t *region_array, const int num_regions, const ocsd_mem_space_acc_t mem_space, const char *filepath)
 {
     ocsd_err_t err = OCSD_OK;
-
-    if((handle != C_API_INVALID_TREE_HANDLE) && (region_array != 0) && (num_regions != 0))
-    {
-        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
-        if(!pDT->hasMemAccMapper())
-            err = pDT->createMemAccMapper();
-
-        if(err == OCSD_OK)
-        {
-            TrcMemAccessorBase *p_accessor;
-            std::string pathToFile = filepath;
-            int curr_region_idx = 0;
-            err = TrcMemAccFactory::CreateFileAccessor(&p_accessor,pathToFile,region_array[curr_region_idx].start_address,region_array[curr_region_idx].file_offset, region_array[curr_region_idx].region_size);            
-            if(err == OCSD_OK)
-            {
-                TrcMemAccessorFile *pAcc = dynamic_cast<TrcMemAccessorFile *>(p_accessor);
-                if(pAcc)
-                {
-                    curr_region_idx++;
-                    while(curr_region_idx < num_regions)
-                    {
-                        pAcc->AddOffsetRange(region_array[curr_region_idx].start_address, 
-                                             region_array[curr_region_idx].region_size,
-                                             region_array[curr_region_idx].file_offset);
-                        curr_region_idx++;
-                    }
-                    pAcc->setMemSpace(mem_space);
-                    err = pDT->addMemAccessorToMap(pAcc,0);
-                }
-                else
-                    err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
-
-                if(err != OCSD_OK)
-                    TrcMemAccFactory::DestroyAccessor(p_accessor);
-            }
-        }
-    }
-    else
-        err = OCSD_ERR_INVALID_PARAM_VAL;
+    DecodeTree *pDT;
+    err = ocsd_check_and_add_mem_acc_mapper(handle,&pDT);
+    if(err == OCSD_OK)
+        err = pDT->addBinFileRegionMemAcc(region_array,num_regions,mem_space,filepath);
     return err;
 }
 
 OCSD_C_API ocsd_err_t ocsd_dt_add_buffer_mem_acc(const dcd_tree_handle_t handle, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length)
 {
     ocsd_err_t err = OCSD_OK;
-
-    if(handle != C_API_INVALID_TREE_HANDLE)
-    {
-        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
-        if(!pDT->hasMemAccMapper())
-            err = pDT->createMemAccMapper();
-
-        if(err == OCSD_OK)
-        {
-            TrcMemAccessorBase *p_accessor;
-            err = TrcMemAccFactory::CreateBufferAccessor(&p_accessor, address, p_mem_buffer, mem_length);
-            if(err == OCSD_OK)
-            {
-                TrcMemAccBufPtr *pMBuffAcc = dynamic_cast<TrcMemAccBufPtr *>(p_accessor);
-                if(pMBuffAcc)
-                {
-                    pMBuffAcc->setMemSpace(mem_space);
-                    err = pDT->addMemAccessorToMap(p_accessor,0);
-                }
-                else
-                    err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
-
-                if(err != OCSD_OK)
-                    TrcMemAccFactory::DestroyAccessor(p_accessor);
-            }
-        }
-    }
-    else
-        err = OCSD_ERR_INVALID_PARAM_VAL;
+    DecodeTree *pDT;
+    err = ocsd_check_and_add_mem_acc_mapper(handle,&pDT);
+    if(err == OCSD_OK)
+        err = pDT->addBufferMemAcc(address,mem_space,p_mem_buffer,mem_length);
     return err;
 }
 
 OCSD_C_API ocsd_err_t ocsd_dt_add_callback_mem_acc(const dcd_tree_handle_t handle, const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context)
 {
     ocsd_err_t err = OCSD_OK;
-
-    if(handle != C_API_INVALID_TREE_HANDLE)
-    {
-        DecodeTree *pDT = static_cast<DecodeTree *>(handle);
-        if(!pDT->hasMemAccMapper())
-            err = pDT->createMemAccMapper();
-
-        if(err == OCSD_OK)
-        {
-            TrcMemAccessorBase *p_accessor;
-            err = TrcMemAccFactory::CreateCBAccessor(&p_accessor, st_address, en_address, mem_space);
-            if(err == OCSD_OK)
-            {
-                TrcMemAccCB *pCBAcc = dynamic_cast<TrcMemAccCB *>(p_accessor);
-                if(pCBAcc)
-                {
-                    pCBAcc->setCBIfFn(p_cb_func, p_context);
-                    err = pDT->addMemAccessorToMap(p_accessor,0);
-                }
-                else
-                    err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
-
-                if(err != OCSD_OK)
-                    TrcMemAccFactory::DestroyAccessor(p_accessor);
-            }
-        }
-    }
-    else
-        err = OCSD_ERR_INVALID_PARAM_VAL;
+    DecodeTree *pDT;
+    err = ocsd_check_and_add_mem_acc_mapper(handle,&pDT);
+    if(err == OCSD_OK)
+        err = pDT->addCallbackMemAcc(st_address,en_address,mem_space,p_cb_func,p_context);
     return err;
 }
 
@@ -492,10 +382,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_remove_mem_acc(const dcd_tree_handle_t handle, con
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
         DecodeTree *pDT = static_cast<DecodeTree *>(handle);
-        if(!pDT->hasMemAccMapper())
-            err = OCSD_ERR_INVALID_PARAM_VAL; /* no mapper, no remove*/
-        else
-            err = pDT->removeMemAccessorByAddress(st_address,mem_space,0);
+        err = pDT->removeMemAccByAddress(st_address,mem_space);
     }
     else
         err = OCSD_ERR_INVALID_PARAM_VAL;
@@ -582,6 +469,16 @@ static ocsd_err_t ocsd_create_pkt_mon_cb(ocsd_trace_protocol_t protocol, FnDefPk
     return err;
 }
 
+static ocsd_err_t ocsd_check_and_add_mem_acc_mapper(const dcd_tree_handle_t handle, DecodeTree **ppDT)
+{
+    *ppDT = 0;
+    if(handle == C_API_INVALID_TREE_HANDLE)
+        return OCSD_ERR_INVALID_PARAM_VAL;
+    *ppDT = static_cast<DecodeTree *>(handle);
+    if(!(*ppDT)->hasMemAccMapper())
+        return (*ppDT)->createMemAccMapper();
+    return OCSD_OK;
+}
 
 /*******************************************************************************/
 /* C API Helper objects                                                        */
