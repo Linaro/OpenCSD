@@ -27,48 +27,56 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 # 
 #################################################################################
-# OpenCSD - makefile for C API wrapper library
+
+########  
+# RCTDL - test makefile for simple c api packet list test.
 #
 
-CPP := $(MASTER_CPP)
-LINKER := $(MASTER_LINKER)
-LIB := $(MASTER_LIB)
+CC := $(MASTER_CC)
+CC_FLAGS := $(MASTER_CC_FLAGS) -Wno-switch
+LINKER := $(MASTER_LINKER)	
+LINKER_FLAGS := $(MASTER_LINKER_FLAGS) 
 
-CPP_FLAGS := $(MASTER_CPP_FLAGS) -fpic -Wno-switch
-LIB_FLAGS := $(MASTER_LIB_FLAGS)
-LINKER_FLAGS := $(MASTER_LINKER_FLAGS) -shared
-
-LIB_NAME = lib$(LIB_CAPI_NAME)
-SO_LIB_DEPS= -L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME)
+PROG = c_api_pkt_print_test
 
 BUILD_DIR=./$(PLAT_DIR)
 
-VPATH=	$(OCSD_SOURCE)/c_api
+VPATH	=	 $(OCSD_TESTS)/source 
 
-CPP_INCLUDES= \
-				-I$(OCSD_INCLUDE) \
-				-I$(OCSD_SOURCE)/c_api
+CC_INCLUDES	=	\
+			-I$(OCSD_TESTS)/source \
+			-I$(OCSD_INCLUDE) 
 
-OBJECTS=$(BUILD_DIR)/ocsd_c_api.o \
-		$(BUILD_DIR)/ocsd_c_api_deprc_fn.o
+OBJECTS		=	$(BUILD_DIR)/c_api_pkt_print_test.o 
+
+LIBS		=	-L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME) -l$(LIB_CAPI_NAME) 
+
+all:  build_dir test_app copy_libs
+
+test_app: 	$(OBJECTS) $(BIN_TEST_TARGET_DIR)/$(PROG)
 
 
-all: build_dir $(OBJECTS)
-	mkdir -p $(LIB_TARGET_DIR)
-	$(LIB) $(LIB_FLAGS) $(LIB_TARGET_DIR)/$(LIB_NAME).a $(OBJECTS)
-	$(LINKER) $(LINKER_FLAGS) -o $(LIB_TARGET_DIR)/$(LIB_NAME).so -Wl,-soname,$(LIB_NAME).so $(OBJECTS) $(SO_LIB_DEPS)
+ $(BIN_TEST_TARGET_DIR)/$(PROG):
+			mkdir -p  $(BIN_TEST_TARGET_DIR)
+			$(LINKER) $(LINKER_FLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
+			cp $(LIB_TARGET_DIR)/*.so .
 
 build_dir:
 	mkdir -p $(BUILD_DIR)
 
-##### build rules
-$(BUILD_DIR)/%.o : %.cpp
-	$(CPP) $(CPP_FLAGS) $(CPP_INCLUDES) $< -o $@
+.PHONY: copy_libs
 
+copy_libs:
+	cp $(LIB_TARGET_DIR)/*.so $(BIN_TEST_TARGET_DIR)/.
+
+
+#### build rules
+$(BUILD_DIR)/%.o : %.c
+			$(CC) $(CC_FLAGS) $(CC_INCLUDES) $< -o $@ 
 
 #### clean
 .PHONY: clean
-clean:
-	rm -f $(OBJECTS)
-	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).a
-	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).so
+clean :
+			rm -f  $(BIN_TEST_TARGET_DIR)/$(PROG) $(OBJECTS)
+
+# end of file makefile

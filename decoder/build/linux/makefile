@@ -158,6 +158,7 @@ tests: libs
 	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && make
 	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && make
 	cd $(OCSD_ROOT)/tests/build/linux/simple_pkt_print_c_api && make
+	cd $(OCSD_ROOT)/tests/build/linux/c_api_pkt_print_test && make
 
 #############################################################
 # clean targets
@@ -174,3 +175,4 @@ clean_tests:
 	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && make clean
 	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && make clean
 	cd $(OCSD_ROOT)/tests/build/linux/simple_pkt_print_c_api && make clean
+	cd $(OCSD_ROOT)/tests/build/linux/c_api_pkt_print_test && make clean

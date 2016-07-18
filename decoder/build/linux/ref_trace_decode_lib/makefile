@@ -90,6 +90,7 @@ OBJECTS=$(BUILD_DIR)/ocsd_code_follower.o \
 		$(BUILD_DIR)/ocsd_error.o \
 		$(BUILD_DIR)/ocsd_error_logger.o \
 		$(BUILD_DIR)/ocsd_gen_elem_list.o \
+		$(BUILD_DIR)/ocsd_lib_dcd_register.o \
 		$(BUILD_DIR)/ocsd_msg_logger.o \
 		$(BUILD_DIR)/ocsd_version.o \
 		$(BUILD_DIR)/trc_component.o \

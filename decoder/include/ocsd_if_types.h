@@ -36,6 +36,7 @@
 #define ARM_OCSD_IF_TYPES_H_INCLUDED
 
 #include <stdint.h>
+#include <stddef.h>
 
 /** @defgroup ocsd_interfaces OpenCSD Library : Interfaces
     @brief Set of types, structures and virtual interface classes making up the primary API

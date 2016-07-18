@@ -39,7 +39,7 @@
 #include "common/ocsd_dcd_mngr_i.h"
 #include "common/ocsd_lib_dcd_register.h"
 #include "common/trc_pkt_decode_base.h"
-
+#include "common/trc_pkt_proc_base.h"
 
 template <class P, class Pt, class Pc>
 class DecoderMngrBase : public IDecoderMngr
@@ -327,7 +327,7 @@ class DecodeMngrFullDcd : public DecoderMngrBase<P,Pt,Pc>
 {
 public:
     DecodeMngrFullDcd (const std::string &name, ocsd_trace_protocol_t builtInProtocol) 
-        : DecoderMngrBase(name,builtInProtocol) {};
+        : DecoderMngrBase<P,Pt,Pc>(name,builtInProtocol) {};
 
     virtual ~DecodeMngrFullDcd() {};
 
@@ -370,7 +370,7 @@ class DecodeMngrPktProc : public DecoderMngrBase<P,Pt,Pc>
 {
 public:
     DecodeMngrPktProc (const std::string &name, ocsd_trace_protocol_t builtInProtocol) 
-        : DecoderMngrBase(name,builtInProtocol) {};
+        : DecoderMngrBase<P,Pt,Pc>(name,builtInProtocol) {};
 
     virtual ~DecodeMngrPktProc() {};
 

@@ -51,7 +51,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv4i_pkt_proc(const dcd_tree_handle_t han
         err = ocsd_dt_create_decoder(handle,OCSD_BUILTIN_DCD_ETMV4I,OCSD_CREATE_FLG_PACKET_PROC,etmv4_cfg,&CSID);
         if(err == OCSD_OK)
         {
-            err = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,pPktFn,p_context);
+            err = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,(void *)pPktFn,p_context);
             if(err != OCSD_OK)
                 ocsd_dt_remove_decoder(handle,CSID);
         }        
@@ -79,7 +79,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv4i_pkt_mon(const dcd_tree_handle_t hand
     ocsd_err_t err = OCSD_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
-        err = ocsd_dt_attach_packet_callback(handle,trc_chan_id,OCSD_C_API_CB_PKT_MON,pPktFn,p_context);
+        err = ocsd_dt_attach_packet_callback(handle,trc_chan_id,OCSD_C_API_CB_PKT_MON,(void *)pPktFn,p_context);
     }
     else
         err = OCSD_ERR_INVALID_PARAM_VAL;
@@ -95,7 +95,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t hand
         err = ocsd_dt_create_decoder(handle,OCSD_BUILTIN_DCD_ETMV3,OCSD_CREATE_FLG_PACKET_PROC,etmv3_cfg,&CSID);
         if(err == OCSD_OK)
         {
-            err = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,pPktFn,p_context);
+            err = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,(void *)pPktFn,p_context);
             if(err != OCSD_OK)
                 ocsd_dt_remove_decoder(handle,CSID);
         }        
@@ -123,7 +123,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_etmv3_pkt_mon(const dcd_tree_handle_t handl
     ocsd_err_t err = OCSD_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
-        err = ocsd_dt_attach_packet_callback(handle,trc_chan_id,OCSD_C_API_CB_PKT_MON,pPktFn,p_context);
+        err = ocsd_dt_attach_packet_callback(handle,trc_chan_id,OCSD_C_API_CB_PKT_MON,(void *)pPktFn,p_context);
     }
     else
         err = OCSD_ERR_INVALID_PARAM_VAL;
@@ -140,7 +140,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_ptm_pkt_proc(const dcd_tree_handle_t handle
         err = ocsd_dt_create_decoder(handle,OCSD_BUILTIN_DCD_PTM,OCSD_CREATE_FLG_PACKET_PROC,ptm_cfg,&CSID);
         if(err == OCSD_OK)
         {
-            err = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,pPktFn,p_context);
+            err = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,(void *)pPktFn,p_context);
             if(err != OCSD_OK)
                 ocsd_dt_remove_decoder(handle,CSID);
         }        
@@ -169,7 +169,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_ptm_pkt_mon(const dcd_tree_handle_t handle,
     ocsd_err_t err = OCSD_OK;
     if(handle != C_API_INVALID_TREE_HANDLE)
     {
-        err = ocsd_dt_attach_packet_callback(handle,trc_chan_id,OCSD_C_API_CB_PKT_MON,pPktFn,p_context);
+        err = ocsd_dt_attach_packet_callback(handle,trc_chan_id,OCSD_C_API_CB_PKT_MON,(void *)pPktFn,p_context);
     }
     else
         err = OCSD_ERR_INVALID_PARAM_VAL;
@@ -185,7 +185,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_stm_pkt_proc(const dcd_tree_handle_t handle
         err = ocsd_dt_create_decoder(handle,OCSD_BUILTIN_DCD_STM,OCSD_CREATE_FLG_PACKET_PROC,stm_cfg,&CSID);
         if(err == OCSD_OK)
         {
-            err = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,pPktFn,p_context);
+            err = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,(void *)pPktFn,p_context);
             if(err != OCSD_OK)
                 ocsd_dt_remove_decoder(handle,CSID);
         }        
