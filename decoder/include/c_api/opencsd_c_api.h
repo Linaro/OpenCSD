@@ -126,7 +126,7 @@ OCSD_C_API void ocsd_destroy_dcd_tree(const dcd_tree_handle_t handle);
  * @param *pDataBlock : Pointer to data block.
  * @param *numBytesProcessed : Number of bytes actually processed by the decoder.
  *
- * @return ocsd_datapath_resp_t  : Datapath response code
+ * @return ocsd_datapath_resp_t  : Datapath response code (CONT/WAIT/FATAL)
  */
 OCSD_C_API ocsd_datapath_resp_t ocsd_dt_process_data(const dcd_tree_handle_t handle,
                                             const ocsd_datapath_op_t op,
@@ -156,15 +156,18 @@ OCSD_C_API ocsd_err_t ocsd_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle,
 
 /*---------------------- Trace Decoders ----------------------------------------------------------------------------------*/
 /*!
-* <Detailed description of the method>
+* Creates a decoder that is registered with the library under the supplied name.
+* Flags determine if a full packet processor / packet decoder pair or 
+* packet processor only is created.
+* Uses the supplied configuration structure.
 *
 * @param handle : Handle to decode tree.
-* @param *decoder_name : 
-* @param create_flags : 
-* @param *decoder_cfg : 
+* @param *decoder_name : Registered name of the decoder to create. 
+* @param create_flags : Decoder creation options. 
+* @param *decoder_cfg : Pointer to a valid configuration structure for the named decoder.
 * @param *pCSID : Pointer to location to return the configured CoreSight trace ID for the decoder.
 *
-* @return ocsd_err_t  : 
+* @return ocsd_err_t  : Library error code -  OCSD_OK if successful.
 */
 OCSD_C_API ocsd_err_t ocsd_dt_create_decoder(const dcd_tree_handle_t handle,
                                              const char *decoder_name,
@@ -174,12 +177,12 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_decoder(const dcd_tree_handle_t handle,
                                              );
 
 /*!
-* <Detailed description of the method>
+* Remove a decoder from the tree and destroy it.
 *
 * @param handle :  Handle to decode tree.
 * @param CSID : Configured CoreSight trace ID for the decoder.
 *
-* @return ocsd_err_t  : 
+* @return ocsd_err_t  : Library error code -  OCSD_OK if successful.
 */
 OCSD_C_API ocsd_err_t ocsd_dt_remove_decoder(   const dcd_tree_handle_t handle, 
                                                 const unsigned char CSID);
@@ -188,16 +191,16 @@ OCSD_C_API ocsd_err_t ocsd_dt_remove_decoder(   const dcd_tree_handle_t handle,
 /*!
 * Attach a callback function to the packet processor.
 * 
-* The callback_type defines the attachment point:-
+* The callback_type defines the attachment point, either the main packet output
+* (only if no decoder attached), or the packet monitor.
 * 
-*
 * @param handle : Handle to decode tree.
 * @param CSID : Configured CoreSight trace ID for the decoder.
-* @param callback_type : 
+* @param callback_type : Attachment point 
 * @param p_fn_pkt_data_in : Pointer to the callback function.
 * @param p_context : Opaque context pointer value used in callback function.
 *
-* @return ocsd_err_t  : 
+* @return ocsd_err_t  : Library error code -  OCSD_OK if successful.
 */
 OCSD_C_API ocsd_err_t ocsd_dt_attach_packet_callback(  const dcd_tree_handle_t handle, 
                                                 const unsigned char CSID,
@@ -208,8 +211,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_packet_callback(  const dcd_tree_handle_t h
 
 
 
-
-/** TBD : more C API functions to be added here */    
+ 
     
 /** @}*/
 /*---------------------- Memory Access for traced opcodes ----------------------------------------------------------------------------------*/

@@ -89,56 +89,11 @@ typedef void (* FnDefPktDataMon)(const void *p_context,
                                                  const uint32_t size,
                                                  const uint8_t *p_data);
 
-/** function pointer type for ETMv4 instruction packet processor output, packet analyser/decoder input */
-typedef ocsd_datapath_resp_t (* FnEtmv4IPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_etmv4_i_pkt *p_packet_in);
-
-/** function pointer type for ETMv4 instruction packet processor monitor output, raw packet monitor / display input  */
-typedef void (* FnEtmv4IPktMonDataIn)(  const void *p_context, 
-                                        const ocsd_datapath_op_t op, 
-                                        const ocsd_trc_index_t index_sop, 
-                                        const ocsd_etmv4_i_pkt *p_packet_in,
-                                        const uint32_t size,
-                                        const uint8_t *p_data);
-
-/** function pointer type for ETMv3 packet processor output, packet analyser/decoder input */
-typedef ocsd_datapath_resp_t (* FnEtmv3PacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_etmv3_pkt *p_packet_in);
-
-/** function pointer type for ETMv3 packet processor monitor output, raw packet monitor / display input  */
-typedef void (* FnEtmv3PktMonDataIn)(   const void *p_context, 
-                                        const ocsd_datapath_op_t op, 
-                                        const ocsd_trc_index_t index_sop, 
-                                        const ocsd_etmv3_pkt *p_packet_in,
-                                        const uint32_t size,
-                                        const uint8_t *p_data);
-
-
-/** function pointer type for PTM packet processor output, packet analyser/decoder input */
-typedef ocsd_datapath_resp_t (* FnPtmPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_ptm_pkt *p_packet_in);
-
-/** function pointer type for PTM packet processor monitor output, raw packet monitor / display input  */
-typedef void (* FnPtmPktMonDataIn)(     const void *p_context, 
-                                        const ocsd_datapath_op_t op, 
-                                        const ocsd_trc_index_t index_sop, 
-                                        const ocsd_ptm_pkt *p_packet_in,
-                                        const uint32_t size,
-                                        const uint8_t *p_data);
-
-
-/** function pointer type for STM packet processor output, packet analyser/decoder input */
-typedef ocsd_datapath_resp_t (* FnStmPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_stm_pkt *p_packet_in);
-
-/** function pointer type for STM packet processor monitor output, raw packet monitor / display input  */
-typedef void (* FnStmPktMonDataIn)(     const void *p_context, 
-                                        const ocsd_datapath_op_t op, 
-                                        const ocsd_trc_index_t index_sop, 
-                                        const ocsd_stm_pkt *p_packet_in,
-                                        const uint32_t size,
-                                        const uint8_t *p_data);
 
 /** Callback interface type when attaching monitor/sink to packet processor */
 typedef enum _ocsd_c_api_cb_types {
-    OCSD_C_API_CB_PKT_SINK,
-    OCSD_C_API_CB_PKT_MON,
+    OCSD_C_API_CB_PKT_SINK, /** Attach to the packet processor primary packet output (CB fn is FnDefPktDataIn) */
+    OCSD_C_API_CB_PKT_MON,  /** Attach to the packet processor packet monitor output (CB fn is FnDefPktDataMon) */
 } ocsd_c_api_cb_types;
 
 /** @}*/
