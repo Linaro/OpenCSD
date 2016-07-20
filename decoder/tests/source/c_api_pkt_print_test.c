@@ -42,7 +42,9 @@
  *
  * The test source can be set from the command line, but will default to the 
  * ETMv4 trace for trace ID 0x10 on the juno r1-1 test snapshot.
- * This example uses the updated C-API functionality from library version 0v004 onwards.
+ * This example uses the updated C-API functionality from library version 0.4.0 onwards.
+ * Test values are hardcoded from the same values in the snapshots as we do not 
+ * explicitly read the snapshot metadata in this example program.
  */
 
 #include <stdio.h>
@@ -62,7 +64,7 @@ const char *default_path_to_snapshot = "../../../snapshots/juno_r1_1/";
 const char *tc2_snapshot = "../../../snapshots/TC2/";
 #endif
 
-/* trace data and memory file dump names */
+/* trace data and memory file dump names and values - taken from snapshot metadata */
 const char *trace_data_filename = "cstrace.bin";
 const char *stmtrace_data_filename = "cstraceitm.bin";
 const char *memory_dump_filename = "kernel_dump.bin";
@@ -324,7 +326,6 @@ ocsd_datapath_resp_t packet_handler(void *context, const ocsd_datapath_op_t op, 
 
     switch(op)
     {
-    default: break;
     case OCSD_OP_DATA:
         sprintf(packet_str,"Idx:%ld; ", index_sop);
         offset = strlen(packet_str);
@@ -352,6 +353,8 @@ ocsd_datapath_resp_t packet_handler(void *context, const ocsd_datapath_op_t op, 
         sprintf(packet_str,"**** END OF TRACE ****\n");
         ocsd_def_errlog_msgout(packet_str);
         break;
+
+    default: break;
     }
 
     return resp;

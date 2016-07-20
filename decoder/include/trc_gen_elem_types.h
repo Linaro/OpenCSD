@@ -92,7 +92,7 @@ typedef struct _ocsd_generic_trace_elem {
     ocsd_instr_type    last_i_type;    /**< Last instruction type if instruction execution range */
     ocsd_instr_subtype last_i_subtype; /**< sub type for last instruction in range */
  
-    // per element flags
+    //! per element flags
     struct {
         uint32_t last_instr_exec:1;     /**< 1 if last instruction in range was executed; */
         uint32_t has_cc:1;              /**< 1 if this packet has a valid cycle count included (e.g. cycle count included as part of instruction range packet, always 1 for pure cycle count packet.*/
@@ -101,7 +101,7 @@ typedef struct _ocsd_generic_trace_elem {
         uint32_t excep_data_marker:1;   /**< 1 if the exception entry packet is a data push marker only, with no address information (used typically in v7M trace for marking data pushed onto stack) */
     };
 
-    // packet specific payloads
+    //! packet specific payloads
     union {  
         uint32_t exception_number; /**< exception number for exception type packets */
         trace_event_t  trace_event;  /**< Trace event - trigger etc */

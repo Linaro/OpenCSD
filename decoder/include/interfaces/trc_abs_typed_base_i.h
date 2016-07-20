@@ -37,13 +37,14 @@
 #define ARM_TRC_ABS_TYPED_BASE_I_H_INCLUDED
 
 /*!
- * @class ITrcTypedBase : Abstract base class to for interfaces templated types.
+ * @class ITrcTypedBase 
+ * @brief Abstract base class to for interfaces templated types.
  * 
  *  This class is used as an abstract base for any interfaces that are specialised using
  *  template<> types.
  *
  *  Designed to allow interface objects to be passed through generic interfaces into type 
- *  specific templated implmentation handlers.
+ *  specific templated implmentation handlers and converted/checked using RTTI.
  */
 class ITrcTypedBase
 {

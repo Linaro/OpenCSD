@@ -38,29 +38,32 @@
 #include "common/ocsd_dcd_mngr_i.h"
 #include "common/trc_component.h"
 
-/** @class decoder_elements 
- *  @brief Decode tree element base structure.
- *  @addtogroup dcd_tree
+/** @addtogroup dcd_tree
+@{*/
+
+/*!  @struct _decoder_elements 
+ *   @brief Decode tree element base structure.
  *
  *  Element describes the protocol supported for this element and 
  *  contains pointers to the decoder manager interface and component handle.
- *  
  */
 typedef struct _decoder_elements 
 {
-    std::string dcd_name;
-    TraceComponent *dcd_handle;
-    IDecoderMngr *dcd_mngr;
-    ocsd_trace_protocol_t protocol;
+    std::string dcd_name;       //!< Registered name of the decoder
+    TraceComponent *dcd_handle; //!< handle to the decoder object
+    IDecoderMngr *dcd_mngr;     //!< pointer to the decoder manager interface for the decodcer
+    ocsd_trace_protocol_t protocol;//!< protocol type 
     bool created;  /**< decode tree created this element (destroy it on tree destruction) */
 } decoder_element;
 
 /*!
  *  @class DecodeTreeElement   
  *  @brief Decode tree element
- *  @addtogroup dcd_tree
  *
- *   
+ *  Decoder tree elements are references to individual decoders in the tree.
+ *  These allow iteration of all decoders in the tree to perform common operations.
+ *  
+ * The DecodeTree contains a list of elements.
  */
 class DecodeTreeElement : protected decoder_element
 {
@@ -103,6 +106,7 @@ inline void DecodeTreeElement::DestroyElem()
         dcd_mngr->destroyDecoder(dcd_handle);
 }
 
+/** @}*/
 #endif // ARM_OCSD_DCD_TREE_ELEM_H_INCLUDED
 
 /* End of File ocsd_dcd_tree_elem.h */

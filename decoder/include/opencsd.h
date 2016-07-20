@@ -50,9 +50,6 @@
 #include "interfaces/trc_pkt_raw_in_i.h"
 #include "interfaces/trc_tgt_mem_access_i.h"
 
-/* TBD : include the indexers and reader interfaces in here when implmented. */
-
-
 /* protocol base classes and generic elements */
 #include "common/ocsd_version.h"
 #include "common/ocsd_error.h"

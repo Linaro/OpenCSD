@@ -511,7 +511,7 @@ typedef enum _ocsd_trace_protocol_t {
     OCSD_PROTOCOL_BUILTIN_END,  /**< Invalid protocol - built-in protocol types end marker */
 
 /* Custom / external decoders */
-    OCSD_PROTOCOL_CUSTOM_0 = 100,
+    OCSD_PROTOCOL_CUSTOM_0 = 100,   /**< Values from this onwards are assigned to external registered decoders */
     OCSD_PROTOCOL_CUSTOM_1,
     OCSD_PROTOCOL_CUSTOM_2,
     OCSD_PROTOCOL_CUSTOM_3,
@@ -525,9 +525,11 @@ typedef enum _ocsd_trace_protocol_t {
     OCSD_PROTOCOL_END      /**< Invalid protocol - protocol types end marker */
 } ocsd_trace_protocol_t;
 
-#define OCSD_PROTOCOL_IS_BUILTIN(P) ((P > OCSD_PROTOCOL_UNKNOWN) && (P < OCSD_PROTOCOL_BUILTIN_END))
-#define OCSD_PROTOCOL_IS_CUSTOM(P)  ((P > OCSD_PROTOCOL_CUSTOM_0) && (P < OCSD_PROTOCOL_END ))
+/** Test if protocol type is a library built-in decoder */
+#define OCSD_PROTOCOL_IS_BUILTIN(P) ((P > OCSD_PROTOCOL_UNKNOWN) && (P < OCSD_PROTOCOL_BUILTIN_END)) 
 
+/** Test if protocol type is a custom external registered decoder */
+#define OCSD_PROTOCOL_IS_CUSTOM(P)  ((P > OCSD_PROTOCOL_CUSTOM_0) && (P < OCSD_PROTOCOL_END ))
 
 /** @}*/
 

@@ -1,6 +1,6 @@
 /*
  * \file       gen_elem_printer.h
- * \brief      OpenCSD : 
+ * \brief      OpenCSD : Generic element printer class.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */

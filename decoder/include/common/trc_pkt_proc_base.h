@@ -45,13 +45,22 @@
 #include "comp_attach_pt_t.h"
 
 /** @defgroup ocsd_pkt_proc  OpenCSD Library : Packet Processors.
-
     @brief Classes providing Protocol Packet Processing capability.
 
     Packet processors take an incoming byte stream and convert into discrete packets for the
     required trace protocol.
 @{*/
 
+
+
+/*!
+ * @class TrcPktProcI   
+ * @brief Base Packet processing interface
+ *  
+ * Defines the packet processing methods that protocol specific processors must 
+ * implement.
+ * 
+ */
 class TrcPktProcI : public TraceComponent, public ITrcDataIn
 {
 public:
@@ -59,7 +68,8 @@ public:
     TrcPktProcI(const char *component_name, int instIDNum);
     virtual ~TrcPktProcI() {}; 
 
-    /* generic trace data input interface */
+    /** Trace byte data input interface - from ITrcDataIn.
+     */
     virtual ocsd_datapath_resp_t TraceDataIn(  const ocsd_datapath_op_t op,
                                                 const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
@@ -69,15 +79,18 @@ public:
 protected:
 
     /* implementation packet processing interface */
+
+    /*! @brief Implementation function for the OCSD_OP_DATA operation */
     virtual ocsd_datapath_resp_t processData(  const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
                                                 const uint8_t *pDataBlock,
                                                 uint32_t *numBytesProcessed) = 0;
-    virtual ocsd_datapath_resp_t onEOT() = 0;
-    virtual ocsd_datapath_resp_t onReset() = 0;
-    virtual ocsd_datapath_resp_t onFlush() = 0;
-    virtual ocsd_err_t onProtocolConfig() = 0;
-    virtual const bool isBadPacket() const = 0;     // check if the current packet is an error / bad packet
+        
+    virtual ocsd_datapath_resp_t onEOT() = 0;       //!< Implementation function for the OCSD_OP_EOT operation
+    virtual ocsd_datapath_resp_t onReset() = 0;     //!< Implementation function for the OCSD_OP_RESET operation
+    virtual ocsd_datapath_resp_t onFlush() = 0;     //!< Implementation function for the OCSD_OP_FLUSH operation
+    virtual ocsd_err_t onProtocolConfig() = 0;      //!< Called when the configuration object is passed to the decoder.
+    virtual const bool isBadPacket() const = 0;     //!< check if the current packet is an error / bad packet
 };
 
 inline TrcPktProcI::TrcPktProcI(const char *component_name) :
@@ -95,15 +108,15 @@ inline TrcPktProcI::TrcPktProcI(const char *component_name, int instIDNum) :
  * @brief Packet Processor base class. Provides common infrastructure and interconnections for packet processors.
  * 
  *  The class is a templated base class. 
- *  P  - this is the packet object class.
- *  Pt - this is the packet type class.
- *  Pc - this is the packet configuration class.
+ *  - P  - this is the packet object class.
+ *  - Pt - this is the packet type class.
+ *  - Pc - this is the packet configuration class.
  * 
  *  implementations will provide concrete classes for each of these to operate under the common infrastructures.
  *  The base provides the trace data in (ITrcDataIn) interface and operates on the incoming operation type.
  *  
- *  Implementions override the 'onFn()' and data process functions, with the base class ensuring consistent
- *  ordering of operations.
+ *  Implementions override the 'onFn()' and data process functions defined in TrcPktProcI, 
+ *  with the base class ensuring consistent ordering of operations.
  * 
  */
 template <class P, class Pt, class Pc> 
@@ -114,7 +127,11 @@ public:
     TrcPktProcBase(const char *component_name, int instIDNum);
     virtual ~TrcPktProcBase(); 
 
-        /* generic trace data input interface */
+    /** Byte trace data input interface defined in ITrcDataIn
+        
+        The base class implementation processes the operation to call the 
+        interface functions on TrcPktProcI.
+     */
     virtual ocsd_datapath_resp_t TraceDataIn(  const ocsd_datapath_op_t op,
                                                 const ocsd_trc_index_t index,
                                                 const uint32_t dataBlockSize,
@@ -122,14 +139,20 @@ public:
                                                 uint32_t *numBytesProcessed);
 
 
-    /* component attachment points */ 
+/* component attachment points */ 
+
+    //! Attachement point for the protocol packet output
     componentAttachPt<IPktDataIn<P>> *getPacketOutAttachPt()  { return &m_pkt_out_i; };
+    //! Attachment point for the protocol packet monitor
     componentAttachPt<IPktRawDataMon<P>> *getRawPacketMonAttachPt() { return &m_pkt_raw_mon_i; };
 
+    //! Attachment point for a packet indexer 
     componentAttachPt<ITrcPktIndexer<Pt>> *getTraceIDIndexerAttachPt() { return &m_pkt_indexer_i; };
    
-    /* protocol configuration */
+/* protocol configuration */
+    //!< Set the protocol specific configuration for the decoder.
     virtual ocsd_err_t setProtocolConfig(const Pc *config);
+    //!< Get the configuration for the decoder.
     virtual const Pc *getProtocolConfig() const { return m_config; };
 
 protected:

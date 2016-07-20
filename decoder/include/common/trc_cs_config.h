@@ -35,8 +35,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
+/** @addtogroup ocsd_protocol_cfg
+@{*/
+
 /*!
- * @class CSConfig : Base class for configuration data on CoreSight trace component.
+ * @class CSConfig 
+ * @brief Base class for configuration data on CoreSight trace component.
  * 
  *  Defines common access functionality, common to all components.
  *  (e.g. trace ID).
@@ -50,6 +54,8 @@ public:
 
     virtual const uint8_t getTraceID() const = 0; //!< CoreSight Trace ID for this device.
 };
+
+/** @}*/
 
 #endif // ARM_TRC_CS_CONFIG_H_INCLUDED
 

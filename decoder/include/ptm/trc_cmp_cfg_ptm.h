@@ -39,9 +39,9 @@
 #include "trc_pkt_types_ptm.h"
 #include "common/trc_cs_config.h"
 
-/** @defgroup ocsd_protocol_cfg  OpenCSD Library : Protcol Generator Configuration.
+/** @defgroup ocsd_protocol_cfg  OpenCSD Library : Trace Source Protocol Configuration.
 
-    @brief Classes describing the trace capture time configuration of the protocol generators.
+    @brief Classes describing the trace capture time configuration of the trace source hardware.
 
     Protocol configuration represents the trace capture time settings for the CoreSight hardware
     component generating the trace. The packet processors and packet decoders require this configuration 

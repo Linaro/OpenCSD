@@ -35,8 +35,62 @@
 #ifndef ARM_OCSD_C_API_DEPRC_FN_H_INCLUDED
 #define ARM_OCSD_C_API_DEPRC_FN_H_INCLUDED
 
-/** @name Deprecated C-API functions
+/** @defgroup depr_lib_c_api OpenCSD Library : Deprecated "C" API functions and types
+
+    @brief "C" API functions and types that have been deprecated after API changes.
+
+    Retained for regression testing for a few library versions
+    Will be removed completely in a later library version
+
+    To use these functions define the macro OPENCSD_INC_DEPRECATED_API
 @{*/
+
+/** function pointer type for ETMv4 instruction packet processor output, packet analyser/decoder input */
+typedef ocsd_datapath_resp_t (* FnEtmv4IPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_etmv4_i_pkt *p_packet_in);
+
+/** function pointer type for ETMv4 instruction packet processor monitor output, raw packet monitor / display input  */
+typedef void (* FnEtmv4IPktMonDataIn)(  const void *p_context, 
+                                        const ocsd_datapath_op_t op, 
+                                        const ocsd_trc_index_t index_sop, 
+                                        const ocsd_etmv4_i_pkt *p_packet_in,
+                                        const uint32_t size,
+                                        const uint8_t *p_data);
+
+/** function pointer type for ETMv3 packet processor output, packet analyser/decoder input */
+typedef ocsd_datapath_resp_t (* FnEtmv3PacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_etmv3_pkt *p_packet_in);
+
+/** function pointer type for ETMv3 packet processor monitor output, raw packet monitor / display input  */
+typedef void (* FnEtmv3PktMonDataIn)(   const void *p_context, 
+                                        const ocsd_datapath_op_t op, 
+                                        const ocsd_trc_index_t index_sop, 
+                                        const ocsd_etmv3_pkt *p_packet_in,
+                                        const uint32_t size,
+                                        const uint8_t *p_data);
+
+
+/** function pointer type for PTM packet processor output, packet analyser/decoder input */
+typedef ocsd_datapath_resp_t (* FnPtmPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_ptm_pkt *p_packet_in);
+
+/** function pointer type for PTM packet processor monitor output, raw packet monitor / display input  */
+typedef void (* FnPtmPktMonDataIn)(     const void *p_context, 
+                                        const ocsd_datapath_op_t op, 
+                                        const ocsd_trc_index_t index_sop, 
+                                        const ocsd_ptm_pkt *p_packet_in,
+                                        const uint32_t size,
+                                        const uint8_t *p_data);
+
+
+/** function pointer type for STM packet processor output, packet analyser/decoder input */
+typedef ocsd_datapath_resp_t (* FnStmPacketDataIn)(const void *p_context, const ocsd_datapath_op_t op, const ocsd_trc_index_t index_sop, const ocsd_stm_pkt *p_packet_in);
+
+/** function pointer type for STM packet processor monitor output, raw packet monitor / display input  */
+typedef void (* FnStmPktMonDataIn)(     const void *p_context, 
+                                        const ocsd_datapath_op_t op, 
+                                        const ocsd_trc_index_t index_sop, 
+                                        const ocsd_stm_pkt *p_packet_in,
+                                        const uint32_t size,
+                                        const uint8_t *p_data);
+
 
 /*---------------------- ETMv4 Trace ----------------------------------------------------------------------------------*/
 /*!
@@ -95,7 +149,7 @@ OCSD_C_API ocsd_err_t ocsd_dt_create_etmv3_pkt_proc(const dcd_tree_handle_t hand
  * Uses the output function set in ocsd_dt_set_gen_elem_outfn() as the output sink.
  *
  * @param handle : Handle to decode tree.
- * @param *etmv4_cfg : pointer to valid Etmv4 configuration structure.
+ * @param *etmv3_cfg : pointer to valid Etmv4 configuration structure.
  *
  * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
