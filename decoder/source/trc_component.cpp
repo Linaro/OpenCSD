@@ -83,6 +83,7 @@ void TraceComponent::Init(const std::string &name)
 
     m_supported_op_flags = 0;
     m_op_flags = 0;
+    m_assocComp = 0;
 
     m_pErrAttachMon = new (std::nothrow) errLogAttachMonitor();
     if(m_pErrAttachMon)
