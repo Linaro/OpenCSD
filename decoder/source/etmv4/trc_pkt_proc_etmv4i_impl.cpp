@@ -1462,7 +1462,7 @@ void EtmV4IPktProcImpl::BuildIPacketTable()
             // each byte has seven bits + cont bit
             byteVal = buffer[(st_idx + idx)];
             lastByte = (byteVal & 0x80) != 0x80;
-            value |= ((uint32_t)byteVal) << (idx * 7);
+            value |= ((uint32_t)(byteVal & 0x7F)) << (idx * 7);
             idx++;
         }
         else
@@ -1479,14 +1479,14 @@ unsigned EtmV4IPktProcImpl::extractContField64(const std::vector<uint8_t> &buffe
     bool lastByte = false;
     uint8_t byteVal;
     value = 0;
-    while(!lastByte && (idx < byte_limit))   // max 9 bytes for 32 bit value;
+    while(!lastByte && (idx < byte_limit))   // max 9 bytes for 64 bit value;
     {
         if(buffer.size() > (st_idx + idx))
         {
             // each byte has seven bits + cont bit
             byteVal = buffer[(st_idx + idx)];
             lastByte = (byteVal & 0x80) != 0x80;
-            value |= ((uint64_t)byteVal) << (idx * 7);
+            value |= ((uint64_t)(byteVal & 0x7F)) << (idx * 7);
             idx++;
         }
         else
