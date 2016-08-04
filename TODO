@@ -1,10 +1,8 @@
 * Decode Tree API updates.
 -> Re-factor the decode tree API to:
-   1)  remove the per decoder type creation functions  - CreateETMv4Decoder(...),
-   replacing with a single CreateDecoder("Type"). 
-   2) Use new structure to enable custom decoders - may be proprietary / binaries to 
+   1) Use new structure to enable custom decoders - may be proprietary / binaries to 
    be used in the decoder structure.
-   3) Make it easier to add a new decoder to the library source, without the overhead of 
+   2) Make it easier to add a new decoder to the library source, without the overhead of 
    doing all the creation fns.
 
 * STM "full decode".

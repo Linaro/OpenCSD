@@ -10,11 +10,23 @@ The library will decode formatted trace in three stages:-
 
 The library is implemented in C++ with an optional "C" API.
 
+Library Versioning
+------------------
+
+From version 0.4, library versioning will use a semantic versioning format
+(per http://semver.org) of the form _Major.minor.patch_ (M.m.p).
+
+Internal library version calls, documentation and git repository will use this format moving forwards.
+Where a patch version is not quoted, or quoted as .x then comments will apply to the entire release.
+
+Releases will be at M.m.0, with patch version incremented for bugfixes.
+
+Releases will appear on the master branch in the git repository with an appropriate version tag.
 
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.004_
+_Current Version 0.4_
 
 ### Current support:
 
@@ -38,7 +50,7 @@ output packet.
 Note on the Git Repository.
 ---------------------------
 
-At present, the git repository for OpenCSD contains both branches for the OpenCSD library itself, and branches that 
+At present, the git repository for OpenCSD contains both branches/tags for the OpenCSD library itself, and branches that 
 have the perf updates that are not yet upstream in the main linux tree for using perf to record and decode trace.
 
 These perf branches are snapshots of the kernel tree and are thus quite large. 
@@ -48,6 +60,8 @@ Otherwise, downloading may take some time.
 e.g.
 
     git clone -b opencsd-0v003 --single-branch https://github.com/Linaro/OpenCSD 
+
+(From version 0.4, releases appear as versioned tags on the master branch.)
 
 
 Documentation
@@ -83,7 +97,7 @@ Version and Modification Information
 - _Version 0.001_:  Library development - tested with `perf` tools integration - BKK16, 8th March 2016
 - _Version 0.002_:  Library development - added in PTM decoder support. Restructure header dir, replaced ARM rctdl prefix with opencsd/ocsd.
 - _Version 0.003_:  Library development - added in ETMv3 instruction decoder support.
-- _Version 0.004_:  In development - decode tree api updates.
+- _Version 0.4_  :  Library development - updated decode tree and C-API for generic decoder handling. Switch to semantic versioning.
 
 Licence Information
 ===================

@@ -11,6 +11,11 @@ using library branches `opencsd-0v002` and `opencsd-0v003` (decode library only)
 and the latest perf branch `perf-opencsd-4.7` (decode library + perf tools) 
 on the [OpenCSD github repository][1].
 
+From v0.4 of the library releases appear as master branch tags. v0.4 requires
+a patched version of the `perf-opencsd-4.7` perf tools to use the updated C API.
+The unpatched `perf-opencsd-4.7` may be used with v0.4 if the build makefile
+for the tools is altered to #define OPENCSD_INC_DEPRECATED_API which will
+include the decprecated function call wrappers for the new generic API. 
 
 On Target Trace Acquisition - Perf Record
 -----------------------------------------
@@ -18,7 +23,7 @@ On Target Trace Acquisition - Perf Record
 All the enhancement to the Perf tools that support the new `cs_etm` pmu have
 not been upstreamed yet.  To get the required functionality branch
 `perf-opencsd-4.7` needs to be downloaded to the target system where
-traces are to be collected.  This branch is an upstream v4.7-rc4 kernel
+traces are to be collected.  This branch is an upstream v4.7 kernel
 supplemented with modifications to the CoreSight framework and drivers to be
 usable by the Perf core.  The remaining out of tree patches are being
 upstreamed incrementally.
@@ -133,31 +138,32 @@ have also been collected.
 Off Target OpenCSD Compilation
 ------------------------------
 As of this writing the openCSD library is not part of the perf tools source.
-It is available on [github][1] and needs to be compiled before perf.
+It is available on [github][1] and needs to be compiled before perf. Checkout the
+required branch/tag version into a local directory.
 
-    linaro@t430:~/linaro/coresight$ git clone -b opencsd-0v003 https://github.com/Linaro/OpenCSD.git opencsd-0v003
+    linaro@t430:~/linaro/coresight$ git clone -b opencsd-0v003 https://github.com/Linaro/OpenCSD.git my-opencsd
     Cloning into 'OpenCSD'...
     remote: Counting objects: 2063, done.
     remote: Total 2063 (delta 0), reused 0 (delta 0), pack-reused 2063
     Receiving objects: 100% (2063/2063), 2.51 MiB | 1.24 MiB/s, done.
     Resolving deltas: 100% (1399/1399), done.
     Checking connectivity... done.
-    linaro@t430:~/linaro/coresight$ ls opencsd-0v003
-    decoder LICENSE  README.md
+    linaro@t430:~/linaro/coresight$ ls my-opencsd
+    decoder LICENSE  README.md HOWTO.md TODO
 
 Once the source code has been acquired compilation of the openCSD library can
 take place.  For Linux two options are available, LINUX and LINUX64, based on
 the host's (which has nothing to do with the target) architecture:
 
-    linaro@t430:~/linaro/coresight/$ cd opencsd-0v003/decoder/build/linux/
-    linaro@t430:~/linaro/coresight/opencsd-0v003/decoder/build/linux$ ls
+    linaro@t430:~/linaro/coresight/$ cd my-opencsd/decoder/build/linux/
+    linaro@t430:~/linaro/coresight/my-opencsd/decoder/build/linux$ ls
     makefile  rctdl_c_api_lib  ref_trace_decode_lib
 
-    linaro@t430:~/linaro/coresight/opencsd-0v003/decoder/build/linux$ make LINUX64=1 DEBUG=1
+    linaro@t430:~/linaro/coresight/my-opencsd/decoder/build/linux$ make LINUX64=1 DEBUG=1
     ...
     ...
 
-    linaro@t430:~/linaro/coresight/opencsd-0v003/decoder/build/linux$ ls ../../lib/linux64/dbg/
+    linaro@t430:~/linaro/coresight/my-opencsd/decoder/build/linux$ ls ../../lib/linux64/dbg/
     libcstraced.a  libcstraced_c_api.a  libcstraced_c_api.so  libcstraced.so 
 
 Off Target Perf Tools Compilation
@@ -182,7 +188,7 @@ successful, but handling of CoreSight trace data won't be supported.
 **See perf-test-scripts below for assistance in creating a build and test enviroment.**
 
     linaro@t430:~/linaro/coresight$ cd perf-opencsd-4.7
-    linaro@t430:~/linaro/coresight/perf-opencsd-4.7$ export CSTRACE_PATH=~/linaro/coresight/opencsd-0v003/decoder
+    linaro@t430:~/linaro/coresight/perf-opencsd-4.7$ export CSTRACE_PATH=~/linaro/coresight/my-opencsd/decoder
     linaro@t430:~/linaro/coresight/perf-opencsd-4.7$ make -C tools/perf
     ...
     ...
@@ -225,7 +231,7 @@ to be sure everything is clean.
 
     linaro@t430:~/linaro/coresight/feb24$ rm -rf ~/.debug
     linaro@t430:~/linaro/coresight/feb24$ cp -dpR .debug ~/
-    linaro@t430:~/linaro/coresight/feb24$ export LD_LIBRARY_PATH=~/linaro/coresight/opencsd-0v003/decoder/lib/linux64/dbg/
+    linaro@t430:~/linaro/coresight/feb24$ export LD_LIBRARY_PATH=~/linaro/coresight/my-opencsd/decoder/lib/linux64/dbg/
     linaro@t430:~/linaro/coresight/feb24$ ../perf-opencsd-4.7/tools/perf/perf report --stdio
 
     # To display the perf.data header info, please use --header/--header-only options.
