@@ -83,7 +83,7 @@
 /** @name Library Version API
 
 @{*/
-/** Get Library version. Return a 32 bit version in form MMMMnnnn - MMMM = major verison, nnnn = minor version */ 
+/** Get Library version. Return a 32 bit version in form MMMMnnpp - MMMM = major verison, nn = minor version, pp = patch version */ 
 OCSD_C_API uint32_t ocsd_get_version(void);
 
 /** Get library version string */

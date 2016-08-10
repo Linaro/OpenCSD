@@ -50,7 +50,16 @@
 @{*/
 #define OCSD_VER_MAJOR 0x0 /**< Library Major Version */
 #define OCSD_VER_MINOR 0x4 /**< Library Minor Version */
-#define OCSD_VER_STRING "0.004"    /**< Library Version string */
+#define OCSD_VER_PATCH 0x0 /**< Library Patch Version */
+
+/** Library version number - MMMMnnpp format.
+    MMMM = major version, 
+    nn = minor version, 
+    pp = patch version
+*/
+#define OCSD_VER_NUM (((uint32_t)OCSD_VER_MAJOR << 16) | ((uint32_t)OCSD_VER_MINOR << 8) | ((uint32_t)OCSD_VER_PATCH)) 
+
+#define OCSD_VER_STRING "0.4.0"    /**< Library Version string */
 #define OCSD_LIB_NAME "OpenCSD Library"  /**< Library name string */
 #define OCSD_LIB_SHORT_NAME "OCSD"    /**< Library Short name string */
 /** @}*/

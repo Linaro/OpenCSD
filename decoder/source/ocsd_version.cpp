@@ -37,15 +37,12 @@
 
 const uint32_t ocsdVersion::vers_num()
 {
-    return ((uint32_t)OCSD_VER_MAJOR << 16) | (uint32_t)OCSD_VER_MINOR; 
+    return OCSD_VER_NUM;
 }
 
 const char *ocsdVersion::vers_str()
 {
-     return OCSD_VER_STRING; 
+    return OCSD_VER_STRING; 
 }
-
-
-
 
 /* End of File ocsd_version.cpp */
