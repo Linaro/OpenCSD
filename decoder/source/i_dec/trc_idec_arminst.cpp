@@ -102,14 +102,6 @@ int inst_ARM_is_indirect_branch(uint32_t inst)
     } else if ((inst & 0x0f9000f0) == 0x01800090) {
         /* Some extended loads and stores */
         is_indirect_branch = 0;
-#if 0
-    } else if ((inst & 0x0ff000f0) == 0x01200070) {
-        /* BKPT */
-        is_indirect_branch = 0;
-    } else if ((inst & 0x0fb0f0f0) == 0x0120f000) {
-        /* MSR CPSR/SPSR,rx - appears to write PC, but is special */
-        is_indirect_branch = 0;
-#endif
     } else if ((inst & 0x0fb0f000) == 0x0320f000) {
         /* MSR #imm */
         is_indirect_branch = 0;
@@ -324,26 +316,6 @@ int inst_A64_branch_destination(uint64_t addr, uint32_t inst, uint64_t *pnpc)
     return is_direct_branch;
 }
 
-
-#if 0
-int inst_ARM_is_direct_branch(uint32_t inst)
-{
-    return inst_ARM_branch_destination(0, inst, NULL);
-}
-
-
-int inst_Thumb_is_direct_branch(uint32_t inst)
-{
-    return inst_Thumb_branch_destination(0, inst, NULL);
-}
-
-int inst_A64_is_direct_branch(uint32_t inst)
-{
-    return inst_A64_branch_destination(0, inst, NULL);
-}
-#endif
-
-
 int inst_ARM_is_branch(uint32_t inst)
 {
     return inst_ARM_is_indirect_branch(inst) ||
@@ -477,11 +449,6 @@ int inst_A64_is_conditional(uint32_t inst)
         return 1;
     } else if ((inst & 0xff000010) == 0x54000000) {
         /* B.cond */
-        return 1;
-#if 0
-    } else if ((inst & 0x3fe00000) == 0x1a800000) {
-        /* CSEL */
-#endif
         return 1;
     }
     return 0;

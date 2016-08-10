@@ -393,25 +393,7 @@ bool TraceFmtDcdImpl::checkForSync()
 uint32_t TraceFmtDcdImpl::findfirstFSync()
 {
     uint32_t unsynced = m_in_block_size;  // consider entire block as unsynced at present.
-#if 0
-    if(m_match_fsync.patternSize() == 0)
-    {
-        uint8_t pattern[] = { 0xFF, 0xFF, 0xFF, 0x7F };
-        if(!m_match_fsync.setPattern(pattern,sizeof(pattern)))
-        {
-            ocsdError err(OCSD_ERR_SEV_ERROR, OCSD_ERR_NOT_INIT);
-            err.setMessage("Failed to set pattern in FSYNC matcher.");
-            throw ocsdError(&err);
-        }
-    }
-
-    // find an FSYNC
-    if(m_match_fsync.checkBuffer(m_in_block_base,m_in_block_size))
-    {
-        unsynced = m_match_fsync.pos(); // number of unsynced bytes is the position in the buffer.
-        m_frame_synced = true;
-    }
-#endif
+    //**TBD - handle fsync patterns in TPIU captured code
     return unsynced;
 }
 

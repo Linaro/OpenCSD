@@ -35,17 +35,14 @@
 
 #include "etmv4/trc_pkt_proc_etmv4.h"
 #include "trc_pkt_proc_etmv4i_impl.h"
-#include "trc_pkt_proc_etmv4d_impl.h"
 #include "common/ocsd_error.h"
 
 #ifdef __GNUC__
 // G++ doesn't like the ## pasting
 #define ETMV4I_PKTS_NAME "PKTP_ETMV4I"
-#define ETMV4D_PKTS_NAME "PKTP_ETMV4D"
 #else
 // VC++ is fine
 #define ETMV4I_PKTS_NAME OCSD_CMPNAME_PREFIX_PKTPROC##"_ETMV4I"
-#define ETMV4D_PKTS_NAME OCSD_CMPNAME_PREFIX_PKTPROC##"_ETMV4D"
 #endif
 
 static const uint32_t ETMV4_SUPPORTED_OP_FLAGS = OCSD_OPFLG_PKTPROC_COMMON;
@@ -125,75 +122,5 @@ const bool TrcPktProcEtmV4I::isBadPacket() const
         return m_pProcessor->isBadPacket();
     return false;
 }
-
-/***************************************************************************/
-/*******************ETM V4 DATA ********************************************/
-/***************************************************************************/
-
-#if 0
-TrcPktProcEtmV4D::TrcPktProcEtmV4D() : TrcPktProcBase(ETMV4I_PKTS_NAME), 
-    m_pProcessor(0)
-{
-}
-
-TrcPktProcEtmV4D::TrcPktProcEtmV4D(int instIDNum) : TrcPktProcBase(ETMV4I_PKTS_NAME, instIDNum),
-    m_pProcessor(0)
-{
-}
-
-TrcPktProcEtmV4D::~TrcPktProcEtmV4D()
-{
-    if(m_pProcessor)
-        delete m_pProcessor;
-    m_pProcessor = 0;
-}
-
-ocsd_err_t TrcPktProcEtmV4D::onProtocolConfig()
-{
-    if(m_pProcessor == 0)
-    {
-        m_pProcessor = new (std::nothrow) EtmV4DPktProcImpl();
-        if(m_pProcessor == 0)
-        {           
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_MEM));
-            return OCSD_ERR_MEM;
-        }
-        m_pProcessor->Initialise(this);
-    }
-    return m_pProcessor->Configure(m_config);
-}
-
-ocsd_datapath_resp_t TrcPktProcEtmV4D::processData(  const ocsd_trc_index_t index,
-                                                const uint32_t dataBlockSize,
-                                                const uint8_t *pDataBlock,
-                                                uint32_t *numBytesProcessed)
-{
-    if(m_pProcessor)
-        return m_pProcessor->processData(index,dataBlockSize,pDataBlock,numBytesProcessed);
-    return OCSD_RESP_FATAL_NOT_INIT;
-}
-
-ocsd_datapath_resp_t TrcPktProcEtmV4D::onEOT()
-{
-    if(m_pProcessor)
-        return m_pProcessor->onEOT();
-    return OCSD_RESP_FATAL_NOT_INIT;
-}
-
-ocsd_datapath_resp_t TrcPktProcEtmV4D::onReset()
-{
-    if(m_pProcessor)
-        return m_pProcessor->onReset();
-    return OCSD_RESP_FATAL_NOT_INIT;
-}
-
-ocsd_datapath_resp_t TrcPktProcEtmV4D::onFlush()
-{
-    if(m_pProcessor)
-        return m_pProcessor->onFlush();
-    return OCSD_RESP_FATAL_NOT_INIT;
-}
-
-#endif
 
 /* End of File trc_pkt_proc_etmv4.cpp */

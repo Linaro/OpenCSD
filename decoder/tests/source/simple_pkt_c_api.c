@@ -738,31 +738,9 @@ static ocsd_err_t create_decoder_stm(dcd_tree_handle_t dcd_tree_h)
     {
         /* Full decode */
         /* not supported in library at present */
-        
-#if 0
-        /* create the packet decoder and packet processor pair */
-        ret = ocsd_dt_create_stm_decoder(dcd_tree_h,&trace_config_stm);
-        if(ret == OCSD_OK)
-        {
-            if((op != TEST_PKT_DECODEONLY) && (ret == OCSD_OK))
-            {
-                    ret = ocsd_dt_attach_stm_pkt_mon(dcd_tree_h, (uint8_t)((trace_config_stm.reg_tcsr & STMTCSR_TRC_ID_MASK) >> STMTCSR_TRC_ID_SHIFT), stm_packet_monitor);
-            }
-        }
-
-        /* trace data file path */
-        strcpy(mem_file_path,);
-        strcat(mem_file_path,memory_dump_filename);
-
-        if(ret == OCSD_OK)
-        {
-            /* create a memory file accessor */
-            ret = ocsd_dt_add_binfile_mem_acc(dcd_tree_h,mem_dump_address,OCSD_MEM_SPACE_ANY,mem_file_path);
-        }
-#else
+       
         printf("STM Full decode not supported in library at present. Packet print only\n");
         ret = OCSD_ERR_RDR_NO_DECODER;
-#endif
     }
     return ret;
 }

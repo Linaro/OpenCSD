@@ -42,11 +42,6 @@
 #include "interfaces/trc_indexer_src_i.h"
 #include "common/trc_component.h"
 
-#if 0
-#include "blk_pattern_match.h"
-#endif
-
-
 //! output data fragment from the current frame - collates bytes associated with an ID.
 typedef struct _out_chan_data {
     ocsd_trc_index_t index;      //!< trace source index for start of these bytes
@@ -163,11 +158,6 @@ private:
     bool m_b_output_unpacked_raw;
 
     bool m_raw_chan_enable[128];
-
-#if 0
-    /* pattern match for fsyncs */
-    BlkPatternMatch m_match_fsync;
-#endif
 };
 
 
