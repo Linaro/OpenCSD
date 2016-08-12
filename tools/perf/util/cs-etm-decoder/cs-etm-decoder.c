@@ -253,6 +253,7 @@ static int cs_etm_decoder__create_etmv4i_packet_printer(struct cs_etm_decoder_pa
 {
         ocsd_etmv4_cfg trace_config;
         int ret = 0;
+	unsigned char CSID; /* CSID extracted from the config data */
 
         if (d_params->packet_printer == NULL) 
                 return -1;
@@ -264,11 +265,20 @@ static int cs_etm_decoder__create_etmv4i_packet_printer(struct cs_etm_decoder_pa
 
         decoder->packet_printer = d_params->packet_printer;
 
-        ret = ocsd_dt_create_etmv4i_pkt_proc(decoder->dcd_tree,
-                                              &trace_config,
-                                              cs_etm_decoder__etmv4i_packet_printer,
-                                              decoder);
+	ret = ocsd_dt_create_decoder(decoder->dcd_tree,
+				     OCSD_BUILTIN_DCD_ETMV4I,
+				     OCSD_CREATE_FLG_PACKET_PROC,
+				     (void *)&trace_config,
+				     &CSID);
 
+	if (ret != 0)
+		return -1;
+
+	ret = ocsd_dt_attach_packet_callback(decoder->dcd_tree,
+					  CSID,
+					  OCSD_C_API_CB_PKT_SINK,
+					  cs_etm_decoder__etmv4i_packet_printer,
+					  decoder);
         return ret;
 }
 
@@ -277,6 +287,8 @@ static int cs_etm_decoder__create_etmv4i_packet_decoder(struct cs_etm_decoder_pa
 {
         ocsd_etmv4_cfg trace_config;
         int ret = 0;
+	unsigned char CSID; /* CSID extracted from the config data */
+
         decoder->packet_printer = d_params->packet_printer;
 
         ret = cs_etm_decoder__gen_etmv4_config(t_params,&trace_config);
@@ -284,9 +296,13 @@ static int cs_etm_decoder__create_etmv4i_packet_decoder(struct cs_etm_decoder_pa
         if (ret != 0)
                 return -1;
 
-        ret = ocsd_dt_create_etmv4i_decoder(decoder->dcd_tree,&trace_config);
+	ret = ocsd_dt_create_decoder(decoder->dcd_tree,
+				     OCSD_BUILTIN_DCD_ETMV4I,
+				     OCSD_CREATE_FLG_FULL_DECODER,
+				     (void *)&trace_config,
+				     &CSID);
 
-        if (ret != OCSD_OK) 
+	if (ret != 0)
                 return -1;
 
         ret = ocsd_dt_set_gen_elem_outfn(decoder->dcd_tree,
@@ -312,7 +328,7 @@ int cs_etm_decoder__add_mem_access_cb(struct cs_etm_decoder *decoder, uint64_t a
 int cs_etm_decoder__add_bin_file(struct cs_etm_decoder *decoder, uint64_t offset, uint64_t address, uint64_t len, const char *fname)
 {
         int err = 0;
-        file_mem_region_t region;
+	ocsd_file_mem_region_t region;
 
         (void) len;
         if (NULL == decoder)
