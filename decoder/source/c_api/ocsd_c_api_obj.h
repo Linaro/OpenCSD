@@ -36,7 +36,7 @@ private:
 
 
 
-template<class TrcPkt, class TrcPktStruct>
+template<class TrcPkt>
 class PktCBObj : public IPktDataIn<TrcPkt>
 {
 public:
@@ -52,7 +52,10 @@ public:
                                                const ocsd_trc_index_t index_sop,
                                                const TrcPkt *p_packet_in)
     {
-        return m_c_api_cb_fn(m_p_context,op,index_sop,(TrcPktStruct *)p_packet_in);
+        const void *c_pkt_struct = 0;
+        if(op == OCSD_OP_DATA)
+            c_pkt_struct = p_packet_in->c_pkt(); // always output the c struct packet
+        return m_c_api_cb_fn(m_p_context,op,index_sop,c_pkt_struct);
     };
 
 private:
@@ -61,7 +64,7 @@ private:
 };
 
 
-template<class TrcPkt, class TrcPktStruct>
+template<class TrcPkt>
 class PktMonCBObj : public IPktRawDataMon<TrcPkt>
 {
 public:
@@ -79,7 +82,10 @@ public:
                                                const uint32_t size,
                                                const uint8_t *p_data)
     {
-        m_c_api_cb_fn(m_p_context,op,index_sop,(TrcPktStruct *)p_packet_in,size,p_data);
+        const void *c_pkt_struct = 0;
+        if(op == OCSD_OP_DATA)
+            c_pkt_struct = p_packet_in->c_pkt(); // always output the c struct packet
+        m_c_api_cb_fn(m_p_context,op,index_sop,c_pkt_struct,size,p_data);
     };
 
 private:

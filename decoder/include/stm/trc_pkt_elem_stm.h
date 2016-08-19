@@ -37,6 +37,7 @@
 
 #include "trc_pkt_types_stm.h"
 #include "common/trc_printable_elem.h"
+#include "common/trc_pkt_elem_base.h"
 
 /*!
  * @class StmTrcPacket 
@@ -49,13 +50,15 @@
  *  Based on data structure ocsd_stm_pkt.
  * 
  */
-class StmTrcPacket : public ocsd_stm_pkt, public trcPrintableElem
+class StmTrcPacket :  public TrcPacketBase, public ocsd_stm_pkt, public trcPrintableElem
 {
 public:
     StmTrcPacket();
     ~StmTrcPacket() {};
     
     StmTrcPacket &operator =(const ocsd_stm_pkt *p_pkt);
+
+    virtual const void *c_pkt() const { return (const ocsd_stm_pkt *)this; };
 
     void initStartState();  //!< Initialise packet state at start of decoder. 
     void initNextPacket();  //!< Initialise state for next packet.

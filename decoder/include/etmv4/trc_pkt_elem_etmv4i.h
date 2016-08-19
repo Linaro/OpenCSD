@@ -38,6 +38,7 @@
 
 #include "trc_pkt_types_etmv4.h"
 #include "common/trc_printable_elem.h"
+#include "common/trc_pkt_elem_base.h"
 
 /** @addtogroup trc_pkts
 @{*/
@@ -50,13 +51,15 @@
  *  This class represents a single ETMv4 data trace packet, along with intra packet state.
  * 
  */
-class EtmV4ITrcPacket : public ocsd_etmv4_i_pkt, public trcPrintableElem
+class EtmV4ITrcPacket :  public TrcPacketBase, public ocsd_etmv4_i_pkt, public trcPrintableElem
 {
 public:
     EtmV4ITrcPacket();
     ~EtmV4ITrcPacket();
 
     EtmV4ITrcPacket &operator =(const ocsd_etmv4_i_pkt* p_pkt);
+
+    virtual const void *c_pkt() const { return (const ocsd_etmv4_i_pkt *)this; };
 
     // update interface - set packet values
     void initStartState();   //!< Set to initial state - no intra packet state valid. Use on start of trace / discontinuities.

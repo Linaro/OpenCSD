@@ -1,9 +1,11 @@
 /*
- * \file       trc_pkt_elem_etmv4d.h
- * \brief      OpenCSD : 
+ * \file       trc_pkt_elem_base.h
+ * \brief      Reference CoreSight Trace Decoder : 
  * 
- * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
+ * \copyright  Copyright (c) 2016, ARM Limited. All Rights Reserved.
  */
+#ifndef ARM_TRC_PKT_ELEM_BASE_H_INCLUDED
+#define ARM_TRC_PKT_ELEM_BASE_H_INCLUDED
 
 /* 
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -32,42 +34,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#ifndef ARM_TRC_PKT_ELEM_ETMV4D_H_INCLUDED
-#define ARM_TRC_PKT_ELEM_ETMV4D_H_INCLUDED
-
-#include "trc_pkt_types_etmv4.h"
-#include "common/trc_printable_elem.h"
-#include "common/trc_pkt_elem_base.h"
-
-/** @addtogroup trc_pkts
-@{*/
-/*!
- * @class EtmV4DTrcPacket   
- * @brief ETMv4 Data Trace Protocol Packet .
- * 
- *  This class represents a single ETMv4 instruction trace packet, along with intra packet state.
- * 
- */
-class EtmV4DTrcPacket :  public TrcPacketBase, public ocsd_etmv4_d_pkt, trcPrintableElem
+class TrcPacketBase
 {
 public:
-    EtmV4DTrcPacket();
-    ~EtmV4DTrcPacket();
+    TrcPacketBase() {};
+    virtual ~TrcPacketBase() {}
 
-    // update interface - set packet values
-
-
-
-    // packet status interface - get packet info.
-
-
-    // printing
-    virtual void toString(std::string &str) const;
-    virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
+    //! return the underlying C API packet structure
+    virtual const void *c_pkt() const = 0;
 };
 
-/** @}*/
+#endif // ARM_TRC_PKT_ELEM_BASE_H_INCLUDED
 
-#endif // ARM_TRC_PKT_ELEM_ETMV4D_H_INCLUDED
-
-/* End of File trc_pkt_elem_etmv4d.h */
+/* End of File trc_pkt_elem_base.h */

@@ -38,6 +38,7 @@
 
 #include "trc_pkt_types_etmv3.h"
 #include "common/trc_printable_elem.h"
+#include "common/trc_pkt_elem_base.h"
 
 /** @addtogroup trc_pkts
 @{*/
@@ -49,7 +50,7 @@
  *  This class represents a single ETMv3 trace packet, along with intra packet state.
  * 
  */
-class EtmV3TrcPacket : public trcPrintableElem
+class EtmV3TrcPacket : public TrcPacketBase, public trcPrintableElem
 {
 public:
     EtmV3TrcPacket();
@@ -58,9 +59,13 @@ public:
 // conversions between C-API struct and C++ object types
     // assign from C-API struct
     EtmV3TrcPacket &operator =(const ocsd_etmv3_pkt* p_pkt);
+
     // allow const cast to C-API struct to pass C++ object
     operator const ocsd_etmv3_pkt*() const { return &m_pkt_data; };
     operator const ocsd_etmv3_pkt&() const { return m_pkt_data; };
+
+    // override c_pkt to pass out the packet data struct.
+    virtual const void *c_pkt() const { return &m_pkt_data; };
 
 // update interface - set packet values
     void Clear();       //!< clear update data in packet ready for new one.

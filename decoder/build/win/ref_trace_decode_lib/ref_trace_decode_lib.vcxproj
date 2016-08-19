@@ -322,6 +322,7 @@
     <ClInclude Include="..\..\..\include\common\trc_frame_deformatter.h" />
     <ClInclude Include="..\..\..\include\common\trc_gen_elem.h" />
     <ClInclude Include="..\..\..\include\common\trc_pkt_decode_base.h" />
+    <ClInclude Include="..\..\..\include\common\trc_pkt_elem_base.h" />
     <ClInclude Include="..\..\..\include\common\trc_pkt_proc_base.h" />
     <ClInclude Include="..\..\..\include\common\trc_printable_elem.h" />
     <ClInclude Include="..\..\..\include\etmv3\etmv3_decoder.h" />

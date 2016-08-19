@@ -317,6 +317,9 @@
     <ClInclude Include="..\..\..\include\stm\trc_dcd_mngr_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\common\trc_pkt_elem_base.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">

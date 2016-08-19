@@ -77,10 +77,10 @@ inline void trcPrintableElem::toStringFmt(const uint32_t /*fmtFlags*/, std::stri
 
 /** static template string function - used in "C" API to provide generic printing */
 template<class Pc, class Pt>
-void trcPrintElemToString(const Pt *p_pkt, std::string &str)
+void trcPrintElemToString(const void *p_pkt, std::string &str)
 {
     Pc pktClass;
-    pktClass = p_pkt;
+    pktClass = static_cast<const Pt *>(p_pkt);
     pktClass.toString(str);
 }
 

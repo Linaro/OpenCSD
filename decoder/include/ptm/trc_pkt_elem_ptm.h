@@ -39,18 +39,21 @@
 
 #include "trc_pkt_types_ptm.h"
 #include "common/trc_printable_elem.h"
+#include "common/trc_pkt_elem_base.h"
 
 /** @addtogroup trc_pkts
 @{*/
 
 
-class PtmTrcPacket : public ocsd_ptm_pkt, trcPrintableElem
+class PtmTrcPacket :  public TrcPacketBase, public ocsd_ptm_pkt, trcPrintableElem
 {
 public:
     PtmTrcPacket();
     ~PtmTrcPacket();
 
     PtmTrcPacket &operator =(const ocsd_ptm_pkt* p_pkt);
+
+    virtual const void *c_pkt() const { return (const ocsd_ptm_pkt *)this; };
 
     // update interface - set packet values
 
