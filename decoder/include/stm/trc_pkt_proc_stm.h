@@ -128,6 +128,7 @@ private:
     // 3 nibble opcodes 0xF0n
     void stmPktReservedF0n();
     void stmPktVersion();
+    void stmPktNullTS();
     void stmPktTrigger();
     void stmPktTriggerTS();
     void stmPktFreq();
