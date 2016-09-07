@@ -317,10 +317,10 @@ bool process_cmd_line_opts(int argc, char* argv[])
                 if(options_to_process)
                 {
                     uint8_t Id = (uint8_t)strtoul(argv[optIdx],0,0);
-                    if((Id == 0) || (Id >=70)) 
+                    if((Id == 0) || (Id >= 0x70))
                     {                        
                         std::ostringstream iderrstr;
-                        iderrstr << "Trace Packet Lister : Error: invalid ID number " << Id << " on -id option" << std::endl;
+                        iderrstr << "Trace Packet Lister : Error: invalid ID number 0x" << std::hex << (uint32_t)Id << " on -id option" << std::endl;
                         logger.LogMsg(iderrstr.str());
                         bOptsOK = false;
                     }
