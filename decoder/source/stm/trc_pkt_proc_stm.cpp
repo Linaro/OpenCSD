@@ -316,7 +316,22 @@ void TrcPktProcStm::stmPktReserved()
 void TrcPktProcStm::stmPktNull()
 {
     m_curr_packet.setPacketType(STM_PKT_NULL,false);
-    sendPacket();
+    if(m_bNeedsTS)
+    {
+        m_pCurrPktFn = &TrcPktProcStm::stmExtractTS;
+        (this->*m_pCurrPktFn)();
+    }
+    else
+    {
+        sendPacket();
+    }
+}
+
+void TrcPktProcStm::stmPktNullTS()
+{
+    pktNeedsTS();
+    m_pCurrPktFn = &TrcPktProcStm::stmPktNull;
+    (this->*m_pCurrPktFn)();
 }
 
 void TrcPktProcStm::stmPktM8()
@@ -1013,7 +1028,8 @@ void TrcPktProcStm::buildOpTables()
 
     // set the 3N operations 0xF0n
     m_3N_ops[0x0] = &TrcPktProcStm::stmPktVersion;
-    // 0x1 .. 0x5 not used by CS STM
+    m_3N_ops[0x1] = &TrcPktProcStm::stmPktNullTS;
+    // 0x2 .. 0x5 not used by CS STM
     m_3N_ops[0x6] = &TrcPktProcStm::stmPktTrigger;
     m_3N_ops[0x7] = &TrcPktProcStm::stmPktTriggerTS;
     m_3N_ops[0x8] = &TrcPktProcStm::stmPktFreq;
