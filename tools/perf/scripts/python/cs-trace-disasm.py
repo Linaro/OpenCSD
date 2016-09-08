@@ -67,7 +67,7 @@ def trace_begin():
         else:
                 del build_ids['[kernel.kallsyms]']
 
-        mmap_re = re.compile("PERF_RECORD_MMAP2 -?[0-9]+/[0-9]+: \[(0x[0-9a-fA-F]+).*:\s.*\s(.*.so)")
+        mmap_re = re.compile("PERF_RECORD_MMAP2 -?[0-9]+/[0-9]+: \[(0x[0-9a-fA-F]+).*:\s.*\s(\S*)")
         cmd_output= check_output("perf script --show-mmap-events | fgrep PERF_RECORD_MMAP2",shell=True).split('\n')
         for line in cmd_output:
                 m = mmap_re.search(line)
