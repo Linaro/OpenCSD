@@ -48,9 +48,19 @@ def trace_begin():
         for line in cmd_output:
                 m = bid_re.search(line)
                 if (m != None) :
+			if (m.group(2) == "[kernel.kallsyms]") :
+				append = "/kallsyms"
+				dirname = "/" + m.group(2)
+			elif (m.group(2) == "[vdso]") :
+				append = "/vdso"
+				dirname = "/" + m.group(2)
+			else:
+				append = "/elf"
+				dirname = m.group(2)
+
                         build_ids[m.group(2)] =  \
                         os.environ['PERF_BUILDID_DIR'] +  \
-                        m.group(2) + "/" + m.group(1);
+			dirname + "/" + m.group(1) + append;
 
         if ((options.vmlinux_name != None) and ("[kernel.kallsyms]" in build_ids)):
                 build_ids['[kernel.kallsyms]'] = options.vmlinux_name;
