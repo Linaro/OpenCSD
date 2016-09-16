@@ -79,6 +79,7 @@
 #endif
 
 #include "ocsd_c_api_types.h"
+#include "ocsd_c_api_custom.h"
 
 /** @name Library Version API
 
@@ -378,6 +379,12 @@ OCSD_C_API ocsd_err_t ocsd_pkt_str(const ocsd_trace_protocol_t pkt_protocol, con
 OCSD_C_API ocsd_err_t ocsd_gen_elem_str(const ocsd_generic_trace_elem *p_pkt, char *buffer, const int buffer_size);
 
 /** @}*/
+
+/** register a custom decoder with the library */
+OCSD_C_API ocsd_err_t ocsd_register_custom_decoder(const char *name, ocsd_extern_dcd_fact_t *p_dcd_fact);
+/** clear all registered decoders - library cleanup */
+OCSD_C_API ocsd_err_t ocsd_deregister_decoders();
+
 
 /** @}*/
 

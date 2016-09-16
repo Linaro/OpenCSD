@@ -57,6 +57,8 @@ public:
     static OcsdLibDcdRegister *getDecoderRegister();
 
     static void deregisterAllDecoders();    //!< library cleanup - deregisters decoder managers and destroys the register object.
+    static const ocsd_trace_protocol_t getNextCustomProtocolID();
+    static void releaseLastCustomProtocolID();
 
     const ocsd_err_t registerDecoderTypeByName(const std::string &name, IDecoderMngr *p_decoder_fact);  //!< register a decoder manager interface   
     const ocsd_err_t getDecoderMngrByName(const std::string &name, IDecoderMngr **p_decoder_mngr);
@@ -70,6 +72,7 @@ public:
 
 private:
     void registerBuiltInDecoders();         //!< register the list of build in decoder managers on first access of getDecoderMngrByName.
+    void deRegisterCustomDecoders();        //!< delete all custom decoders registered with the library.
 
     std::map<const std::string, IDecoderMngr *> m_decoder_mngrs;                    //!< map linking names to decoder manager interfaces.
     std::map<const std::string, IDecoderMngr *>::const_iterator m_iter;             //!< iterator for name search.
@@ -84,6 +87,7 @@ private:
 
     static OcsdLibDcdRegister *m_p_libMngr;
     static bool m_b_registeredBuiltins;
+    static ocsd_trace_protocol_t m_nextCustomProtocolID;  
 };
 
 /*!

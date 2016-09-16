@@ -296,9 +296,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_custom.h" />
     <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_deprc_fn.h" />
     <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_types.h" />
     <ClInclude Include="..\..\..\include\c_api\opencsd_c_api.h" />
+    <ClInclude Include="..\..\..\source\c_api\ocsd_c_api_custom_obj.h" />
     <ClInclude Include="..\..\..\source\c_api\ocsd_c_api_obj.h" />
   </ItemGroup>
   <ItemGroup>
@@ -308,6 +310,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\c_api\ocsd_c_api.cpp" />
+    <ClCompile Include="..\..\..\source\c_api\ocsd_c_api_custom_obj.cpp" />
     <ClCompile Include="..\..\..\source\c_api\ocsd_c_api_deprc_fn.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

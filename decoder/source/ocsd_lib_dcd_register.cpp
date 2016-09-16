@@ -54,12 +54,27 @@ static built_in_decoder_info_t sBuiltInArray[] = {
 
 OcsdLibDcdRegister *OcsdLibDcdRegister::m_p_libMngr = 0;
 bool OcsdLibDcdRegister::m_b_registeredBuiltins = false;
+ocsd_trace_protocol_t OcsdLibDcdRegister::m_nextCustomProtocolID = OCSD_PROTOCOL_CUSTOM_0;  
 
 OcsdLibDcdRegister *OcsdLibDcdRegister::getDecoderRegister()
 {
     if(m_p_libMngr == 0)
         m_p_libMngr = new (std::nothrow) OcsdLibDcdRegister();
     return m_p_libMngr;
+}
+
+const ocsd_trace_protocol_t OcsdLibDcdRegister::getNextCustomProtocolID()
+{
+    ocsd_trace_protocol_t ret = m_nextCustomProtocolID;
+    if(m_nextCustomProtocolID < OCSD_PROTOCOL_END)
+        m_nextCustomProtocolID = (ocsd_trace_protocol_t)(((int)m_nextCustomProtocolID)+1);
+    return ret;
+}
+
+void OcsdLibDcdRegister::releaseLastCustomProtocolID()
+{
+    if(m_nextCustomProtocolID > OCSD_PROTOCOL_CUSTOM_0)
+        m_nextCustomProtocolID = (ocsd_trace_protocol_t)(((int)m_nextCustomProtocolID)-1);
 }
 
 OcsdLibDcdRegister::OcsdLibDcdRegister()
@@ -100,11 +115,31 @@ void OcsdLibDcdRegister::registerBuiltInDecoders()
 
 void OcsdLibDcdRegister::deregisterAllDecoders()
 {
-    for(unsigned i = 0; i < NUM_BUILTINS; i++)
-        delete sBuiltInArray[i].pMngr;
-    m_b_registeredBuiltins = false;
-    delete m_p_libMngr;
-    m_p_libMngr = 0;
+    if(m_b_registeredBuiltins)
+    {
+        for(unsigned i = 0; i < NUM_BUILTINS; i++)
+            delete sBuiltInArray[i].pMngr;
+        m_b_registeredBuiltins = false;
+    }
+
+    if(m_p_libMngr)
+    {
+        m_p_libMngr->deRegisterCustomDecoders();
+        delete m_p_libMngr;
+        m_p_libMngr = 0;
+    }
+}
+
+void OcsdLibDcdRegister::deRegisterCustomDecoders()
+{
+    std::map<const ocsd_trace_protocol_t, IDecoderMngr *>::const_iterator iter = m_typed_decoder_mngrs.begin();
+    while(iter != m_typed_decoder_mngrs.end())
+    {
+        IDecoderMngr *pMngr = iter->second;
+        if(pMngr->getProtocolType() >= OCSD_PROTOCOL_CUSTOM_0)
+            delete pMngr;
+        iter++;
+    }
 }
 
 const ocsd_err_t OcsdLibDcdRegister::getDecoderMngrByName(const std::string &name, IDecoderMngr **p_decoder_mngr)

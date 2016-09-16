@@ -27,12 +27,21 @@
     <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_deprc_fn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_custom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\c_api\ocsd_c_api_custom_obj.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\c_api\ocsd_c_api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\c_api\ocsd_c_api_deprc_fn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\c_api\ocsd_c_api_custom_obj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
