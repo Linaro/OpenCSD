@@ -119,16 +119,16 @@ void OcsdTraceElement::toString(std::string &str) const
             {
                 oss << "pref ret addr:0x" << std::hex << en_addr << "; ";
             }
-            oss << "excep num (0x" << std::setfill('0') << std::setw(2) << std::hex << exception_number;
+            oss << "excep num (0x" << std::setfill('0') << std::setw(2) << std::hex << exception_number << ") ";
             break;
 
         case OCSD_GEN_TRC_ELEM_PE_CONTEXT:
             oss << "(ISA=" << s_isa_str[(int)isa] << ") ";
-            if(context.exception_level >= 0)
+            if((context.exception_level > ocsd_EL_unknown) && (context.el_valid))
             {
                 oss << "EL" << std::dec << (int)(context.exception_level);
             }
-            oss << (context.security_level == ocsd_sec_secure ? " S; " : "N; ") << (context.bits64 ? "64-bit; " : "32-bit; ");
+            oss << (context.security_level == ocsd_sec_secure ? "S; " : "N; ") << (context.bits64 ? "64-bit; " : "32-bit; ");
             if(context.vmid_valid)
                 oss << "VMID=0x" << std::hex << context.vmid << "; ";
             if(context.ctxt_id_valid)

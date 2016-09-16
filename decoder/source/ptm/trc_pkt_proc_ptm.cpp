@@ -547,7 +547,7 @@ void TrcPktProcPtm::pktWPointUpdate()
     if(m_currPacketData.size() == 1)
     {        
         m_gotAddrBytes = false;    // flag to indicate got all needed address bytes
-        m_numAddrBytes = 1;        // number of address bytes so far
+        m_numAddrBytes = 0;        // number of address bytes so far - in this case header is not part of the address
                
         m_gotExcepBytes = false;    // mark as not got all required exception bytes thus far
         m_numExcepBytes = 0;        // 0 read in

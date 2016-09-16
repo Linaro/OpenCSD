@@ -182,6 +182,8 @@ inline void OcsdTraceElement::setTraceOnReason(const trace_on_reason_t reason)
 inline void OcsdTraceElement::setISA(const ocsd_isa isa_update)
 {
     isa = isa_update;
+    if(isa > ocsd_isa_unknown)
+        isa = ocsd_isa_unknown;
 }
 
 /** @}*/

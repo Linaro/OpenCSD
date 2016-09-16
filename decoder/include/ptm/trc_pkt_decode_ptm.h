@@ -116,6 +116,13 @@ protected:
     /* local decode methods */
 
 private:
+    /** operation for the trace instruction follower */
+    typedef enum {
+        TRACE_WAYPOINT,     //!< standard operation - trace to waypoint - default op 
+        TRACE_TO_ADDR_EXCL, //!< trace to supplied address - address is 1st instuction not executed.
+        TRACE_TO_ADDR_INCL  //!< trace to supplied address - address is last instruction executed.
+    } waypoint_trace_t;
+
     void initDecoder();
     void resetDecoder();
 
@@ -125,8 +132,8 @@ private:
     ocsd_datapath_resp_t processBranch();
     ocsd_datapath_resp_t processWPUpdate();
     ocsd_datapath_resp_t processAtom();
-    ocsd_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
-    ocsd_datapath_resp_t processAtomRange(const ocsd_atm_val A, const char *pkt_msg,  const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);
+    ocsd_err_t traceInstrToWP(bool &bWPFound, const waypoint_trace_t traceWPOp = TRACE_WAYPOINT, const ocsd_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
+    ocsd_datapath_resp_t processAtomRange(const ocsd_atm_val A, const char *pkt_msg, const waypoint_trace_t traceWPOp = TRACE_WAYPOINT, const ocsd_vaddr_t nextAddrMatch = 0);
     void checkPendingNacc(ocsd_datapath_resp_t &resp);
 
     uint8_t m_CSID; //!< Coresight trace ID for this decoder.

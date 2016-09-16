@@ -81,6 +81,8 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processPacket()
         case WAIT_ISYNC:
             if(m_curr_packet_in->getType() == PTM_PKT_I_SYNC)
                 m_curr_state = DECODE_PKTS;
+            else 
+                bPktDone = true;
             break;
 
         case DECODE_PKTS:
@@ -193,7 +195,7 @@ void TrcPktDecodePtm::resetDecoder()
     m_pe_context.ctxt_id_valid = 0;
     m_pe_context.bits64 = 0;
     m_pe_context.vmid_valid = 0;
-    m_pe_context.exception_level = ocsd_EL3;
+    m_pe_context.exception_level = ocsd_EL_unknown;
     m_pe_context.security_level = ocsd_sec_secure;
     m_pe_context.el_valid = 0;
     
@@ -202,6 +204,7 @@ void TrcPktDecodePtm::resetDecoder()
     m_curr_pe_state.valid = false;
 
     m_atoms.clearAll();
+    m_output_elem.init();
 }
 
 ocsd_datapath_resp_t TrcPktDecodePtm::decodePacket()
@@ -358,6 +361,7 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processIsync()
     {
         m_output_elem.setType(OCSD_GEN_TRC_ELEM_PE_CONTEXT);
         m_output_elem.setContext(m_pe_context);
+        m_output_elem.setISA(m_curr_pe_state.isa);
         resp = outputTraceElement(m_output_elem); 
         m_i_sync_pe_ctxt = false;
     }
@@ -378,11 +382,7 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processBranch()
     // initial pass - decoding packet.
     if(m_curr_state == DECODE_PKTS)
     {
-        // could be an associated cycle count
-        if(m_curr_packet_in->hasCC())
-            m_output_elem.setCycleCount(m_curr_packet_in->getCCVal());
-
-        // behaviour predicated on if this is an exception packet.
+        // specific behviour if this is an exception packet.
         if(m_curr_packet_in->isBranchExcepPacket())
         {
             // exception - record address and output exception packet.
@@ -394,12 +394,16 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processBranch()
                 m_output_elem.excep_ret_addr = 1;
                 m_output_elem.en_addr = m_curr_pe_state.instr_addr;
             }
+            // could be an associated cycle count
+            if(m_curr_packet_in->hasCC())
+                m_output_elem.setCycleCount(m_curr_packet_in->getCCVal());
 
+            // output the element
             resp = outputTraceElement(m_output_elem);
         }
         else
         {
-            // branch address only - implies E atom - need to output a range.
+            // branch address only - implies E atom - need to output a range element based on the atom.
             if(m_curr_pe_state.valid)
                 resp = processAtomRange(ATOM_E,"BranchAddr");
         }
@@ -430,8 +434,9 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
     // we do not have a start point - still waiting for branch or other address packet
     if(m_curr_pe_state.valid)
     {
-        // WP update implies atom - use E, we cannot be sure if the instruction passed its condition codes - though it doesn't really matter.
-        resp = processAtomRange(ATOM_E,"WP update",true,m_curr_packet_in->getAddrVal());
+        // WP update implies atom - use E, we cannot be sure if the instruction passed its condition codes 
+        // - though it doesn't really matter as it is not a branch so cannot change flow.
+        resp = processAtomRange(ATOM_E,"WP update",TRACE_TO_ADDR_INCL,m_curr_packet_in->getAddrVal());
     }
 
     // atom range may return with NACC pending 
@@ -484,7 +489,7 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processAtom()
  }
 
 // given an atom element - walk the code and output a range or mark nacc.
-ocsd_datapath_resp_t TrcPktDecodePtm::processAtomRange(const ocsd_atm_val A, const char *pkt_msg,  const bool traceToAddrNext /*= false*/, const ocsd_vaddr_t nextAddrMatch /*= 0*/)
+ocsd_datapath_resp_t TrcPktDecodePtm::processAtomRange(const ocsd_atm_val A, const char *pkt_msg, const waypoint_trace_t traceWPOp /*= TRACE_WAYPOINT*/, const ocsd_vaddr_t nextAddrMatch /*= 0*/)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     bool bWPFound = false;
@@ -493,7 +498,7 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processAtomRange(const ocsd_atm_val A, con
     m_instr_info.instr_addr = m_curr_pe_state.instr_addr;
     m_instr_info.isa = m_curr_pe_state.isa;
 
-    ocsd_err_t err = traceInstrToWP(bWPFound,traceToAddrNext,nextAddrMatch);
+    ocsd_err_t err = traceInstrToWP(bWPFound,traceWPOp,nextAddrMatch);
     if(err != OCSD_OK)
     {
         if(err == OCSD_ERR_UNSUPPORTED_ISA)
@@ -557,11 +562,12 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processAtomRange(const ocsd_atm_val A, con
     return resp;
 }
 
-ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const bool traceToAddrNext /*= false*/, const ocsd_vaddr_t nextAddrMatch /*= 0*/)
+ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const waypoint_trace_t traceWPOp /*= TRACE_WAYPOINT*/, const ocsd_vaddr_t nextAddrMatch /*= 0*/)
 {
     uint32_t opcode;
     uint32_t bytesReq;
     ocsd_err_t err = OCSD_OK;
+    ocsd_vaddr_t curr_op_address;
 
     ocsd_mem_space_acc_t mem_space = (m_pe_context.security_level == ocsd_sec_secure) ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
 
@@ -573,6 +579,7 @@ ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const bool traceToAdd
     {
         // start off by reading next opcode;
         bytesReq = 4;
+        curr_op_address = m_instr_info.instr_addr;  // save the start address for the current opcode
         err = accessMemory(m_instr_info.instr_addr,mem_space,&bytesReq,(uint8_t *)&opcode);
         if(err != OCSD_OK) break;
 
@@ -589,9 +596,14 @@ ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const bool traceToAdd
             m_output_elem.en_addr = m_instr_info.instr_addr;
 
             m_output_elem.last_i_type = m_instr_info.type;
-            // either walking to match the next instruction address or a real watchpoint
-            if(traceToAddrNext)
-                bWPFound = (m_output_elem.en_addr == nextAddrMatch);
+            // either walking to match the next instruction address or a real waypoint
+            if(traceWPOp != TRACE_WAYPOINT)
+            {
+                if(traceWPOp == TRACE_TO_ADDR_EXCL)
+                    bWPFound = (m_output_elem.en_addr == nextAddrMatch);
+                else
+                    bWPFound = (curr_op_address == nextAddrMatch);
+            }
             else
                 bWPFound = (m_instr_info.type != OCSD_INSTR_OTHER);
         }
