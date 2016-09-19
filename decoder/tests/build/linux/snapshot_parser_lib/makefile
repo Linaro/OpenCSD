@@ -36,7 +36,10 @@ CPP := $(MASTER_CPP)
 LINKER := $(MASTER_LINKER)
 LIB := $(MASTER_LIB)
 
-CPP_FLAGS := $(MASTER_CPP_FLAGS) -fpic -Wno-switch
+# avoid build warnings in donated test code
+WSUPPRESS= -Wno-deprecated-declarations -Wno-unused-variable -Wno-reorder
+
+CPP_FLAGS := $(MASTER_CPP_FLAGS) -fpic -Wno-switch $(WSUPPRESS)
 LIB_FLAGS := $(MASTER_LIB_FLAGS)
 
 LIB_NAME = libsnapshot_parser

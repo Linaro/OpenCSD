@@ -327,7 +327,7 @@ ocsd_datapath_resp_t packet_handler(void *context, const ocsd_datapath_op_t op, 
     switch(op)
     {
     case OCSD_OP_DATA:
-        sprintf(packet_str,"Idx:%ld; ", index_sop);
+        sprintf(packet_str,"Idx:%"  OCSD_TRC_IDX_STR "; ", index_sop);
         offset = strlen(packet_str);
    
         /* 
@@ -408,7 +408,7 @@ void packet_monitor(const ocsd_datapath_op_t op,
     {
     default: break;
     case OCSD_OP_DATA:
-        sprintf(packet_str,"Idx:%ld;", index_sop);
+        sprintf(packet_str,"Idx:%"  OCSD_TRC_IDX_STR ";", index_sop);
         offset = strlen(packet_str);
         offset+= print_data_array(p_data,size,packet_str+offset,PACKET_STR_LEN-offset);
 
@@ -442,7 +442,7 @@ ocsd_datapath_resp_t gen_trace_elem_print(const void *p_context, const ocsd_trc_
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     int offset = 0;
 
-    sprintf(packet_str,"Idx:%ld; TrcID:0x%02X; ", index_sop, trc_chan_id);
+    sprintf(packet_str,"Idx:%"  OCSD_TRC_IDX_STR "; TrcID:0x%02X; ", index_sop, trc_chan_id);
     offset = strlen(packet_str);
 
     if(ocsd_gen_elem_str(elem, packet_str+offset,PACKET_STR_LEN - offset) == OCSD_OK)
@@ -520,7 +520,6 @@ static ocsd_err_t create_generic_decoder(dcd_tree_handle_t handle, const char *p
 /*** ETMV4 specific settings ***/
 static ocsd_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
 {
-    ocsd_err_t ret = OCSD_OK;
     ocsd_etmv4_cfg trace_config;
 
     /* 
@@ -556,7 +555,6 @@ static ocsd_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
 /*** ETMV3 specific settings ***/
 static ocsd_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
 {
-    ocsd_err_t ret = OCSD_OK;
     ocsd_etmv3_cfg trace_config_etmv3;
 
     /* 
@@ -582,7 +580,6 @@ static ocsd_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
 /*** PTM specific settings ***/
 static ocsd_err_t create_decoder_ptm(dcd_tree_handle_t dcd_tree_h)
 {
-    ocsd_err_t ret = OCSD_OK;
     ocsd_ptm_cfg trace_config_ptm;
 
     /* 

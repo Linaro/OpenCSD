@@ -97,7 +97,6 @@ void TrcMemAccFactory::DestroyAccessor(TrcMemAccessorBase *pAccessor)
 void TrcMemAccessorBase::getMemAccString(std::string &accStr) const
 {
     std::ostringstream oss;
-    int printNibbles = OCSD_MAX_VA_BITSIZE / 4;
 
     switch(m_type)
     {

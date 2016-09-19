@@ -86,7 +86,7 @@ const ocsd_err_t OcsdLibDcdRegister::registerDecoderTypeByName(const std::string
 void OcsdLibDcdRegister::registerBuiltInDecoders()
 {    
     bool memFail = false;
-    for(int i = 0; i < NUM_BUILTINS; i++)
+    for(unsigned i = 0; i < NUM_BUILTINS; i++)
     {
         if(sBuiltInArray[i].PFn)
         {
@@ -100,7 +100,7 @@ void OcsdLibDcdRegister::registerBuiltInDecoders()
 
 void OcsdLibDcdRegister::deregisterAllDecoders()
 {
-    for(int i = 0; i < NUM_BUILTINS; i++)
+    for(unsigned i = 0; i < NUM_BUILTINS; i++)
         delete sBuiltInArray[i].pMngr;
     m_b_registeredBuiltins = false;
     delete m_p_libMngr;

@@ -52,7 +52,6 @@ ocsd_err_t RawFramePrinter::TraceRawFrameIn(  const ocsd_datapath_op_t op,
         std::string strData;
         std::ostringstream oss;
         int printDataSize = dataBlockSize;
-        int printOffset = 0;
 
         oss << "Frame Data; Index" << std::setw(7) << index << "; ";
         switch(frame_element) 

@@ -455,7 +455,6 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processWPUpdate()
 ocsd_datapath_resp_t TrcPktDecodePtm::processAtom()
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
-    bool bWPFound = false;
 
     // loop to process all the atoms in the packet
     while(m_atoms.numAtoms() && m_curr_pe_state.valid && OCSD_DATA_RESP_IS_CONT(resp))

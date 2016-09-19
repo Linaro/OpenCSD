@@ -79,7 +79,7 @@ private:
     // singleton pattern - need just one of these in the library - ensure all default constructors are private.
     OcsdLibDcdRegister();
     OcsdLibDcdRegister(OcsdLibDcdRegister const &) {};
-    OcsdLibDcdRegister& operator=(OcsdLibDcdRegister const &){ };
+    OcsdLibDcdRegister& operator=(OcsdLibDcdRegister const &){ return *this; };
     ~OcsdLibDcdRegister();
 
     static OcsdLibDcdRegister *m_p_libMngr;

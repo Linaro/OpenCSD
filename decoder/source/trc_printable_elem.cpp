@@ -35,6 +35,15 @@
 #include "common/trc_printable_elem.h"
 #include <cassert>
 #include <cstring>
+#ifdef _MSC_VER
+/** VS2010 does not support inttypes - temp fix till we update the compiler support */
+#define __PRI64_PREFIX "ll"
+#define PRIX64 __PRI64_PREFIX "X"
+#define PRIu64 __PRI64_PREFIX "u"
+#define PRIu32 "u"
+#else
+#include <cinttypes>
+#endif
 
 void trcPrintableElem::getValStr(std::string &valStr, const int valTotalBitSize, const int valValidBits, const uint64_t value, const bool asHex /* = true*/, const int updateBits /* = 0*/)
 {
@@ -81,7 +90,7 @@ void trcPrintableElem::getValStr(std::string &valStr, const int valTotalBitSize,
         {
             uint64_t updateMask = ~0ULL;
             updateMask >>= 64-updateBits;
-            sprintf(szStrBuffer," ~[0x%llX]",value & updateMask);
+            sprintf(szStrBuffer," ~[0x%" PRIX64 "]",value & updateMask);
             valStr+=szStrBuffer;
         }
     }
@@ -92,11 +101,11 @@ void trcPrintableElem::getValStr(std::string &valStr, const int valTotalBitSize,
             valStr += "??";
         if(valValidBits > 32)
         {
-            sprintf(szStrBuffer,"%llu",value);
+            sprintf(szStrBuffer,"%" PRIu64 ,value);
         }
         else
         {
-            sprintf(szStrBuffer,"%lu",(uint32_t)value);
+            sprintf(szStrBuffer,"%" PRIu32 ,(uint32_t)value);
         }
         valStr +=  szStrBuffer;
         if(valValidBits < valTotalBitSize)

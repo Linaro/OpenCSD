@@ -496,7 +496,7 @@ void TrcPktProcPtm::pktISync()
             }
 
             // check if we have enough bytes
-            bGotBytes = (bool)(m_numPktBytesReq == m_currPacketData.size());
+            bGotBytes = (bool)((unsigned)m_numPktBytesReq == m_currPacketData.size());
         }
         else 
             validByte = false;  // no byte available, exit.
@@ -747,7 +747,7 @@ void TrcPktProcPtm::pktTimeStamp()
         {
             if(!m_gotTSBytes)
             {
-                if(((currByte & 0x80) == 0) || (m_currPacketData.size() == m_tsByteMax))
+                if(((currByte & 0x80) == 0) || (m_currPacketData.size() == (unsigned)m_tsByteMax))
                 {
                     m_gotTSBytes = true;
                     if(!m_needCycleCount)

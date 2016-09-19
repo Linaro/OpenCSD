@@ -95,7 +95,6 @@ DecoderMngrBase<P,Pt,Pc>::DecoderMngrBase(const std::string &decoderTypeName, oc
 template <class P, class Pt, class Pc>
 ocsd_err_t  DecoderMngrBase<P,Pt,Pc>::createDecoder(const int create_flags, const int instID, const CSConfig *pConfig,  TraceComponent **ppTrcComp)
 {
-    ocsd_err_t err = OCSD_OK;
     TraceComponent *pkt_proc = 0;
     TraceComponent *pkt_dcd = 0;
     bool bUseInstID =  (create_flags & OCSD_CREATE_FLG_INST_ID) != 0;

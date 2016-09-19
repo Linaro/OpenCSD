@@ -745,7 +745,6 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
     if(m_flush_EOT)
     {
         TrcStackElem *pElem = 0;
-        bool bClearStack = false;
         while(OCSD_DATA_RESP_IS_CONT(resp) && (m_P0_stack.size() > 0))
         {
             // scan for outstanding events, TS and CC, before any outstanding

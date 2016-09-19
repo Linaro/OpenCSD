@@ -37,6 +37,15 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#ifdef _MSC_VER
+/** VS2010 does not support inttypes - temp fix till we update the compiler support */
+#define __PRI64_PREFIX "ll"
+#define PRIX64 __PRI64_PREFIX "X"
+#define PRIu64 __PRI64_PREFIX "u"
+#define PRIu32 "u"
+#else
+#include <inttypes.h>
+#endif
 
 /** @defgroup ocsd_interfaces OpenCSD Library : Interfaces
     @brief Set of types, structures and virtual interface classes making up the primary API
@@ -68,8 +77,10 @@
 @{*/
 #ifdef ENABLE_LARGE_TRACE_SOURCES
 typedef uint64_t ocsd_trc_index_t;   /**< Trace source index type - 64 bit size */
+#define OCSD_TRC_IDX_STR PRIu64
 #else
 typedef uint32_t ocsd_trc_index_t;   /**< Trace source index type - 32 bit size */
+#define OCSD_TRC_IDX_STR PRIu32
 #endif
 
 /** Invalid trace index value */

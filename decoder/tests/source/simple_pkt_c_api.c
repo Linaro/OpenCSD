@@ -191,7 +191,7 @@ ocsd_datapath_resp_t packet_handler(const ocsd_datapath_op_t op, const ocsd_trc_
     {
     default: break;
     case OCSD_OP_DATA:
-        sprintf(packet_str,"Idx:%ld; ", index_sop);
+        sprintf(packet_str,"Idx:%" OCSD_TRC_IDX_STR "; ", index_sop);
         offset = strlen(packet_str);
    
         /* got a packet - convert to string and use the libraries' message output to print to file and stdoout */
@@ -308,7 +308,7 @@ void packet_monitor(const ocsd_datapath_op_t op,
     {
     default: break;
     case OCSD_OP_DATA:
-        sprintf(packet_str,"Idx:%ld;", index_sop);
+        sprintf(packet_str,"Idx:%"  OCSD_TRC_IDX_STR  ";", index_sop);
         offset = strlen(packet_str);
         offset+= print_data_array(p_data,size,packet_str+offset,PACKET_STR_LEN-offset);
 
@@ -338,7 +338,7 @@ ocsd_datapath_resp_t gen_trace_elem_print(const void *p_context, const ocsd_trc_
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     int offset = 0;
 
-    sprintf(packet_str,"Idx:%ld; TrcID:0x%02X; ", index_sop, trc_chan_id);
+    sprintf(packet_str,"Idx:%"  OCSD_TRC_IDX_STR "; TrcID:0x%02X; ", index_sop, trc_chan_id);
     offset = strlen(packet_str);
 
     if(ocsd_gen_elem_str(elem, packet_str+offset,PACKET_STR_LEN - offset) == OCSD_OK)
