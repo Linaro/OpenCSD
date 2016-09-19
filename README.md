@@ -26,7 +26,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.4_
+_Current Version 0.4.1_
 
 ### Current support:
 
@@ -98,6 +98,7 @@ Version and Modification Information
 - _Version 0.002_:  Library development - added in PTM decoder support. Restructure header dir, replaced ARM rctdl prefix with opencsd/ocsd.
 - _Version 0.003_:  Library development - added in ETMv3 instruction decoder support.
 - _Version 0.4_  :  Library development - updated decode tree and C-API for generic decoder handling. Switch to semantic versioning.
+- _Version 0.4.1_:  Minor Update & Bugfixes - fix to PTM decoder, ID checking on test program, adds NULL_TS support in STM packet processor.
 
 Licence Information
 ===================
