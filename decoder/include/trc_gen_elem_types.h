@@ -58,7 +58,9 @@ typedef enum _ocsd_gen_trc_elem_t
     OCSD_GEN_TRC_ELEM_EXCEPTION_RET,   /*!< expection return */
     OCSD_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
     OCSD_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count - cycles since last cycle count value - associated with a preceding instruction range. */
-    OCSD_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */    
+    OCSD_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */   
+    OCSD_GEN_TRC_ELEM_SWTRACE,         /*!< Software trace packet - may contain data payload. */
+    OCSD_GEN_TRC_ELEM_CUSTOM,          /*!< Fully custom packet type - used by none-ARM architecture decoders */
 } ocsd_gen_trc_elem_t;
 
 
@@ -73,15 +75,14 @@ typedef struct _trace_event_t {
     uint16_t ev_number;        /**< event number if numbered event type */
 } trace_event_t;
 
-
 typedef struct _ocsd_generic_trace_elem {
     ocsd_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
     ocsd_isa           isa;          /**< instruction set for executed instructions */
     ocsd_vaddr_t       st_addr;      /**< start address for instruction execution range / inaccessible code address / data address */
     ocsd_vaddr_t       en_addr;        /**< end address (exclusive) for instruction execution range. */
     ocsd_pe_context    context;        /**< PE Context */
-    uint64_t            timestamp;      /**< timestamp value for TS element type */
-    uint32_t            cycle_count;    /**< cycle count for explicit cycle count element, or count for element with associated cycle count */
+    uint64_t           timestamp;      /**< timestamp value for TS element type */
+    uint32_t           cycle_count;    /**< cycle count for explicit cycle count element, or count for element with associated cycle count */
     ocsd_instr_type    last_i_type;    /**< Last instruction type if instruction execution range */
     ocsd_instr_subtype last_i_subtype; /**< sub type for last instruction in range */
  
@@ -92,15 +93,19 @@ typedef struct _ocsd_generic_trace_elem {
         uint32_t cpu_freq_change:1;     /**< 1 if this packet indicates a change in CPU frequency */
         uint32_t excep_ret_addr:1;      /**< 1 if en_addr is the preferred exception return address on exception packet type */
         uint32_t excep_data_marker:1;   /**< 1 if the exception entry packet is a data push marker only, with no address information (used typically in v7M trace for marking data pushed onto stack) */
+        uint32_t extended_data:1;       /**< 1 if the packet extended data pointer is valid. Allows packet extensions for custom decoders, or additional data payloads for data trace.  */
+        uint32_t has_ts:1;              /**< 1 if the packet has an associated timestamp - e.g. SW/STM trace TS+Payload as a single packet */
     };
 
     //! packet specific payloads
     union {  
-        uint32_t exception_number; /**< exception number for exception type packets */
-        trace_event_t  trace_event;  /**< Trace event - trigger etc */
+        uint32_t exception_number;          /**< exception number for exception type packets */
+        trace_event_t  trace_event;         /**< Trace event - trigger etc      */
         trace_on_reason_t trace_on_reason;  /**< reason for the trace on packet */
+        ocsd_swt_info_t sw_trace_info;       /**< software trace packet info    */
     };
 
+    void *ptr_extended_data;        /**< pointer to extended data buffer (data trace, sw trace payload) / custom structure */
 
 } ocsd_generic_trace_elem;
 

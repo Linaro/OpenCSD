@@ -323,6 +323,9 @@
     <ClInclude Include="..\..\..\include\common\trc_pkt_elem_base.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\stm\trc_pkt_decode_stm.h">
+      <Filter>Header Files\stm</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -435,6 +438,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\ocsd_lib_dcd_register.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\stm\trc_pkt_decode_stm.cpp">
+      <Filter>Source Files\stm</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

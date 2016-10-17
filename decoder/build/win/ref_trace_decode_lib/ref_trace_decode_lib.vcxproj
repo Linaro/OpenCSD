@@ -373,6 +373,7 @@
     <ClInclude Include="..\..\..\include\stm\stm_decoder.h" />
     <ClInclude Include="..\..\..\include\stm\trc_cmp_cfg_stm.h" />
     <ClInclude Include="..\..\..\include\stm\trc_dcd_mngr_stm.h" />
+    <ClInclude Include="..\..\..\include\stm\trc_pkt_decode_stm.h" />
     <ClInclude Include="..\..\..\include\stm\trc_pkt_elem_stm.h" />
     <ClInclude Include="..\..\..\include\stm\trc_pkt_proc_stm.h" />
     <ClInclude Include="..\..\..\include\stm\trc_pkt_types_stm.h" />
@@ -415,6 +416,7 @@
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_decode_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_elem_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_proc_ptm.cpp" />
+    <ClCompile Include="..\..\..\source\stm\trc_pkt_decode_stm.cpp" />
     <ClCompile Include="..\..\..\source\stm\trc_pkt_elem_stm.cpp" />
     <ClCompile Include="..\..\..\source\stm\trc_pkt_proc_stm.cpp" />
     <ClCompile Include="..\..\..\source\trc_component.cpp" />

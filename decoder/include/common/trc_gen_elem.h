@@ -77,7 +77,9 @@ public:
     void setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype);
     void setAddrStart(const ocsd_vaddr_t  st_addr) { this->st_addr = st_addr; };
 
-
+    void setSWTMaster(const uint16_t master_id) { sw_trace_info.swt_master_id = master_id; };
+    void setSWTChannel(const uint16_t chan_id) { sw_trace_info.swt_channel_id = chan_id; };
+    void setSWTErrPkt(const bool m_err = false);
 
 // stringize the element
 

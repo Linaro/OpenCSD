@@ -285,7 +285,8 @@ typedef enum _ocsd_dcd_tree_src_t {
 typedef enum _ocsd_arch_version {
     ARCH_UNKNOWN,   /**< unknown architecture */
     ARCH_V7,        /**< V7 architecture */
-    ARCH_V8         /**< V8 architecture */
+    ARCH_V8,        /**< V8 architecture */
+    ARCH_CUSTOM,    /**< None ARM, custom architecture */
 } ocsd_arch_version_t;
 
 /** Core Profile  */
@@ -293,7 +294,8 @@ typedef enum _ocsd_core_profile {
     profile_Unknown,    /**< Unknown profile */
     profile_CortexM,    /**< Cortex-M profile */
     profile_CortexR,    /**< Cortex-R profile */
-    profile_CortexA     /**< Cortex-A profile */
+    profile_CortexA,    /**< Cortex-A profile */
+    profile_Custom,     /**< None ARM, custom arch profile */
 } ocsd_core_profile_t;
 
 /** Combined architecture and profile descriptor for a core */
@@ -331,6 +333,7 @@ typedef enum _ocsd_isa
     ocsd_isa_aarch64,      /**< V8 AArch64 */
     ocsd_isa_tee,          /**< Thumb EE - unsupported */  
     ocsd_isa_jazelle,      /**< Jazelle - unsupported in trace */  
+    ocsd_isa_custom,       /**< Instruction set - custom arch decoder */
     ocsd_isa_unknown       /**< ISA not yet known */
 } ocsd_isa;
 
@@ -503,7 +506,7 @@ typedef struct _ocsd_file_mem_region {
 
     Builtin decoder names.
 
-    Protocol type enum
+    Protocol type enum.
 @{*/
 
 #define OCSD_CREATE_FLG_PACKET_PROC     0x01    /**< Create packet processor only.              */
@@ -551,6 +554,38 @@ typedef enum _ocsd_trace_protocol_t {
 
 /** Test if protocol type is a custom external registered decoder */
 #define OCSD_PROTOCOL_IS_CUSTOM(P)  ((P > OCSD_PROTOCOL_CUSTOM_0) && (P < OCSD_PROTOCOL_END ))
+
+/** @}*/
+
+
+/** @name Software Trace Packets Info
+
+    Contains the information for the generic software trace output packet.
+
+    Software trace packet master and channel data.
+    Payload info:  
+        size - packet payload size in bits;
+        marker - if this packet has a marker/flag
+        timestamp - if this packet has a timestamp associated
+        number of packets - packet processor can optionally correlate identically 
+        sized packets on the same master / channel to be output as a single generic packet
+        
+    Payload output as separate LE buffer, of sufficient bytes to hold all the packets.
+@{*/
+
+typedef struct _ocsd_swt_info {
+    uint16_t swt_master_id;
+    uint16_t swt_channel_id;
+    struct {
+        uint32_t swt_payload_pkt_bitsize:8; /**< Packet size in bits of the payload packets */
+        uint32_t swt_payload_num_packets:8; /**< number of consecutive packets of this type in the payload data */
+        uint32_t swt_marker_packet:1;       /**< packet is marker / flag packet */ 
+        uint32_t swt_has_timestamp:1;       /**< packet has timestamp. */
+        uint32_t swt_marker_first:1;        /**< for multiple packet payloads, this indicates if any marker is on first or last packet */
+        uint32_t swt_master_err:1;          /**< current master has error */
+        uint32_t swt_global_err:1;          /**< global error  */
+    };
+} ocsd_swt_info_t;
 
 /** @}*/
 
