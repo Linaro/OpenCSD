@@ -1002,7 +1002,7 @@ static uint32_t cs_etm__mem_access(struct cs_etm_queue *etmq, uint64_t address, 
 
         offset = al.map->map_ip(al.map,address);
 
-        map__load(al.map, machine->symbol_filter);
+        map__load(al.map);
 
         len = dso__data_read_offset(al.map->dso, machine,
                                     offset, buffer, size);
