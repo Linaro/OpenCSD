@@ -19,14 +19,14 @@ From version 0.4, library versioning will use a semantic versioning format
 Internal library version calls, documentation and git repository will use this format moving forwards.
 Where a patch version is not quoted, or quoted as .x then comments will apply to the entire release.
 
-Releases will be at M.m.0, with patch version incremented for bugfixes.
+Releases will be at M.m.0, with patch version incremented for bugfixes or documentation updates.
 
 Releases will appear on the master branch in the git repository with an appropriate version tag.
 
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.4.1_
+_Current Version 0.4.2_
 
 ### Current support:
 
@@ -99,6 +99,7 @@ Version and Modification Information
 - _Version 0.003_:  Library development - added in ETMv3 instruction decoder support.
 - _Version 0.4_  :  Library development - updated decode tree and C-API for generic decoder handling. Switch to semantic versioning.
 - _Version 0.4.1_:  Minor Update & Bugfixes - fix to PTM decoder, ID checking on test program, adds NULL_TS support in STM packet processor.
+- _Version 0.4.2_:  Minor Update - Update to documentation for perf usage in 4.8 kernel branch.
 
 Licence Information
 ===================
@@ -106,3 +107,10 @@ Licence Information
 This library is licensed under the [BSD three clause licence.](http://directory.fsf.org/wiki/License:BSD_3Clause)
 
 A copy of this license is in the `LICENCE` file included with the source code.
+
+Contact
+=======
+
+Using the github site: https://github.com/Linaro/OpenCSD
+
+Mailing list: coresight@lists.linaro.org
