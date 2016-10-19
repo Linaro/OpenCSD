@@ -1,8 +1,8 @@
 /*
- * \file       ocsd_version.cpp
- * \brief      OpenCSD : 
+ * \file       ocsd_if_version.h
+ * \brief      OpenCSD : Library API versioning
  * 
- * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
+ * \copyright  Copyright (c) 2016, ARM Limited. All Rights Reserved.
  */
 
 /* 
@@ -32,17 +32,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "ocsd_if_version.h"
-#include "common/ocsd_version.h"
+#ifndef ARM_OCSD_IF_VERSION_H_INCLUDED
+#define ARM_OCSD_IF_VERSION_H_INCLUDED
 
-const uint32_t ocsdVersion::vers_num()
-{
-    return OCSD_VER_NUM;
-}
+#include <stdint.h>
 
-const char *ocsdVersion::vers_str()
-{
-    return OCSD_VER_STRING; 
-}
+/** @addtogroup ocsd_interfaces
+@{*/
 
-/* End of File ocsd_version.cpp */
+/** @name Library Versioning
+@{*/
+#define OCSD_VER_MAJOR 0x0 /**< Library Major Version */
+#define OCSD_VER_MINOR 0x5 /**< Library Minor Version */
+#define OCSD_VER_PATCH 0x0 /**< Library Patch Version */
+
+/** Library version number - MMMMnnpp format.
+    MMMM = major version, 
+    nn = minor version, 
+    pp = patch version
+*/
+#define OCSD_VER_NUM (((uint32_t)OCSD_VER_MAJOR << 16) | ((uint32_t)OCSD_VER_MINOR << 8) | ((uint32_t)OCSD_VER_PATCH)) 
+
+#define OCSD_VER_STRING "0.5.0"    /**< Library Version string */
+#define OCSD_LIB_NAME "OpenCSD Library"  /**< Library name string */
+#define OCSD_LIB_SHORT_NAME "OCSD"    /**< Library Short name string */
+/** @}*/
+
+/** @}*/
+
+#endif // ARM_OCSD_IF_VERSION_H_INCLUDED
+
+/* End of File ocsd_if_version.h */
