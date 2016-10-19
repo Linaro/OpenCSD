@@ -104,7 +104,7 @@ typedef struct _ocsd_stm_pkt
     uint8_t     master;             /**< current master */
     uint16_t    channel;            /**< current channel */
     
-    uint64_t    timestamp;          /**< latest timestamp value */
+    uint64_t    timestamp;          /**< latest timestamp value -> as binary - packet processor does grey decoding */
     uint8_t     pkt_ts_bits;        /**< timestamp bits updated this packet */
     uint8_t     pkt_has_ts;         /**< current packet has associated timestamp (ts bits can be 0 if same value as last time) */
     

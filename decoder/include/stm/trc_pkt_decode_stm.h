@@ -51,7 +51,7 @@ public:
     TrcPktDecodeStm();
     TrcPktDecodeStm(int instIDNum);
     virtual ~TrcPktDecodeStm();
-
+    
 protected:
     /* implementation packet decoding interface */
     virtual ocsd_datapath_resp_t processPacket();
@@ -67,24 +67,32 @@ private:
     void initDecoder();
     void resetDecoder();
     void initPayloadBuffer();
+    bool isInit() { return (bool)((m_config != 0) && (m_payload_buffer != 0)); };
+    ocsd_datapath_resp_t decodePacket(bool &bPktDone);  //!< decode the current incoming packet
+    void clearSWTPerPcktInfo();
+    void updatePayload(bool &bSendPacket);
 
     typedef enum {
         NO_SYNC,        //!< pre start trace - init state or after reset or overflow, loss of sync.
         WAIT_SYNC,      //!< waiting for sync packet.
-        DECODE_PKTS,    //!< processing input packet
+        DECODE_PKTS     //!< processing input packet.  
     } processor_state_t;
 
     processor_state_t m_curr_state;  
-    
-    uint8_t m_curr_master;      //!< current active master ID
-    uint16_t m_curr_channel;    //!< current active channel ID
 
-    uint8_t *m_payload_buffer;  //!< payload buffer - allocated for one of multiple packets according to config
-    int m_payload_used;         //!< payload used in bytes
-    int m_payload_size;         //!< payload size in bytes
+    ocsd_swt_info_t m_swt_packet_info;
+
+    uint8_t *m_payload_buffer;  //!< payload buffer - allocated for one or multiple packets according to config
+    int m_payload_size;         //!< payload buffer total size in bytes.
+    int m_payload_used;         //!< payload buffer used in bytes - current payload size.
     bool m_payload_odd_nibble;  //!< last used byte in payload contains a single 4 bit packet.
+    int m_num_pkt_correlation;  //!< number of identical payload packets to buffer up before output. - fixed at 1 till later update
 
     uint8_t m_CSID;             //!< Coresight trace ID for this decoder.
+
+    bool m_decode_pass1;        //!< flag to indicate 1st pass of packet decode.
+
+
 
 //** output element
     OcsdTraceElement m_output_elem; //!< output packet

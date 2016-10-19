@@ -84,7 +84,7 @@ public:
     const uint8_t getMaster() const;
     const uint16_t getChannel() const;
     const ocsd_stm_ts_type getTSType() const;
-    const uint64_t getCurrentTSVal() const;
+    const uint64_t getTSVal() const;
 
     const uint8_t getD4Val() const;
     const uint8_t getD8Val() const;
@@ -197,7 +197,7 @@ inline const ocsd_stm_ts_type StmTrcPacket::getTSType() const
     return ts_type;
 }
 
-inline const uint64_t StmTrcPacket::getCurrentTSVal() const
+inline const uint64_t StmTrcPacket::getTSVal() const
 {
     return timestamp;
 }

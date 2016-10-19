@@ -35,18 +35,20 @@
 #define ARM_TRC_DCD_MNGR_STM_H_INCLUDED
 
 #include "common/ocsd_dcd_mngr.h"
+#include "trc_pkt_decode_stm.h"
 #include "trc_pkt_proc_stm.h"
 #include "trc_cmp_cfg_stm.h"
 #include "trc_pkt_types_stm.h"
 
-class DecoderMngrStm : public DecodeMngrPktProc< StmTrcPacket, 
+class DecoderMngrStm : public DecodeMngrFullDcd< StmTrcPacket, 
                                                  ocsd_stm_pkt_type,
                                                  STMConfig,
                                                  ocsd_stm_cfg,
-                                                 TrcPktProcStm>
+                                                 TrcPktProcStm,
+                                                 TrcPktDecodeStm>
 {
 public:
-    DecoderMngrStm(const std::string &name) : DecodeMngrPktProc(name,OCSD_PROTOCOL_STM) {};
+    DecoderMngrStm(const std::string &name) : DecodeMngrFullDcd(name,OCSD_PROTOCOL_STM) {};
     virtual ~DecoderMngrStm() {};
 };
 

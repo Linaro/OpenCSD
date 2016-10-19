@@ -65,7 +65,7 @@ public:
     
     void setCycleCount(const uint32_t cycleCount);
     void setEvent(const event_t ev_type, const uint16_t number);
-    void setTS(const uint64_t ts, const bool freqChange = false) { timestamp = ts; cpu_freq_change = freqChange ? 1 : 0; };
+    void setTS(const uint64_t ts, const bool freqChange = false);
 
     void setExcepMarker() { excep_data_marker = 1; };
     void setExceptionNum(uint32_t excepNum) { exception_number = excepNum; };
@@ -77,9 +77,8 @@ public:
     void setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype);
     void setAddrStart(const ocsd_vaddr_t  st_addr) { this->st_addr = st_addr; };
 
-    void setSWTMaster(const uint16_t master_id) { sw_trace_info.swt_master_id = master_id; };
-    void setSWTChannel(const uint16_t chan_id) { sw_trace_info.swt_channel_id = chan_id; };
-    void setSWTErrPkt(const bool m_err = false);
+    void setSWTInfo(const ocsd_swt_info_t swt_info) { sw_trace_info = swt_info; };
+    void setExtendedDataPtr(const void *data_ptr);
 
 // stringize the element
 
@@ -96,6 +95,7 @@ public:
 
     
 private:
+    void printSWInfoPkt(std::ostringstream &oss) const;
     void clearPerPktData(); //!< clear flags that indicate validity / have values on a per packet basis
 
 };
@@ -168,12 +168,9 @@ inline void OcsdTraceElement::init()
 
 inline void OcsdTraceElement::clearPerPktData()
 {
-    cpu_freq_change = 0;
-    has_cc = 0;
-    last_instr_exec = 0;
-    excep_ret_addr = 0;
-    exception_number = 0;       // union with trace_on_reason / trace_event
-    excep_data_marker = 0;
+    flag_bits = 0; // union with trace_on_reason / trace_event
+
+    ptr_extended_data = 0;  // extended data pointer
 }
 
 inline void OcsdTraceElement::setTraceOnReason(const trace_on_reason_t reason)
@@ -187,6 +184,20 @@ inline void OcsdTraceElement::setISA(const ocsd_isa isa_update)
     if(isa > ocsd_isa_unknown)
         isa = ocsd_isa_unknown;
 }
+
+inline void OcsdTraceElement::setTS(const uint64_t ts, const bool freqChange /*= false*/) 
+{ 
+    timestamp = ts; 
+    cpu_freq_change = freqChange ? 1 : 0; 
+    has_ts = 1;
+}
+
+inline void OcsdTraceElement::setExtendedDataPtr(const void *data_ptr)
+{
+    extended_data = 1;
+    ptr_extended_data = data_ptr;
+}
+
 
 /** @}*/
 

@@ -52,7 +52,9 @@ static const char *s_elem_descs[][2] =
     {"OCSD_GEN_TRC_ELEM_EXCEPTION_RET","Expection return"},
     {"OCSD_GEN_TRC_ELEM_TIMESTAMP","Timestamp - preceding elements happeded before this time."},
     {"OCSD_GEN_TRC_ELEM_CYCLE_COUNT","Cycle count - cycles since last cycle count value - associated with a preceding instruction range."},
-    {"OCSD_GEN_TRC_ELEM_EVENT","Event - numbered event or trigger"}
+    {"OCSD_GEN_TRC_ELEM_EVENT","Event - numbered event or trigger"},
+    {"OCSD_GEN_TRC_ELEM_SWTRACE","Software trace packet - may contain data payload."},
+    {"OCSD_GEN_TRC_ELEM_CUSTOM","Fully custom packet type."}
 };
 
 static const char *instr_type[] = {
@@ -143,6 +145,10 @@ void OcsdTraceElement::toString(std::string &str) const
             oss << " [ TS=0x" << std::setfill('0') << std::setw(12) << std::hex << timestamp << "]; "; 
             break;
 
+        case OCSD_GEN_TRC_ELEM_SWTRACE:
+            printSWInfoPkt(oss);
+            break;
+
         default: break;
         }
         if(has_cc)
@@ -160,6 +166,68 @@ OcsdTraceElement &OcsdTraceElement::operator =(const ocsd_generic_trace_elem* p_
 {
     *dynamic_cast<ocsd_generic_trace_elem*>(this) = *p_elem;
     return *this;
+}
+
+
+void OcsdTraceElement::printSWInfoPkt(std::ostringstream & oss) const
+{
+    if (!sw_trace_info.swt_global_err)
+    {
+        if (sw_trace_info.swt_id_valid)
+        {
+            oss << " (Ma:0x" << std::setfill('0') << std::setw(2) << std::hex << sw_trace_info.swt_master_id << "; ";
+            oss << "Ch:0x" << std::setfill('0') << std::setw(2) << std::hex << sw_trace_info.swt_channel_id << ") ";
+        }
+        else
+            oss << "(Ma:0x??; Ch:0x??" << ") ";
+
+        if (sw_trace_info.swt_payload_pkt_bitsize > 0)
+        {
+            oss << "0x" << std::setfill('0') << std::hex;
+            if (sw_trace_info.swt_payload_pkt_bitsize == 4)
+            {
+                oss << std::setw(1);
+                oss << (uint16_t)(((uint8_t *)ptr_extended_data)[0] & 0xF);
+            }
+            else
+            {
+                switch (sw_trace_info.swt_payload_pkt_bitsize)
+                {
+                case 8:
+                    // force uint8 to uint16 so oss 'sees' them as something to be stringised, rather than absolute char values
+                    oss << std::setw(2) << (uint16_t)((uint8_t *)ptr_extended_data)[0];
+                    break;
+                case 16:
+                    oss << std::setw(4) << ((uint16_t *)ptr_extended_data)[0];
+                    break;
+                case 32:
+                    oss << std::setw(8) << ((uint32_t *)ptr_extended_data)[0];
+                    break;
+                case 64:
+                    oss << std::setw(16) << ((uint64_t *)ptr_extended_data)[0];
+                    break;
+                default:
+                    oss << "{Data Error : unsupported bit width.}";
+                    break;
+                }
+            }
+            oss << "; ";
+        }
+        if (sw_trace_info.swt_marker_packet)
+            oss << "+Mrk ";
+        if (sw_trace_info.swt_trigger_event)
+            oss << "Trig ";
+        if (sw_trace_info.swt_has_timestamp)
+            oss << " [ TS=0x" << std::setfill('0') << std::setw(12) << std::hex << timestamp << "]; ";
+        if (sw_trace_info.swt_frequency)
+            oss << "Freq";
+        if (sw_trace_info.swt_master_err)
+            oss << "{Master Error.}";
+    }
+    else
+    {
+        oss << "{Global Error.}";
+    }
 }
 
 /*

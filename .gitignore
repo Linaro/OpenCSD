@@ -70,3 +70,5 @@ ref_trace_decoder/tests/build/win/trc_pkt_lister/x64/Release-dll/*
 *.orig
 decoder/docs/html/*
 *.orig
+*.VC.db
+*.VC.VC.opendb

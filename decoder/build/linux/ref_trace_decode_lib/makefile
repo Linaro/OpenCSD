@@ -83,7 +83,8 @@ MEMACCOBJ=	$(BUILD_DIR)/trc_mem_acc_mapper.o \
 			$(BUILD_DIR)/trc_mem_acc_cb.o
 
 STMOBJ=		$(BUILD_DIR)/trc_pkt_elem_stm.o \
-			$(BUILD_DIR)/trc_pkt_proc_stm.o
+			$(BUILD_DIR)/trc_pkt_proc_stm.o \
+			$(BUILD_DIR)/trc_pkt_decode_stm.o
 
 OBJECTS=$(BUILD_DIR)/ocsd_code_follower.o \
 		$(BUILD_DIR)/ocsd_dcd_tree.o \

@@ -752,7 +752,10 @@ void TrcPktProcStm::stmPktTriggerTS()
 void TrcPktProcStm::stmPktFreq()
 {
     if(m_num_nibbles == 3)
+    {
         m_curr_packet.setPacketType(STM_PKT_FREQ,false);
+        m_val32 = 0;
+    }
     stmExtractVal32(11);
     if(m_num_nibbles == 11)
     {
@@ -868,7 +871,7 @@ void TrcPktProcStm::stmExtractTS()
             uint8_t new_bits = m_req_ts_nibbles * 4;
             if(m_curr_packet.getTSType() == STM_TS_GREY)
             {            
-                uint64_t gray_val = bin_to_gray(m_curr_packet.getCurrentTSVal());
+                uint64_t gray_val = bin_to_gray(m_curr_packet.getTSVal());
                 if(new_bits == 64)
                 {
                     gray_val = m_ts_update_value;

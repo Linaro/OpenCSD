@@ -37,8 +37,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#ifdef _MSC_VER
-/** VS2010 does not support inttypes - temp fix till we update the compiler support */
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+/** VS2010 does not support inttypes - remove when VS2010 support is dropped */
 #define __PRI64_PREFIX "ll"
 #define PRIX64 __PRI64_PREFIX "X"
 #define PRIu64 __PRI64_PREFIX "u"
@@ -561,16 +561,25 @@ typedef enum _ocsd_trace_protocol_t {
 typedef struct _ocsd_swt_info {
     uint16_t swt_master_id;
     uint16_t swt_channel_id;
-    struct {
-        uint32_t swt_payload_pkt_bitsize:8; /**< Packet size in bits of the payload packets */
-        uint32_t swt_payload_num_packets:8; /**< number of consecutive packets of this type in the payload data */
-        uint32_t swt_marker_packet:1;       /**< packet is marker / flag packet */ 
-        uint32_t swt_has_timestamp:1;       /**< packet has timestamp. */
-        uint32_t swt_marker_first:1;        /**< for multiple packet payloads, this indicates if any marker is on first or last packet */
-        uint32_t swt_master_err:1;          /**< current master has error */
-        uint32_t swt_global_err:1;          /**< global error  */
+    union {
+        struct {
+            uint32_t swt_payload_pkt_bitsize:8; /**< [bits 0:7 ] Packet size in bits of the payload packets */
+            uint32_t swt_payload_num_packets:8; /**< [bits 8:15 ] number of consecutive packets of this type in the payload data */
+            uint32_t swt_marker_packet:1;       /**< [bit 16 ] packet is marker / flag packet */ 
+            uint32_t swt_has_timestamp:1;       /**< [bit 17 ] packet has timestamp. */
+            uint32_t swt_marker_first:1;        /**< [bit 18 ] for multiple packet payloads, this indicates if any marker is on first or last packet */
+            uint32_t swt_master_err:1;          /**< [bit 19 ] current master has error - payload is error code */
+            uint32_t swt_global_err:1;          /**< [bit 20 ] global error - payload is error code - master and channel ID not valid */
+            uint32_t swt_trigger_event:1;       /**< [bit 21 ] trigger event packet - payload is event number */
+            uint32_t swt_frequency:1;           /**< [bit 22 ] frequency packet - payload is frequency */
+            uint32_t swt_id_valid:1;            /**< [bit 23 ] master & channel ID has been set by input stream  */
+        };
+        uint32_t swt_flag_bits;
     };
 } ocsd_swt_info_t;
+
+/** mask for the swt_id_valid flag - need to retain between packets */
+#define SWT_ID_VALID_MASK (0x1 << 23)
 
 /** @}*/
 
