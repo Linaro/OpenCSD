@@ -32,7 +32,6 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,6 +76,41 @@ static ocsd_datapath_resp_t echo_dcd_process_data(echo_decoder_t *decoder,
 
 static ocsd_datapath_resp_t send_gen_packet(echo_decoder_t *decoder);
 static ocsd_datapath_resp_t analyse_packet(echo_decoder_t *decoder);
+static ocsd_datapath_resp_t send_none_data_op(echo_decoder_t *decoder, const ocsd_datapath_op_t op);
+static void print_init_test_message(echo_decoder_t *decoder);
+
+/******Infrastructure testing functionality *********************/
+/* As this is a test decoder we want to check which of the callbacks or call-ins are covered for a given test run 
+  (by definition they can't all be - so will need a couple of runs to test all)
+*/
+enum {
+    TEST_COV_ERRORLOG_CB = 0,
+    TEST_COV_MSGLOG_CB,
+    TEST_COV_GEN_ELEM_CB,
+    TEST_COV_IDEC_CB,
+    TEST_COV_MEM_ACC_CB,
+    TEST_COV_PKTMON_CB,
+    TEST_COV_PKTSINK_CB,
+    TEST_COV_INDATA,
+    TEST_COV_INCBFLAGS,
+    /**/
+    TEST_COV_END
+};
+
+typedef enum {
+    TEST_RES_NA,    /* not tested */
+    TEST_RES_OK,    /* test OK */
+    TEST_RES_FAIL   /* test fail */
+} test_result_t;
+
+static test_result_t coverage[TEST_COV_END] = { TEST_RES_NA };
+
+#define UPDATE_COVERAGE(i,r) { if(coverage[i] != TEST_RES_FAIL) coverage[i] = r; }
+
+static void print_test_cov_results(echo_decoder_t *decoder);
+
+/*************************/
+
 
 /** init decoder on creation, along with library instance structure */
 void echo_dcd_init(echo_decoder_t *decoder, ocsd_extern_dcd_inst_t *p_decoder_inst, const echo_dcd_cfg_t *p_config, const ocsd_extern_dcd_cb_fns *p_lib_callbacks)
@@ -106,12 +140,10 @@ void echo_dcd_init(echo_decoder_t *decoder, ocsd_extern_dcd_inst_t *p_decoder_in
 
 void echo_dcd_pkt_tostr(echo_dcd_pkt_t *pkt, char *buffer, const int buflen)
 {
-    snprintf(buffer, buflen, "ECHOTP[0x%02X] (0x%08X) \n", pkt->header, pkt->data);
+    snprintf(buffer, buflen, "ECHOTP{%d} [0x%02X] (0x%08X)", pkt->header & 0x3, pkt->header, pkt->data);
 }
 
-
 /**** Main decoder implementation ****/
-
 ocsd_datapath_resp_t echo_dcd_trace_data_in(const void *decoder_handle,
     const ocsd_datapath_op_t op,
     const ocsd_trc_index_t index,
@@ -121,7 +153,10 @@ ocsd_datapath_resp_t echo_dcd_trace_data_in(const void *decoder_handle,
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     echo_decoder_t *decoder = (echo_decoder_t *)decoder_handle;
+    UPDATE_COVERAGE(TEST_COV_INDATA,TEST_RES_OK)
 
+    /* Deal with each possible datapath operation.         
+    */
     switch (op)
     {
     case OCSD_OP_DATA:
@@ -130,13 +165,23 @@ ocsd_datapath_resp_t echo_dcd_trace_data_in(const void *decoder_handle,
 
     case OCSD_OP_EOT:
         if (decoder->data_in_count > 0)
-            lib_cb_LogError(&(decoder->lib_fns), OCSD_ERR_SEV_WARN, OCSD_ERR_PKT_INTERP_FAIL,index,decoder->reg_config.cs_id,"Incomplete packet at end of trace");
-        ocsd_gen_elem_init(&(decoder->out_pkt), OCSD_GEN_TRC_ELEM_EO_TRACE);
-        resp = send_gen_packet(decoder);
+            lib_cb_LogError(&(decoder->lib_fns), OCSD_ERR_SEV_WARN, OCSD_ERR_PKT_INTERP_FAIL,decoder->curr_pkt_idx,decoder->reg_config.cs_id,"Incomplete packet at end of trace.\n");
+
+        /* if we are in full decoder mode then generate a generic EOT packet. */
+        if (decoder->createFlags &  OCSD_CREATE_FLG_FULL_DECODER)
+        {
+            ocsd_gen_elem_init(&(decoder->out_pkt), OCSD_GEN_TRC_ELEM_EO_TRACE);
+            resp = send_gen_packet(decoder);
+            send_none_data_op(decoder, OCSD_OP_EOT); /* send EOT to any packet monitor in use */
+        }
+        else
+            resp = send_none_data_op(decoder, OCSD_OP_EOT); /*send EOT to packet sink and any packet monitor in use */
+        print_test_cov_results(decoder);    /* end of test run - need to print out the coverage data */
         break;
 
     case OCSD_OP_FLUSH:
         /* This decoder never saves a list of incoming packets (which some real decoders may have to according to protocol). 
+           Additionally this decoder both processes packets and analyses them so there is no second stage to pass the flush request on to.
            Therefore there is nothing to flush */
         break;
 
@@ -149,7 +194,8 @@ ocsd_datapath_resp_t echo_dcd_trace_data_in(const void *decoder_handle,
 
 void echo_dcd_update_mon_flags(const void *decoder_handle, const int flags)
 {
-    ((echo_decoder_t *)decoder_handle)->lib_fns.packetCBFlags = flags;
+    lib_cb_updatePktCBFlags(&((echo_decoder_t *)decoder_handle)->lib_fns, flags);
+    UPDATE_COVERAGE(TEST_COV_INCBFLAGS,TEST_RES_OK)
 }
 
 void echo_dcd_reset(echo_decoder_t *decoder)
@@ -178,11 +224,12 @@ ocsd_datapath_resp_t echo_dcd_process_data(echo_decoder_t *decoder,
             ocsd_gen_elem_init(&decoder->out_pkt, OCSD_GEN_TRC_ELEM_NO_SYNC);
             resp = send_gen_packet(decoder);
             decoder->state = DCD_WAIT_SYNC; /* wait for the first sync point */
+            print_init_test_message(decoder);  /* because this is in fact a test decoder - print verification messages */
             break;
 
         case DCD_WAIT_SYNC:
             /* In this 'protocol' sync will be a single 0x00 byte.
-               Some decoders may output "unsynced packets" if in packet processing only mode, or on the
+               Some decoders may output "unsynced packets" markers if in packet processing only mode, or on the
                packet monitor output if in use. We are not bothering here. */
             if (pDataBlock[bytesUsed] == 0x00)
                 decoder->state = DCD_PROC_PACKETS;
@@ -215,11 +262,82 @@ ocsd_datapath_resp_t send_gen_packet(echo_decoder_t *decoder)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     /* Only output generic decode packets if we are in full decode mode. */
-    if(decoder->createFlags &  OCSD_CREATE_FLG_FULL_DECODER)
+    if (decoder->createFlags &  OCSD_CREATE_FLG_FULL_DECODER)
+    {
         resp = lib_cb_GenElemOp(&decoder->lib_fns, decoder->curr_pkt_idx, decoder->reg_config.cs_id, &decoder->out_pkt);
+        UPDATE_COVERAGE(TEST_COV_GEN_ELEM_CB, (OCSD_DATA_RESP_IS_FATAL(resp) ? TEST_RES_FAIL : TEST_RES_OK))
+    }
     return resp;
 }
 
+ocsd_datapath_resp_t send_none_data_op(echo_decoder_t *decoder, const ocsd_datapath_op_t op)
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    ocsd_extern_dcd_cb_fns *p_fns = &(decoder->lib_fns);
+    
+    /* send a none data op to the packet monitor or packet sink if in packet processing only mode
+       None data ops have the data parameters all set to 0.
+     */
+
+     /* if the packet monitor callback is in use. */
+    if (lib_cb_usePktMon(p_fns))
+        lib_cb_PktMon(p_fns, op, 0, 0, 0, 0);
+
+    /* if the packet sink is in use then we shouldn't be in full decoder mode.*/
+    if (lib_cb_usePktSink(p_fns))
+        resp = lib_cb_PktDataSink(p_fns, op, 0, 0);
+
+    return resp;
+}
+
+void print_init_test_message(echo_decoder_t * decoder)
+{
+    ocsd_extern_dcd_cb_fns *p_fns = &(decoder->lib_fns);
+    if (lib_cb_LogMsg(p_fns, OCSD_ERR_SEV_ERROR, "Echo_Test_Decoder: Init - LogMsgCB test.\n") == OCSD_OK)
+        UPDATE_COVERAGE(TEST_COV_MSGLOG_CB, TEST_RES_OK)
+    else
+        UPDATE_COVERAGE(TEST_COV_MSGLOG_CB, TEST_RES_FAIL)
+
+    if(lib_cb_LogError(p_fns, OCSD_ERR_SEV_ERROR, OCSD_OK, 0, decoder->reg_config.cs_id, "Echo_Test_Decoder - Init - LogErrorCB test.\n") == OCSD_OK)
+        UPDATE_COVERAGE(TEST_COV_ERRORLOG_CB, TEST_RES_OK)
+    else
+        UPDATE_COVERAGE(TEST_COV_ERRORLOG_CB, TEST_RES_FAIL)
+}
+
+void print_test_cov_results(echo_decoder_t *decoder)
+{
+    int i;
+    ocsd_extern_dcd_cb_fns *p_fns = &(decoder->lib_fns);
+    static char *results[] = {
+        "Not Tested", "Passed", "Failed"
+    };
+    static char *cov_elem_names[] = {
+        "ERRORLOG_CB",
+        "MSGLOG_CB",
+        "GEN_ELEM_CB",
+        "IDEC_CB",
+        "MEM_ACC_CB",
+        "PKTMON_CB",
+        "PKTSINK_CB",
+        "INDATA",
+        "INCBFLAGS"
+    };
+    char coverage_message[256];
+
+    for (i = 0; i < TEST_COV_END; i++)
+    {
+        sprintf(coverage_message, "Element %s : %s\n",cov_elem_names[i],results[coverage[i]]);
+        if (coverage[TEST_COV_MSGLOG_CB] == TEST_RES_OK)    /* check we can use the msg logger for outputting the results */
+            lib_cb_LogMsg(p_fns, OCSD_ERR_SEV_ERROR, coverage_message);
+        else
+            printf(coverage_message);
+    }
+}
+
+
+/* This is the packet decode portion of the decoder. 
+*  incoming protocol packets are analysed to create generic output packets. 
+*/
 ocsd_datapath_resp_t analyse_packet(echo_decoder_t * decoder)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
@@ -235,11 +353,17 @@ ocsd_datapath_resp_t analyse_packet(echo_decoder_t * decoder)
     
     /* if the packet monitor callback is in use - output the newly created packet. */
     if (lib_cb_usePktMon(p_fns))
+    {
         lib_cb_PktMon(p_fns, OCSD_OP_DATA, decoder->curr_pkt_idx, (const void *)(&decoder->curr_pkt), ECHO_DCD_PKT_SIZE, decoder->data_in);
+        UPDATE_COVERAGE(TEST_COV_PKTMON_CB, TEST_RES_OK)
+    }
 
     /* if the packet sink is in use then we shouldn't be in full decoder mode.*/
     if (lib_cb_usePktSink(p_fns))
-        lib_cb_PktDataSink(p_fns, OCSD_OP_DATA, decoder->curr_pkt_idx, (const void *)(&decoder->curr_pkt));
+    {
+        resp = lib_cb_PktDataSink(p_fns, OCSD_OP_DATA, decoder->curr_pkt_idx, (const void *)(&decoder->curr_pkt));
+        UPDATE_COVERAGE(TEST_COV_PKTSINK_CB, (OCSD_DATA_RESP_IS_FATAL(resp) ? TEST_RES_FAIL : TEST_RES_OK))
+    }
     else if (decoder->createFlags &  OCSD_CREATE_FLG_FULL_DECODER) /* no packet sink so are we full decoder? */
     {
         /*  Full decode - generate generic output packets. 
@@ -274,6 +398,7 @@ ocsd_datapath_resp_t analyse_packet(echo_decoder_t * decoder)
             err = lib_cb_MemAccess(p_fns, decoder->curr_pkt.data & 0xFFFFFFF0, decoder->reg_config.cs_id, OCSD_MEM_SPACE_ANY, &num_mem_bytes, mem_buffer);
             if (err != OCSD_OK)
                 lib_cb_LogError(p_fns, OCSD_ERR_SEV_ERROR, err, decoder->curr_pkt_idx, decoder->reg_config.cs_id, "Error accessing memory area\n.");
+            UPDATE_COVERAGE(TEST_COV_MEM_ACC_CB,(err == OCSD_OK ? TEST_RES_OK : TEST_RES_FAIL))
             if (num_mem_bytes == 0)
             {
                 /* unable to read the address... */
@@ -299,6 +424,7 @@ ocsd_datapath_resp_t analyse_packet(echo_decoder_t * decoder)
             instr_info.dsb_dmb_waypoints = 0;
             
             err = lib_cb_DecodeArmInst(p_fns, &instr_info);
+            UPDATE_COVERAGE(TEST_COV_IDEC_CB, (err == OCSD_OK ? TEST_RES_OK : TEST_RES_FAIL))
             if (err != OCSD_OK)
             {
                 lib_cb_LogError(p_fns, OCSD_ERR_SEV_ERROR, err, decoder->curr_pkt_idx, decoder->reg_config.cs_id, "Error decoding instruction\n.");
