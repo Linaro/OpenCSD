@@ -114,6 +114,7 @@ protected:
     friend class errLogAttachMonitor;
 
     void LogError(const ocsdError &Error);
+    void LogMessage(const ocsd_err_severity_t filter_level, const std::string &msg);
     const ocsd_err_severity_t getErrorLogLevel() const { return m_errVerbosity; };
     const bool isLoggingErrorLevel(const ocsd_err_severity_t level) const { return level <= m_errVerbosity; };
     void updateErrorLogLevel(); 

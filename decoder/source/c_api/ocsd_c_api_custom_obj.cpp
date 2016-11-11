@@ -109,17 +109,41 @@ ocsd_err_t CustomDcdMngrWrapper::createDecoder(const int create_flags, const int
     if(m_dcd_fact.protocol_id == OCSD_PROTOCOL_END)
         return OCSD_ERR_NOT_INIT;
 
-    ocsd_extern_dcd_inst_t dcd_inst;
+    CustomDecoderWrapper *pComp = new (std::nothrow) CustomDecoderWrapper();
+    *ppComponent = pComp;
+    if (pComp == 0)
+        return OCSD_ERR_MEM;
+
+    ocsd_extern_dcd_cb_fns lib_callbacks;
+    CustomDecoderWrapper::SetCallbacks(lib_callbacks);
+    lib_callbacks.lib_context = pComp;
+
+
+    ocsd_extern_dcd_inst_t *pDecodeInst = pComp->getDecoderInstInfo();
+
     err = m_dcd_fact.createDecoder( create_flags,
-                                    ((CustomConfigWrapper *)p_config)->getConfig(),
-                                    &dcd_inst);
-    if(err == OCSD_OK)
+        ((CustomConfigWrapper *)p_config)->getConfig(),
+        &lib_callbacks,
+        pDecodeInst);
+    
+    if (err == OCSD_OK)
     {
-        CustomDecoderWrapper *pComp = new (std::nothrow) CustomDecoderWrapper(dcd_inst,dcd_inst.p_decoder_name,dcd_inst.cs_id);
-        *ppComponent = pComp;
-        if(pComp == 0)
-            err = OCSD_ERR_MEM;
+        // validate the decoder
+        if ((pDecodeInst->fn_data_in == 0) ||
+            (pDecodeInst->fn_update_pkt_mon == 0) ||
+            (pDecodeInst->cs_id == 0) ||
+            (pDecodeInst->decoder_handle == 0) ||
+            (pDecodeInst->p_decoder_name == 0)
+            )
+        {
+            err = OCSD_ERR_INVALID_PARAM_VAL;
+        }
     }
+
+    if (err != OCSD_OK)
+        delete pComp;
+    else
+        pComp->updateNameFromDcdInst();
     return err;
 }
 
@@ -128,6 +152,7 @@ ocsd_err_t CustomDcdMngrWrapper::destroyDecoder(TraceComponent *pComponent)
     CustomDecoderWrapper *pCustWrap = dynamic_cast<CustomDecoderWrapper *>(pComponent);
     if(m_dcd_fact.protocol_id != OCSD_PROTOCOL_END)
         m_dcd_fact.destroyDecoder(pCustWrap->getDecoderInstInfo()->decoder_handle);
+    delete pCustWrap;
     return OCSD_OK;
 }
 
@@ -171,8 +196,10 @@ ocsd_err_t CustomDcdMngrWrapper::getDataInputI(TraceComponent *pComponent, ITrcD
 ocsd_err_t CustomDcdMngrWrapper::attachErrorLogger(TraceComponent *pComponent, ITraceErrorLog *pIErrorLog)
 {
     CustomDecoderWrapper *pDecoder = dynamic_cast<CustomDecoderWrapper *>(pComponent);
-    if(pDecoder == 0)
+    if (pDecoder == 0)
         return OCSD_ERR_INVALID_PARAM_TYPE;
+    pDecoder->getErrorLogAttachPt()->replace_first(pIErrorLog);
+    return OCSD_OK;
 }
 
 // full decoder
@@ -181,7 +208,7 @@ ocsd_err_t CustomDcdMngrWrapper::attachInstrDecoder(TraceComponent *pComponent, 
     CustomDecoderWrapper *pDecoder = dynamic_cast<CustomDecoderWrapper *>(pComponent);
     if(pDecoder == 0)
         return OCSD_ERR_INVALID_PARAM_TYPE;
-
+    pDecoder->attachInstrDecI(pIInstrDec);
     return OCSD_OK; 
 }
 
@@ -190,6 +217,8 @@ ocsd_err_t CustomDcdMngrWrapper::attachMemAccessor(TraceComponent *pComponent, I
     CustomDecoderWrapper *pDecoder = dynamic_cast<CustomDecoderWrapper *>(pComponent);
     if(pDecoder == 0)
         return OCSD_ERR_INVALID_PARAM_TYPE;
+    pDecoder->attchMemAccI(pMemAccessor);
+    return OCSD_OK;
 }
 
 ocsd_err_t CustomDcdMngrWrapper::attachOutputSink(TraceComponent *pComponent, ITrcGenElemIn *pOutSink)
@@ -197,6 +226,8 @@ ocsd_err_t CustomDcdMngrWrapper::attachOutputSink(TraceComponent *pComponent, IT
     CustomDecoderWrapper *pDecoder = dynamic_cast<CustomDecoderWrapper *>(pComponent);
     if(pDecoder == 0)
         return OCSD_ERR_INVALID_PARAM_TYPE;
+    pDecoder->attachGenElemI(pOutSink);
+    return OCSD_OK;
 }
 
 // pkt processor only
@@ -205,6 +236,8 @@ ocsd_err_t CustomDcdMngrWrapper::attachPktMonitor(TraceComponent *pComponent, IT
     CustomDecoderWrapper *pDecoder = dynamic_cast<CustomDecoderWrapper *>(pComponent);
     if(pDecoder == 0)
         return OCSD_ERR_INVALID_PARAM_TYPE;
+    // TBD:
+    return OCSD_OK;
 }
 
 ocsd_err_t CustomDcdMngrWrapper::attachPktIndexer(TraceComponent *pComponent, ITrcTypedBase *pPktIndexer)
@@ -218,6 +251,8 @@ ocsd_err_t CustomDcdMngrWrapper::attachPktSink(TraceComponent *pComponent, ITrcT
     CustomDecoderWrapper *pDecoder = dynamic_cast<CustomDecoderWrapper *>(pComponent);
     if(pDecoder == 0)
         return OCSD_ERR_INVALID_PARAM_TYPE;
+    // TBD:
+    return OCSD_OK;
 }
 
 void CustomDcdMngrWrapper::pktToString(void *pkt, char *pStrBuffer, int bufSize)
@@ -229,23 +264,59 @@ void CustomDcdMngrWrapper::pktToString(void *pkt, char *pStrBuffer, int bufSize)
 
 /************************** Decoder instance wrapper **************************************/
 
-ocsd_datapath_resp_t GenElemOpCB( const void *cb_context,
+/* callback functions */
+ocsd_datapath_resp_t GenElemOpCB( const void *lib_context,
                                                 const ocsd_trc_index_t index_sop, 
                                                 const uint8_t trc_chan_id, 
                                                 const ocsd_generic_trace_elem *elem)
 {
-    if(cb_context && ((CustomDecoderWrapper *)cb_context)->m_pGenElemIn)
-        return ((CustomDecoderWrapper *)cb_context)->m_pGenElemIn->TraceElemIn(index_sop,trc_chan_id,*(OcsdTraceElement *)elem);
+    if (lib_context && ((CustomDecoderWrapper *)lib_context)->m_pGenElemIn)
+        return ((CustomDecoderWrapper *)lib_context)->m_pGenElemIn->TraceElemIn(index_sop,trc_chan_id,*(OcsdTraceElement *)elem);
     return OCSD_RESP_FATAL_NOT_INIT;
 }
 
-CustomDecoderWrapper::CustomDecoderWrapper( const ocsd_extern_dcd_inst_t &dcd_inst,
-                                            const std::string &name, 
-                                            const int instID) 
-                                            : TraceComponent(name,instID)
+void LogErrorCB(const void *lib_context, const ocsd_err_severity_t filter_level, const ocsd_err_t code, const ocsd_trc_index_t idx, const uint8_t chan_id, const char *pMsg)
 {
-    m_pGenElemIn = 0;
-    m_decoder_inst = dcd_inst;
+    if (lib_context)
+    {
+        if(pMsg)
+            ((CustomDecoderWrapper *)lib_context)->LogError(&ocsdError(filter_level, code, idx, chan_id, std::string(pMsg)));
+        else
+            ((CustomDecoderWrapper *)lib_context)->LogError(&ocsdError(filter_level, code, idx, chan_id));
+    }
+}
+
+void LogMsgCB(const void *lib_context, const ocsd_err_severity_t filter_level, const char *msg)
+{
+    if (lib_context && msg)
+        ((CustomDecoderWrapper *)lib_context)->LogMessage(filter_level, std::string(msg));
+}
+
+ocsd_err_t DecodeArmInstCB(const void *lib_context, ocsd_instr_info *instr_info)
+{
+    if (lib_context && ((CustomDecoderWrapper *)lib_context)->m_pIInstrDec)
+        return ((CustomDecoderWrapper *)lib_context)->m_pIInstrDec->DecodeInstruction(instr_info);
+    return OCSD_ERR_ATTACH_INVALID_PARAM;
+}
+
+ocsd_err_t MemAccessCB(const void *lib_context,
+    const ocsd_vaddr_t address,
+    const uint8_t cs_trace_id,
+    const ocsd_mem_space_acc_t mem_space,
+    uint32_t *num_bytes,
+    uint8_t *p_buffer)
+{
+    if (lib_context && ((CustomDecoderWrapper *)lib_context)->m_pMemAccessor)
+        return ((CustomDecoderWrapper *)lib_context)->m_pMemAccessor->ReadTargetMemory(address, cs_trace_id, mem_space, num_bytes, p_buffer);
+    return OCSD_ERR_INVALID_PARAM_VAL;
+}
+
+/** decoder instance object */
+CustomDecoderWrapper::CustomDecoderWrapper() : TraceComponent("extern_wrapper"),                                            
+    m_pGenElemIn(0),
+    m_pIInstrDec(0),
+    m_pMemAccessor(0)
+{
 }
 
 CustomDecoderWrapper::~CustomDecoderWrapper()
@@ -267,5 +338,27 @@ ocsd_datapath_resp_t CustomDecoderWrapper::TraceDataIn( const ocsd_datapath_op_t
                                           numBytesProcessed);
     return OCSD_RESP_FATAL_NOT_INIT;
 }
+
+void CustomDecoderWrapper::updateNameFromDcdInst()
+{
+    // create a unique component name from the decoder name + cs-id.
+    std::string name_combined = m_decoder_inst.p_decoder_name;
+    char num_buffer[32];
+    sprintf(num_buffer, "_%04d", m_decoder_inst.cs_id);
+    name_combined += (std::string)num_buffer;
+    setComponentName(name_combined);
+}
+
+void CustomDecoderWrapper::SetCallbacks(ocsd_extern_dcd_cb_fns & callbacks)
+{
+    callbacks.fn_arm_instruction_decode = DecodeArmInstCB;
+    callbacks.fn_gen_elem_out = GenElemOpCB;
+    callbacks.fn_log_error = LogErrorCB;
+    callbacks.fn_log_msg = LogMsgCB;
+    callbacks.fn_memory_access = MemAccessCB;
+    callbacks.fn_packet_data_sink = 0;
+    callbacks.fn_packet_mon = 0;
+}
+
 
 /* End of File ocsd_c_api_custom_obj.cpp */

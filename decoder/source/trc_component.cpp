@@ -101,6 +101,18 @@ void TraceComponent::LogError(const ocsdError &Error)
     }
 }
 
+void TraceComponent::LogMessage(const ocsd_err_severity_t filter_level, const std::string &msg)
+{
+    if ((m_errLogHandle != OCSD_INVALID_HANDLE) &&
+        isLoggingErrorLevel(filter_level))
+    {
+        // ensure we have not disabled the attachPt
+        if (m_error_logger.first())
+            m_error_logger.first()->LogMessage(this->m_errLogHandle, filter_level, msg);
+    }
+
+}
+
 void TraceComponent::do_attach_notify(const int num_attached)
 {
     if(num_attached)
@@ -133,6 +145,5 @@ ocsd_err_t TraceComponent::setComponentOpMode(uint32_t op_flags)
     m_op_flags = op_flags;
     return OCSD_OK;
 }
-
 
 /* End of File trc_component.cpp */

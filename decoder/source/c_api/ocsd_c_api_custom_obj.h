@@ -99,9 +99,9 @@ private:
 class CustomDecoderWrapper : public TraceComponent, public ITrcDataIn
 {
 public:
-    CustomDecoderWrapper(const ocsd_extern_dcd_inst_t &dcd_inst, const std::string &name, const int instID);
+    CustomDecoderWrapper();
     virtual ~CustomDecoderWrapper();
-    const ocsd_extern_dcd_inst_t *getDecoderInstInfo() const { return &m_decoder_inst; }
+    ocsd_extern_dcd_inst_t *getDecoderInstInfo() { return &m_decoder_inst; }
 
     virtual ocsd_datapath_resp_t TraceDataIn( const ocsd_datapath_op_t op,
                                               const ocsd_trc_index_t index,
@@ -109,20 +109,48 @@ public:
                                               const uint8_t *pDataBlock,
                                               uint32_t *numBytesProcessed);
 
+    void attachGenElemI(ITrcGenElemIn *pIF) { m_pGenElemIn = pIF; };
+    void attachInstrDecI(IInstrDecode *pIF) { m_pIInstrDec = pIF; };
+    void attchMemAccI(ITargetMemAccess *pIF) { m_pMemAccessor = pIF; };
+
+    void updateNameFromDcdInst();
+
+    static void SetCallbacks(ocsd_extern_dcd_cb_fns &callbacks);
+
+private:
     // declare the callback functions as friend functions.
-    friend ocsd_datapath_resp_t GenElemOpCB( const void *cb_context,
+    friend ocsd_datapath_resp_t GenElemOpCB( const void *lib_context,
                                                 const ocsd_trc_index_t index_sop, 
                                                 const uint8_t trc_chan_id, 
                                                 const ocsd_generic_trace_elem *elem);
 
-private:
-    ITrcGenElemIn *m_pGenElemIn;    //!< generic element sink interface - output from decdoer.
-    ITraceErrorLog *m_pErrorLog;    //!< error log interface
-    IInstrDecode *m_pIInstrDec;     //!< arm instruction decode interface.
-    ITargetMemAccess *m_pMemAccessor;
+    friend void LogErrorCB(   const void *lib_context, 
+                                const ocsd_err_severity_t filter_level, 
+                                const ocsd_err_t code, 
+                                const ocsd_trc_index_t idx, 
+                                const uint8_t chan_id, 
+                                const char *pMsg);
+
+    friend void LogMsgCB(const void *lib_context,
+        const ocsd_err_severity_t filter_level,
+        const char *msg);
+        
+    friend ocsd_err_t DecodeArmInstCB(const void *lib_context, ocsd_instr_info *instr_info);
+
+    friend ocsd_err_t MemAccessCB(const void *lib_context,
+        const ocsd_vaddr_t address,
+        const uint8_t cs_trace_id,
+        const ocsd_mem_space_acc_t mem_space,
+        uint32_t *num_bytes,
+        uint8_t *p_buffer);
 
 private:
-     ocsd_extern_dcd_inst_t m_decoder_inst;
+    ITrcGenElemIn *m_pGenElemIn;        //!< generic element sink interface - output from decoder fed to common sink.
+    IInstrDecode *m_pIInstrDec;         //!< arm instruction decode interface - decoder may want to use this.
+    ITargetMemAccess *m_pMemAccessor;   //!< system memory accessor insterface - decoder may want to use this.
+
+    ocsd_extern_dcd_inst_t m_decoder_inst;
+
 };
 
 /**** Decoder configuration wrapper - implements CSConfig base class interface ***/

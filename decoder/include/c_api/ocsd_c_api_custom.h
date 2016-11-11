@@ -1,6 +1,6 @@
 /*
  * \file       ocsd_c_api_custom.h
- * \brief      Reference CoreSight Trace Decoder : 
+ * \brief      OpenCSD : Custom decoder interface types and structures
  * 
  * \copyright  Copyright (c) 2016, ARM Limited. All Rights Reserved.
  */
@@ -46,81 +46,83 @@ typedef ocsd_datapath_resp_t (* fnTraceDataIn)( const void *decoder_handle,
                                                 const uint8_t *pDataBlock,
                                                 uint32_t *numBytesProcessed);
 
+/* function to update the in-use flags for the packet sinks - must be implemented in the decoder */
+typedef void (* fnUpdatePktMonFlags)(const void *decoder_handle, const int flags);
 
-/* callback and registration function to connect a generic element output point */
-typedef ocsd_datapath_resp_t (* fnGenElemOpCB)( const void *cb_context,
+
+/* callback function to connect into the generic element output point */
+typedef ocsd_datapath_resp_t (* fnGenElemOpCB)( const void *lib_context,
                                                 const ocsd_trc_index_t index_sop, 
                                                 const uint8_t trc_chan_id, 
                                                 const ocsd_generic_trace_elem *elem); 
-typedef ocsd_err_t (* fnRegisterGenElemOpCB)(const void *decoder_handle, const void *cb_context, const fnGenElemOpCB pFnGenElemOut);
  
-/* callback and registration function to connect into the library error logging mechanism */
-typedef void (* fnLogErrorCB)(const void *cb_context, const ocsd_err_severity_t filter_level, const ocsd_err_t code, const ocsd_trc_index_t idx, const uint8_t chan_id, const char *pMsg);
-typedef void (* fnLogMsgCB)(const void *cb_context, const ocsd_err_severity_t filter_level, const char *msg);
-typedef void (* fnRegisterErrLogCB)(const void *decoder_handle, const void *cb_context, const fnLogErrorCB pFnErrLog, const fnLogMsgCB pFnMsgLog);
+/* callback functions to connect into the library error logging mechanism */
+typedef void (* fnLogErrorCB)(const void *lib_context, const ocsd_err_severity_t filter_level, const ocsd_err_t code, const ocsd_trc_index_t idx, const uint8_t chan_id, const char *pMsg);
+typedef void (* fnLogMsgCB)(const void *lib_context, const ocsd_err_severity_t filter_level, const char *msg);
 
-/* callback and registration function to connect an ARM instruction decoder */
-typedef ocsd_err_t (* fnDecodeArmInstCB)(const void *cb_context, ocsd_instr_info *instr_info);
-typedef ocsd_err_t (* fnRegisterDecodeArmInstCB)(const void *decoder_handle, const void *cb_context, const fnDecodeArmInstCB pFnDecodeArmInstr);
+/* callback function to connect an ARM instruction decoder */
+typedef ocsd_err_t (* fnDecodeArmInstCB)(const void *lib_context, ocsd_instr_info *instr_info);
 
-/* callback and registration function to connect the memory accessor interface */
-typedef ocsd_err_t (* fnMemAccessCB)(const void *cb_context,
+/* callback function to connect the memory accessor interface */
+typedef ocsd_err_t (* fnMemAccessCB)(const void *lib_context,
                                      const ocsd_vaddr_t address, 
                                      const uint8_t cs_trace_id, 
                                      const ocsd_mem_space_acc_t mem_space, 
                                      uint32_t *num_bytes, 
                                      uint8_t *p_buffer);
-typedef ocsd_err_t (* fnRegisterMemAccessCB)(const void *decoder_handle, const void *cb_context, const fnMemAccessCB pFnmemAcc);
 
-/* callback and registration function to connect to the packet monitor interface of the packet processor */
-typedef void (* fnPktMonCB)(  const void *cb_context,
+/* callback function to connect to the packet monitor interface of the packet processor */
+typedef void (* fnPktMonCB)(  const void *lib_context,
                               const ocsd_datapath_op_t op,
                               const ocsd_trc_index_t index_sop,
                               const void *pkt,
                               const uint32_t size,
                               const uint8_t *p_data);
-typedef ocsd_err_t (* fnRegisterPktMonCB)(const void *decoder_handle, const void *cb_context, fnPktMonCB pFnPktMon);
 
-/* callback and registration function to connect to the packet sink interface, on the main decode 
+/* callback function to connect to the packet sink interface, on the main decode 
     data path - use if decoder created as packet processor only */
-typedef ocsd_datapath_resp_t (* fnPktDataSinkCB)( const ocsd_datapath_op_t op,
+typedef ocsd_datapath_resp_t (* fnPktDataSinkCB)( const void *lib_context,
+                                                  const ocsd_datapath_op_t op,
                                                   const ocsd_trc_index_t index_sop,
-                                                  const void *p_packet_in);
-typedef ocsd_err_t (* fnRegisterPktDataSinkCB)(const void *decoder_handle, const void *cb_context, fnPktDataSinkCB pFnPktData);
+                                                  const void *pkt);
 
-/** This structure is filled in by the ocsd_extern_dcd_fact_t creation function with the exception of the 
-    library context value. */
+/** an instance of this is owned by the decoder, filled in by the library - allows the CB fns in the library decode tree to be called. */
+typedef struct _ocsd_extern_dcd_cb_fns {
+    fnGenElemOpCB       fn_gen_elem_out;
+    fnLogErrorCB        fn_log_error;
+    fnLogMsgCB          fn_log_msg;
+    fnDecodeArmInstCB   fn_arm_instruction_decode;
+    fnMemAccessCB       fn_memory_access;
+    fnPktMonCB          fn_packet_mon;
+    fnPktDataSinkCB     fn_packet_data_sink;
+    const void *lib_context;
+    int packetCBFlags;  /**< Flags to indicate if the packet sink / packet monitor callbacks are in use. */
+} ocsd_extern_dcd_cb_fns;
+
+#define OCSD_CUST_DCD_PKT_CB_USE_MON  0x1
+#define OCSD_CUST_DCD_PKT_CB_USE_SINK 0x2
+
+/** Owned by the library instance object, this structure is filled in by the ocsd_extern_dcd_fact_t createDecoder() function. */
 typedef struct _ocsd_extern_dcd_inst {
-    /* Mandatory decoder functions - library initialisation will fail without these. */
-    fnTraceDataIn fn_data_in;            /**< raw trace data input function to decoder */
-
-    /* Optional decoder functions - set to 0 if the decoder class does not require / support this functionality */
-    fnRegisterGenElemOpCB       fn_reg_gen_out_cb;   /**< connect callback to get the generic element output of the decoder */
-    fnRegisterErrLogCB          fn_reg_error_log_cb; /**< connect callbacks for error logging */        
-    fnRegisterDecodeArmInstCB   fn_reg_instr_dcd_cb; /**< connect callback to decode an arm instruction */
-    fnRegisterMemAccessCB       fn_reg_mem_acc_cb;   /**< connect callback to access trace memory images */
-    fnRegisterPktMonCB          fn_reg_pkt_mon_cb;   /**< connect to the packet monitor of the packet processing stage */   
-    fnRegisterPktDataSinkCB     fn_reg_pkt_sink_cb;  /**< connect to packet sink on main datapath if decoder in packe processing mode only */
+    /* Mandatory decoder call back functions - library initialisation will fail without these. */
+    fnTraceDataIn       fn_data_in;         /**< raw trace data input function to decoder */
+    fnUpdatePktMonFlags fn_update_pkt_mon;  /**< update the packet monitor / sink usage flags */
 
     /* Decoder instance data */
-    void *decoder_handle;   /**< Instance handle for the decoder */
-    unsigned char cs_id;    /**< CS ID of the trace stream this decoder should be attached to */
+    void *decoder_handle;   /**< Instance handle for the decoder  - used by library to call the decoder CB functions */
     char *p_decoder_name;   /**< type name of the decoder - may be used in logging */
+    uint8_t cs_id;          /**< Coresight ID for the instance - extracted from the config on creation. */
 
-    /* opaque library context value */
-    void *library_context;  /**< Context information for this decoder used by the library */
 } ocsd_extern_dcd_inst_t;
 
-
 /** function to create a decoder instance - fills in the decoder struct supplied. */
-typedef ocsd_err_t (* fnCreateCustomDecoder)(const int create_flags, const void *decoder_cfg, ocsd_extern_dcd_inst_t *p_decoder_inst);
+typedef ocsd_err_t (* fnCreateCustomDecoder)(const int create_flags, const void *decoder_cfg, const ocsd_extern_dcd_cb_fns *p_lib_callbacks, ocsd_extern_dcd_inst_t *p_decoder_inst);
 /** Function to destroy a decoder instance - indicated by decoder handle */
 typedef ocsd_err_t (* fnDestroyCustomDecoder)(const void *decoder_handle);
 /** Function to extract the CoreSight Trace ID from the configuration structure */
 typedef ocsd_err_t (* fnGetCSIDFromConfig)(const void *decoder_cfg, unsigned char *p_csid);
 /** Function to convert a protocol specific trace packet to human readable string */
 typedef ocsd_err_t (* fnPacketToString)(const void *trc_pkt, char *buffer, const int buflen);
-
 
 /** set of functions and callbacks to create an extern custom decoder in the library 
     via the C API interface. This structure is registered with the library by name and 
