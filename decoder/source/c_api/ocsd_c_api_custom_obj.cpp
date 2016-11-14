@@ -88,6 +88,21 @@ OCSD_C_API ocsd_err_t ocsd_deregister_decoders()
     return OCSD_OK;
 }
 
+
+
+ocsd_err_t ocsd_cust_protocol_to_str(const ocsd_trace_protocol_t pkt_protocol, const void *trc_pkt, char *buffer, const int buflen)
+{
+    OcsdLibDcdRegister *pRegister = OcsdLibDcdRegister::getDecoderRegister();
+    IDecoderMngr *p_mngr = 0;
+    if (pRegister->getDecoderMngrByType(pkt_protocol, &p_mngr) == OCSD_OK)
+    {
+        CustomDcdMngrWrapper *pWrapper = static_cast<CustomDcdMngrWrapper *>(p_mngr);
+        pWrapper->pktToString(trc_pkt, buffer, buflen);
+        return OCSD_OK;
+    }
+    return OCSD_ERR_NO_PROTOCOL;
+}
+
 /***************** Decode Manager Wrapper *****************************/
 
 CustomDcdMngrWrapper::CustomDcdMngrWrapper()
@@ -217,7 +232,7 @@ ocsd_err_t CustomDcdMngrWrapper::attachMemAccessor(TraceComponent *pComponent, I
     CustomDecoderWrapper *pDecoder = dynamic_cast<CustomDecoderWrapper *>(pComponent);
     if(pDecoder == 0)
         return OCSD_ERR_INVALID_PARAM_TYPE;
-    pDecoder->attchMemAccI(pMemAccessor);
+    pDecoder->attachMemAccI(pMemAccessor);
     return OCSD_OK;
 }
 
@@ -236,7 +251,14 @@ ocsd_err_t CustomDcdMngrWrapper::attachPktMonitor(TraceComponent *pComponent, IT
     CustomDecoderWrapper *pDecoder = dynamic_cast<CustomDecoderWrapper *>(pComponent);
     if(pDecoder == 0)
         return OCSD_ERR_INVALID_PARAM_TYPE;
-    // TBD:
+    IPktRawDataMon<void> *pIF = 0;
+    if (pPktRawDataMon)
+    {
+        pIF = dynamic_cast<IPktRawDataMon<void> *>(pPktRawDataMon);
+        if (!pIF)
+            return OCSD_ERR_INVALID_PARAM_TYPE;
+    }
+    pDecoder->attachPtkMonI(pIF);   
     return OCSD_OK;
 }
 
@@ -255,12 +277,13 @@ ocsd_err_t CustomDcdMngrWrapper::attachPktSink(TraceComponent *pComponent, ITrcT
     return OCSD_OK;
 }
 
-void CustomDcdMngrWrapper::pktToString(void *pkt, char *pStrBuffer, int bufSize)
+void CustomDcdMngrWrapper::pktToString(const void *pkt, char *pStrBuffer, int bufSize)
 {
-    if(m_dcd_fact.pktToString)
-        m_dcd_fact.pktToString(pkt,pStrBuffer,bufSize);
+    if (m_dcd_fact.pktToString)
+        m_dcd_fact.pktToString(pkt, pStrBuffer, bufSize);
+    else
+        snprintf(pStrBuffer, bufSize, "CUSTOM_PKT[]: print unsupported; protocol(%d).",m_dcd_fact.protocol_id);
 }
-
 
 /************************** Decoder instance wrapper **************************************/
 
@@ -311,11 +334,37 @@ ocsd_err_t MemAccessCB(const void *lib_context,
     return OCSD_ERR_INVALID_PARAM_VAL;
 }
 
+void PktMonCB(const void *lib_context,
+    const ocsd_datapath_op_t op,
+    const ocsd_trc_index_t index_sop,
+    const void *pkt,
+    const uint32_t size,
+    const uint8_t *p_data)
+{
+    if (lib_context && ((CustomDecoderWrapper *)lib_context)->m_pPktMon)
+        ((CustomDecoderWrapper *)lib_context)->m_pPktMon->RawPacketDataMon(op, index_sop, pkt, size, p_data);
+}
+
+ocsd_datapath_resp_t PktDataSinkCB(const void *lib_context,
+    const ocsd_datapath_op_t op,
+    const ocsd_trc_index_t index_sop,
+    const void *pkt)
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    if (lib_context && ((CustomDecoderWrapper *)lib_context)->m_pPktIn)
+        resp = ((CustomDecoderWrapper *)lib_context)->m_pPktIn->PacketDataIn(op, index_sop, pkt);
+    return resp;
+}
+
+
+
 /** decoder instance object */
 CustomDecoderWrapper::CustomDecoderWrapper() : TraceComponent("extern_wrapper"),                                            
     m_pGenElemIn(0),
     m_pIInstrDec(0),
-    m_pMemAccessor(0)
+    m_pMemAccessor(0),
+    m_pPktMon(0),
+    m_pPktIn(0)
 {
 }
 
@@ -339,6 +388,20 @@ ocsd_datapath_resp_t CustomDecoderWrapper::TraceDataIn( const ocsd_datapath_op_t
     return OCSD_RESP_FATAL_NOT_INIT;
 }
 
+void CustomDecoderWrapper::attachPtkMonI(IPktRawDataMon<void>* pIF)
+{
+    m_pPktMon = pIF;
+    int flags = (m_pPktMon ? OCSD_CUST_DCD_PKT_CB_USE_MON : 0) | (m_pPktIn ? OCSD_CUST_DCD_PKT_CB_USE_SINK : 0);
+    m_decoder_inst.fn_update_pkt_mon(m_decoder_inst.decoder_handle, flags);
+}
+
+void CustomDecoderWrapper::attachPtkSinkI(IPktDataIn<void>* pIF)
+{
+    m_pPktIn = pIF;
+    int flags = (m_pPktMon ? OCSD_CUST_DCD_PKT_CB_USE_MON : 0) | (m_pPktIn ? OCSD_CUST_DCD_PKT_CB_USE_SINK : 0);
+    m_decoder_inst.fn_update_pkt_mon(m_decoder_inst.decoder_handle, flags);
+}
+
 void CustomDecoderWrapper::updateNameFromDcdInst()
 {
     // create a unique component name from the decoder name + cs-id.
@@ -356,9 +419,8 @@ void CustomDecoderWrapper::SetCallbacks(ocsd_extern_dcd_cb_fns & callbacks)
     callbacks.fn_log_error = LogErrorCB;
     callbacks.fn_log_msg = LogMsgCB;
     callbacks.fn_memory_access = MemAccessCB;
-    callbacks.fn_packet_data_sink = 0;
-    callbacks.fn_packet_mon = 0;
+    callbacks.fn_packet_data_sink = PktDataSinkCB;
+    callbacks.fn_packet_mon = PktMonCB;
 }
-
 
 /* End of File ocsd_c_api_custom_obj.cpp */

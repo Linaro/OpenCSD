@@ -80,12 +80,14 @@ void OcsdLibDcdRegister::releaseLastCustomProtocolID()
 OcsdLibDcdRegister::OcsdLibDcdRegister()
 {
     m_iter = m_decoder_mngrs.begin();
+    m_pLastTypedDecoderMngr = 0;
 }
 
 OcsdLibDcdRegister::~OcsdLibDcdRegister()
 {
     m_decoder_mngrs.clear();
     m_typed_decoder_mngrs.clear();
+    m_pLastTypedDecoderMngr = 0;
 }
 
 
@@ -166,10 +168,16 @@ const ocsd_err_t OcsdLibDcdRegister::getDecoderMngrByType(const ocsd_trace_proto
         if(!m_b_registeredBuiltins)
             return OCSD_ERR_MEM;
     }
-    std::map<const ocsd_trace_protocol_t, IDecoderMngr *>::const_iterator iter = m_typed_decoder_mngrs.find(decoderType);
-    if(iter !=  m_typed_decoder_mngrs.end())
-        return OCSD_ERR_DCDREG_NAME_UNKNOWN;
-    *p_decoder_mngr = iter->second;
+
+    if (m_pLastTypedDecoderMngr && (m_pLastTypedDecoderMngr->getProtocolType() == decoderType))
+        *p_decoder_mngr = m_pLastTypedDecoderMngr;
+    else
+    {
+        std::map<const ocsd_trace_protocol_t, IDecoderMngr *>::const_iterator iter = m_typed_decoder_mngrs.find(decoderType);
+        if (iter != m_typed_decoder_mngrs.end())
+            return OCSD_ERR_DCDREG_NAME_UNKNOWN;
+        *p_decoder_mngr = m_pLastTypedDecoderMngr = iter->second;
+    }
     return OCSD_OK;
 }
 

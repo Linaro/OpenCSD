@@ -378,6 +378,12 @@ OCSD_C_API ocsd_err_t ocsd_pkt_str(const ocsd_trace_protocol_t pkt_protocol, con
  */
 OCSD_C_API ocsd_err_t ocsd_gen_elem_str(const ocsd_generic_trace_elem *p_pkt, char *buffer, const int buffer_size);
 
+
+/*!
+ * Init a generic element with type, clearing any flags etc.
+ */
+OCSD_C_API void ocsd_gen_elem_init(ocsd_generic_trace_elem *p_pkt, const ocsd_gen_trc_elem_t elem_type);
+
 /** @}*/
 
 /** register a custom decoder with the library */

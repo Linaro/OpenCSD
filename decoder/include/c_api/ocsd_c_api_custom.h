@@ -140,6 +140,9 @@ typedef struct _ocsd_extern_dcd_fact {
     ocsd_trace_protocol_t protocol_id;  /**< protocol ID assigned during registration. */
 } ocsd_extern_dcd_fact_t; 
 
+
+ocsd_err_t ocsd_cust_protocol_to_str(const ocsd_trace_protocol_t pkt_protocol, const void *trc_pkt, char *buffer, const int buflen);
+
 #endif // ARM_OCSD_C_API_CUSTOM_H_INCLUDED
 
 /* End of File ocsd_c_api_custom.h */

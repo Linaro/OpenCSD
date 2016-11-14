@@ -88,7 +88,8 @@ public:
 // create configuration from data structure
     virtual ocsd_err_t createConfigFromDataStruct(CSConfig **pConfigBase, const void *pDataStruct);
 
-    void pktToString(void *pkt, char *pStrBuffer, int bufSize);
+// custom packet to string interface.
+    void pktToString(const void *pkt, char *pStrBuffer, int bufSize);
 
 private:
 
@@ -111,7 +112,10 @@ public:
 
     void attachGenElemI(ITrcGenElemIn *pIF) { m_pGenElemIn = pIF; };
     void attachInstrDecI(IInstrDecode *pIF) { m_pIInstrDec = pIF; };
-    void attchMemAccI(ITargetMemAccess *pIF) { m_pMemAccessor = pIF; };
+    void attachMemAccI(ITargetMemAccess *pIF) { m_pMemAccessor = pIF; };
+
+    void attachPtkMonI(IPktRawDataMon<void> *pIF);
+    void attachPtkSinkI(IPktDataIn<void> *pIF);
 
     void updateNameFromDcdInst();
 
@@ -144,13 +148,26 @@ private:
         uint32_t *num_bytes,
         uint8_t *p_buffer);
 
+    friend void PktMonCB(const void *lib_context,
+        const ocsd_datapath_op_t op,
+        const ocsd_trc_index_t index_sop,
+        const void *pkt,
+        const uint32_t size,
+        const uint8_t *p_data);
+
+    friend ocsd_datapath_resp_t PktDataSinkCB(const void *lib_context,
+        const ocsd_datapath_op_t op,
+        const ocsd_trc_index_t index_sop,
+        const void *pkt);
+
 private:
     ITrcGenElemIn *m_pGenElemIn;        //!< generic element sink interface - output from decoder fed to common sink.
     IInstrDecode *m_pIInstrDec;         //!< arm instruction decode interface - decoder may want to use this.
     ITargetMemAccess *m_pMemAccessor;   //!< system memory accessor insterface - decoder may want to use this.
+    IPktRawDataMon<void> *m_pPktMon;    //!< interface to packet monitor (full or packet only decode).
+    IPktDataIn<void> *m_pPktIn;          //!< interface to packet sink (decode packets only).
 
-    ocsd_extern_dcd_inst_t m_decoder_inst;
-
+    ocsd_extern_dcd_inst_t m_decoder_inst;    
 };
 
 /**** Decoder configuration wrapper - implements CSConfig base class interface ***/

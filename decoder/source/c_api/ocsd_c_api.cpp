@@ -304,7 +304,10 @@ OCSD_C_API ocsd_err_t ocsd_pkt_str(const ocsd_trace_protocol_t pkt_protocol, con
         break;
 
     default:
-        err = OCSD_ERR_NO_PROTOCOL;
+        if ((pkt_protocol >= OCSD_PROTOCOL_CUSTOM_0) && (pkt_protocol < OCSD_PROTOCOL_END))
+            err = ocsd_cust_protocol_to_str(pkt_protocol, p_pkt, buffer, buffer_size);
+        else
+            err = OCSD_ERR_NO_PROTOCOL;
         break;
     }
 
@@ -330,7 +333,6 @@ OCSD_C_API ocsd_err_t ocsd_gen_elem_str(const ocsd_generic_trace_elem *p_pkt, ch
     }
     return err;
 }
-
 
 /*** Decode tree -- memory accessor control */
 
@@ -397,6 +399,13 @@ OCSD_C_API void ocsd_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle)
     }
 }
 
+OCSD_C_API void ocsd_gen_elem_init(ocsd_generic_trace_elem *p_pkt, const ocsd_gen_trc_elem_t elem_type)
+{
+    p_pkt->elem_type = elem_type;
+    p_pkt->flag_bits = 0;
+    p_pkt->ptr_extended_data = 0;
+}
+
 /*******************************************************************************/
 /* C API local fns                                                             */
 /*******************************************************************************/
@@ -424,7 +433,12 @@ static ocsd_err_t ocsd_create_pkt_sink_cb(ocsd_trace_protocol_t protocol,  FnDef
         break;
 
     default:
-        err = OCSD_ERR_NO_PROTOCOL;
+        if ((protocol >= OCSD_PROTOCOL_CUSTOM_0) && (protocol < OCSD_PROTOCOL_END))
+        {
+            *ppCBObj = new (std::nothrow) PktCBObj<void>(pPktInFn, p_context);                
+        }
+        else
+            err = OCSD_ERR_NO_PROTOCOL;
         break;
     }
 
@@ -458,7 +472,12 @@ static ocsd_err_t ocsd_create_pkt_mon_cb(ocsd_trace_protocol_t protocol, FnDefPk
         break;
 
     default:
-        err = OCSD_ERR_NO_PROTOCOL;
+        if ((protocol >= OCSD_PROTOCOL_CUSTOM_0) && (protocol < OCSD_PROTOCOL_END))
+        {
+            *ppCBObj = new (std::nothrow) PktMonCBObj<void>(pPktInFn, p_context);
+        }
+        else
+            err = OCSD_ERR_NO_PROTOCOL;
         break;
     }
 

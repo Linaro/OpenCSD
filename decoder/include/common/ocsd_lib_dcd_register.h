@@ -79,6 +79,11 @@ private:
 
     std::map<const ocsd_trace_protocol_t, IDecoderMngr *> m_typed_decoder_mngrs;    //!< map linking decoder managers to protocol type ID
 
+    // cache last found by type to speed up repeated quries on same object.
+    IDecoderMngr *m_pLastTypedDecoderMngr;      //!< last manager we found by type
+
+
+
     // singleton pattern - need just one of these in the library - ensure all default constructors are private.
     OcsdLibDcdRegister();
     OcsdLibDcdRegister(OcsdLibDcdRegister const &) {};
