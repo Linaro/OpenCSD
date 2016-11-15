@@ -132,8 +132,8 @@ ocsd_err_t CustomDcdMngrWrapper::createDecoder(const int create_flags, const int
     ocsd_extern_dcd_cb_fns lib_callbacks;
     CustomDecoderWrapper::SetCallbacks(lib_callbacks);
     lib_callbacks.lib_context = pComp;
-
-
+    lib_callbacks.packetCBFlags = 0;
+    
     ocsd_extern_dcd_inst_t *pDecodeInst = pComp->getDecoderInstInfo();
 
     err = m_dcd_fact.createDecoder( create_flags,
@@ -273,7 +273,14 @@ ocsd_err_t CustomDcdMngrWrapper::attachPktSink(TraceComponent *pComponent, ITrcT
     CustomDecoderWrapper *pDecoder = dynamic_cast<CustomDecoderWrapper *>(pComponent);
     if(pDecoder == 0)
         return OCSD_ERR_INVALID_PARAM_TYPE;
-    // TBD:
+    IPktDataIn<void> *pIF = 0;
+    if (pPktDataInSink)
+    {
+        pIF = dynamic_cast<IPktDataIn<void> *>(pPktDataInSink);
+        if(!pIF)
+            return OCSD_ERR_INVALID_PARAM_TYPE;
+    }
+    pDecoder->attachPtkSinkI(pIF);
     return OCSD_OK;
 }
 

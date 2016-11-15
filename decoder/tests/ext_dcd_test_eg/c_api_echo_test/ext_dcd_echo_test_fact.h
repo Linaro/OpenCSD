@@ -42,7 +42,7 @@
 #include "c_api/ocsd_c_api_custom.h"
 
 /* return an initialised structure with the factory functions */
-ocsd_extern_dcd_fact_t *ext_echo_get_dcd_fact();
+extern ocsd_extern_dcd_fact_t *ext_echo_get_dcd_fact();
 
 
 #endif /*ARM_EXT_DCD_ECHO_TEST_FACT_H_INCLUDED */

@@ -36,13 +36,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "c_api/opencsd_c_api.h"
 #include "c_api/ocsd_c_api_types.h"
+#include "c_api/ocsd_c_api_cust_impl.h"
+
 #include "ext_dcd_echo_test_fact.h"
 #include "ext_dcd_echo_test.h"
 
 /** The name of the decoder */
 #define DECODER_NAME "ECHO_TEST"
 
+/********* External callback fns passed to library *****/
 /** Declare the trace data input function for the decoder - passed to library as call-back. */
 static ocsd_datapath_resp_t echo_dcd_trace_data_in(const void *decoder_handle,
     const ocsd_datapath_op_t op,
@@ -54,6 +59,25 @@ static ocsd_datapath_resp_t echo_dcd_trace_data_in(const void *decoder_handle,
 /** Allow library to update the packet monitor / sink in use flags to allow decoder to call CB as appropriate.*/
 static void echo_dcd_update_mon_flags(const void *decoder_handle, const int flags);
 
+/********* Fns called by decoder creation factory  *****/
+void echo_dcd_init(echo_decoder_t *decoder, 
+    ocsd_extern_dcd_inst_t *p_decoder_inst, 
+    const echo_dcd_cfg_t *p_config, 
+    const ocsd_extern_dcd_cb_fns *p_lib_callbacks);
+
+void echo_dcd_pkt_tostr(echo_dcd_pkt_t *pkt, char *buffer, const int buflen);
+
+/********* Internal decoder functions  *****/
+static void echo_dcd_reset(echo_decoder_t *decoder);
+static ocsd_datapath_resp_t echo_dcd_process_data(echo_decoder_t *decoder,
+    const ocsd_trc_index_t index,
+    const uint32_t dataBlockSize,
+    const uint8_t *pDataBlock,
+    uint32_t *numBytesProcessed);
+
+static ocsd_datapath_resp_t send_gen_packet(echo_decoder_t *decoder);
+static ocsd_datapath_resp_t analyse_packet(echo_decoder_t *decoder);
+
 /** init decoder on creation, along with library instance structure */
 void echo_dcd_init(echo_decoder_t *decoder, ocsd_extern_dcd_inst_t *p_decoder_inst, const echo_dcd_cfg_t *p_config, const ocsd_extern_dcd_cb_fns *p_lib_callbacks)
 {
@@ -63,8 +87,9 @@ void echo_dcd_init(echo_decoder_t *decoder, ocsd_extern_dcd_inst_t *p_decoder_in
     memset(decoder, 0, sizeof(echo_decoder_t));
 
     memcpy(&(decoder->reg_config), p_config, sizeof(echo_dcd_cfg_t));       // copy in the config structure.
-    memcpy(&(decoder->lib_fns), p_lib_callbacks, sizeof(p_lib_callbacks));  // copy in the the library callbacks.
+    memcpy(&(decoder->lib_fns), p_lib_callbacks, sizeof(ocsd_extern_dcd_cb_fns));  // copy in the the library callbacks.
 
+    echo_dcd_reset(decoder);
 
     // fill out the info to pass back to the library.
 
@@ -76,6 +101,7 @@ void echo_dcd_init(echo_decoder_t *decoder, ocsd_extern_dcd_inst_t *p_decoder_in
     // set up the data input callback
     p_decoder_inst->fn_data_in = echo_dcd_trace_data_in;
     p_decoder_inst->fn_update_pkt_mon = echo_dcd_update_mon_flags;
+
 }
 
 void echo_dcd_pkt_tostr(echo_dcd_pkt_t *pkt, char *buffer, const int buflen)
@@ -83,10 +109,6 @@ void echo_dcd_pkt_tostr(echo_dcd_pkt_t *pkt, char *buffer, const int buflen)
     snprintf(buffer, buflen, "ECHOTP[0x%02X] (0x%08X) \n", pkt->header, pkt->data);
 }
 
-void echo_dcd_update_mon_flags(const void *decoder_handle, const int flags)
-{
-    ((echo_decoder_t *)decoder_handle)->lib_fns.packetCBFlags = flags;
-}
 
 /**** Main decoder implementation ****/
 
@@ -98,6 +120,206 @@ ocsd_datapath_resp_t echo_dcd_trace_data_in(const void *decoder_handle,
     uint32_t *numBytesProcessed)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    echo_decoder_t *decoder = (echo_decoder_t *)decoder_handle;
 
+    switch (op)
+    {
+    case OCSD_OP_DATA:
+        resp = echo_dcd_process_data(decoder, index, dataBlockSize, pDataBlock, numBytesProcessed);
+        break;
+
+    case OCSD_OP_EOT:
+        if (decoder->data_in_count > 0)
+            lib_cb_LogError(&(decoder->lib_fns), OCSD_ERR_SEV_WARN, OCSD_ERR_PKT_INTERP_FAIL,index,decoder->reg_config.cs_id,"Incomplete packet at end of trace");
+        ocsd_gen_elem_init(&(decoder->out_pkt), OCSD_GEN_TRC_ELEM_EO_TRACE);
+        resp = send_gen_packet(decoder);
+        break;
+
+    case OCSD_OP_FLUSH:
+        /* This decoder never saves a list of incoming packets (which some real decoders may have to according to protocol). 
+           Therefore there is nothing to flush */
+        break;
+
+    case OCSD_OP_RESET:
+        echo_dcd_reset(decoder);
+        break;
+    }
+    return resp;
+}
+
+void echo_dcd_update_mon_flags(const void *decoder_handle, const int flags)
+{
+    ((echo_decoder_t *)decoder_handle)->lib_fns.packetCBFlags = flags;
+}
+
+void echo_dcd_reset(echo_decoder_t *decoder)
+{
+    decoder->curr_pkt.header = 0;
+    decoder->data_in_count = 0;
+    decoder->state = DCD_INIT;
+}
+
+ocsd_datapath_resp_t echo_dcd_process_data(echo_decoder_t *decoder,
+    const ocsd_trc_index_t index,
+    const uint32_t dataBlockSize,
+    const uint8_t *pDataBlock,
+    uint32_t *numBytesProcessed)
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    uint32_t bytesUsed = 0;
+
+    while (OCSD_DATA_RESP_IS_CONT(resp) && (bytesUsed < dataBlockSize))
+    {
+        switch (decoder->state)
+        {
+
+        case DCD_INIT:
+            /* on initialisation / after reset output a not-synced indicator */
+            ocsd_gen_elem_init(&decoder->out_pkt, OCSD_GEN_TRC_ELEM_NO_SYNC);
+            resp = send_gen_packet(decoder);
+            decoder->state = DCD_WAIT_SYNC; /* wait for the first sync point */
+            break;
+
+        case DCD_WAIT_SYNC:
+            /* In this 'protocol' sync will be a single 0x00 byte.
+               Some decoders may output "unsynced packets" if in packet processing only mode, or on the
+               packet monitor output if in use. We are not bothering here. */
+            if (pDataBlock[bytesUsed] == 0x00)
+                decoder->state = DCD_PROC_PACKETS;
+            bytesUsed++;
+            break;
+
+        case DCD_PROC_PACKETS:
+            /* collect our ECHO_DCD_PKT_SIZE byte packets into the data in buffer */
+            if (decoder->data_in_count < ECHO_DCD_PKT_SIZE)
+            {
+                if (decoder->data_in_count == 0)
+                    decoder->curr_pkt_idx = index + bytesUsed;  /* record the correct start of packet index in the buffer. */
+                decoder->data_in[decoder->data_in_count++] = pDataBlock[bytesUsed++];                
+            }
+
+            /* if we have ECHO_DCD_PKT_SIZE bytes we have a packet */
+            if (decoder->data_in_count == ECHO_DCD_PKT_SIZE)
+            {
+                resp = analyse_packet(decoder);
+                decoder->data_in_count = 0; /* done with the current packet */
+            }
+            break;
+        }
+    }
+    *numBytesProcessed = bytesUsed;
+    return resp;
+}
+
+ocsd_datapath_resp_t send_gen_packet(echo_decoder_t *decoder)
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    /* Only output generic decode packets if we are in full decode mode. */
+    if(decoder->createFlags &  OCSD_CREATE_FLG_FULL_DECODER)
+        resp = lib_cb_GenElemOp(&decoder->lib_fns, decoder->curr_pkt_idx, decoder->reg_config.cs_id, &decoder->out_pkt);
+    return resp;
+}
+
+ocsd_datapath_resp_t analyse_packet(echo_decoder_t * decoder)
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    ocsd_extern_dcd_cb_fns *p_fns = &(decoder->lib_fns);
+    uint32_t num_mem_bytes = 4;
+    uint8_t mem_buffer[4];
+    ocsd_instr_info instr_info;
+    ocsd_err_t err;
+
+    /* create a packet from the data */
+    decoder->curr_pkt.header = decoder->data_in[0];
+    decoder->curr_pkt.data = *((uint32_t *)&decoder->data_in[1]);
+    
+    /* if the packet monitor callback is in use - output the newly created packet. */
+    if (lib_cb_usePktMon(p_fns))
+        lib_cb_PktMon(p_fns, OCSD_OP_DATA, decoder->curr_pkt_idx, (const void *)(&decoder->curr_pkt), ECHO_DCD_PKT_SIZE, decoder->data_in);
+
+    /* if the packet sink is in use then we shouldn't be in full decoder mode.*/
+    if (lib_cb_usePktSink(p_fns))
+        lib_cb_PktDataSink(p_fns, OCSD_OP_DATA, decoder->curr_pkt_idx, (const void *)(&decoder->curr_pkt));
+    else if (decoder->createFlags &  OCSD_CREATE_FLG_FULL_DECODER) /* no packet sink so are we full decoder? */
+    {
+        /*  Full decode - generate generic output packets. 
+        
+            A real decoder will sometimes require multiple input packets per output packet, or may generate multiple output
+            packets per single input packet. Here we stick at 1:1 for test simplicity.
+
+            This code will also test the infrastructure callbacks to ensure that everything holds together correctly.
+        */
+
+        /* nominally 4 types of packet */
+        switch (decoder->curr_pkt.header & 0x3)
+        {
+        case 0:
+            ocsd_gen_elem_init(&decoder->out_pkt, OCSD_GEN_TRC_ELEM_CUSTOM);    /* full custom packet */
+            decoder->out_pkt.extended_data = 1;/* mark the extended ptr in use */
+            decoder->out_pkt.ptr_extended_data = decoder->data_in;  /* the custom packet data in this protocol just the packet itself (hence 'echo')*/
+            break;
+
+        case 1:
+            /* custom decoders can re-use existing packet types if they follow the rules for those types. */
+            ocsd_gen_elem_init(&decoder->out_pkt, OCSD_GEN_TRC_ELEM_INSTR_RANGE); 
+            /* fake up an address range using the input data */
+            decoder->out_pkt.st_addr = decoder->curr_pkt.data & 0xFFFFFFF0;
+            decoder->out_pkt.en_addr = decoder->curr_pkt.data + 0x10 + (((uint32_t)decoder->curr_pkt.header) << 2);
+            decoder->out_pkt.isa = ocsd_isa_custom;
+            decoder->out_pkt.last_instr_exec = (decoder->curr_pkt.header & 0x4) ? 1 : 0;
+            break;
+
+        case 2:
+            /* test the memory access callback. */
+            err = lib_cb_MemAccess(p_fns, decoder->curr_pkt.data & 0xFFFFFFF0, decoder->reg_config.cs_id, OCSD_MEM_SPACE_ANY, &num_mem_bytes, mem_buffer);
+            if (err != OCSD_OK)
+                lib_cb_LogError(p_fns, OCSD_ERR_SEV_ERROR, err, decoder->curr_pkt_idx, decoder->reg_config.cs_id, "Error accessing memory area\n.");
+            if (num_mem_bytes == 0)
+            {
+                /* unable to read the address... */
+                ocsd_gen_elem_init(&decoder->out_pkt, OCSD_GEN_TRC_ELEM_ADDR_NACC);
+                decoder->out_pkt.st_addr = decoder->curr_pkt.data & 0xFFFFFFF0;
+            }
+            else
+            {
+                /* try something different */
+                ocsd_gen_elem_init(&decoder->out_pkt, OCSD_GEN_TRC_ELEM_CYCLE_COUNT);
+                decoder->out_pkt.cycle_count = *((uint32_t *)mem_buffer);
+                decoder->out_pkt.has_cc = 1;
+            }
+            break;
+
+        case 3:
+            /* test the ARM instruction decode callback */
+            instr_info.pe_type.arch = ARCH_V8;
+            instr_info.pe_type.profile = profile_CortexA;
+            instr_info.isa = ocsd_isa_aarch64;
+            instr_info.opcode = decoder->curr_pkt.data;
+            instr_info.instr_addr = decoder->curr_pkt.data & 0xFFFFF000;
+            instr_info.dsb_dmb_waypoints = 0;
+            
+            err = lib_cb_DecodeArmInst(p_fns, &instr_info);
+            if (err != OCSD_OK)
+            {
+                lib_cb_LogError(p_fns, OCSD_ERR_SEV_ERROR, err, decoder->curr_pkt_idx, decoder->reg_config.cs_id, "Error decoding instruction\n.");
+                ocsd_gen_elem_init(&decoder->out_pkt, OCSD_GEN_TRC_ELEM_CUSTOM);
+                decoder->out_pkt.has_ts = 1;
+                decoder->out_pkt.timestamp = decoder->curr_pkt.data;
+            }
+            else
+            {
+                ocsd_gen_elem_init(&decoder->out_pkt, OCSD_GEN_TRC_ELEM_INSTR_RANGE);
+                /* fake up an address range using the input data */
+                decoder->out_pkt.st_addr = decoder->curr_pkt.data & 0xFFFFFFF0;
+                decoder->out_pkt.en_addr = decoder->curr_pkt.data + 0x10 + (((uint32_t)decoder->curr_pkt.header) << 2);
+                decoder->out_pkt.isa = ocsd_isa_aarch64;
+                decoder->out_pkt.last_instr_exec = (decoder->curr_pkt.header & 0x4) ? 1 : 0;
+                decoder->out_pkt.last_i_type = instr_info.type;
+                decoder->out_pkt.last_i_subtype = instr_info.sub_type;
+            }
+            break;
+        }
+        resp = send_gen_packet(decoder);
+    }
     return resp;
 }

@@ -133,6 +133,7 @@ typedef enum _ocsd_err_t {
     /* decoder registration */
     OCSD_ERR_DCDREG_NAME_REPEAT,        /**< attempted to register a decoder with the same name as another one */
     OCSD_ERR_DCDREG_NAME_UNKNOWN,       /**< attempted to find a decoder with a name that is not known in the library */
+    OCSD_ERR_DCDREG_TYPE_UNKNOWN,       /**< attempted to find a decoder with a type that is not known in the library */
     OCSD_ERR_DCDREG_TOOMANY,            /**< attempted to register too many custom decoders */
     /* decoder config */
     OCSD_ERR_DCD_INTERFACE_UNUSED,      /**< Attempt to connect or use and inteface not supported by this decoder. */

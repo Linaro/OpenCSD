@@ -174,8 +174,8 @@ const ocsd_err_t OcsdLibDcdRegister::getDecoderMngrByType(const ocsd_trace_proto
     else
     {
         std::map<const ocsd_trace_protocol_t, IDecoderMngr *>::const_iterator iter = m_typed_decoder_mngrs.find(decoderType);
-        if (iter != m_typed_decoder_mngrs.end())
-            return OCSD_ERR_DCDREG_NAME_UNKNOWN;
+        if (iter == m_typed_decoder_mngrs.end())
+            return OCSD_ERR_DCDREG_TYPE_UNKNOWN;
         *p_decoder_mngr = m_pLastTypedDecoderMngr = iter->second;
     }
     return OCSD_OK;
