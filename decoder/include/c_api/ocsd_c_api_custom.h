@@ -57,7 +57,13 @@ typedef ocsd_datapath_resp_t (* fnGenElemOpCB)( const void *lib_context,
                                                 const ocsd_generic_trace_elem *elem); 
  
 /* callback functions to connect into the library error logging mechanism */
-typedef void (* fnLogErrorCB)(const void *lib_context, const ocsd_err_severity_t filter_level, const ocsd_err_t code, const ocsd_trc_index_t idx, const uint8_t chan_id, const char *pMsg);
+typedef void (* fnLogErrorCB)(  const void *lib_context, 
+                                const ocsd_err_severity_t filter_level, 
+                                const ocsd_err_t code, 
+                                const ocsd_trc_index_t idx, 
+                                const uint8_t chan_id, 
+                                const char *pMsg);
+
 typedef void (* fnLogMsgCB)(const void *lib_context, const ocsd_err_severity_t filter_level, const char *msg);
 
 /* callback function to connect an ARM instruction decoder */
@@ -88,18 +94,23 @@ typedef ocsd_datapath_resp_t (* fnPktDataSinkCB)( const void *lib_context,
 
 /** an instance of this is owned by the decoder, filled in by the library - allows the CB fns in the library decode tree to be called. */
 typedef struct _ocsd_extern_dcd_cb_fns {
-    fnGenElemOpCB       fn_gen_elem_out;
-    fnLogErrorCB        fn_log_error;
-    fnLogMsgCB          fn_log_msg;
-    fnDecodeArmInstCB   fn_arm_instruction_decode;
-    fnMemAccessCB       fn_memory_access;
-    fnPktMonCB          fn_packet_mon;
-    fnPktDataSinkCB     fn_packet_data_sink;
-    const void *lib_context;
-    int packetCBFlags;  /**< Flags to indicate if the packet sink / packet monitor callbacks are in use. */
+/* Callback functions */
+    fnGenElemOpCB       fn_gen_elem_out;            /**< Callback to output a generic element. */
+    fnLogErrorCB        fn_log_error;               /**< Callback to output an error.  */
+    fnLogMsgCB          fn_log_msg;                 /**< Callback to output a message. */
+    fnDecodeArmInstCB   fn_arm_instruction_decode;  /**< Callback to decode an ARM instruction. */
+    fnMemAccessCB       fn_memory_access;           /**< Callback to access memory images related to the trace capture. */
+    fnPktMonCB          fn_packet_mon;              /**< Callback to output trace packet to packet monitor. */
+    fnPktDataSinkCB     fn_packet_data_sink;        /**< Callback to output trace packet to packet sink - if in pack processing only mode. */
+/* CB in use flags. */
+    int packetCBFlags;  /**< Flags to indicate if the packet sink / packet monitor callbacks are in use. ( OCSD_CUST_DCD_PKT_CB_USE_MON / OCSD_CUST_DCD_PKT_CB_USE_SINK) */
+/* library context */
+    const void *lib_context;  /** library context pointer - use in callbacks to allow the library to load the correct context data. */
 } ocsd_extern_dcd_cb_fns;
 
+/** Flag to indicate the the packet monitor is in use in the library */
 #define OCSD_CUST_DCD_PKT_CB_USE_MON  0x1
+/** Flag to indicate the the packet sink is in use in the library */
 #define OCSD_CUST_DCD_PKT_CB_USE_SINK 0x2
 
 /** Owned by the library instance object, this structure is filled in by the ocsd_extern_dcd_fact_t createDecoder() function. */

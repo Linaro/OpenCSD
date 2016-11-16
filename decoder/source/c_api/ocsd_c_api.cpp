@@ -203,10 +203,14 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_packet_callback(  const dcd_tree_handle_t h
     {
     case OCSD_C_API_CB_PKT_SINK:
         err = ocsd_create_pkt_sink_cb(pElem->getProtocol(),(FnDefPktDataIn)p_fn_callback_data,p_context,&pDataInSink);
+        if(err == OCSD_OK)
+            err = pElem->getDecoderMngr()->attachPktSink(pElem->getDecoderHandle(), pDataInSink);
         break;
 
     case OCSD_C_API_CB_PKT_MON:
         err = ocsd_create_pkt_mon_cb(pElem->getProtocol(),(FnDefPktDataMon)p_fn_callback_data,p_context,&pDataInSink);
+        if (err == OCSD_OK)
+            err = pElem->getDecoderMngr()->attachPktMonitor(pElem->getDecoderHandle(), pDataInSink);
         break;
 
     default:
@@ -215,15 +219,16 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_packet_callback(  const dcd_tree_handle_t h
 
     if(err == OCSD_OK)
     {
-        err = pElem->getDecoderMngr()->attachPktSink(pElem->getDecoderHandle(),pDataInSink);
-        if(err == OCSD_OK)
+        if (err == OCSD_OK)
         {
             // save object pointer for destruction later.
             std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
             it = s_data_map.find(handle);
-            if(it != s_data_map.end())
+            if (it != s_data_map.end())
                 it->second->cb_objs.push_back(pDataInSink);
         }
+        else
+            delete pDataInSink;
     }
     return err;
 }

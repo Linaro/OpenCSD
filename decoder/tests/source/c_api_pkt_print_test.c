@@ -55,6 +55,12 @@
 /* include the C-API library header */
 #include "c_api/opencsd_c_api.h"
 
+/* include the test external decoder factory and decoder types headers 
+   - separate from the main library includes by definition as external decoder. 
+*/
+#include "ext_dcd_echo_test_fact.h"
+#include "ext_dcd_echo_test.h"
+
 /* path to test snapshots, relative to tests/bin/<plat>/<dbg|rel> build output dir */
 #ifdef _WIN32
 const char *default_path_to_snapshot = "..\\..\\..\\snapshots\\juno_r1_1\\";
@@ -91,6 +97,10 @@ static test_op_t op = TEST_PKT_PRINT;   // default operation is to packet print
 static ocsd_trace_protocol_t test_protocol = OCSD_PROTOCOL_ETMV4I; // ETMV4 protocl
 static uint8_t test_trc_id_override = 0x00; // no trace ID override.
 
+/* external decoder testing */
+static int test_extern_decoder = 0; /* test the external decoder infrastructure. */
+static ocsd_extern_dcd_fact_t *p_ext_fact; /* external decoder factory */
+#define EXT_DCD_NAME "ext_echo"
 
 /* Process command line options - choose the operation to use for the test. */
 static int process_cmd_line(int argc, char *argv[])
@@ -142,6 +152,10 @@ static int process_cmd_line(int argc, char *argv[])
         {
             use_region_file = 1;
             using_mem_acc_cb = 0;
+        }
+        else if (strcmp(argv[idx], "-extern") == 0)
+        {
+            test_extern_decoder = 1;
         }
         else if(strcmp(argv[idx],"-help") == 0)
         {
@@ -396,11 +410,12 @@ static int print_data_array(const uint8_t *p_array, const int array_size, char *
 * Callback function to process packets and packet data from the monitor output of the 
 * packet processor. Again print them to the library error logger. 
 */
-void packet_monitor(const ocsd_datapath_op_t op, 
-                              const ocsd_trc_index_t index_sop, 
-                              const void *p_packet_in,
-                              const uint32_t size,
-                              const uint8_t *p_data)
+void packet_monitor(    void *context, 
+                        const ocsd_datapath_op_t op,
+                        const ocsd_trc_index_t index_sop, 
+                        const void *p_packet_in,
+                        const uint32_t size,
+                        const uint8_t *p_data)
 {
     int offset = 0;
 
@@ -630,27 +645,57 @@ static ocsd_err_t create_decoder_stm(dcd_tree_handle_t dcd_tree_h)
     trace_config_stm.reg_feat1r = 0;
     trace_config_stm.hw_event = HwEvent_Unknown_Disabled;
 
-    /* STM only has packet processor at present */
-    if(op == TEST_PKT_PRINT) /* packet printing only */
+    /* create a STM decoder - no context needed as we have a single stream to a single handler. */
+    return create_generic_decoder(dcd_tree_h, OCSD_BUILTIN_DCD_STM, (void *)&trace_config_stm, 0);
+}
+
+static ocsd_err_t create_decoder_extern(dcd_tree_handle_t dcd_tree_h)
+{
+    echo_dcd_cfg_t trace_cfg_ext;
+
+    /* setup the custom configuration */
+    trace_cfg_ext.cs_id = 0x010;
+    if (test_trc_id_override != 0)
     {
-        ret = create_generic_decoder(dcd_tree_h,OCSD_BUILTIN_DCD_STM,(void *)&trace_config_stm,0);
+        trace_cfg_ext.cs_id = (uint32_t)test_trc_id_override;
     }
-    else
-    {
-        /* Full decode */
-        /* not supported in library at present */
-        printf("STM Full decode not supported in library at present. Packet print only\n");
-        ret = OCSD_ERR_RDR_NO_DECODER;
-    }
-    return ret;
+
+    /* create an external decoder - no context needed as we have a single stream to a single handler. */
+    return create_generic_decoder(dcd_tree_h, EXT_DCD_NAME, (void *)&trace_cfg_ext, 0);
 }
 
 /************************************************************************/
+
+ocsd_err_t register_extern_decoder()
+{
+    ocsd_err_t err = OCSD_ERR_NO_PROTOCOL;
+
+    p_ext_fact = ext_echo_get_dcd_fact();
+    if (p_ext_fact)
+    {
+        err = ocsd_register_custom_decoder(EXT_DCD_NAME, p_ext_fact);
+        if (err == OCSD_OK)
+            test_protocol = p_ext_fact->protocol_id;
+        else
+            printf("External Decoder Registration: Failed to register decoder.");
+    }
+    else
+        printf("External Decoder Registration: Failed to get decoder factory.");
+
+    return err;
+}
 
 /* create a decoder according to options */
 static ocsd_err_t create_decoder(dcd_tree_handle_t dcd_tree_h)
 {
     ocsd_err_t err = OCSD_OK;
+    
+    /* extended for the external decoder testing*/
+    if (test_extern_decoder)
+            err = register_extern_decoder();
+    if (err != OCSD_OK)
+        return err;
+
     switch(test_protocol)
     {
     case OCSD_PROTOCOL_ETMV4I:
@@ -667,6 +712,12 @@ static ocsd_err_t create_decoder(dcd_tree_handle_t dcd_tree_h)
 
     case OCSD_PROTOCOL_PTM:
         err = create_decoder_ptm(dcd_tree_h);
+        break;
+
+        /* we only register a single external decoder in this test, 
+        so it will always be assigned the first custom protocol ID */
+    case OCSD_PROTOCOL_CUSTOM_0:
+        err = create_decoder_extern(dcd_tree_h);
         break;
 
     default:
