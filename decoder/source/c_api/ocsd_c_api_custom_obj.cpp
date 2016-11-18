@@ -88,13 +88,11 @@ OCSD_C_API ocsd_err_t ocsd_deregister_decoders()
     return OCSD_OK;
 }
 
-
-
-ocsd_err_t ocsd_cust_protocol_to_str(const ocsd_trace_protocol_t pkt_protocol, const void *trc_pkt, char *buffer, const int buflen)
+OCSD_C_API ocsd_err_t ocsd_cust_protocol_to_str(const ocsd_trace_protocol_t pkt_protocol, const void *trc_pkt, char *buffer, const int buflen)
 {
     OcsdLibDcdRegister *pRegister = OcsdLibDcdRegister::getDecoderRegister();
     IDecoderMngr *p_mngr = 0;
-    if (pRegister->getDecoderMngrByType(pkt_protocol, &p_mngr) == OCSD_OK)
+    if (OCSD_PROTOCOL_IS_CUSTOM(pkt_protocol) && (pRegister->getDecoderMngrByType(pkt_protocol, &p_mngr) == OCSD_OK))
     {
         CustomDcdMngrWrapper *pWrapper = static_cast<CustomDcdMngrWrapper *>(p_mngr);
         pWrapper->pktToString(trc_pkt, buffer, buflen);

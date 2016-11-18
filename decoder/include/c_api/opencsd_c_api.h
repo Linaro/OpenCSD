@@ -386,10 +386,42 @@ OCSD_C_API void ocsd_gen_elem_init(ocsd_generic_trace_elem *p_pkt, const ocsd_ge
 
 /** @}*/
 
-/** register a custom decoder with the library */
+/** @name Custom Decoder API functions
+
+@{*/
+
+/** Register a custom decoder with the library 
+
+    @param *name : Name under which to register the decoder.
+    @param *p_dcd_fact : Custom decoder factory structure.
+
+    @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
+*/
 OCSD_C_API ocsd_err_t ocsd_register_custom_decoder(const char *name, ocsd_extern_dcd_fact_t *p_dcd_fact);
-/** clear all registered decoders - library cleanup */
+
+/** Clear all registered decoders - library cleanup 
+    
+    @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
+*/
 OCSD_C_API ocsd_err_t ocsd_deregister_decoders();
+
+/** Get a string representation of a custom protocol packet.
+
+    Specific function to extract the packet string for a custom protocol ID only. Custom IDs are allocated to decoder factories 
+    during the ocsd_register_custom_decoder() process.
+
+    This function is called by ocsd_pkt_str() when the incoming protocol is a custom ID.
+
+    @param pkt_protocol : Packet protocol type - must be in the custom ID range ( >= OCSD_PROTOCOL_CUSTOM_0, < OCSD_PROTOCOL_END) 
+    @param *p_pkt : pointer to a valid packet structure of protocol type. cast to void *.
+    @param *buffer : character buffer for string.
+    @param buffer_size : size of character buffer.
+
+    @return ocsd_err_t  : Library error code -  RCDTL_OK if successful, OCSD_ERR_NO_PROTOCOL if input ID not in custom range or not in use.
+*/
+OCSD_C_API ocsd_err_t ocsd_cust_protocol_to_str(const ocsd_trace_protocol_t pkt_protocol, const void *trc_pkt, char *buffer, const int buflen);
+
+/** @}*/
 
 
 /** @}*/

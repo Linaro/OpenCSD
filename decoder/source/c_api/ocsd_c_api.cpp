@@ -309,7 +309,7 @@ OCSD_C_API ocsd_err_t ocsd_pkt_str(const ocsd_trace_protocol_t pkt_protocol, con
         break;
 
     default:
-        if ((pkt_protocol >= OCSD_PROTOCOL_CUSTOM_0) && (pkt_protocol < OCSD_PROTOCOL_END))
+        if (OCSD_PROTOCOL_IS_CUSTOM(pkt_protocol))
             err = ocsd_cust_protocol_to_str(pkt_protocol, p_pkt, buffer, buffer_size);
         else
             err = OCSD_ERR_NO_PROTOCOL;

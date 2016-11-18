@@ -539,7 +539,7 @@ typedef enum _ocsd_trace_protocol_t {
 #define OCSD_PROTOCOL_IS_BUILTIN(P) ((P > OCSD_PROTOCOL_UNKNOWN) && (P < OCSD_PROTOCOL_BUILTIN_END)) 
 
 /** Test if protocol type is a custom external registered decoder */
-#define OCSD_PROTOCOL_IS_CUSTOM(P)  ((P > OCSD_PROTOCOL_CUSTOM_0) && (P < OCSD_PROTOCOL_END ))
+#define OCSD_PROTOCOL_IS_CUSTOM(P)  ((P >= OCSD_PROTOCOL_CUSTOM_0) && (P < OCSD_PROTOCOL_END ))
 
 /** @}*/
 
