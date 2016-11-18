@@ -170,13 +170,11 @@ static int process_cmd_line(int argc, char *argv[])
 
 static void print_cmd_line_help()
 {
-    printf("Usage:\n-etmv3|-stm|-ptm  : choose protocol (one only, default etmv4)\n");
+    printf("Usage:\n-etmv3|-stm|-ptm|-extern  : choose protocol (one only, default etmv4)\n");
     printf("-id <ID> : decode source for id <ID> (default 0x10)\n");
     printf("-decode | -decode_only : full decode + trace packets / full decode packets only (default trace packets only)\n");
-    printf("-test_region_file | -test_cb : mem accessor - test multi region file API | test callback API (default single memroy file)\n\n");
+    printf("-test_region_file | -test_cb : mem accessor - test multi region file API | test callback API (default single memory file)\n\n");
 }
-
-
 
 /************************************************************************/
 /* Memory accessor functionality */

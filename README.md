@@ -26,7 +26,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.4.2_
+_Current Version 0.5.0_
 
 ### Current support:
 
@@ -34,11 +34,12 @@ _Current Version 0.4.2_
 - PTM instruction trace - packet processing and packet decode.
 - ETMv3 instruction trace - packet processing and packet decode.
 - ETMv3 data trace - packet processing.
-- STM software trace - packet processing.
+- STM software trace - packet processing and packet decode.
+
+- External Decoders - support for addition of external / custom decoders into the library.
 
 ### Support to be added:
 
-- STM software trace - packet decode.
 - ITM software trace - packet processing and decode.
 - ETMv3 data trace - packet decode.
 - ETMv4 data trace - packet processing and decode.
@@ -100,6 +101,7 @@ Version and Modification Information
 - _Version 0.4_  :  Library development - updated decode tree and C-API for generic decoder handling. Switch to semantic versioning.
 - _Version 0.4.1_:  Minor Update & Bugfixes - fix to PTM decoder, ID checking on test program, adds NULL_TS support in STM packet processor.
 - _Version 0.4.2_:  Minor Update - Update to documentation for perf usage in 4.8 kernel branch.
+- _Version 0.5.0_:  Library Development - external decoder support. STM full decode.
 
 Licence Information
 ===================

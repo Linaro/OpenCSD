@@ -12,8 +12,10 @@ There are currently two test programs built alongside the library.
 and decodes all or a chosen set of trace sources from within the trace data buffers in the library. Command
 line parameters allow the test program to be controlled. 
 
-2. `simple_pkt_print_c_api` : This program tests the "C" API functions, using hardcoded tests 
+2. `c_api_pkt_print_test` : This program tests the "C" API functions, using hardcoded tests 
 based on the same "snapshots" used for the C++ library. Limited user control for this program. 
+This can also run tests using the external test decoder to validate the external decoder API. 
+See [external_custom.md](@ref custom_decoders) for details.
 
 These programs are both built at the same time as the library for the same set of platforms.
 See [build_libs.md](@ref build_lib) for build details.
@@ -177,4 +179,21 @@ Idx:17300; ID:10; RCTDL_GEN_TRC_ELEM_ADDR_NACC( 0xffffffc000117cf0 )
 
 ~~~~~~~~~~~~~~~~
 
+The `c_api_pkt_print_test` program.
+-----------------------------------
 
+Program tests the C-API infrastructure, including as an option the external decoder support. 
+
+Limited to decoding trace from a single CoreSight ID. Uses the same "snapshots" as the C++ test program, but using hardcoded path values.
+
+__Command Line Options__
+
+By default the program will run the single CoreSight ID of 0x10 in packet processing output mode using the ETMv4 decoder on the Juno snapshot.
+
+- `-id <n>`          : Change the ID used for the test.
+- `-etmv3`           : Test the ETMv3 decoder - uses the TC2 snapshot.
+- `-ptm`             : Test the PTM decoder - uses the TC2 snapshot.
+- `-stm`             : Test the STM decoder - uses juno STM only snapshot.
+- `-extern`          : Use the 'echo_test' external decoder to test the custom decoder API.
+- `-decode`          : Output trace protocol packets and full decode generic packets.
+- `-decode_only`     : Output full decode generic packets only.

@@ -37,7 +37,16 @@
 #include "c_api/ocsd_c_api_types.h"
 #include "c_api/ocsd_c_api_custom.h"
 
-/* inline functions to call the various CB functionality */
+/** @addtogroup ocsd_ext_dcd
+@{*/
+
+/**@name External decoder - Inline utility functions.
+   @brief inline functions used in decoders to call the various library callback functionality.
+
+   Functions manipulate and use the ocsd_extern_dcd_cb_fns structure to call into the library, 
+   with appropriate checking for initialisation and usage flags.
+
+@{*/
 
 inline ocsd_datapath_resp_t lib_cb_GenElemOp(const ocsd_extern_dcd_cb_fns *callbacks,
     const ocsd_trc_index_t index_sop,
@@ -141,5 +150,9 @@ inline void lib_cb_updatePktCBFlags(ocsd_extern_dcd_cb_fns *callbacks, const int
 {
     callbacks->packetCBFlags = newFlags;
 }
+
+/** @}*/
+
+/** @}*/
 
 #endif /* ARM_OCSD_C_API_CUST_IMPL_H_INCLUDED */
