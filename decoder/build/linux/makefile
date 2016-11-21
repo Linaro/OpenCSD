@@ -155,6 +155,7 @@ $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so: $(LIB_BASE_NAME)_lib
 
 .PHONY: tests
 tests: libs
+	cd $(OCSD_ROOT)/tests/build/linux/echo_test_dcd_lib && make
 	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && make
 	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && make
 	cd $(OCSD_ROOT)/tests/build/linux/simple_pkt_print_c_api && make

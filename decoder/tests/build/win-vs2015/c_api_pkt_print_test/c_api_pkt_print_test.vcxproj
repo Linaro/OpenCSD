@@ -250,15 +250,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;OCSD_USE_STATIC_C_API;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\..\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\include;..\..\..\..\tests\ext_dcd_test_eg\c_api_echo_test</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\..\..\lib\win$(PlatformArchitecture)\rel\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>lib$(LIB_CAPI_NAME).lib;lib$(LIB_BASE_NAME).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\..\lib\win$(PlatformArchitecture)\rel\;..\..\..\..\tests\lib\win$(PlatformArchitecture)\rel\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>lib$(LIB_CAPI_NAME).lib;lib$(LIB_BASE_NAME).lib;ext_dcd_echo_test.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-dll|Win32'">

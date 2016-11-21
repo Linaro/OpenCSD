@@ -308,9 +308,9 @@ void LogErrorCB(const void *lib_context, const ocsd_err_severity_t filter_level,
     if (lib_context)
     {
         if(pMsg)
-            ((CustomDecoderWrapper *)lib_context)->LogError(&ocsdError(filter_level, code, idx, chan_id, std::string(pMsg)));
+            ((CustomDecoderWrapper *)lib_context)->LogError(ocsdError(filter_level, code, idx, chan_id, std::string(pMsg)));
         else
-            ((CustomDecoderWrapper *)lib_context)->LogError(&ocsdError(filter_level, code, idx, chan_id));
+            ((CustomDecoderWrapper *)lib_context)->LogError(ocsdError(filter_level, code, idx, chan_id));
     }
 }
 

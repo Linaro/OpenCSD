@@ -1,5 +1,5 @@
 ########################################################
-# Copyright 2015 ARM Limited. All rights reserved.
+# Copyright 2016 ARM Limited. All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without modification, 
 # are permitted provided that the following conditions are met:
@@ -27,41 +27,39 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 # 
 #################################################################################
-
-########  
-# RCTDL - test makefile for simple c api packet list test.
+# OpenCSD - makefile for external echo_test decoder.
 #
 
 CC := $(MASTER_CC)
-CC_FLAGS := $(MASTER_CC_FLAGS) -Wno-switch
 LINKER := $(MASTER_LINKER)	
-LINKER_FLAGS := $(MASTER_LINKER_FLAGS) 
+LIB := $(MASTER_LIB)
 
-PROG = c_api_pkt_print_test
+CC_FLAGS := $(MASTER_CC_FLAGS) -fpic -Wno-switch
+LIB_FLAGS := $(MASTER_LIB_FLAGS)
+LINKER_FLAGS := $(MASTER_LINKER_FLAGS) -shared
+
+LIB_NAME = lib_echo_test_dcd
 
 BUILD_DIR=./$(PLAT_DIR)
 
-VPATH	=	 $(OCSD_TESTS)/source 
+ECHO_TEST_PATH=$(OCSD_TESTS)/ext_dcd_test_eg/c_api_echo_test
+
+VPATH	=	 $(ECHO_TEST_PATH)
 
 CC_INCLUDES	=	\
-			-I$(OCSD_TESTS)/source \
-			-I$(OCSD_TESTS)/ext_dcd_test_eg/c_api_echo_test \
+			-I$(ECHO_TEST_PATH) \
 			-I$(OCSD_INCLUDE) 
 
-OBJECTS		=	$(BUILD_DIR)/c_api_pkt_print_test.o 
+OBJECTS		=	$(BUILD_DIR)/ext_dcd_echo_test.o \
+				$(BUILD_DIR)/ext_dcd_echo_test_fact.o
 
-LIBS		=	-L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME) -l$(LIB_CAPI_NAME) \
-				-L$(LIB_TEST_TARGET_DIR) -l_echo_test_dcd
-
-all:  build_dir test_app copy_libs
+all:  build_dir  $(OBJECTS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a
 
 test_app: 	$(OBJECTS) $(BIN_TEST_TARGET_DIR)/$(PROG)
 
-
- $(BIN_TEST_TARGET_DIR)/$(PROG):
-			mkdir -p  $(BIN_TEST_TARGET_DIR)
-			$(LINKER) $(LINKER_FLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
-			cp $(LIB_TARGET_DIR)/*.so .
+$(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a:
+	mkdir -p $(LIB_TEST_TARGET_DIR)
+	$(LIB) $(LIB_FLAGS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a $(OBJECTS)
 
 build_dir:
 	mkdir -p $(BUILD_DIR)
@@ -78,7 +76,8 @@ $(BUILD_DIR)/%.o : %.c
 
 #### clean
 .PHONY: clean
-clean :
-			rm -f  $(BIN_TEST_TARGET_DIR)/$(PROG) $(OBJECTS)
+clean:
+	rm -f $(OBJECTS)
+	rm -f $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a
 
 # end of file makefile
