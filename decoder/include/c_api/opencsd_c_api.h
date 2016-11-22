@@ -403,7 +403,7 @@ OCSD_C_API ocsd_err_t ocsd_register_custom_decoder(const char *name, ocsd_extern
     
     @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
 */
-OCSD_C_API ocsd_err_t ocsd_deregister_decoders();
+OCSD_C_API ocsd_err_t ocsd_deregister_decoders(void);
 
 /** Get a string representation of a custom protocol packet.
 
