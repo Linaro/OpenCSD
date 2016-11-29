@@ -201,6 +201,8 @@ static ocsd_datapath_resp_t cs_etm_decoder__gen_trace_elem_printer(
         case OCSD_GEN_TRC_ELEM_CYCLE_COUNT:
         case OCSD_GEN_TRC_ELEM_ADDR_UNKNOWN:
         case OCSD_GEN_TRC_ELEM_EVENT:
+	case OCSD_GEN_TRC_ELEM_SWTRACE:
+	case OCSD_GEN_TRC_ELEM_CUSTOM:
         default:
             break;
         }
