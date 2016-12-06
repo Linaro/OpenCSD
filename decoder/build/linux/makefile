@@ -136,7 +136,7 @@ $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so:
 #
 $(LIB_CAPI_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a
 
-$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a:
+$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a: $(LIB_BASE_NAME)_lib
 	mkdir -p $(LIB_TARGET_DIR)
 	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make
 
@@ -145,7 +145,7 @@ $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a:
 #
 $(LIB_CAPI_NAME)_so: $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so
 
-$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so: $(LIB_BASE_NAME)_lib
+$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so: $(LIB_BASE_NAME)_so
 	mkdir -p $(LIB_TARGET_DIR)
 	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make
 
