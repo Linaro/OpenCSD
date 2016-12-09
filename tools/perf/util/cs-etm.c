@@ -1310,7 +1310,7 @@ static void cs_etm__print_auxtrace_info(u64 *val, size_t num)
 {
         unsigned i,j,cpu;
 
-        for (i = 0, cpu = 0; cpu < num; ++cpu) {
+        for (i = CS_HEADER_VERSION_0_MAX, cpu = 0; cpu < num; ++cpu) {
 
                 if (val[i] == __perf_cs_etmv3_magic) {
                         for (j = 0; j < CS_ETM_PRIV_MAX; ++j, ++i) {
