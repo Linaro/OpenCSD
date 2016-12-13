@@ -67,6 +67,11 @@ struct cs_etm_auxtrace {
         u64                     instructions_id;
         struct itrace_synth_opts synth_opts;
         unsigned                pmu_type;
+
+        u32                     branches_filter;
+        u64                     branches_sample_type;
+        u64                     branches_id;
+        bool                    sample_branches;
 };
 
 struct cs_etm_queue {
@@ -89,6 +94,9 @@ struct cs_etm_queue {
         u64                     offset;
         bool                    eot;
         bool                    kernel_mapped;
+        struct branch_stack    *last_branch;
+        struct branch_stack    *last_branch_rb;
+        size_t                  last_branch_pos;
 };
 
 static int cs_etm__get_trace(struct cs_etm_buffer *buff, struct cs_etm_queue *etmq);
@@ -209,6 +217,8 @@ static void cs_etm__free_queue(void *priv)
         thread__zput(etmq->thread);
         cs_etm_decoder__free(etmq->decoder);
         zfree(&etmq->event_buf);
+        zfree(&etmq->last_branch);
+        zfree(&etmq->last_branch_rb);
         zfree(&etmq->chain);
         free(etmq);
 }
@@ -373,6 +383,19 @@ static struct cs_etm_queue *cs_etm__alloc_queue(struct cs_etm_auxtrace *etm,
                 etmq->chain = NULL;
         }
 
+        if (etm->synth_opts.last_branch) {
+                size_t sz = sizeof(struct branch_stack);
+
+                sz += etm->synth_opts.last_branch_sz *
+                      sizeof(struct branch_entry);
+                etmq->last_branch = zalloc(sz);
+                if (!etmq->last_branch)
+                        goto out_free;
+                etmq->last_branch_rb = zalloc(sz);
+                if (!etmq->last_branch_rb)
+                        goto out_free;
+        }
+
         etmq->event_buf = malloc(PERF_SAMPLE_MAX_SIZE);
         if (!etmq->event_buf)
                 goto out_free;
@@ -419,6 +442,8 @@ static struct cs_etm_queue *cs_etm__alloc_queue(struct cs_etm_auxtrace *etm,
 
 out_free:
         zfree(&etmq->event_buf);
+        zfree(&etmq->last_branch);
+        zfree(&etmq->last_branch_rb);
         zfree(&etmq->chain);
         free(etmq);
         return NULL;
@@ -512,6 +537,62 @@ static int cs_etm__setup_queues(struct cs_etm_auxtrace *etm)
                         return ret;
         }
         return 0;
+}
+
+static inline void cs_etm__copy_last_branch_rb(struct cs_etm_queue *etmq)
+{
+        struct branch_stack *bs_src = etmq->last_branch_rb;
+        struct branch_stack *bs_dst = etmq->last_branch;
+        size_t nr = 0;
+
+        bs_dst->nr = bs_src->nr;
+
+        if (!bs_src->nr)
+                return;
+
+        nr = etmq->etm->synth_opts.last_branch_sz - etmq->last_branch_pos;
+        memcpy(&bs_dst->entries[0],
+               &bs_src->entries[etmq->last_branch_pos],
+               sizeof(struct branch_entry) * nr);
+
+        if (bs_src->nr >= etmq->etm->synth_opts.last_branch_sz) {
+                memcpy(&bs_dst->entries[nr],
+                       &bs_src->entries[0],
+                       sizeof(struct branch_entry) * etmq->last_branch_pos);
+        }
+}
+
+static inline void cs_etm__reset_last_branch_rb(struct cs_etm_queue *etmq)
+{
+        etmq->last_branch_pos = 0;
+        etmq->last_branch_rb->nr = 0;
+}
+
+static void cs_etm__update_last_branch_rb(struct cs_etm_queue *etmq,
+                                          struct cs_etm_packet *packet)
+{
+        struct branch_stack *bs = etmq->last_branch_rb;
+        struct branch_entry *be;
+
+        if (!etmq->last_branch_pos)
+                etmq->last_branch_pos = etmq->etm->synth_opts.last_branch_sz;
+
+        etmq->last_branch_pos -= 1;
+
+        be              = &bs->entries[etmq->last_branch_pos];
+        be->from        = packet->start_addr;
+        be->to          = packet->end_addr;
+
+        if (bs->nr < etmq->etm->synth_opts.last_branch_sz)
+                bs->nr += 1;
+}
+
+static int cs_etm__inject_event(union perf_event *event,
+                               struct perf_sample *sample, u64 type,
+                               bool swapped)
+{
+        event->header.size = perf_event__sample_event_size(sample, type, 0);
+        return perf_event__synthesize_sample(event, type, 0, sample, swapped);
 }
 
 #if 0
@@ -630,6 +711,11 @@ static int cs_etm__synth_instruction_sample(struct cs_etm_queue *etmq,
 
         //etmq->last_insn_cnt = etmq->state->tot_insn_cnt;
 
+        if (etm->synth_opts.last_branch) {
+                cs_etm__copy_last_branch_rb(etmq);
+                sample.branch_stack = etmq->last_branch;
+        }
+
 #if 0
         {
                 struct   addr_location al;
@@ -689,12 +775,24 @@ endTest:
         }
 #endif
 
+        if (etm->synth_opts.inject) {
+                ret = cs_etm__inject_event(event, &sample,
+                                           etm->instructions_sample_type,
+                                           etm->synth_needs_swap);
+                if (ret)
+                        return ret;
+        }
+
         ret = perf_session__deliver_synth_event(etm->session,event, &sample);
 
         if (ret) {
                 pr_err("CS ETM Trace: failed to deliver instruction event, error %d\n", ret);
 
         }
+
+        if (etm->synth_opts.last_branch)
+                cs_etm__reset_last_branch_rb(etmq);
+
         return ret;
 }
 
@@ -783,6 +881,8 @@ static int cs_etm__synth_events(struct cs_etm_auxtrace *etm,
                 attr.config = PERF_COUNT_HW_INSTRUCTIONS;
                 attr.sample_period = etm->synth_opts.period;
                 etm->instructions_sample_period = attr.sample_period;
+                if (etm->synth_opts.last_branch)
+                        attr.sample_type |= PERF_SAMPLE_BRANCH_STACK;
                 err = cs_etm__synth_event(session, &attr, id);
 
                 if (err) {
@@ -809,8 +909,13 @@ static int cs_etm__sample(struct cs_etm_queue *etmq)
 
         err = cs_etm_decoder__get_packet(etmq->decoder,&packet);
         // if there is no sample, it returns err = -1, no real error
-
-        if (!err && packet.sample_type & CS_ETM_RANGE) {
+        if (err)
+                return err;
+        if (etmq->etm->synth_opts.last_branch &&
+            etmq->last_branch_rb->nr < etmq->etm->synth_opts.last_branch_sz) {
+                // FIXME: need to synth partial stack on last event.
+                cs_etm__update_last_branch_rb(etmq, &packet);
+        } else if (packet.sample_type & CS_ETM_RANGE) {
                 err = cs_etm__synth_instruction_sample(etmq,&packet);
                 if (err)
                         return err;
@@ -1310,7 +1415,7 @@ static void cs_etm__print_auxtrace_info(u64 *val, size_t num)
 {
         unsigned i,j,cpu;
 
-        for (i = 0, cpu = 0; cpu < num; ++cpu) {
+        for (i = CS_HEADER_VERSION_0_MAX, cpu = 0; cpu < num; ++cpu) {
 
                 if (val[i] == __perf_cs_etmv3_magic) {
                         for (j = 0; j < CS_ETM_PRIV_MAX; ++j, ++i) {
