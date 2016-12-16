@@ -518,6 +518,32 @@ will add the --dump option to the end of the command line and run
         ${PERF_EXEC_PATH}/perf report --stdio --dump
 
 
+Generating coverage files for Feedback Directed Optimization: AutoFDO
+---------------------------------------------------------------------
+
+Below is an example of using ARM ETM for autoFDO.  It requires autofdo
+(https://github.com/google/autofdo) and gcc version 5.  The bubble
+sort example is from the AutoFDO tutorial (https://gcc.gnu.org/wiki/AutoFDO/Tutorial).
+
+        $ gcc-5 -O3 sort.c -o sort_optimized
+        $ taskset -c 2 ./sort_optimized
+        Bubble sorting array of 30000 elements
+        5910 ms
+
+        $ perf record -e cs_etm/@20070000.etr/u --per-thread taskset -c 2 ./sort
+        Bubble sorting array of 30000 elements
+        12543 ms
+        [ perf record: Woken up 35 times to write data ]
+        [ perf record: Captured and wrote 69.640 MB perf.data ]
+
+        $ perf inject -i perf.data -o inj.data --itrace=il64 --strip
+        $ create_gcov --binary=./sort --profile=inj.data --gcov=sort.gcov -gcov_version=1
+        $ gcc-5 -O3 -fauto-profile=sort.gcov sort.c -o sort_autofdo
+        $ taskset -c 2 ./sort_autofdo
+        Bubble sorting array of 30000 elements
+        5806 ms
+
+
 The Linaro CoreSight Team
 -------------------------
 - Mike Leach
