@@ -110,45 +110,33 @@ export BIN_TEST_TARGET_DIR=$(OCSD_TESTS)/bin/$(PLAT_DIR)
 
 all: libs tests
 
-libs: $(LIB_BASE_NAME)_lib $(LIB_BASE_NAME)_so $(LIB_CAPI_NAME)_lib $(LIB_CAPI_NAME)_so
+libs: $(LIB_BASE_NAME)_lib  $(LIB_CAPI_NAME)_lib
 
 ################################
-# build static OpenCSD trace decode library
+# build  OpenCSD trace decode library
 #
-$(LIB_BASE_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a
+$(LIB_BASE_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so
 
-$(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a:
-	mkdir -p $(LIB_TARGET_DIR)
-	cd $(OCSD_ROOT)/build/linux/ref_trace_decode_lib && make
+$(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so: $(LIB_BASE_NAME)_all
+$(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a: $(LIB_BASE_NAME)_all
 
-
-################################
-# build shared OpenCSD trace decode library
-#
-$(LIB_BASE_NAME)_so: $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so
-
-$(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so:
+# single command builds both .a and .so targets in sub-makefile
+$(LIB_BASE_NAME)_all:
 	mkdir -p $(LIB_TARGET_DIR)
 	cd $(OCSD_ROOT)/build/linux/ref_trace_decode_lib && make
 
 ################################
-# build static OpenCSD trace decode C API library 
+# build OpenCSD trace decode C API library 
 #
-$(LIB_CAPI_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a
+$(LIB_CAPI_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so
 
-$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a: $(LIB_BASE_NAME)_lib
+$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so: $(LIB_CAPI_NAME)_all
+$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a:  $(LIB_CAPI_NAME)_all
+
+# single command builds both .a and .so targets in sub-makefile
+$(LIB_CAPI_NAME)_all:  $(LIB_BASE_NAME)_lib
 	mkdir -p $(LIB_TARGET_DIR)
 	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make
-
-################################
-# build shared OpenCSD trace decode C API library 
-#
-$(LIB_CAPI_NAME)_so: $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so
-
-$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so: $(LIB_BASE_NAME)_so
-	mkdir -p $(LIB_TARGET_DIR)
-	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make
-
 
 #################################
 # build tests
