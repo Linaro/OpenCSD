@@ -26,7 +26,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.5.0_
+_Current Version 0.5.1_
 
 ### Current support:
 
@@ -102,6 +102,7 @@ Version and Modification Information
 - _Version 0.4.1_:  Minor Update & Bugfixes - fix to PTM decoder, ID checking on test program, adds NULL_TS support in STM packet processor.
 - _Version 0.4.2_:  Minor Update - Update to documentation for perf usage in 4.8 kernel branch.
 - _Version 0.5.0_:  Library Development - external decoder support. STM full decode.
+- _Version 0.5.1_:  Minor Update & Bugfixes - Update HOWTO for kernel 4.9. Build fixes for parallel builds
 
 Licence Information
 ===================
