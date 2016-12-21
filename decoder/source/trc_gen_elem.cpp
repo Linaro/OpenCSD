@@ -88,7 +88,8 @@ static const char *s_isa_str[] = {
    "T32",          /**< Thumb2 -> 16/32 bit instructions */  
    "A64",      /**< V8 AArch64 */
    "TEE",          /**< Thumb EE - unsupported */  
-   "Jaz",      /**< Jazelle - unsupported in trace */  
+   "Jaz",      /**< Jazelle - unsupported in trace */ 
+   "Cst",      /**< ISA custom */
    "Unk"       /**< ISA not yet known */
 };
 

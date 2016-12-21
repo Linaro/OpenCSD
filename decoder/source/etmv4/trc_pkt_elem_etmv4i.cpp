@@ -87,20 +87,20 @@ void EtmV4ITrcPacket::toString(std::string &str) const
     str = name + (std::string)" : " + desc;
 
     // extended descriptions
-    switch(type)
+    switch (type)
     {
     case ETM4_PKT_I_BAD_SEQUENCE:
     case ETM4_PKT_I_INCOMPLETE_EOT:
-        name = packetTypeName(err_type,0);
+        name = packetTypeName(err_type, 0);
         str += "[" + (std::string)name + "]";
         break;
 
     case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
-    case ETM4_PKT_I_ADDR_CTXT_L_32IS1:       
+    case ETM4_PKT_I_ADDR_CTXT_L_32IS1:
         contextStr(ctxtStr);
     case ETM4_PKT_I_ADDR_L_32IS0:
-    case ETM4_PKT_I_ADDR_L_32IS1:        
-        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,(v_addr.pkt_bits < 32) ? v_addr.pkt_bits : 0);
+    case ETM4_PKT_I_ADDR_L_32IS1:
+        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32, v_addr.valid_bits, v_addr.val, true, (v_addr.pkt_bits < 32) ? v_addr.pkt_bits : 0);
         str += "; Addr=" + valStr + "; " + ctxtStr;
         break;
 
@@ -109,7 +109,7 @@ void EtmV4ITrcPacket::toString(std::string &str) const
         contextStr(ctxtStr);
     case ETM4_PKT_I_ADDR_L_64IS0:
     case ETM4_PKT_I_ADDR_L_64IS1:
-        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,(v_addr.pkt_bits < 64) ? v_addr.pkt_bits : 0);
+        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32, v_addr.valid_bits, v_addr.val, true, (v_addr.pkt_bits < 64) ? v_addr.pkt_bits : 0);
         str += "; Addr=" + valStr + "; " + ctxtStr;
         break;
 
@@ -120,7 +120,7 @@ void EtmV4ITrcPacket::toString(std::string &str) const
 
     case ETM4_PKT_I_ADDR_S_IS0:
     case ETM4_PKT_I_ADDR_S_IS1:
-        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32,v_addr.valid_bits,v_addr.val,true,v_addr.pkt_bits);
+        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32, v_addr.valid_bits, v_addr.val, true, v_addr.pkt_bits);
         str += "; Addr=" + valStr;
         break;
 
@@ -148,10 +148,31 @@ void EtmV4ITrcPacket::toString(std::string &str) const
         {
             std::ostringstream oss;
             oss << "; Updated val = " << std::hex << "0x" << ts.timestamp;
+            if (pkt_valid.bits.cc_valid)
+                oss << "; CC=" << std::hex << "0x" << cycle_count;
             str += oss.str();
         }
         break;
-        
+
+    case ETM4_PKT_I_TRACE_INFO:
+        {
+            std::ostringstream oss;
+            oss << "; PCTL=" << std::hex << "0x" << trace_info.val;
+            if (trace_info.bits.cc_enabled)
+                oss << "; CC_THRESHOLD=" << std::hex << "0x" << cc_threshold;
+            str += oss.str();
+        }
+        break;
+
+    case ETM4_PKT_I_CCNT_F1:
+    case ETM4_PKT_I_CCNT_F2:
+    case ETM4_PKT_I_CCNT_F3:
+        {
+            std::ostringstream oss;
+            oss << "; Count=" << std::hex << "0x" << cycle_count;
+            str += oss.str();
+        }
+        break;
     }
 }
 

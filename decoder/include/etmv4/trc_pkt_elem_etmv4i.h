@@ -109,7 +109,11 @@ public:
     const ocsd_etmv4_i_pkt_type getType() const { return type; };
     const ocsd_etmv4_i_pkt_type getErrType() const { return err_type; };
 
-    const bool hasCommitElementsCount() const;    //!< return true if this packet has set the commit packet count.
+    //! return true if this packet has set the commit packet count.
+    const bool hasCommitElementsCount() const 
+    {
+        return pkt_valid.bits.commit_elem_valid ? true : false;
+    };
     
     // trace info
     const etmv4_trace_info_t &getTraceInfo() const { return trace_info; };    

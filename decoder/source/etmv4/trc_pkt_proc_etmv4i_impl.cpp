@@ -532,14 +532,13 @@ void EtmV4IPktProcImpl::iPktException()
 
 void EtmV4IPktProcImpl::iPktCycleCntF123()
 {
-    static  ocsd_etmv4_i_pkt_type format = ETM4_PKT_I_CCNT_F1;
+    ocsd_etmv4_i_pkt_type format = m_curr_packet.type;
 
     uint8_t lastByte = m_currPacketData.back();
     if( m_currPacketData.size() == 1)
     {
         m_count_done = m_commit_done = false; 
         m_has_count = true;
-        format = m_curr_packet.type;
 
         if(format == ETM4_PKT_I_CCNT_F3)
         {
@@ -596,11 +595,13 @@ void EtmV4IPktProcImpl::iPktCycleCntF123()
             idx += extractContField(m_currPacketData,idx,field_value);
             m_curr_packet.setCommitElements(field_value);
         }
-        if(m_has_count)
-        {
-            extractContField(m_currPacketData,idx,field_value, 3);
-            m_curr_packet.setCycleCount(field_value);
-        }
+		if (m_has_count)
+		{
+			extractContField(m_currPacketData, idx, field_value, 3);
+			m_curr_packet.setCycleCount(field_value + m_curr_packet.getCCThreshold());
+		}
+		else
+			m_curr_packet.setCycleCount(0);	/* unknown CC marked as 0 after overflow */
         m_process_state = SEND_PKT;
     }
 }
