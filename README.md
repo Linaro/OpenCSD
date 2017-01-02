@@ -3,7 +3,8 @@ OpenCSD - An open source CoreSight(tm) Trace Decode library        {#mainpage}
 
 This library provides an API suitable for the decode of ARM(r) CoreSight(tm) trace streams.
 
-The library will decode formatted trace in three stages:-
+The library will decode formatted trace in three stages:
+
 1. *Frame Deformatting* : Removal CoreSight frame formatting from individual trace streams.
 2. *Packet Processing*  : Separate individual trace streams into discrete packets.
 3. *Packet Decode*      : Convert the packets into fully decoded trace describing the program flow on a core.
@@ -26,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.5.1_
+_Current Version 0.5.2_
 
 ### Current support:
 
@@ -103,6 +104,7 @@ Version and Modification Information
 - _Version 0.4.2_:  Minor Update - Update to documentation for perf usage in 4.8 kernel branch.
 - _Version 0.5.0_:  Library Development - external decoder support. STM full decode.
 - _Version 0.5.1_:  Minor Update & Bugfixes - Update HOWTO for kernel 4.9. Build fixes for parallel builds
+- _Version 0.5.2_:  Minor Update & Bugfixes - Update trace info packet string o/p + Cycle count packet bugfixes.
 
 Licence Information
 ===================
