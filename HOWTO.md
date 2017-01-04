@@ -186,6 +186,22 @@ start stop filters.  As such the following example would _not_ work:
                                                     filter 0x72c/0x40@/opt/lib/libcstest.so.1.0'      \  // address range
                                                     --per-thread uname
 
+Additional Trace Options
+------------------------
+Additional options can be used during trace collection that add information to the captured trace.
+
+- Timestamps: These packets are added to the trace streams to allow correlation of different sources where tools support this.
+- Cycle Counts: These packets are added to get a count of cycles for blocks of executed instructions. Adding cycle counts will considerably increase the amount of generated trace.
+The relationship between cycle counts and executed instructions differs according to the trace protocol.
+For example, the ETMv4 protocol will emit counts for groups of instructions according to a minimum count threshold.
+Presently this threshold is fixed at 256 cycles for `perf record`.
+
+Command line options in `perf record` to use these features are part of the options for the `cs_etm` event:
+
+    perf record -e cs_etm/timestamp,cycacc,@20070000.etr/ --per-thread uname
+
+At current version,  `perf record` and `perf script` do not use this additional information.
+
 On Target Trace Collection
 --------------------------
 The entire program flow will have been recorded in the `perf.data` file.

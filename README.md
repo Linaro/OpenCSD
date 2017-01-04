@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.5.2_
+_Current Version 0.5.3_
 
 ### Current support:
 
@@ -105,6 +105,7 @@ Version and Modification Information
 - _Version 0.5.0_:  Library Development - external decoder support. STM full decode.
 - _Version 0.5.1_:  Minor Update & Bugfixes - Update HOWTO for kernel 4.9. Build fixes for parallel builds
 - _Version 0.5.2_:  Minor Update & Bugfixes - Update trace info packet string o/p + Cycle count packet bugfixes.
+- _Version 0.5.3_:  Doc update for using AutoFDO with ETM and additional timestamp and cycle count options.
 
 Licence Information
 ===================
