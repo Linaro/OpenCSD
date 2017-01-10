@@ -426,11 +426,6 @@ OCSD_C_API ocsd_err_t ocsd_cust_protocol_to_str(const ocsd_trace_protocol_t pkt_
 
 /** @}*/
 
-#ifdef OPENCSD_INC_DEPRECATED_API
-#include "ocsd_c_api_deprc_fn.h"
-#endif
-
 #endif // ARM_OPENCSD_C_API_H_INCLUDED
-
 
 /* End of File opencsd_c_api.h */

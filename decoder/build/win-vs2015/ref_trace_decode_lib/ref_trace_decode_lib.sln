@@ -17,11 +17,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trc_pkt_lister", "..\..\..\
 		{7F500891-CC76-405F-933F-F682BC39F923} = {7F500891-CC76-405F-933F-F682BC39F923}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple_pkt_print_c_api", "..\..\..\tests\build\win-vs2015\simple_pkt_print_c_api\simple_pkt_print_c_api.vcxproj", "{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{533F929A-A73B-46B6-9D5F-FFCD62F734E3} = {533F929A-A73B-46B6-9D5F-FFCD62F734E3}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "c_api_pkt_print_test", "..\..\..\tests\build\win-vs2015\c_api_pkt_print_test\c_api_pkt_print_test.vcxproj", "{3AC169DA-E156-4D16-95DF-73D7302A5606}"
 	ProjectSection(ProjectDependencies) = postProject
 		{46219A32-8178-41C1-B3B1-B5A6E547515F} = {46219A32-8178-41C1-B3B1-B5A6E547515F}
@@ -101,22 +96,6 @@ Global
 		{18ABC652-AB11-4993-9491-1A7FB7117339}.Release|x64.Build.0 = Release|x64
 		{18ABC652-AB11-4993-9491-1A7FB7117339}.Release-dll|Win32.ActiveCfg = Release-dll|Win32
 		{18ABC652-AB11-4993-9491-1A7FB7117339}.Release-dll|x64.ActiveCfg = Release-dll|x64
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug|Win32.Build.0 = Debug|Win32
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug|x64.ActiveCfg = Debug|x64
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug|x64.Build.0 = Debug|x64
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug-dll|Win32.ActiveCfg = Debug-dll|Win32
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug-dll|Win32.Build.0 = Debug-dll|Win32
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug-dll|x64.ActiveCfg = Debug-dll|x64
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Debug-dll|x64.Build.0 = Debug-dll|x64
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release|Win32.ActiveCfg = Release|Win32
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release|Win32.Build.0 = Release|Win32
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release|x64.ActiveCfg = Release|x64
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release|x64.Build.0 = Release|x64
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release-dll|Win32.ActiveCfg = Release-dll|Win32
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release-dll|Win32.Build.0 = Release-dll|Win32
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release-dll|x64.ActiveCfg = Release-dll|x64
-		{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}.Release-dll|x64.Build.0 = Release-dll|x64
 		{3AC169DA-E156-4D16-95DF-73D7302A5606}.Debug|Win32.ActiveCfg = Debug|Win32
 		{3AC169DA-E156-4D16-95DF-73D7302A5606}.Debug|Win32.Build.0 = Debug|Win32
 		{3AC169DA-E156-4D16-95DF-73D7302A5606}.Debug|x64.ActiveCfg = Debug|x64

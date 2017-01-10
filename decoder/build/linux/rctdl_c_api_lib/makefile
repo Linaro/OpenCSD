@@ -50,7 +50,6 @@ CPP_INCLUDES= \
 				-I$(OCSD_SOURCE)/c_api
 
 OBJECTS=$(BUILD_DIR)/ocsd_c_api.o \
-		$(BUILD_DIR)/ocsd_c_api_deprc_fn.o \
 		$(BUILD_DIR)/ocsd_c_api_custom_obj.o
 
 
