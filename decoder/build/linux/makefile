@@ -47,7 +47,11 @@ export LIB_CAPI_NAME
 
 # determine base architecture, heavily borrowed from the Linux kernel v4.4's
 # tools/perf/config/Makefile.arch
+# For example, to compile for arm64 on a X86 PC, you can issue the command:
+# "export ARCH=arm64"
+ifndef ARCH
 ARCH := $(shell uname -m 2>/dev/null || echo not)
+endif
 
 # source root directories
 export OCSD_LIB_ROOT=$(OCSD_ROOT)/lib
@@ -58,10 +62,10 @@ export OCSD_SOURCE=$(OCSD_ROOT)/source
 export OCSD_TESTS=$(OCSD_ROOT)/tests
 
 # tools
-export MASTER_CC=gcc
-export MASTER_CPP=g++
-export MASTER_LINKER=g++
-export MASTER_LIB=ar
+export MASTER_CC=$(CROSS_COMPILE)gcc
+export MASTER_CPP=$(CROSS_COMPILE)g++
+export MASTER_LINKER=$(CROSS_COMPILE)g++
+export MASTER_LIB=$(CROSS_COMPILE)ar
 
 # compile flags
 MASTER_CC_FLAGS := -c -Wall -DLINUX
@@ -87,6 +91,10 @@ ifeq ($(ARCH),x86)
 else ifeq ($(ARCH),x86_64)
    MFLAG:="-m64"
    BIT_VARIANT=64
+else ifeq ($(ARCH),arm)
+   BIT_VARIANT=-arm
+else ifeq ($(ARCH),arm64)
+   BIT_VARIANT=-arm64
 endif
 
 MASTER_CC_FLAGS += $(MFLAG)
