@@ -55,8 +55,6 @@ OBJECTS		=	$(BUILD_DIR)/ext_dcd_echo_test.o \
 
 all:  build_dir  $(OBJECTS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a
 
-test_app: 	$(OBJECTS) $(BIN_TEST_TARGET_DIR)/$(PROG)
-
 $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a:
 	mkdir -p $(LIB_TEST_TARGET_DIR)
 	$(LIB) $(LIB_FLAGS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a $(OBJECTS)

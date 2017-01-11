@@ -48,7 +48,7 @@
 
 @{*/
 
-inline ocsd_datapath_resp_t lib_cb_GenElemOp(const ocsd_extern_dcd_cb_fns *callbacks,
+static inline ocsd_datapath_resp_t lib_cb_GenElemOp(const ocsd_extern_dcd_cb_fns *callbacks,
     const ocsd_trc_index_t index_sop,
     const uint8_t trc_chan_id,
     const ocsd_generic_trace_elem *elem)
@@ -58,7 +58,7 @@ inline ocsd_datapath_resp_t lib_cb_GenElemOp(const ocsd_extern_dcd_cb_fns *callb
     return OCSD_RESP_FATAL_NOT_INIT;
 }
 
-inline ocsd_err_t lib_cb_LogError(const ocsd_extern_dcd_cb_fns *callbacks,
+static inline ocsd_err_t lib_cb_LogError(const ocsd_extern_dcd_cb_fns *callbacks,
     const ocsd_err_severity_t filter_level,
     const ocsd_err_t code,
     const ocsd_trc_index_t idx,
@@ -73,7 +73,7 @@ inline ocsd_err_t lib_cb_LogError(const ocsd_extern_dcd_cb_fns *callbacks,
     return OCSD_ERR_NOT_INIT;
 }
 
-inline ocsd_err_t lib_cb_LogMsg(const ocsd_extern_dcd_cb_fns *callbacks,
+static inline ocsd_err_t lib_cb_LogMsg(const ocsd_extern_dcd_cb_fns *callbacks,
     const ocsd_err_severity_t filter_level,
     const char *pMsg)
 {
@@ -85,7 +85,7 @@ inline ocsd_err_t lib_cb_LogMsg(const ocsd_extern_dcd_cb_fns *callbacks,
     return OCSD_ERR_NOT_INIT;
 }
 
-inline ocsd_err_t lib_cb_DecodeArmInst(const ocsd_extern_dcd_cb_fns *callbacks,
+static inline ocsd_err_t lib_cb_DecodeArmInst(const ocsd_extern_dcd_cb_fns *callbacks,
     ocsd_instr_info *instr_info)
 {
     if (callbacks->fn_arm_instruction_decode)
@@ -93,7 +93,7 @@ inline ocsd_err_t lib_cb_DecodeArmInst(const ocsd_extern_dcd_cb_fns *callbacks,
     return OCSD_ERR_NOT_INIT;
 }
 
-inline ocsd_err_t lib_cb_MemAccess(const ocsd_extern_dcd_cb_fns *callbacks,
+static inline ocsd_err_t lib_cb_MemAccess(const ocsd_extern_dcd_cb_fns *callbacks,
     const ocsd_vaddr_t address,
     const uint8_t cs_trace_id,
     const ocsd_mem_space_acc_t mem_space,
@@ -105,7 +105,7 @@ inline ocsd_err_t lib_cb_MemAccess(const ocsd_extern_dcd_cb_fns *callbacks,
     return OCSD_ERR_NOT_INIT;
 }
 
-inline void lib_cb_PktMon(const ocsd_extern_dcd_cb_fns *callbacks,
+static inline void lib_cb_PktMon(const ocsd_extern_dcd_cb_fns *callbacks,
     const ocsd_datapath_op_t op,
     const ocsd_trc_index_t index_sop,
     const void *pkt,
@@ -119,14 +119,14 @@ inline void lib_cb_PktMon(const ocsd_extern_dcd_cb_fns *callbacks,
     }
 }
 
-inline int lib_cb_usePktMon(const ocsd_extern_dcd_cb_fns *callbacks)
+static inline int lib_cb_usePktMon(const ocsd_extern_dcd_cb_fns *callbacks)
 {
     return (callbacks->packetCBFlags & OCSD_CUST_DCD_PKT_CB_USE_MON);
 }
 
 /* callback function to connect to the packet sink interface, on the main decode
 data path - used if decoder created as packet processor only */
-inline ocsd_datapath_resp_t lib_cb_PktDataSink(const ocsd_extern_dcd_cb_fns *callbacks,
+static inline ocsd_datapath_resp_t lib_cb_PktDataSink(const ocsd_extern_dcd_cb_fns *callbacks,
     const ocsd_datapath_op_t op,
     const ocsd_trc_index_t index_sop,
     const void *pkt)
@@ -141,12 +141,12 @@ inline ocsd_datapath_resp_t lib_cb_PktDataSink(const ocsd_extern_dcd_cb_fns *cal
     return OCSD_RESP_CONT;
 }
 
-inline int lib_cb_usePktSink(const ocsd_extern_dcd_cb_fns *callbacks)
+static inline int lib_cb_usePktSink(const ocsd_extern_dcd_cb_fns *callbacks)
 {
     return (callbacks->packetCBFlags & OCSD_CUST_DCD_PKT_CB_USE_SINK);
 }
 
-inline void lib_cb_updatePktCBFlags(ocsd_extern_dcd_cb_fns *callbacks, const int newFlags)
+static inline void lib_cb_updatePktCBFlags(ocsd_extern_dcd_cb_fns *callbacks, const int newFlags)
 {
     callbacks->packetCBFlags = newFlags;
 }

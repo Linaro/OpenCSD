@@ -161,6 +161,7 @@ clean_libs:
 	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make clean
 
 clean_tests:
+	cd $(OCSD_ROOT)/tests/build/linux/echo_test_dcd_lib && make clean
 	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && make clean
 	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && make clean
 	cd $(OCSD_ROOT)/tests/build/linux/simple_pkt_print_c_api && make clean
