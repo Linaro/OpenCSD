@@ -38,6 +38,7 @@
     <ProjectGuid>{DE1F395D-4F53-42FB-8AEF-993A4BF7E411}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>snapshot_parser_lib</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -306,11 +307,6 @@
     <ClInclude Include="..\..\..\snapshot_parser_lib\include\ss_key_value_names.h" />
     <ClInclude Include="..\..\..\snapshot_parser_lib\include\ss_to_dcdtree.h" />
     <ClInclude Include="..\..\..\snapshot_parser_lib\include\trace_snapshots.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\build\win\ref_trace_decode_lib\ref_trace_decode_lib.vcxproj">
-      <Project>{7f500891-cc76-405f-933f-f682bc39f923}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

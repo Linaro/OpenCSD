@@ -8,8 +8,14 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ocsd_c_api_lib", "..\rctdl_c_api_lib\rctdl_c_api_lib.vcxproj", "{533F929A-A73B-46B6-9D5F-FFCD62F734E3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snapshot_parser_lib", "..\..\..\tests\build\win-vs2015\snapshot_parser_lib\snapshot_parser_lib.vcxproj", "{DE1F395D-4F53-42FB-8AEF-993A4BF7E411}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7F500891-CC76-405F-933F-F682BC39F923} = {7F500891-CC76-405F-933F-F682BC39F923}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trc_pkt_lister", "..\..\..\tests\build\win-vs2015\trc_pkt_lister\trc_pkt_lister.vcxproj", "{18ABC652-AB11-4993-9491-1A7FB7117339}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7F500891-CC76-405F-933F-F682BC39F923} = {7F500891-CC76-405F-933F-F682BC39F923}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple_pkt_print_c_api", "..\..\..\tests\build\win-vs2015\simple_pkt_print_c_api\simple_pkt_print_c_api.vcxproj", "{D18112ED-E2D7-4D49-B1F0-15E98967AC0A}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -23,6 +29,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "c_api_pkt_print_test", "..\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ext_dcd_echo_test", "..\..\..\tests\build\win-vs2015\ext_dcd_echo_test\ext_dcd_echo_test.vcxproj", "{46219A32-8178-41C1-B3B1-B5A6E547515F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{533F929A-A73B-46B6-9D5F-FFCD62F734E3} = {533F929A-A73B-46B6-9D5F-FFCD62F734E3}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

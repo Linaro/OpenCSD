@@ -72,3 +72,5 @@ decoder/docs/html/*
 *.orig
 *.VC.db
 *.VC.VC.opendb
+*.iobj
+*.ipdb
