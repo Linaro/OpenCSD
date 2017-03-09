@@ -84,6 +84,7 @@ MASTER_CPP_FLAGS += -g -O2 -DNDEBUG
 BUILD_VARIANT=rel
 endif
 
+
 # platform bit size variant
 ifeq ($(ARCH),x86)
    MFLAG:="-m32"
@@ -95,6 +96,10 @@ else ifeq ($(ARCH),arm)
    BIT_VARIANT=-arm
 else ifeq ($(ARCH),arm64)
    BIT_VARIANT=-arm64
+else ifeq ($(ARCH),aarch64)
+   BIT_VARIANT=-arm64
+else ifeq ($(ARCH),aarch32)
+   BIT_VARIANT=-arm
 endif
 
 MASTER_CC_FLAGS += $(MFLAG)
