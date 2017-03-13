@@ -228,7 +228,7 @@ bool CreateDcdTreeFromSnapShot::createPEDecoder(const std::string &coreName, Par
     {
         bCreatedDecoder = createETMv3Decoder(coreName,devSrc);
     }
-    else if(devTypeName == PTMProtocol)
+    else if(devTypeName == PTMProtocol || devTypeName == PFTProtocol)
     {
         bCreatedDecoder = createPTMDecoder(coreName,devSrc);
     }

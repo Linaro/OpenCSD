@@ -61,6 +61,7 @@ const char * const ETMv4RegIDR13("TRCIDR13");
 /*** ETMv3/PTM ***/
 const char * const ETMv3Protocol("ETM3");
 const char * const PTMProtocol("PTM1");
+const char * const PFTProtocol("PFT1");
 const char * const ETMv3PTMRegIDR("ETMIDR");
 const char * const ETMv3PTMRegCR("ETMCR");
 const char * const ETMv3PTMRegCCER("ETMCCER");
