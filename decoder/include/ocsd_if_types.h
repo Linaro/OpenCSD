@@ -242,7 +242,8 @@ typedef enum _ocsd_dcd_tree_src_t {
 #define OCSD_DFRMTR_FRAME_MEM_ALIGN    0x04 /**< Deformatter Config : formatted frames are memory aligned, no syncs. Input data 16 byte frame aligned. */
 #define OCSD_DFRMTR_PACKED_RAW_OUT     0x08 /**< Deformatter Config : output raw packed frame data if raw monitor attached. */
 #define OCSD_DFRMTR_UNPACKED_RAW_OUT   0x10 /**< Deformatter Config : output raw unpacked frame data if raw monitor attached. */
-#define OCSD_DFRMTR_VALID_MASK         0x1F /**< Deformatter Config : valid mask for deformatter configuration */
+#define OCSD_DFRMTR_RESET_ON_4X_FSYNC  0x20 /**< Deformatter Config : reset downstream decoders if frame aligned 4x consecutive fsyncs spotted. (perf workaround) */
+#define OCSD_DFRMTR_VALID_MASK         0x3F /**< Deformatter Config : valid mask for deformatter configuration */
 
 #define OCSD_DFRMTR_FRAME_SIZE         0x10 /**< CoreSight frame formatter frame size constant in bytes. */
 

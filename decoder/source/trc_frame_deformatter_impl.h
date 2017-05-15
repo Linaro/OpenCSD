@@ -76,7 +76,7 @@ private:
     ocsd_err_t SetForcedSyncIndex(ocsd_trc_index_t index, bool bSet);
 
 private:
-    ocsd_datapath_resp_t executeNoneDataOpAllIDs(ocsd_datapath_op_t op);
+    ocsd_datapath_resp_t executeNoneDataOpAllIDs(ocsd_datapath_op_t op, const ocsd_trc_index_t index = 0);
     ocsd_datapath_resp_t processTraceData(const ocsd_trc_index_t index, 
                                                 const uint32_t dataBlockSize, 
                                                 const uint8_t *pDataBlock, 
@@ -113,6 +113,7 @@ private:
     void setRawChanFilterAll(bool bEnable);
     const bool rawChanEnabled(const uint8_t id) const;
 
+	int checkForResetFSyncPatterns();
 
     friend class TraceFormatterFrameDecoder;
 

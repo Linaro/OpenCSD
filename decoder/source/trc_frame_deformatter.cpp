@@ -181,7 +181,8 @@ ocsd_datapath_resp_t TraceFmtDcdImpl::Flush()
     return highestDataPathResp();
 }
 
-ocsd_datapath_resp_t TraceFmtDcdImpl::executeNoneDataOpAllIDs(ocsd_datapath_op_t op)
+ocsd_datapath_resp_t TraceFmtDcdImpl::executeNoneDataOpAllIDs(ocsd_datapath_op_t op,
+                                                              const ocsd_trc_index_t index /* = 0*/)
 {
     ITrcDataIn *pTrcComp = 0;
     for(uint8_t id = 0; id < 128; id++)
@@ -191,7 +192,7 @@ ocsd_datapath_resp_t TraceFmtDcdImpl::executeNoneDataOpAllIDs(ocsd_datapath_op_t
             pTrcComp = m_IDStreams[id].first();
             while(pTrcComp)
             {
-                CollateDataPathResp(pTrcComp->TraceDataIn(op,0,0,0,0));
+                CollateDataPathResp(pTrcComp->TraceDataIn(op,index,0,0,0));
                 pTrcComp = m_IDStreams[id].next();
             }
         }
@@ -402,9 +403,54 @@ void TraceFmtDcdImpl::outputUnsyncedBytes(uint32_t /*num_bytes*/)
     //**TBD:
 }
 
+int TraceFmtDcdImpl::checkForResetFSyncPatterns()
+{
+	const uint32_t FSYNC_PATTERN = 0x7FFFFFFF;    // LE host pattern for FSYNC	 
+	bool check_for_fsync = true;
+	int num_fsyncs = 0;
+	const uint8_t *dataPtr = m_in_block_base + m_in_block_processed;
+
+	while (check_for_fsync && (m_in_block_processed < m_in_block_size))
+	{
+		// look for consecutive fsyncs as padding or for reset downstream - both cases will reset downstream....
+		if (*((uint32_t *)(dataPtr)) == FSYNC_PATTERN)
+		{
+			dataPtr += sizeof(uint32_t);
+			num_fsyncs++;		
+		}
+		else
+			check_for_fsync = false;
+	}
+
+	if (num_fsyncs)
+	{
+        printf("Frame deformatter: Found %d FSYNCS\n",num_fsyncs);
+		if ((num_fsyncs % 4) == 0)
+        {
+            // reset the upstream decoders            
+			executeNoneDataOpAllIDs(OCSD_OP_RESET,m_trc_curr_idx);
+            
+            // reset the intra frame parameters
+            m_curr_src_ID = OCSD_BAD_CS_SRC_ID;
+            m_ex_frm_n_bytes = 0;
+            m_trc_curr_idx_sof = OCSD_BAD_TRC_INDEX;
+        }
+		else
+		{
+			// TBD: throw processing error, none frame size block of fsyncs
+		}
+	}
+    return num_fsyncs * 4;
+}
+
+
 bool TraceFmtDcdImpl::extractFrame()
 {
-    bool cont_process = true;   // continue processing after extraction.
+	const uint32_t FSYNC_PATTERN = 0x7FFFFFFF;    // LE host pattern for FSYNC	 
+	const uint16_t HSYNC_PATTERN = 0x7FFF;        // LE host pattern for HSYNC
+	
+	
+	bool cont_process = true;   // continue processing after extraction.
     uint32_t f_sync_bytes = 0; // skipped f sync bytes
     uint32_t h_sync_bytes = 0; // skipped h sync bytes
     uint32_t ex_bytes = 0;  // extracted bytes
@@ -412,27 +458,29 @@ bool TraceFmtDcdImpl::extractFrame()
     // memory aligned sources are always multiples of frames, aligned to start.
     if( m_cfgFlags & OCSD_DFRMTR_FRAME_MEM_ALIGN)
     {
-        if(m_in_block_processed == m_in_block_size)
+		// some linux drivers (e.g. for perf) will insert FSYNCS to pad or differentiate
+        // between blocks of aligned data, always in frame aligned complete 16 byte frames.       
+		if( m_cfgFlags & OCSD_DFRMTR_RESET_ON_4X_FSYNC)
+			f_sync_bytes = checkForResetFSyncPatterns();
+
+        if((m_in_block_processed+f_sync_bytes) == m_in_block_size)
         {
             m_ex_frm_n_bytes = 0;
             cont_process = false;   // end of input data.
         }
-        else
-        {
-            // always a complete frame.
-            m_ex_frm_n_bytes = OCSD_DFRMTR_FRAME_SIZE;
-            memcpy(m_ex_frm_data, m_in_block_base+m_in_block_processed,m_ex_frm_n_bytes);
-            m_trc_curr_idx_sof = m_trc_curr_idx;
-            ex_bytes = OCSD_DFRMTR_FRAME_SIZE;
+		else
+		{
+			// always a complete frame.
+			m_ex_frm_n_bytes = OCSD_DFRMTR_FRAME_SIZE;
+			memcpy(m_ex_frm_data, m_in_block_base + m_in_block_processed + f_sync_bytes, m_ex_frm_n_bytes);
+			m_trc_curr_idx_sof = m_trc_curr_idx + f_sync_bytes;
+			ex_bytes = OCSD_DFRMTR_FRAME_SIZE;
         }
     }
     else
     {
         // extract data accounting for frame syncs and hsyncs if present.
         // we know we are aligned at this point - could be FSYNC or HSYNCs here.
-
-        #define FSYNC_PATTERN 0x7FFFFFFF    // LE host pattern for FSYNC 
-        #define HSYNC_PATTERN 0x7FFF        // LE host pattern for HSYNC
 
         // check what we a looking for
         bool hasFSyncs =  ((m_cfgFlags & OCSD_DFRMTR_HAS_FSYNCS) == OCSD_DFRMTR_HAS_FSYNCS);
@@ -446,7 +494,7 @@ bool TraceFmtDcdImpl::extractFrame()
         // can have FSYNCS at start of frame (in middle is an error).
         if(hasFSyncs && cont_process && (m_ex_frm_n_bytes == 0))
         {
-            while((*((uint32_t *)(dataPtr)) == (uint32_t)FSYNC_PATTERN) && cont_process)
+            while((*((uint32_t *)(dataPtr)) == FSYNC_PATTERN) && cont_process)
             {
                 f_sync_bytes += 4;
                 dataPtr += 4;
@@ -462,7 +510,7 @@ bool TraceFmtDcdImpl::extractFrame()
             // check for illegal out of sequence FSYNC
             if((m_ex_frm_n_bytes % 4) == 0)
             {
-                if(*((uint32_t *)(dataPtr)) == (uint32_t)FSYNC_PATTERN) 
+                if(*((uint32_t *)(dataPtr)) == FSYNC_PATTERN) 
                 {
                     // throw an illegal FSYNC error
                 }
@@ -478,7 +526,7 @@ bool TraceFmtDcdImpl::extractFrame()
             ex_bytes +=2;
 
             // check pair is not HSYNC
-            if(*((uint16_t *)(dataPtr)) == (uint16_t)HSYNC_PATTERN)
+            if(*((uint16_t *)(dataPtr)) == HSYNC_PATTERN)
             {
                 if(hasHSyncs)
                 {

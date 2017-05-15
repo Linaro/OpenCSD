@@ -185,7 +185,7 @@ protected:
 
 private:
     /* decode control */
-    ocsd_datapath_resp_t Reset();
+    ocsd_datapath_resp_t Reset(const ocsd_trc_index_t index);
     ocsd_datapath_resp_t Flush();
     ocsd_datapath_resp_t EOT();
 
@@ -247,7 +247,7 @@ template<class P,class Pt, class Pc> ocsd_datapath_resp_t TrcPktProcBase<P, Pt, 
         break;
 
     case OCSD_OP_RESET:
-        resp = Reset();
+        resp = Reset(index);
         break;
 
     default:
@@ -259,13 +259,13 @@ template<class P,class Pt, class Pc> ocsd_datapath_resp_t TrcPktProcBase<P, Pt, 
 }
 
 
-template<class P,class Pt, class Pc> ocsd_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::Reset()
+template<class P,class Pt, class Pc> ocsd_datapath_resp_t TrcPktProcBase<P, Pt, Pc>::Reset(const ocsd_trc_index_t index)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
 
     // reset the trace decoder attachment on main data path.
     if(m_pkt_out_i.hasAttachedAndEnabled())
-        resp = m_pkt_out_i.first()->PacketDataIn(OCSD_OP_RESET,0,0);
+        resp = m_pkt_out_i.first()->PacketDataIn(OCSD_OP_RESET,index,0);
 
     // reset the packet processor implmentation
     if(!OCSD_DATA_RESP_IS_FATAL(resp))
@@ -273,7 +273,7 @@ template<class P,class Pt, class Pc> ocsd_datapath_resp_t TrcPktProcBase<P, Pt, 
 
     // packet monitor
     if(m_pkt_raw_mon_i.hasAttachedAndEnabled())
-        m_pkt_raw_mon_i.first()->RawPacketDataMon(OCSD_OP_RESET,0,0,0,0);
+        m_pkt_raw_mon_i.first()->RawPacketDataMon(OCSD_OP_RESET,index,0,0,0);
 
     return resp;
 }
