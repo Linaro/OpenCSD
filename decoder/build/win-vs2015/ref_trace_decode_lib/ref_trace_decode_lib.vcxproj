@@ -372,6 +372,12 @@
     <ClInclude Include="..\..\..\include\ocsd_if_types.h" />
     <ClInclude Include="..\..\..\include\ocsd_if_version.h" />
     <ClInclude Include="..\..\..\include\opencsd.h" />
+    <ClInclude Include="..\..\..\include\pkt_printers\gen_elem_printer.h" />
+    <ClInclude Include="..\..\..\include\pkt_printers\item_printer.h" />
+    <ClInclude Include="..\..\..\include\pkt_printers\pkt_printer_t.h" />
+    <ClInclude Include="..\..\..\include\pkt_printers\raw_frame_printer.h" />
+    <ClInclude Include="..\..\..\include\pkt_printers\trc_pkt_printers.h" />
+    <ClInclude Include="..\..\..\include\pkt_printers\trc_print_fact.h" />
     <ClInclude Include="..\..\..\include\ptm\ptm_decoder.h" />
     <ClInclude Include="..\..\..\include\ptm\trc_cmp_cfg_ptm.h" />
     <ClInclude Include="..\..\..\include\ptm\trc_dcd_mngr_ptm.h" />
@@ -421,6 +427,8 @@
     <ClCompile Include="..\..\..\source\ocsd_lib_dcd_register.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_msg_logger.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_version.cpp" />
+    <ClCompile Include="..\..\..\source\pkt_printers\raw_frame_printer.cpp" />
+    <ClCompile Include="..\..\..\source\pkt_printers\trc_print_fact.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_decode_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_elem_ptm.cpp" />

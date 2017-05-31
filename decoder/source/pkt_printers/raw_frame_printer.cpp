@@ -36,7 +36,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "raw_frame_printer.h"
+#include "opencsd.h"
 
 
 ocsd_err_t RawFramePrinter::TraceRawFrameIn(  const ocsd_datapath_op_t op, 
@@ -54,12 +54,20 @@ ocsd_err_t RawFramePrinter::TraceRawFrameIn(  const ocsd_datapath_op_t op,
         int printDataSize = dataBlockSize;
 
         oss << "Frame Data; Index" << std::setw(7) << index << "; ";
+        
         switch(frame_element) 
         {
         case OCSD_FRM_PACKED: oss << std::setw(15) << "RAW_PACKED; "; break;
         case OCSD_FRM_HSYNC:  oss << std::setw(15) << "HSYNC; "; break;
         case OCSD_FRM_FSYNC:  oss << std::setw(15)  << "FSYNC; "; break;  
-        case OCSD_FRM_ID_DATA: oss << std::setw(10) << "ID_DATA[0x" << std::hex << std::setw(2) << std::setfill('0') << (uint16_t)traceID << "]; "; break;
+        case OCSD_FRM_ID_DATA: 
+            oss << std::setw(10) << "ID_DATA[";
+            if (traceID == OCSD_BAD_CS_SRC_ID)
+                oss << "????";
+            else
+                oss << "0x" << std::hex << std::setw(2) << std::setfill('0') << (uint16_t)traceID;
+            oss << "]; ";
+            break;
         default: oss << std::setw(15) << "UNKNOWN; "; break;
         }
 

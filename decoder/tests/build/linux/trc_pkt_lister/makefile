@@ -48,8 +48,7 @@ CPP_INCLUDES	=	\
 			-I$(OCSD_INCLUDE) \
 			-I$(OCSD_TESTS)/snapshot_parser_lib/include
 
-OBJECTS		=	$(BUILD_DIR)/trc_pkt_lister.o \
-				$(BUILD_DIR)/raw_frame_printer.o
+OBJECTS		=	$(BUILD_DIR)/trc_pkt_lister.o
 
 LIBS		=	-L$(LIB_TEST_TARGET_DIR) -lsnapshot_parser \
 				-L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME)

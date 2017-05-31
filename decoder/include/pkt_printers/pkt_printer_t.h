@@ -36,10 +36,11 @@
 #define ARM_PKT_PRINTER_T_H_INCLUDED
 
 #include "opencsd.h"
-#include "item_printer.h"
 
 #include <string>
 #include <sstream>
+#include <iostream>
+#include <iomanip>
 
 template<class P>
 class PacketPrinter : public IPktDataIn<P>, public IPktRawDataMon<P>, public ItemPrinter

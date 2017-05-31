@@ -18,21 +18,9 @@
     <ClCompile Include="..\..\..\source\trc_pkt_lister.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\raw_frame_printer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\source\pkt_printer_t.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\source\item_printer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\source\raw_frame_printer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\source\gen_elem_printer.h">
+    <ClInclude Include="..\..\..\..\include\pkt_printers\trc_pkt_printers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

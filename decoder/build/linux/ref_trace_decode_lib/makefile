@@ -48,7 +48,8 @@ VPATH=	$(OCSD_SOURCE) \
 		$(OCSD_SOURCE)/ptm \
 		$(OCSD_SOURCE)/i_dec \
 		$(OCSD_SOURCE)/mem_acc \
-		$(OCSD_SOURCE)/stm
+		$(OCSD_SOURCE)/stm \
+		$(OCSD_SOURCE)/pkt_printers
 
 
 CPP_INCLUDES= \
@@ -86,6 +87,10 @@ STMOBJ=		$(BUILD_DIR)/trc_pkt_elem_stm.o \
 			$(BUILD_DIR)/trc_pkt_proc_stm.o \
 			$(BUILD_DIR)/trc_pkt_decode_stm.o
 
+PKTPRNTOBJ=	$(BUILD_DIR)/raw_frame_printer.o \
+			$(BUILD_DIR)/trc_print_fact.o
+
+
 OBJECTS=$(BUILD_DIR)/ocsd_code_follower.o \
 		$(BUILD_DIR)/ocsd_dcd_tree.o \
 		$(BUILD_DIR)/ocsd_error.o \
@@ -104,7 +109,8 @@ OBJECTS=$(BUILD_DIR)/ocsd_code_follower.o \
 		$(IDECOBJ) \
 		$(MEMACCOBJ) \
 		$(STMOBJ) \
-		$(PTMOBJ)
+		$(PTMOBJ) \
+		$(PKTPRNTOBJ)
 
 all: build_dir $(OBJECTS)
 	mkdir -p $(LIB_TARGET_DIR)

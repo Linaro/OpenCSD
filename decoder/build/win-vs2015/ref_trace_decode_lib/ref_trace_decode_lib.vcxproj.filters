@@ -58,6 +58,12 @@
     <Filter Include="Header Files\common">
       <UniqueIdentifier>{58d2398e-efdd-45d9-b7be-fc6096f3bec2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\pkt_printers">
+      <UniqueIdentifier>{0e6e1f5d-465e-4f91-88a3-479952bbd316}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pkt_printers">
+      <UniqueIdentifier>{baf047d0-0ff7-4502-b42b-4f1fda94d54b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\LICENSE">
@@ -329,6 +335,24 @@
     <ClInclude Include="..\..\..\include\ocsd_if_version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\pkt_printers\gen_elem_printer.h">
+      <Filter>Header Files\pkt_printers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\pkt_printers\item_printer.h">
+      <Filter>Header Files\pkt_printers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\pkt_printers\pkt_printer_t.h">
+      <Filter>Header Files\pkt_printers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\pkt_printers\raw_frame_printer.h">
+      <Filter>Header Files\pkt_printers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\pkt_printers\trc_pkt_printers.h">
+      <Filter>Header Files\pkt_printers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\pkt_printers\trc_print_fact.h">
+      <Filter>Header Files\pkt_printers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -444,6 +468,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\stm\trc_pkt_decode_stm.cpp">
       <Filter>Source Files\stm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\pkt_printers\raw_frame_printer.cpp">
+      <Filter>Source Files\pkt_printers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\pkt_printers\trc_print_fact.cpp">
+      <Filter>Source Files\pkt_printers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

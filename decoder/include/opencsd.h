@@ -70,6 +70,10 @@
 #include "i_dec/trc_i_decode.h"
 #include "mem_acc/trc_mem_acc.h"
 
+/* printers for builtin packet elements */
+#include "pkt_printers/trc_pkt_printers.h"
+#include "pkt_printers/trc_print_fact.h"
+
 /** The decode tree and decoder register*/
 #include "common/ocsd_lib_dcd_register.h"
 #include "common/ocsd_dcd_tree.h"

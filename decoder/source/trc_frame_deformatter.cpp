@@ -460,8 +460,21 @@ bool TraceFmtDcdImpl::extractFrame()
     {
 		// some linux drivers (e.g. for perf) will insert FSYNCS to pad or differentiate
         // between blocks of aligned data, always in frame aligned complete 16 byte frames.       
-		if( m_cfgFlags & OCSD_DFRMTR_RESET_ON_4X_FSYNC)
-			f_sync_bytes = checkForResetFSyncPatterns();
+        if (m_cfgFlags & OCSD_DFRMTR_RESET_ON_4X_FSYNC)
+        {
+            f_sync_bytes = checkForResetFSyncPatterns();
+
+            /* in this case the FSYNC pattern is output on both packed and unpacked cases */
+            if (f_sync_bytes && (m_b_output_packed_raw || m_b_output_unpacked_raw))
+            {
+                outputRawMonBytes(OCSD_OP_DATA,
+                    m_trc_curr_idx,
+                    OCSD_FRM_FSYNC,
+                    f_sync_bytes,
+                    m_in_block_base + m_in_block_processed,
+                    0);
+            }
+        }
 
         if((m_in_block_processed+f_sync_bytes) == m_in_block_size)
         {
@@ -719,8 +732,8 @@ bool TraceFmtDcdImpl::outputFrame()
         }
         else
         {
-            // optional raw output for debugging / monitor tools
-            if(m_b_output_unpacked_raw && rawChanEnabled( m_out_data[m_out_processed].id))
+            // optional raw output for debugging / monitor tools of unknown src ID data
+            if(m_b_output_unpacked_raw)
             {
                 outputRawMonBytes(  OCSD_OP_DATA, 
                     m_out_data[m_out_processed].index, 

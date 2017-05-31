@@ -44,11 +44,6 @@
 #include "opencsd.h"              // the library
 #include "trace_snapshots.h"    // the snapshot reading test library
 
-// include some printers for packet elements
-#include "pkt_printer_t.h"
-#include "raw_frame_printer.h"
-#include "gen_elem_printer.h"
-
 static bool process_cmd_line_opts( int argc, char* argv[]);
 static void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name);
 static bool process_cmd_line_logger_opts(int argc, char* argv[]);
@@ -170,7 +165,7 @@ int main(int argc, char* argv[])
     else
     {
         std::ostringstream oss;
-        oss << "Trace Packet Lister : Snapshot path" << ss_path << "not found\n";
+        oss << "Trace Packet Lister : Snapshot path" << ss_path << " not found\n";
         logger.LogMsg(oss.str());
     }
 
@@ -425,9 +420,10 @@ bool process_cmd_line_opts(int argc, char* argv[])
 // if packet processing only, then waits will be coming from there until the count is extinguished
 // wait testing with packet processor only really works correctly if we are doing a single source as there is no way at this 
 // point to know which source has sent the _WAIT. with multi packet processor waiting may get false warnings once the _WAITs run out.
-bool ExpectingPPrintWaitResp(std::vector<ItemPrinter *> &printers, TrcGenericElementPrinter &genElemPrinter)
+bool ExpectingPPrintWaitResp(TrcGenericElementPrinter &genElemPrinter)
 {
     bool ExpectingWaits = false;
+    std::vector<ItemPrinter *> &printers = PktPrinterFact::getPrinterList();
     if(test_waits > 0)
     {
         // see if last response was from the Gen elem printer expecting a wait
@@ -452,21 +448,26 @@ bool ExpectingPPrintWaitResp(std::vector<ItemPrinter *> &printers, TrcGenericEle
     return ExpectingWaits;
 }
 
-void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &printers)
+void AttachPacketPrinters( DecodeTree *dcd_tree)
 {
     uint8_t elemID;
+    ocsd_trace_protocol_t protocol;
+    std::ostringstream oss;
+
     // attach packet printers to each trace source in the tree
     DecodeTreeElement *pElement = dcd_tree->getFirstElement(elemID);
     while(pElement && !no_undecoded_packets)
     {
         if(!element_filtered(elemID))
         {
-            switch(pElement->getProtocol())
+            oss.str("");
+            protocol = pElement->getProtocol();
+            switch(protocol)
             {
             case OCSD_PROTOCOL_ETMV4I:
                 {
-                    std::ostringstream oss;
-                    PacketPrinter<EtmV4ITrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV4ITrcPacket>(elemID,&logger);
+                    
+                    PacketPrinter<EtmV4ITrcPacket> *pPrinter = dynamic_cast<PacketPrinter<EtmV4ITrcPacket> *>(PktPrinterFact::createProtocolPrinter(protocol,elemID,&logger));
                     if(pPrinter)
                     {
                         // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
@@ -478,18 +479,17 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                             if(test_waits)
                                 pPrinter->setTestWaits(test_waits);
                         }
-                        printers.push_back(pPrinter); // save printer to destroy it later
+                        oss << "Trace Packet Lister : ETMv4 Instuction trace Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                     }
-
-                    oss << "Trace Packet Lister : ETMv4 Instuction trace Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                    else  
+                        oss << "Trace Packet Lister : Failed to set printer for ETMv4 Instuction trace Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                     logger.LogMsg(oss.str());
                 }
                 break;
 
             case OCSD_PROTOCOL_ETMV3:
                 {
-                    std::ostringstream oss;
-                    PacketPrinter<EtmV3TrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<EtmV3TrcPacket>(elemID,&logger);
+                PacketPrinter<EtmV3TrcPacket> *pPrinter = dynamic_cast<PacketPrinter<EtmV3TrcPacket> *>(PktPrinterFact::createProtocolPrinter(protocol, elemID, &logger));
                     if(pPrinter)
                     {
                         // if we are decoding then the decoder is attached to the packet output - attach the printer to the monitor point.
@@ -501,16 +501,16 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                             if(test_waits)
                                 pPrinter->setTestWaits(test_waits);
                         }
-                        printers.push_back(pPrinter); // save printer to destroy it later
-                    }                    
-                    oss << "Trace Packet Lister : ETMv3 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                        oss << "Trace Packet Lister : ETMv3 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+                    }
+                    else
+                        oss << "Trace Packet Lister : Failed to set printer for ETMv3 Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                     logger.LogMsg(oss.str());
                 }
                 break;
 
             case OCSD_PROTOCOL_PTM:
                 {
-                    std::ostringstream oss;
                     PacketPrinter<PtmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<PtmTrcPacket>(elemID,&logger);
                     if(pPrinter)
                     {
@@ -523,7 +523,6 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                             if(test_waits)
                                 pPrinter->setTestWaits(test_waits);
                         }
-                        printers.push_back(pPrinter); // save printer to destroy it later
                     }                    
                     oss << "Trace Packet Lister : PTM Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                     logger.LogMsg(oss.str());
@@ -533,7 +532,6 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
 
             case OCSD_PROTOCOL_STM:
                 {
-                    std::ostringstream oss;
                     PacketPrinter<StmTrcPacket> *pPrinter = new (std::nothrow) PacketPrinter<StmTrcPacket>(elemID,&logger);
                     if(pPrinter)
                     {
@@ -547,7 +545,6 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
                                 pPrinter->setTestWaits(test_waits);
                         }
 
-                        printers.push_back(pPrinter); // save printer to destroy it later
                     }                    
                     oss << "Trace Packet Lister : STM Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                     logger.LogMsg(oss.str());
@@ -556,7 +553,6 @@ void AttachPacketPrinters( DecodeTree *dcd_tree, std::vector<ItemPrinter *> &pri
 
             default:
                 {
-                    std::ostringstream oss;
                     oss << "Trace Packet Lister : Unsupported Protocol on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
                     logger.LogMsg(oss.str());
                 }
@@ -593,39 +589,46 @@ void ConfigureFrameDeMux(DecodeTree *dcd_tree, RawFramePrinter &framePrinter)
 void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name)
 {
     CreateDcdTreeFromSnapShot tree_creator;
-    RawFramePrinter framePrinter;
-    TrcGenericElementPrinter genElemPrinter;
+    RawFramePrinter *framePrinter = 0;
+    TrcGenericElementPrinter *genElemPrinter = 0;
+      
+    framePrinter = PktPrinterFact::createRawFramePrinter(&logger);
+    if (decode)
+        genElemPrinter = PktPrinterFact::createGenElemPrinter(&logger);
 
-    framePrinter.setMessageLogger(&logger);
-    tree_creator.initialise(&reader,&err_logger);
-    if(decode)
-        genElemPrinter.setMessageLogger(&logger);
+    if ((framePrinter == 0) || (decode && (genElemPrinter == 0)))
+    {
+        std::ostringstream oss;
+        oss << "Trace Packet Lister : failed to create printer objects\n";
+        logger.LogMsg(oss.str());
+        return;
+    }
+
+    tree_creator.initialise(&reader, &err_logger);
 
     if(tree_creator.createDecodeTree(trace_buffer_name, (decode == false)))
     {
-        std::vector<ItemPrinter *> printers;
         DecodeTree *dcd_tree = tree_creator.getDecodeTree();
 
-        AttachPacketPrinters(dcd_tree, printers);
+        AttachPacketPrinters(dcd_tree);
 
-        ConfigureFrameDeMux(dcd_tree, framePrinter);
+        ConfigureFrameDeMux(dcd_tree, *framePrinter);
 
         // if decoding set the generic element printer to the output interface on the tree.
         if(decode)
         {
             std::ostringstream oss;
-            dcd_tree->setGenTraceElemOutI(&genElemPrinter);
+            dcd_tree->setGenTraceElemOutI(genElemPrinter);
             oss << "Trace Packet Lister : Set trace element decode printer\n";
             logger.LogMsg(oss.str());
-            genElemPrinter.setTestWaits(test_waits);
+            genElemPrinter->setTestWaits(test_waits);
         }
-
 
         if(decode)
             dcd_tree->logMappedRanges();    // print out the mapped ranges
 
          // check if we have attached at least one printer
-        if(decode || (printers.size() > 0))
+        if(decode || (PktPrinterFact::numPrinters() > 0))
         {
             // set up the filtering at the tree level (avoid pushing to processors with no attached printers)
             if(!all_source_ids)
@@ -668,7 +671,7 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
                             trace_index += nUsedThisTime;
 
                             // test printers can inject _WAIT responses - see if we are expecting one...
-                            if(ExpectingPPrintWaitResp(printers,genElemPrinter))
+                            if(ExpectingPPrintWaitResp(*genElemPrinter))
                             {
                                 if(OCSD_DATA_RESP_IS_CONT(dataPathResp))
                                 {
@@ -682,8 +685,8 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
                         else // last response was _WAIT
                         {
                             // may need to acknowledge a wait from the gen elem printer
-                            if(genElemPrinter.needAckWait())
-                                genElemPrinter.ackWait();
+                            if(genElemPrinter->needAckWait())
+                                genElemPrinter->ackWait();
 
                             // dataPathResp not continue or fatal so must be wait...
                             dataPathResp = dcd_tree->TraceDataIn(OCSD_OP_FLUSH,0,0,0,0);
@@ -737,13 +740,7 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
         tree_creator.destroyDecodeTree();
 
         // get rid of all the printers.
-        std::vector<ItemPrinter *>::iterator it;
-        it = printers.begin();
-        while(it != printers.end())
-        {
-            delete *it;
-            it++;
-        }
+        PktPrinterFact::destroyAllPrinters();
     }
 }
 
