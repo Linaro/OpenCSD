@@ -38,6 +38,15 @@
 #include <string>
 #include <fstream>
 
+class ocsdMsgLogStrOutI
+{
+public:
+	ocsdMsgLogStrOutI() {};
+	virtual ~ocsdMsgLogStrOutI() {};
+
+	virtual void printOutStr(const std::string &outStr) = 0;
+};
+
 class ocsdMsgLogger 
 {
 public:
@@ -48,11 +57,15 @@ public:
         OUT_NONE = 0,
         OUT_FILE = 1,
         OUT_STDERR = 2,
-        OUT_STDOUT = 4
+        OUT_STDOUT = 4,
+		OUT_STR_CB = 8	/* output to external string callback interface */
     } output_dest;
 
     void setLogOpts(int logOpts);
-    void setLogFileName(const char *fileName);
+	const int getLogOpts() const { return m_outFlags; };
+	
+	void setLogFileName(const char *fileName);
+	void setStrOutFn(ocsdMsgLogStrOutI *p_IstrOut);
 
     void LogMsg(const std::string &msg);
 
@@ -63,6 +76,7 @@ private:
 
     std::string m_logFileName;
     std::fstream m_out_file;
+	ocsdMsgLogStrOutI *m_pOutStrI;
 };
 
 #endif // ARM_OCSD_MSG_LOGGER_H_INCLUDED

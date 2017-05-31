@@ -37,9 +37,12 @@
 #include <iostream>
 #include <sstream>
 
+#define MSGLOG_OUT_MASK (ocsdMsgLogger::OUT_FILE | ocsdMsgLogger::OUT_STDERR | ocsdMsgLogger::OUT_STDOUT | ocsdMsgLogger::OUT_STR_CB)
+
 ocsdMsgLogger::ocsdMsgLogger() :
     m_outFlags(ocsdMsgLogger::OUT_STDOUT),
-    m_logFileName("ocsd_trace_decode.log")
+    m_logFileName("ocsd_trace_decode.log"),
+	m_pOutStrI(0)
 {
 }
 
@@ -50,7 +53,7 @@ ocsdMsgLogger::~ocsdMsgLogger()
 
 void ocsdMsgLogger::setLogOpts(int logOpts)
 {
-    m_outFlags = logOpts & (ocsdMsgLogger::OUT_FILE | ocsdMsgLogger::OUT_STDERR | ocsdMsgLogger::OUT_STDOUT);
+    m_outFlags = logOpts & (MSGLOG_OUT_MASK);
 }
 
 void ocsdMsgLogger::setLogFileName(const char *fileName)
@@ -60,6 +63,10 @@ void ocsdMsgLogger::setLogFileName(const char *fileName)
         m_out_file.close();
 }
 
+void ocsdMsgLogger::setStrOutFn(ocsdMsgLogStrOutI *p_IstrOut)
+{
+	m_pOutStrI = p_IstrOut;
+}
 
 void ocsdMsgLogger::LogMsg(const std::string &msg)
 {
@@ -84,11 +91,17 @@ void ocsdMsgLogger::LogMsg(const std::string &msg)
         m_out_file << msg;
         m_out_file.flush();
     }
+
+	if (m_outFlags & OUT_STR_CB)
+	{
+		if (m_pOutStrI)
+			m_pOutStrI->printOutStr(msg);
+	}
 }
 
 const bool ocsdMsgLogger::isLogging() const
 {
-    return (bool)((m_outFlags & (ocsdMsgLogger::OUT_FILE | ocsdMsgLogger::OUT_STDERR | ocsdMsgLogger::OUT_STDOUT)) != 0);
+    return (bool)((m_outFlags & MSGLOG_OUT_MASK) != 0);
 }
 
 /* End of File ocsd_msg_logger.cpp */
