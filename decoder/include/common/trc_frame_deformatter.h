@@ -75,6 +75,7 @@ public:
 
     /* configuration - set operational mode for incoming stream (has FSYNCS etc) */
     ocsd_err_t Configure(uint32_t cfg_flags);
+    const uint32_t getConfigFlags() const;
 
     /* enable / disable ID streams - default as all enabled */
     ocsd_err_t OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable);

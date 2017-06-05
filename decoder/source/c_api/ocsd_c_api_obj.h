@@ -10,7 +10,7 @@
 
 #include "c_api/ocsd_c_api_types.h"
 #include "interfaces/trc_gen_elem_in_i.h"
- 
+#include "common/ocsd_msg_logger.h" 
 
 class TraceElemCBBase
 {
@@ -141,6 +141,39 @@ public:
 
 private:
     FnDefPktDataMon m_c_api_cb_fn;
+    const void *m_p_context;
+};
+
+/* handler for default string print CB object */
+class DefLogStrCBObj : public ocsdMsgLogStrOutI
+{
+public:
+    DefLogStrCBObj()
+    {
+        m_c_api_cb_fn = 0;
+        m_p_context = 0;
+    };
+
+    virtual ~DefLogStrCBObj()
+    {
+        m_c_api_cb_fn = 0;
+        m_p_context = 0;
+    };
+
+    void setCBFn(const void *p_context, FnDefLoggerPrintStrCB pCBFn)
+    {
+        m_c_api_cb_fn = pCBFn;
+        m_p_context = p_context;
+    };
+
+    virtual void printOutStr(const std::string &outStr)
+    {
+        if(m_c_api_cb_fn)
+            m_c_api_cb_fn(m_p_context, outStr.c_str(), outStr.length());
+    }
+
+private:
+    FnDefLoggerPrintStrCB m_c_api_cb_fn;
     const void *m_p_context;
 };
 

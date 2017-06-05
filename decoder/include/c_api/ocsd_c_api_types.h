@@ -89,6 +89,8 @@ typedef void (* FnDefPktDataMon)(const void *p_context,
                                                  const uint32_t size,
                                                  const uint8_t *p_data);
 
+/** function pointer tyee for library default logger output to allow client to print zero terminated output string */
+typedef void (* FnDefLoggerPrintStrCB)(const void *p_context, const char *psz_msg_str, const int str_len);
 
 /** Callback interface type when attaching monitor/sink to packet processor */
 typedef enum _ocsd_c_api_cb_types {

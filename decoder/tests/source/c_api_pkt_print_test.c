@@ -102,6 +102,11 @@ static int test_extern_decoder = 0; /* test the external decoder infrastructure.
 static ocsd_extern_dcd_fact_t *p_ext_fact; /* external decoder factory */
 #define EXT_DCD_NAME "ext_echo"
 
+/* raw packet printing test */
+static int frame_raw_unpacked = 0;
+static int frame_raw_packed = 0;
+static int test_printstr = 0;
+
 /* Process command line options - choose the operation to use for the test. */
 static int process_cmd_line(int argc, char *argv[])
 {
@@ -157,6 +162,18 @@ static int process_cmd_line(int argc, char *argv[])
         {
             test_extern_decoder = 1;
         }
+        else if (strcmp(argv[idx], "-raw") == 0)
+        {
+            frame_raw_unpacked = 1;
+        }
+        else if (strcmp(argv[idx], "-raw_packed") == 0)
+        {
+            frame_raw_packed = 1;
+        }
+        else if (strcmp(argv[idx], "-test_printstr") == 0)
+        {
+            test_printstr = 1;
+        }
         else if(strcmp(argv[idx],"-help") == 0)
         {
             return -1;
@@ -173,6 +190,7 @@ static void print_cmd_line_help()
     printf("Usage:\n-etmv3|-stm|-ptm|-extern  : choose protocol (one only, default etmv4)\n");
     printf("-id <ID> : decode source for id <ID> (default 0x10)\n");
     printf("-decode | -decode_only : full decode + trace packets / full decode packets only (default trace packets only)\n");
+    printf("-raw / -raw_packed: print raw unpacked / packed data;\n");
     printf("-test_region_file | -test_cb : mem accessor - test multi region file API | test callback API (default single memory file)\n\n");
 }
 
@@ -662,6 +680,33 @@ static ocsd_err_t create_decoder_extern(dcd_tree_handle_t dcd_tree_h)
     return create_generic_decoder(dcd_tree_h, EXT_DCD_NAME, (void *)&trace_cfg_ext, 0);
 }
 
+static ocsd_err_t attach_raw_printers(dcd_tree_handle_t dcd_tree_h)
+{
+    ocsd_err_t err = OCSD_OK;
+    int flags = 0;
+    if (frame_raw_unpacked)
+        flags |= OCSD_DFRMTR_UNPACKED_RAW_OUT;
+    if (frame_raw_packed)
+        flags |= OCSD_DFRMTR_PACKED_RAW_OUT;
+    if (flags)
+    {
+        err = ocsd_set_raw_frame_printer(dcd_tree_h, flags);
+    }
+    return err;
+}
+
+static void print_output_str(const void *p_context, const char *psz_msg_str, const int str_len)
+{
+    printf("** CUST_PRNTSTR: %s", psz_msg_str);
+}
+
+static ocsd_err_t test_printstr_cb(dcd_tree_handle_t dcd_tree_h)
+{
+    ocsd_err_t err = OCSD_OK;
+    if (test_printstr)
+        err = ocsd_def_errlog_set_strprint_cb(dcd_tree_h, 0, print_output_str);
+    return err;
+}
 /************************************************************************/
 
 ocsd_err_t register_extern_decoder()
@@ -781,6 +826,15 @@ int process_trace_data(FILE *pf)
             /* attach the generic trace element output callback */
             ret = ocsd_dt_set_gen_elem_outfn(dcdtree_handle,gen_trace_elem_print,0);
 
+
+        /* raw print and str print cb options tested in their init functions */
+        if (ret == OCSD_OK)
+            ret = test_printstr_cb(dcdtree_handle);
+
+        if (ret == OCSD_OK)
+            ret = attach_raw_printers(dcdtree_handle);
+
+
         /* now push the trace data through the packet processor */
         while(!feof(pf) && (ret == OCSD_OK))
         {
@@ -855,7 +909,6 @@ int main(int argc, char *argv[])
         /* print sign-on message in log */
         sprintf(message, "C-API packet print test\nLibrary Version %s\n\n",ocsd_get_version_str());
         ocsd_def_errlog_msgout(message);
-        
 
         /* process the trace data */
         if(ret == 0)

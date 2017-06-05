@@ -821,6 +821,15 @@ ocsd_err_t TraceFormatterFrameDecoder::Configure(uint32_t cfg_flags)
     return OCSD_OK;
 }
 
+const uint32_t TraceFormatterFrameDecoder::getConfigFlags() const
+{
+    uint32_t flags = 0;
+    if(m_pDecoder)
+        flags = m_pDecoder->m_cfgFlags;
+    return flags;
+}
+
+
 /* enable / disable ID streams - default as all enabled */
 ocsd_err_t TraceFormatterFrameDecoder::OutputFilterIDs(std::vector<uint8_t> &id_list, bool bEnable)
 {

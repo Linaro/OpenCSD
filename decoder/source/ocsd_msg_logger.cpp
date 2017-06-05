@@ -58,14 +58,27 @@ void ocsdMsgLogger::setLogOpts(int logOpts)
 
 void ocsdMsgLogger::setLogFileName(const char *fileName)
 {
-    m_logFileName = fileName;
+    if (fileName == 0)
+        m_logFileName = "";
+    else
+        m_logFileName = fileName;
+
     if(m_out_file.is_open())
         m_out_file.close();
+
+    if (m_logFileName.length())
+        m_outFlags |= (int)ocsdMsgLogger::OUT_FILE;
+    else
+        m_outFlags &= ~((int)ocsdMsgLogger::OUT_FILE);
 }
 
 void ocsdMsgLogger::setStrOutFn(ocsdMsgLogStrOutI *p_IstrOut)
 {
 	m_pOutStrI = p_IstrOut;
+    if (p_IstrOut)
+        m_outFlags |= (int)ocsdMsgLogger::OUT_STR_CB;
+    else
+        m_outFlags &= ~((int)ocsdMsgLogger::OUT_STR_CB);
 }
 
 void ocsdMsgLogger::LogMsg(const std::string &msg)

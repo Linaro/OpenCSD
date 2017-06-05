@@ -64,6 +64,7 @@ static ocsd_err_t ocsd_check_and_add_mem_acc_mapper(const dcd_tree_handle_t hand
 /* keep a list of interface objects for a decode tree for later disposal */
 typedef struct _lib_dt_data_list {
     std::vector<ITrcTypedBase *> cb_objs;
+    DefLogStrCBObj s_def_log_str_cb;
 } lib_dt_data_list;
 
 /* map lists to handles */
@@ -272,6 +273,28 @@ OCSD_C_API ocsd_err_t ocsd_def_errlog_config_output(const int output_flags, cons
     return OCSD_ERR_NOT_INIT;    
 }
 
+
+OCSD_C_API ocsd_err_t ocsd_def_errlog_set_strprint_cb(const dcd_tree_handle_t handle, void *p_context, FnDefLoggerPrintStrCB p_str_print_cb)
+{
+    ocsdMsgLogger *pLogger = DecodeTree::getDefaultErrorLogger()->getOutputLogger();
+    if (pLogger)
+    {
+        std::map<dcd_tree_handle_t, lib_dt_data_list *>::iterator it;
+        it = s_data_map.find(handle);
+        if (it != s_data_map.end())
+        {
+            DefLogStrCBObj *pCBObj = &(it->second->s_def_log_str_cb);
+            pCBObj->setCBFn(p_context, p_str_print_cb);
+            pLogger->setStrOutFn(pCBObj);
+            int logOpts = pLogger->getLogOpts();
+            logOpts |= (int)(ocsdMsgLogger::OUT_STR_CB);
+            pLogger->setLogOpts(logOpts);
+            return OCSD_OK;
+        }
+    }
+    return OCSD_ERR_NOT_INIT;
+}
+
 OCSD_C_API void ocsd_def_errlog_msgout(const char *msg)
 {
     ocsdMsgLogger *pLogger = DecodeTree::getDefaultErrorLogger()->getOutputLogger();
@@ -409,6 +432,25 @@ OCSD_C_API void ocsd_gen_elem_init(ocsd_generic_trace_elem *p_pkt, const ocsd_ge
     p_pkt->elem_type = elem_type;
     p_pkt->flag_bits = 0;
     p_pkt->ptr_extended_data = 0;
+}
+
+OCSD_C_API ocsd_err_t ocsd_set_raw_frame_printer(const dcd_tree_handle_t handle, int flags)
+{
+    if (handle != C_API_INVALID_TREE_HANDLE)
+    {
+        RawFramePrinter *pPrinter = PktPrinterFact::createRawFramePrinter();
+        if (pPrinter)
+        {
+            pPrinter->setMessageLogger((DecodeTree::getDefaultErrorLogger()->getOutputLogger()));
+            TraceFormatterFrameDecoder *pFrameDecoder = ((DecodeTree *)handle)->getFrameDeformatter();
+            int cfgFlags = pFrameDecoder->getConfigFlags();
+            cfgFlags |= ((uint32_t)flags & (OCSD_DFRMTR_PACKED_RAW_OUT | OCSD_DFRMTR_UNPACKED_RAW_OUT));
+            pFrameDecoder->Configure(cfgFlags);
+            return pFrameDecoder->getTrcRawFrameAttachPt()->attach(pPrinter);
+        }
+        return OCSD_ERR_MEM;
+    }
+    return OCSD_ERR_NOT_INIT;
 }
 
 /*******************************************************************************/

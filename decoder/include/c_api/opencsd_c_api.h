@@ -339,6 +339,16 @@ OCSD_C_API ocsd_err_t ocsd_def_errlog_init(const ocsd_err_severity_t verbosity, 
 OCSD_C_API ocsd_err_t ocsd_def_errlog_config_output(const int output_flags, const char *log_file_name);
 
 /*!
+ * Configure the library default error logger to send all strings it is outputting back to the client 
+ * to allow printing within the client application. This is in additional to any other log destinations
+ * set in ocsd_def_errlog_init().
+ *
+ * @param *p_context : opaque context pointer
+ * @param p_str_print_cb : client callback function to "print" logstring. 
+ */
+OCSD_C_API ocsd_err_t ocsd_def_errlog_set_strprint_cb(const dcd_tree_handle_t handle, void *p_context, FnDefLoggerPrintStrCB p_str_print_cb);
+
+/*!
  * Print a message via the library output printer - if enabled.
  *
  * @param *msg : Message to output.
@@ -385,6 +395,19 @@ OCSD_C_API ocsd_err_t ocsd_gen_elem_str(const ocsd_generic_trace_elem *p_pkt, ch
 OCSD_C_API void ocsd_gen_elem_init(ocsd_generic_trace_elem *p_pkt, const ocsd_gen_trc_elem_t elem_type);
 
 /** @}*/
+
+/** @name Library packet and data printer control API
+    @brief Allows client to use libraries packet and data printers to log packets etc rather than attach callbacks.
+@{*/
+
+/*!
+ * Set a raw frame printer on the trace frame demuxer. Allows inspection of raw trace data frames for debug.
+ * Prints via the default error logging mechanisms.
+ */
+OCSD_C_API  ocsd_err_t ocsd_set_raw_frame_printer(const dcd_tree_handle_t handle, int flags);
+
+/** @}*/
+
 
 /** @name Custom Decoder API functions
 
