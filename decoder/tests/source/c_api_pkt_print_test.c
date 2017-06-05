@@ -882,7 +882,7 @@ int main(int argc, char *argv[])
 {
     FILE *trace_data;
     char trace_file_path[512];
-    int ret = 0;
+    int ret = 0, i, len;
     char message[512];
 
     /* command line params */
@@ -908,6 +908,22 @@ int main(int argc, char *argv[])
 
         /* print sign-on message in log */
         sprintf(message, "C-API packet print test\nLibrary Version %s\n\n",ocsd_get_version_str());
+        ocsd_def_errlog_msgout(message);
+
+        /* print command line used */
+        message[0] = 0;
+        len = 0;
+        for (i = 0; i < argc; i++)
+        {
+            len += strlen(argv[i]) + 1;
+            if (len < 512)
+            {
+                strcat(message, argv[i]);
+                strcat(message, " ");
+            }
+        }
+        if((len + 2) < 512)
+            strcat(message, "\n\n");
         ocsd_def_errlog_msgout(message);
 
         /* process the trace data */
