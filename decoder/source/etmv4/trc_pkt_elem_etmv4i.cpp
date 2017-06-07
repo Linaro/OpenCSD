@@ -157,7 +157,7 @@ void EtmV4ITrcPacket::toString(std::string &str) const
     case ETM4_PKT_I_TRACE_INFO:
         {
             std::ostringstream oss;
-            oss << "; PCTL=" << std::hex << "0x" << trace_info.val;
+            oss << "; INFO=" << std::hex << "0x" << trace_info.val;
             if (trace_info.bits.cc_enabled)
                 oss << "; CC_THRESHOLD=" << std::hex << "0x" << cc_threshold;
             str += oss.str();
