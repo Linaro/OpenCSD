@@ -434,23 +434,29 @@ OCSD_C_API void ocsd_gen_elem_init(ocsd_generic_trace_elem *p_pkt, const ocsd_ge
     p_pkt->ptr_extended_data = 0;
 }
 
-OCSD_C_API ocsd_err_t ocsd_set_raw_frame_printer(const dcd_tree_handle_t handle, int flags)
+OCSD_C_API ocsd_err_t ocsd_dt_set_raw_frame_printer(const dcd_tree_handle_t handle, int flags)
 {
     if (handle != C_API_INVALID_TREE_HANDLE)
-    {
-        RawFramePrinter *pPrinter = PktPrinterFact::createRawFramePrinter();
-        if (pPrinter)
-        {
-            pPrinter->setMessageLogger((DecodeTree::getDefaultErrorLogger()->getOutputLogger()));
-            TraceFormatterFrameDecoder *pFrameDecoder = ((DecodeTree *)handle)->getFrameDeformatter();
-            int cfgFlags = pFrameDecoder->getConfigFlags();
-            cfgFlags |= ((uint32_t)flags & (OCSD_DFRMTR_PACKED_RAW_OUT | OCSD_DFRMTR_UNPACKED_RAW_OUT));
-            pFrameDecoder->Configure(cfgFlags);
-            return pFrameDecoder->getTrcRawFrameAttachPt()->attach(pPrinter);
-        }
-        return OCSD_ERR_MEM;
-    }
+        return ((DecodeTree *)handle)->addRawFramePrinter(0, (uint32_t)flags);
     return OCSD_ERR_NOT_INIT;
+}
+
+OCSD_C_API ocsd_err_t ocsd_dt_set_gen_elem_printer(const dcd_tree_handle_t handle)
+{
+    if (handle != C_API_INVALID_TREE_HANDLE)
+        return ((DecodeTree *)handle)->addGenElemPrinter(0);
+    return OCSD_ERR_NOT_INIT;
+}
+
+OCSD_C_API ocsd_err_t ocsd_dt_set_pkt_protocol_printer(const dcd_tree_handle_t handle, uint8_t cs_id, int monitor)
+{
+    ocsd_err_t err = OCSD_ERR_NOT_INIT;
+    if (handle != C_API_INVALID_TREE_HANDLE)
+    {
+        DecodeTree *p_tree = (DecodeTree *)handle;
+        err = p_tree->addPacketPrinter(cs_id, (bool)(monitor != 0), 0);
+    }
+    return err;
 }
 
 /*******************************************************************************/

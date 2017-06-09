@@ -83,7 +83,7 @@ public:
 /** @}*/
 
 
-/** @name Error Logging
+/** @name Error and element Logging
 @{*/
     /** @brief The library default error logger */
     static ocsdDefaultErrorLogger* getDefaultErrorLogger() { return &s_error_logger; };
@@ -93,6 +93,20 @@ public:
 
     /** set an alternate error logging interface. */
     static void setAlternateErrorLogger(ITraceErrorLog *p_error_logger);
+
+    /** get the list of packet printers for this decode tree */
+    std::vector<ItemPrinter *> &getPrinterList() { return m_printer_list; };
+
+    /** add a protocol packet printer */
+    ocsd_err_t addPacketPrinter(uint8_t CSID, bool bMonitor, ItemPrinter **ppPrinter);
+    
+    /** add a raw frame printer */
+    ocsd_err_t addRawFramePrinter(RawFramePrinter **ppPrinter, uint32_t flags);
+
+    /** add a generic element output printer */
+    ocsd_err_t addGenElemPrinter(TrcGenericElementPrinter **ppPrinter);
+
+
 
 /** @}*/
 
@@ -371,6 +385,8 @@ private:
 
     TrcMemAccMapper *m_default_mapper;  //!< the mem acc mapper to use
     bool m_created_mapper;              //!< true if created by decode tree object
+
+    std::vector<ItemPrinter *> m_printer_list;  //!< list of packet printers.
 
     /* global error logger  - all sources */ 
     static ITraceErrorLog *s_i_error_logger;

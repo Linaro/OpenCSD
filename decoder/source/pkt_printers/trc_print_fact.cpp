@@ -35,25 +35,23 @@
 
 #include "pkt_printers/trc_print_fact.h"
 
-std::vector<ItemPrinter *> PktPrinterFact::sm_printers;
-
-RawFramePrinter * PktPrinterFact::createRawFramePrinter(ocsdMsgLogger *pMsgLogger /*= 0*/)
+RawFramePrinter * PktPrinterFact::createRawFramePrinter(std::vector<ItemPrinter *> &printer_list, ocsdMsgLogger *pMsgLogger /*= 0*/)
 {
     RawFramePrinter *pPrinter = 0;
     pPrinter = new (std::nothrow)RawFramePrinter();
-    SavePrinter(pPrinter, pMsgLogger);
+    SavePrinter(printer_list, pPrinter, pMsgLogger);
     return pPrinter;
 }
 
-TrcGenericElementPrinter *PktPrinterFact::createGenElemPrinter(ocsdMsgLogger *pMsgLogger /*= 0*/)
+TrcGenericElementPrinter *PktPrinterFact::createGenElemPrinter(std::vector<ItemPrinter *> &printer_list, ocsdMsgLogger *pMsgLogger /*= 0*/)
 {
     TrcGenericElementPrinter *pPrinter = 0;
     pPrinter = new (std::nothrow)TrcGenericElementPrinter();
-    SavePrinter(pPrinter, pMsgLogger);
+    SavePrinter(printer_list, pPrinter, pMsgLogger);
     return pPrinter;
 }
 
-ItemPrinter *PktPrinterFact::createProtocolPrinter(ocsd_trace_protocol_t protocol, uint8_t CSID, ocsdMsgLogger *pMsgLogger /*= 0*/)
+ItemPrinter *PktPrinterFact::createProtocolPrinter(std::vector<ItemPrinter *> &printer_list, ocsd_trace_protocol_t protocol, uint8_t CSID, ocsdMsgLogger *pMsgLogger /*= 0*/)
 {
     ItemPrinter *pPrinter = 0;
     switch (protocol)
@@ -73,39 +71,53 @@ ItemPrinter *PktPrinterFact::createProtocolPrinter(ocsd_trace_protocol_t protoco
     default:
         break;
     }
-    SavePrinter(pPrinter, pMsgLogger);
+    SavePrinter(printer_list, pPrinter, pMsgLogger);
     return pPrinter;
 }
 
-const int PktPrinterFact::numPrinters()
+const int PktPrinterFact::numPrinters(std::vector<ItemPrinter *> &printer_list)
 {
-    return sm_printers.size();
+    return printer_list.size();
 }
 
-std::vector<ItemPrinter *> &PktPrinterFact::getPrinterList()
-{
-    return sm_printers;
-}
-
-void PktPrinterFact::SavePrinter(ItemPrinter *pPrinter, ocsdMsgLogger *pMsgLogger)
+void PktPrinterFact::SavePrinter(std::vector<ItemPrinter *> &printer_list, ItemPrinter *pPrinter, ocsdMsgLogger *pMsgLogger)
 {
     if (pPrinter)
     {
         pPrinter->setMessageLogger(pMsgLogger);
-        sm_printers.push_back((ItemPrinter *)pPrinter);
+        printer_list.push_back((ItemPrinter *)pPrinter);
     }
 }
 
-void PktPrinterFact::destroyAllPrinters()
+void PktPrinterFact::destroyAllPrinters(std::vector<ItemPrinter *> &printer_list)
 {
     std::vector<ItemPrinter *>::iterator it;
-    it = sm_printers.begin();
-    while (it != sm_printers.end())
+    it = printer_list.begin();
+    while (it != printer_list.end())
     {
         delete *it;
         it++;
     }
-    sm_printers.clear();
+    printer_list.clear();
 }
+
+void PktPrinterFact::destroyPrinter(std::vector<ItemPrinter *> &printer_list, ItemPrinter *pPrinter)
+{
+    std::vector<ItemPrinter *>::iterator it;
+    it = printer_list.begin();
+    while (it != printer_list.end())
+    {        
+        if (*it == pPrinter)
+        {
+            printer_list.erase(it);
+            delete pPrinter;
+            return;
+        }
+        else
+            it++;
+    }
+}
+
+
 
 /* end of file  trc_print_fact.cpp */

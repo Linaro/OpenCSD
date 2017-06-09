@@ -107,6 +107,9 @@ static int frame_raw_unpacked = 0;
 static int frame_raw_packed = 0;
 static int test_printstr = 0;
 
+/* test the library printer API */
+static int test_lib_printers = 0;
+
 /* Process command line options - choose the operation to use for the test. */
 static int process_cmd_line(int argc, char *argv[])
 {
@@ -174,6 +177,10 @@ static int process_cmd_line(int argc, char *argv[])
         {
             test_printstr = 1;
         }
+        else if (strcmp(argv[idx], "-test_libprint") == 0)
+        {
+            test_lib_printers = 1;
+        }
         else if(strcmp(argv[idx],"-help") == 0)
         {
             return -1;
@@ -191,6 +198,7 @@ static void print_cmd_line_help()
     printf("-id <ID> : decode source for id <ID> (default 0x10)\n");
     printf("-decode | -decode_only : full decode + trace packets / full decode packets only (default trace packets only)\n");
     printf("-raw / -raw_packed: print raw unpacked / packed data;\n");
+    printf("-test_printstr | -test_libprint : ttest lib printstr callback | test lib based packet printers\n");
     printf("-test_region_file | -test_cb : mem accessor - test multi region file API | test callback API (default single memory file)\n\n");
 }
 
@@ -514,7 +522,10 @@ static ocsd_err_t create_generic_decoder(dcd_tree_handle_t handle, const char *p
         if(ret == OCSD_OK)
         {
             /* Attach the packet handler to the output of the packet processor - referenced by CSID */
-            ret = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,&packet_handler,p_context);
+            if (test_lib_printers)
+                ret = ocsd_dt_set_pkt_protocol_printer(handle, CSID, 0);
+            else
+                ret = ocsd_dt_attach_packet_callback(handle,CSID, OCSD_C_API_CB_PKT_SINK,&packet_handler,p_context);
             if(ret != OCSD_OK)
                 ocsd_dt_remove_decoder(handle,CSID); /* if the attach failed then destroy the decoder. */
         }
@@ -533,7 +544,10 @@ static ocsd_err_t create_generic_decoder(dcd_tree_handle_t handle, const char *p
                 * print the packets as well as the decode - use the packet processors monitor 
                 * output this time, as the main output is attached to the packet decoder. 
                 */
-                ret = ocsd_dt_attach_packet_callback(handle,CSID,OCSD_C_API_CB_PKT_MON,packet_monitor,p_context);
+                if (test_lib_printers)
+                    ret = ocsd_dt_set_pkt_protocol_printer(handle, CSID, 1);
+                else
+                    ret = ocsd_dt_attach_packet_callback(handle,CSID,OCSD_C_API_CB_PKT_MON,packet_monitor,p_context);
             }
 
             /* attach a memory accessor */
@@ -690,7 +704,7 @@ static ocsd_err_t attach_raw_printers(dcd_tree_handle_t dcd_tree_h)
         flags |= OCSD_DFRMTR_PACKED_RAW_OUT;
     if (flags)
     {
-        err = ocsd_set_raw_frame_printer(dcd_tree_h, flags);
+        err = ocsd_dt_set_raw_frame_printer(dcd_tree_h, flags);
     }
     return err;
 }
@@ -822,9 +836,14 @@ int process_trace_data(FILE *pf)
         ret = create_decoder(dcdtree_handle);
         ocsd_tl_log_mapped_mem_ranges(dcdtree_handle);
 
-        if(ret == OCSD_OK)
+        if (ret == OCSD_OK)
+        {
             /* attach the generic trace element output callback */
-            ret = ocsd_dt_set_gen_elem_outfn(dcdtree_handle,gen_trace_elem_print,0);
+            if (test_lib_printers)
+                ret = ocsd_dt_set_gen_elem_printer(dcdtree_handle);
+            else
+                ret = ocsd_dt_set_gen_elem_outfn(dcdtree_handle, gen_trace_elem_print, 0);
+        }
 
 
         /* raw print and str print cb options tested in their init functions */

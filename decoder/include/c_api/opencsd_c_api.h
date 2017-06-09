@@ -397,14 +397,45 @@ OCSD_C_API void ocsd_gen_elem_init(ocsd_generic_trace_elem *p_pkt, const ocsd_ge
 /** @}*/
 
 /** @name Library packet and data printer control API
-    @brief Allows client to use libraries packet and data printers to log packets etc rather than attach callbacks.
+    @brief Allows client to use libraries packet and data printers to log packets etc rather than attach callbacks 
+    to packet output and use packet to string calls.
 @{*/
 
 /*!
  * Set a raw frame printer on the trace frame demuxer. Allows inspection of raw trace data frames for debug.
- * Prints via the default error logging mechanisms.
+ * Prints via the library default error logging mechanisms.
+ *
+ * The flags input determines the data printed. OR combination of one or both of:
+ * OCSD_DFRMTR_PACKED_RAW_OUT   : Output the undemuxed raw data frames.
+ * OCSD_DFRMTR_UNPACKED_RAW_OUT : Output the raw data by trace ID after unpacking the frame.
+ *
+ * @param handle : Handle to decode tree.
+ * @param flags : indicates type of raw frames to print. 
+ *
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
  */
-OCSD_C_API  ocsd_err_t ocsd_set_raw_frame_printer(const dcd_tree_handle_t handle, int flags);
+OCSD_C_API ocsd_err_t ocsd_dt_set_raw_frame_printer(const dcd_tree_handle_t handle, int flags);
+
+/*!
+ * Set a library printer on the generic element output of a full decoder.
+ *
+ * @param handle : Handle to decode tree.
+ *
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+OCSD_C_API ocsd_err_t ocsd_dt_set_gen_elem_printer(const dcd_tree_handle_t handle);
+
+/*!
+ * Attach a library printer to the packet processor. May be attached to the main packet output, or the monitor
+ * output if the main packet output is to be attached to a packet decoder in the datapath.
+ *
+ * @param handle : Handle to decode tree.
+ * @param cs_id  : Coresight trace ID for stream to print.
+ * @param monitor: 0 to attach printer directly to datapath packet output, 1 to attach to packet monitor output  
+ *
+ * @return ocsd_err_t  : Library error code -  RCDTL_OK if successful.
+ */
+OCSD_C_API ocsd_err_t ocsd_dt_set_pkt_protocol_printer(const dcd_tree_handle_t handle, uint8_t cs_id, int monitor);
 
 /** @}*/
 

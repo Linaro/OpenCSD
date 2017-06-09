@@ -109,7 +109,7 @@ DecodeTree::~DecodeTree()
     {
         destroyDecodeElement(i);
     }
-
+    PktPrinterFact::destroyAllPrinters(m_printer_list);
 }
 
 
@@ -557,6 +557,115 @@ ocsd_err_t DecodeTree::clearIDFilter()
         err = m_frame_deformatter_root->OutputFilterAllIDs(true);
     }
     return err;
+}
+
+/** add a protocol packet printer */
+ocsd_err_t DecodeTree::addPacketPrinter(uint8_t CSID, bool bMonitor, ItemPrinter **ppPrinter)
+{
+    ocsd_err_t err = OCSD_ERR_INVALID_PARAM_VAL;
+    DecodeTreeElement *pElement = getDecoderElement(CSID);
+    if (pElement)
+    {
+        ocsd_trace_protocol_t protocol = pElement->getProtocol();
+        ItemPrinter *pPrinter;
+
+        pPrinter = PktPrinterFact::createProtocolPrinter(getPrinterList(), protocol, CSID);        
+        if (pPrinter)
+        {
+            pPrinter->setMessageLogger(getCurrentErrorLogI()->getOutputLogger());
+            switch (protocol)
+            {
+            case  OCSD_PROTOCOL_ETMV4I:
+            {
+                PacketPrinter<EtmV4ITrcPacket> *pTPrinter = dynamic_cast<PacketPrinter<EtmV4ITrcPacket> *>(pPrinter);
+                if (bMonitor)
+                    err = pElement->getDecoderMngr()->attachPktMonitor(pElement->getDecoderHandle(), (IPktRawDataMon<EtmV4ITrcPacket> *)pTPrinter);
+                else
+                    err = pElement->getDecoderMngr()->attachPktSink(pElement->getDecoderHandle(), (IPktDataIn<EtmV4ITrcPacket> *)pTPrinter);
+            }
+            break;
+
+            case  OCSD_PROTOCOL_ETMV3:
+            {
+                PacketPrinter<EtmV3TrcPacket> *pTPrinter = dynamic_cast<PacketPrinter<EtmV3TrcPacket> *>(pPrinter);
+                if (bMonitor)
+                    err = pElement->getDecoderMngr()->attachPktMonitor(pElement->getDecoderHandle(), (IPktRawDataMon<EtmV3TrcPacket> *)pTPrinter);
+                else
+                    err = pElement->getDecoderMngr()->attachPktSink(pElement->getDecoderHandle(), (IPktDataIn<EtmV3TrcPacket> *)pTPrinter);
+            }
+            break;
+
+            case  OCSD_PROTOCOL_PTM:
+            {
+                PacketPrinter<PtmTrcPacket> *pTPrinter = dynamic_cast<PacketPrinter<PtmTrcPacket> *>(pPrinter);
+                if (bMonitor)
+                    err = pElement->getDecoderMngr()->attachPktMonitor(pElement->getDecoderHandle(), (IPktRawDataMon<PtmTrcPacket> *)pTPrinter);
+                else
+                    err = pElement->getDecoderMngr()->attachPktSink(pElement->getDecoderHandle(), (IPktDataIn<PtmTrcPacket> *)pTPrinter);
+            }
+            break;
+
+            case OCSD_PROTOCOL_STM:
+            {
+                PacketPrinter<StmTrcPacket> *pTPrinter = dynamic_cast<PacketPrinter<StmTrcPacket> *>(pPrinter);
+                if (bMonitor)
+                    err = pElement->getDecoderMngr()->attachPktMonitor(pElement->getDecoderHandle(), (IPktRawDataMon<StmTrcPacket> *)pTPrinter);
+                else
+                    err = pElement->getDecoderMngr()->attachPktSink(pElement->getDecoderHandle(), (IPktDataIn<StmTrcPacket> *)pTPrinter);
+            }
+            break;
+
+            default:
+                err = OCSD_ERR_NO_PROTOCOL;
+                break;
+            }
+
+            if (err == OCSD_OK)
+            {
+                if (ppPrinter)
+                    *ppPrinter = pPrinter;
+            }
+            else
+                PktPrinterFact::destroyPrinter(getPrinterList(), pPrinter);
+        }
+    }
+    return err;
+}
+
+/** add a raw frame printer */
+ocsd_err_t DecodeTree::addRawFramePrinter(RawFramePrinter **ppPrinter, uint32_t flags)
+{
+    ocsd_err_t err = OCSD_ERR_MEM;
+    RawFramePrinter *pPrinter = PktPrinterFact::createRawFramePrinter(getPrinterList());
+    if (pPrinter)
+    {
+        pPrinter->setMessageLogger((DecodeTree::getCurrentErrorLogI()->getOutputLogger()));
+        TraceFormatterFrameDecoder *pFrameDecoder = getFrameDeformatter();
+        uint32_t cfgFlags = pFrameDecoder->getConfigFlags();
+        cfgFlags |= ((uint32_t)flags & (OCSD_DFRMTR_PACKED_RAW_OUT | OCSD_DFRMTR_UNPACKED_RAW_OUT));
+        pFrameDecoder->Configure(cfgFlags);
+        err = pFrameDecoder->getTrcRawFrameAttachPt()->attach(pPrinter);        
+        if (ppPrinter && (err==OCSD_OK))
+            *ppPrinter = pPrinter;
+    }
+    return err;
+}
+
+/** add a generic element output printer */
+ocsd_err_t DecodeTree::addGenElemPrinter(TrcGenericElementPrinter **ppPrinter)
+{
+    ocsd_err_t err = OCSD_ERR_MEM;
+    TrcGenericElementPrinter *pPrinter = PktPrinterFact::createGenElemPrinter(getPrinterList());
+    if (pPrinter)
+    {
+        pPrinter->setMessageLogger((DecodeTree::getCurrentErrorLogI()->getOutputLogger()));
+        setGenTraceElemOutI(pPrinter);
+        err = OCSD_OK;
+        if (ppPrinter)
+            *ppPrinter = pPrinter;
+    }
+    return err;
+
 }
 
 /* End of File ocsd_dcd_tree.cpp */

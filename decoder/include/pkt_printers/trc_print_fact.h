@@ -40,21 +40,19 @@
 class PktPrinterFact
 {
 public:
-    static ItemPrinter *createProtocolPrinter(ocsd_trace_protocol_t protocol, uint8_t elemID, ocsdMsgLogger *pMsgLogger = 0);
-	static RawFramePrinter *createRawFramePrinter(ocsdMsgLogger *pMsgLogger = 0);
-	static TrcGenericElementPrinter *createGenElemPrinter(ocsdMsgLogger *pMsgLogger = 0);
+    static ItemPrinter *createProtocolPrinter(std::vector<ItemPrinter *> &printer_list, ocsd_trace_protocol_t protocol, uint8_t elemID, ocsdMsgLogger *pMsgLogger = 0);
+	static RawFramePrinter *createRawFramePrinter(std::vector<ItemPrinter *> &printer_list, ocsdMsgLogger *pMsgLogger = 0);
+	static TrcGenericElementPrinter *createGenElemPrinter(std::vector<ItemPrinter *> &printer_list, ocsdMsgLogger *pMsgLogger = 0);
 
-	static void destroyAllPrinters();
-    static const int numPrinters();
-    static std::vector<ItemPrinter *> &getPrinterList();
+    static void destroyPrinter(std::vector<ItemPrinter *> &printer_list, ItemPrinter *pPrinter);
+	static void destroyAllPrinters(std::vector<ItemPrinter *> &printer_list);
+    static const int numPrinters(std::vector<ItemPrinter *> &printer_list);
 
 private:
-    static void SavePrinter(ItemPrinter *pPrinter, ocsdMsgLogger *pMsgLogger);
+    static void SavePrinter(std::vector<ItemPrinter *> &printer_list, ItemPrinter *pPrinter, ocsdMsgLogger *pMsgLogger);
 
 	PktPrinterFact() {};
 	~PktPrinterFact() {};
-
-	static std::vector<ItemPrinter *> sm_printers;	/* list of printers created. */
 };
 
 #endif // ARM_TRC_PRINT_FACT_H_INCLUDED
