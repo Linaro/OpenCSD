@@ -51,8 +51,8 @@ public:
 
     bool initErrorLogger(const ocsd_err_severity_t verbosity, bool bCreateOutputLogger = false);
     
-    ocsdMsgLogger *getOutputLogger() { return m_output_logger; };
-    void setOutputLogger(ocsdMsgLogger *pLogger);
+    virtual ocsdMsgLogger *getOutputLogger() { return m_output_logger; };
+    virtual void setOutputLogger(ocsdMsgLogger *pLogger);
     
     virtual const ocsd_hndl_err_log_t RegisterErrorSource(const std::string &component_name);
 

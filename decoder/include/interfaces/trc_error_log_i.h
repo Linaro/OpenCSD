@@ -40,6 +40,7 @@
 #include <string>
 
 class ocsdError;
+class ocsdMsgLogger;
 
 /*!
  * @class ITraceErrorLog 
@@ -116,6 +117,8 @@ public:
      */
     virtual ocsdError *GetLastIDError(const uint8_t chan_id) = 0;
 
+    virtual ocsdMsgLogger *getOutputLogger() = 0;
+    virtual void setOutputLogger(ocsdMsgLogger *pLogger) = 0;
 
     enum generic_handles {
         HANDLE_GEN_ERR = 0,
