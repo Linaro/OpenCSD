@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.5.4_
+_Current Version 0.6.0_
 
 ### Current support:
 
@@ -107,6 +107,8 @@ Version and Modification Information
 - _Version 0.5.2_:  Minor Update & Bugfixes - Update trace info packet string o/p + Cycle count packet bugfixes.
 - _Version 0.5.3_:  Doc update for using AutoFDO with ETM and additional timestamp and cycle count options.
 - _Version 0.5.4_:  Updates: X-compile for arm/arm64.  Remove deprecated VS2010 builds. Bugfix: GCC inline semantics in debug build. 
+- _Version 0.6.0_:  Packet printers moved from tests into the main library. C++ and C APIs updated to allow clients to use them. 
+                    Update to allow perf to insert barrier packets (4xFSYNC) which the decoder can be made to use to reset the decode state.
 
 Licence Information
 ===================

@@ -1,15 +1,3 @@
-* Decode Tree API updates.
--> Re-factor the decode tree API to:
-   1) Use new structure to enable custom decoders - may be proprietary / binaries to 
-   be used in the decoder structure.
-   2) Make it easier to add a new decoder to the library source, without the overhead of 
-   doing all the creation fns.
-
-* STM "full decode".
--> This is simply to come up with a generic packet format that will consist of
-   Master+Channel+<payload>,  where <payload> is [data]+[TS]+[marker/flag]. This
-   combines a number of packets from the raw STPv2 format.
-
 * ETMv4/PTM - decoder updates to handle advanced configuration.
 -> Certain (currently unused by perf /  current hardware) configuration settings
    can alter the format of the trace output. One example is Return Stack -
@@ -26,6 +14,6 @@
    the instruction trace.
 
 Cortex-A cores do not support this architecturally. On R and M profile cores it
-is an option. There are scenrios in future that could see linux on R cores, plus
+is an option. There are scenarios in future that could see linux on R cores, plus
 on something like Juno it is possible to switch on trace for the SCP
-(M class processor). So at some point data trace
+(M class processor). So at some point data trace may be required.
