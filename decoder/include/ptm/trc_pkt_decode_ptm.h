@@ -38,6 +38,7 @@
 #include "ptm/trc_pkt_elem_ptm.h"
 #include "ptm/trc_cmp_cfg_ptm.h"
 #include "common/trc_gen_elem.h"
+#include "common/trc_ret_stack.h"
 
 /**************** Atom handling class **************************************/
 class PtmAtoms
@@ -180,6 +181,8 @@ private:
 
     PtmAtoms m_atoms;           //!< atoms to process in an atom packet
 
+    TrcAddrReturnStack m_return_stack;  //!< trace return stack.
+    
 //** output element
     OcsdTraceElement m_output_elem;
 };

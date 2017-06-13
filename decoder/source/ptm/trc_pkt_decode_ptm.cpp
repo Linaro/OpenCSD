@@ -166,6 +166,15 @@ ocsd_err_t TrcPktDecodePtm::onProtocolConfig()
     // static config - copy of CSID for easy reference
     m_CSID = m_config->getTraceID();
 
+    // handle return stack implementation
+    if (m_config->hasRetStack())
+    {
+        m_return_stack.set_active(m_config->enaRetStack());
+#ifdef TRC_RET_STACK_DEBUG
+        m_return_stack.set_dbg_logger(this);
+#endif
+    }
+    
     // config options affecting decode
     m_instr_info.pe_type.profile = m_config->coreProfile();
     m_instr_info.pe_type.arch = m_config->archVersion();
@@ -355,6 +364,7 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processIsync()
             m_i_sync_pe_ctxt = false;
         }
         m_need_isync = false;   // got 1st Isync - can continue to process data.
+        m_return_stack.flush();
     }
     
     if(m_i_sync_pe_ctxt && OCSD_DATA_RESP_IS_CONT(resp))
@@ -519,21 +529,52 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processAtomRange(const ocsd_atm_val A, con
     
     if(bWPFound)
     {
+        //  save recorded next instuction address
+        ocsd_vaddr_t nextAddr = m_instr_info.instr_addr;
+
         // action according to waypoint type and atom value
         switch(m_instr_info.type)
         {
         case OCSD_INSTR_BR:
-            if(A == ATOM_E)
+            if (A == ATOM_E)
+            {
                 m_instr_info.instr_addr = m_instr_info.branch_addr;
+                if (m_instr_info.is_link)
+                    m_return_stack.push(nextAddr,m_instr_info.isa);
+            }
             break;
 
-            // TBD: is this valid for PTM -> branch addresses imply E atom, N atom does not need address (return stack will require this)
+            // For PTM -> branch addresses imply E atom, N atom does not need address (return stack will require this)
         case OCSD_INSTR_BR_INDIRECT:
-            if(A == ATOM_E)
-                m_curr_pe_state.valid = false; // indirect branch taken - need new address.
+            if (A == ATOM_E)
+            {
+                // atom on indirect branch - either implied E from a branch address packet, or return stack if active.
+
+                // indirect branch taken - need new address -if the current packet is a branch address packet this will be sorted.
+                m_curr_pe_state.valid = false; 
+
+                // if return stack and the incoming packet is an atom.
+                if (m_return_stack.is_active() && (m_curr_packet_in->getType() == PTM_PKT_ATOM))
+                {
+                    // we have an E atom packet and return stack value - set address from return stack
+                    m_instr_info.instr_addr = m_return_stack.pop(m_instr_info.next_isa);
+
+                    if (m_return_stack.overflow())
+                    {
+                        resp = OCSD_RESP_FATAL_INVALID_DATA;
+                        oss << "Return stack error processing " << pkt_msg << " packet.";
+                        LogError(ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_RET_STACK_OVERFLOW, m_index_curr_pkt, m_CSID, oss.str()));
+                        return resp;
+                    }
+                    else
+                        m_curr_pe_state.valid = true; 
+                }
+                if(m_instr_info.is_link)
+                    m_return_stack.push(nextAddr, m_instr_info.isa);
+            }
             break;
         }
-            
+        
         m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
         m_output_elem.setLastInstrInfo((A == ATOM_E),m_instr_info.type, m_instr_info.sub_type);
         m_output_elem.setISA(m_curr_pe_state.isa);
