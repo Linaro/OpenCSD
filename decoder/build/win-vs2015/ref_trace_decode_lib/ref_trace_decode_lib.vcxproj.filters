@@ -353,6 +353,9 @@
     <ClInclude Include="..\..\..\include\pkt_printers\trc_print_fact.h">
       <Filter>Header Files\pkt_printers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\common\trc_ret_stack.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -474,6 +477,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\pkt_printers\trc_print_fact.cpp">
       <Filter>Source Files\pkt_printers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\trc_ret_stack.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -334,6 +334,7 @@
     <ClInclude Include="..\..\..\include\common\trc_pkt_elem_base.h" />
     <ClInclude Include="..\..\..\include\common\trc_pkt_proc_base.h" />
     <ClInclude Include="..\..\..\include\common\trc_printable_elem.h" />
+    <ClInclude Include="..\..\..\include\common\trc_ret_stack.h" />
     <ClInclude Include="..\..\..\include\etmv3\etmv3_decoder.h" />
     <ClInclude Include="..\..\..\include\etmv3\trc_cmp_cfg_etmv3.h" />
     <ClInclude Include="..\..\..\include\etmv3\trc_dcd_mngr_etmv3.h" />
@@ -441,6 +442,7 @@
     <ClCompile Include="..\..\..\source\trc_frame_deformatter.cpp" />
     <ClCompile Include="..\..\..\source\trc_gen_elem.cpp" />
     <ClCompile Include="..\..\..\source\trc_printable_elem.cpp" />
+    <ClCompile Include="..\..\..\source\trc_ret_stack.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
