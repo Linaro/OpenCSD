@@ -39,6 +39,7 @@
 #include "etmv4/trc_pkt_elem_etmv4i.h"
 #include "etmv4/trc_cmp_cfg_etmv4.h"
 #include "common/trc_gen_elem.h"
+#include "common/trc_ret_stack.h"
 
 #include <deque>
 
@@ -91,6 +92,8 @@ private:
     void SetInstrInfoInAddrISA(const ocsd_vaddr_t addr_val, const uint8_t isa); 
 
     ocsd_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
+
+    ocsd_datapath_resp_t returnStackPop();  // pop return stack and update instruction address.
 
 //** intra packet state (see ETMv4 spec 6.2.1);
 
@@ -172,6 +175,8 @@ private:
     bool m_prev_overflow;
 
     bool m_flush_EOT;           //!< true if doing an end of trace flush - cleans up lingering events / TS / CC
+
+    TrcAddrReturnStack m_return_stack;
 
 //** output element
     OcsdTraceElement m_output_elem;

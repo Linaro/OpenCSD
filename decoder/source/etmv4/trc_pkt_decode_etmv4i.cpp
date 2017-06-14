@@ -92,6 +92,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
             {
                 doTraceInfoPacket();
                 m_curr_state = DECODE_PKTS;
+                m_return_stack.flush();
             }
             bPktDone = true;
             break;
@@ -157,6 +158,14 @@ ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
 
     m_IASize64 = (m_config->iaSizeMax() == 64);
 
+    if (m_config->enabledRetStack())
+    {
+        m_return_stack.set_active(true);
+#ifdef TRC_RET_STACK_DEBUG
+        m_return_stack.set_dbg_logger(this);
+#endif
+    }
+
     // check config compatible with current decoder support level.
     // at present no data trace, no spec depth, no return stack, no QE
     // Remove these checks as support is added.
@@ -179,11 +188,6 @@ ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
     {
         err = OCSD_ERR_HW_CFG_UNSUPP;
         LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace on conditional non-branch elements not supported."));
-    }
-    else if(m_config->enabledRetStack())
-    {
-        err = OCSD_ERR_HW_CFG_UNSUPP;
-        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace using return stack not supported."));
     }
     else if(m_config->enabledQE())
     {
@@ -262,6 +266,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
 
     case ETM4_PKT_I_TRACE_INFO:
         // skip subsequent TInfo packets.
+        m_return_stack.flush();
         break;
 
     case ETM4_PKT_I_TRACE_ON:
@@ -575,12 +580,14 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 m_output_elem.trace_on_reason = m_prev_overflow ? TRACE_ON_OVERFLOW : TRACE_ON_NORMAL;
                 m_prev_overflow = false;
                 resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+                m_return_stack.flush();
                 break;
 
             case P0_ADDR:
                 {
                 etmv4_addr_val_t new_addr;
                 TrcStackElemAddr *pAddrElem = dynamic_cast<TrcStackElemAddr *>(pElem);
+                m_return_stack.clear_pop_pending(); // address removes the need to pop the indirect address target from the stack
                 if(pAddrElem)
                 {
                     int match_idx = 0;
@@ -673,12 +680,18 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
             case P0_ATOM:
                 {
                 TrcStackElemAtom *pAtomElem = dynamic_cast<TrcStackElemAtom *>(pElem);
+
                 if(pAtomElem)
                 {
                     bool bContProcess = true;
                     while(!pAtomElem->isEmpty() && m_P0_commit && bContProcess)
                     {
                         ocsd_atm_val atom = pAtomElem->commitOldest();
+
+                        // check if prev atom left us an indirect address target on the return stack
+                        if ((resp = returnStackPop()) != OCSD_RESP_CONT)
+                            break;
+
                         // if address and context do instruction trace follower.
                         // otherwise skip atom and reduce committed elements
                         if(!m_need_ctxt && !m_need_addr)
@@ -694,6 +707,10 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 break;
 
             case P0_EXCEP:
+                // check if prev atom left us an indirect address target on the return stack
+                if ((resp = returnStackPop()) != OCSD_RESP_CONT)
+                    break;
+
                 m_excep_proc = EXCEP_POP;   // set state in case we need to stop part way through
                 resp = processException();  // output trace + exception elements.
                 m_P0_commit--;
@@ -735,7 +752,29 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
 
     // reduce the spec depth by number of comitted elements
     m_curr_spec_depth -= (num_commit_req-m_P0_commit);
+    return resp;
+}
 
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::returnStackPop()
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    ocsd_isa nextISA;
+    
+    if (m_return_stack.pop_pending())
+    {
+        ocsd_vaddr_t popAddr = m_return_stack.pop(nextISA);
+        if (m_return_stack.overflow())
+        {
+            resp = OCSD_RESP_FATAL_INVALID_DATA;
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_RET_STACK_OVERFLOW, "Trace Return Stack Overflow."));
+        }
+        else
+        {
+            m_instr_info.instr_addr = popAddr;
+            m_instr_info.isa = nextISA;
+            m_need_addr = false;
+        }
+    }
     return resp;
 }
 
@@ -868,17 +907,30 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom, bo
 
     if(bWPFound)
     {
+        //  save recorded next instuction address
+        ocsd_vaddr_t nextAddr = m_instr_info.instr_addr;
+
         // action according to waypoint type and atom value
         switch(m_instr_info.type)
         {
         case OCSD_INSTR_BR:
-            if(atom == ATOM_E)
+            if (atom == ATOM_E)
+            {
                 m_instr_info.instr_addr = m_instr_info.branch_addr;
+                if (m_instr_info.is_link)
+                    m_return_stack.push(nextAddr, m_instr_info.isa);
+
+            }
             break;
 
         case OCSD_INSTR_BR_INDIRECT:
-            if(atom == ATOM_E)
+            if (atom == ATOM_E)
+            {
                 m_need_addr = true; // indirect branch taken - need new address.
+                if (m_instr_info.is_link)
+                    m_return_stack.push(nextAddr,m_instr_info.isa);
+                m_return_stack.set_pop_pending();  // need to know next packet before we know what is to happen
+            }
             break;
         }
         m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
