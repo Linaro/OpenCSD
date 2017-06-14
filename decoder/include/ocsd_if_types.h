@@ -118,6 +118,7 @@ typedef enum _ocsd_err_t {
     OCSD_ERR_BAD_DECODE_PKT,           /**< reserved or unknown packet in decoder. */
     OCSD_ERR_COMMIT_PKT_OVERRUN,       /**< overrun in commit packet stack - tried to commit more than available */
     OCSD_ERR_MEM_NACC,                 /**< unable to access required memory address */
+    OCSD_ERR_RET_STACK_OVERFLOW,       /**< internal return stack overflow checks failed - popped more than we pushed. */
     /* decode tree errors */
     OCSD_ERR_DCDT_NO_FORMATTER,         /**< No formatter in use - operation not valid. */
     /* target memory access errors */
