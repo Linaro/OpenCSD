@@ -110,6 +110,14 @@ public:
      */
     TraceComponent *getAssocComponent() { return m_assocComp; };
 
+    /*!
+     * Log a message at the default severity on this component.
+     */
+    void LogDefMessage(const std::string &msg)
+    {
+        LogMessage(m_errVerbosity, msg);
+    }
+
 protected:
     friend class errLogAttachMonitor;
 
