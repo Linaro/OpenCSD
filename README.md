@@ -27,15 +27,15 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.6.1_
+_Current Version 0.7.0_
 
 ### Current support:
 
-- ETMv4 instruction trace - packet processing and packet decode.
-- PTM instruction trace - packet processing and packet decode.
-- ETMv3 instruction trace - packet processing and packet decode.
-- ETMv3 data trace - packet processing.
-- STM software trace - packet processing and packet decode.
+- ETMv4 (v4.1) instruction trace - packet processing and packet decode.
+- PTM   (v1.1) instruction trace - packet processing and packet decode.
+- ETMv3 (v3.5) instruction trace - packet processing and packet decode.
+- ETMv3 (v3.5) data trace - packet processing.
+- STM   (v1.1) software trace - packet processing and packet decode.
 
 - External Decoders - support for addition of external / custom decoders into the library.
 
@@ -109,7 +109,8 @@ Version and Modification Information
 - _Version 0.5.4_:  Updates: X-compile for arm/arm64.  Remove deprecated VS2010 builds. Bugfix: GCC inline semantics in debug build. 
 - _Version 0.6.0_:  Packet printers moved from tests into the main library. C++ and C APIs updated to allow clients to use them. 
                     Update to allow perf to insert barrier packets (4xFSYNC) which the decoder can be made to use to reset the decode state.
-  _Version 0.6.1_:  Buxfix: instruction follower bug on A32 branch to T32.
+- _Version 0.6.1_:  Buxfix: instruction follower bug on A32 branch to T32.
+- _Version 0.7.0_:  Add handling for trace return stack feature to ETMv4 and PTM trace.
 
 Licence Information
 ===================
