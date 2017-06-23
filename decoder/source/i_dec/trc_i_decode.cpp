@@ -84,9 +84,12 @@ ocsd_err_t TrcIDecode::DecodeA32(ocsd_instr_info *instr_info)
     {
         inst_ARM_branch_destination((uint32_t)instr_info->instr_addr,instr_info->opcode,&branchAddr);
         instr_info->type = OCSD_INSTR_BR;
-        instr_info->branch_addr = (ocsd_vaddr_t)branchAddr;
-        if(branchAddr & 0x1)
+        if (branchAddr & 0x1)
+        {
             instr_info->next_isa = ocsd_isa_thumb2;
+            branchAddr &= ~0x1;
+        }
+        instr_info->branch_addr = (ocsd_vaddr_t)branchAddr;
         instr_info->is_link = inst_ARM_is_branch_and_link(instr_info->opcode);
     }
     else if((barrier = inst_ARM_barrier(instr_info->opcode)) != ARM_BARRIER_NONE)
