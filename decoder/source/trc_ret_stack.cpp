@@ -35,13 +35,21 @@
 
 #ifdef TRC_RET_STACK_DEBUG
 #include <sstream>
+#include <iostream>
 #include "common/trc_component.h"
 
 #define LOG_POP(A,O,I) LogOp("Pop",A,O,I)
 #define LOG_PUSH(A,O,I) LogOp("Push",A,O,I)
+#define LOG_FLUSH() LogOp("Flush",0,-1000,(const ocsd_isa)0)
+
+// uncomment for forced std::cout log, bypassing normal library debug logger.
+// useful perhaps when perf is decoding w/o printing.
+// #define FORCE_STD_COUT
+
 #else
 #define LOG_POP(A,O,I) 
 #define LOG_PUSH(A,O,I)
+#define LOG_FLUSH()
 #endif
 
 TrcAddrReturnStack::TrcAddrReturnStack() :
@@ -90,6 +98,14 @@ ocsd_vaddr_t TrcAddrReturnStack::pop(ocsd_isa &isa)
     return addr;
 }
 
+
+void  TrcAddrReturnStack::flush()
+{
+    num_entries = 0;
+    m_pop_pending = false;
+    LOG_FLUSH();
+}
+
 #ifdef TRC_RET_STACK_DEBUG
 void TrcAddrReturnStack::LogOp(const char * pszOpString, ocsd_vaddr_t addr, int head_off, ocsd_isa isa)
 {
@@ -106,14 +122,25 @@ void TrcAddrReturnStack::LogOp(const char * pszOpString, ocsd_vaddr_t addr, int 
 
     if (m_p_debug_logger)
     {
-        int name_idx = (int)isa;
-        if (name_idx > 6)
-            name_idx = 6;
         std::ostringstream oss;
-        oss << "Return stack " << pszOpString << "[" << std::dec << (head_idx+head_off) << "](0x" << std::hex << addr << "), " << isa_names[name_idx] << ";";
-        oss << "current entries = " << std::dec << num_entries << ";";
-        oss << "new head idx = " << head_idx << ";";
-        oss << "pop pend (pre op) = " << (m_pop_pending ? "true\n" : "false\n");
+        if(head_off == -1000)
+        {
+            oss << "Return stack " << pszOpString << "\n";
+        }
+        else
+        {
+            int name_idx = (int)isa;
+            if (name_idx > 6)
+                name_idx = 6;
+            oss << "Return stack " << pszOpString << "[" << std::dec << (head_idx+head_off) << "](0x" << std::hex << addr << "), " << isa_names[name_idx] << ";";
+            oss << "current entries = " << std::dec << num_entries << ";";
+            oss << "new head idx = " << head_idx << ";";
+            oss << "pop pend (pre op) = " << (m_pop_pending ? "true\n" : "false\n");
+        }
+#ifdef FORCE_STD_COUT        
+        std::cout << oss.str();
+        std::cout.flush();
+#endif       
         m_p_debug_logger->LogDefMessage(oss.str());
     }
 }

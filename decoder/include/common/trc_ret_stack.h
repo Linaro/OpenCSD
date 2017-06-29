@@ -38,7 +38,7 @@
 #include "ocsd_if_types.h"
 
 // uncomment below for return stack logging
-#define TRC_RET_STACK_DEBUG
+// #define TRC_RET_STACK_DEBUG
 
 #ifdef TRC_RET_STACK_DEBUG
 class TraceComponent;
@@ -68,12 +68,7 @@ public:
 
     void push(const ocsd_vaddr_t addr, const ocsd_isa isa);
     ocsd_vaddr_t pop(ocsd_isa &isa);
-
-    void flush()
-    {
-        num_entries = 0;
-        m_pop_pending = false;
-    };
+    void flush();
 
     bool overflow() const 
     { 
@@ -96,10 +91,6 @@ public:
         return m_pop_pending;
     }; 
 
-#ifdef TRC_RET_STACK_DEBUG
-    void set_dbg_logger(TraceComponent *pLogger) { m_p_debug_logger = pLogger;  };
-#endif
-
 private:
     bool m_active;
     bool m_pop_pending; // flag for decoder to indicate a pop might be needed depending on the next packet (ETMv4)
@@ -109,6 +100,9 @@ private:
     retStackElement m_stack[16];
 
 #ifdef TRC_RET_STACK_DEBUG
+public:
+    void set_dbg_logger(TraceComponent *pLogger) { m_p_debug_logger = pLogger;  };
+private:
     void LogOp(const char *pszOpString, ocsd_vaddr_t addr, int head_off, ocsd_isa isa);
 
     TraceComponent *m_p_debug_logger;
