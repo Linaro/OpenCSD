@@ -853,6 +853,7 @@ uint32_t EtmV3PktProcImpl::extractBrAddrPkt(int &nBitsOut)
             }
             else
             {
+                addrbyte &= 0x7F;
                 bitcount+=7;
             }
         }
@@ -1174,7 +1175,6 @@ void EtmV3PktProcImpl::OnISyncPacket()
     if(m_config.CtxtIDBytes() != 0)
     {
         m_curr_packet.UpdateContextID(extractCtxtID());
-        m_currPktIdx += m_config.CtxtIDBytes();
     }
 
     // extract context info 
