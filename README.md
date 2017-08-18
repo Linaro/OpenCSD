@@ -111,6 +111,7 @@ Version and Modification Information
                     Update to allow perf to insert barrier packets (4xFSYNC) which the decoder can be made to use to reset the decode state.
 - _Version 0.6.1_:  Buxfix: instruction follower bug on A32 branch to T32.
 - _Version 0.7.0_:  Add handling for trace return stack feature to ETMv4 and PTM trace.
+- _Version 0.7.1_:  Buxfix: ETMv3 packet processor.
 
 Licence Information
 ===================
