@@ -44,6 +44,55 @@
 @{*/
 
 /*!
+* @class Etmv4PktAddrStack
+* @brief ETMv4 Address packet values stack
+* @ingroup trc_pkts
+*
+*  This class represents a stack of recent broadcast address values - 
+*  used to fulfil the ExactMatch address type where no address is output.
+*
+*/
+class Etmv4PktAddrStack
+{
+public:
+    Etmv4PktAddrStack()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            m_v_addr[i].pkt_bits = 0;
+            m_v_addr[i].size = VA_64BIT;
+            m_v_addr[i].val = 0;
+            m_v_addr[i].valid_bits = 0;
+            m_v_addr_ISA[i] = 0;
+        }
+    }
+    ~Etmv4PktAddrStack() {};
+
+    void push(const ocsd_pkt_vaddr vaddr, const uint8_t isa)
+    {
+        m_v_addr[2] = m_v_addr[1];
+        m_v_addr[1] = m_v_addr[0];
+        m_v_addr[0] = vaddr;
+        m_v_addr_ISA[2] = m_v_addr_ISA[1];
+        m_v_addr_ISA[1] = m_v_addr_ISA[0];
+        m_v_addr_ISA[0] = isa;
+    }
+
+    void get_idx(const uint8_t idx, ocsd_pkt_vaddr &vaddr, uint8_t &isa)
+    {
+        if (idx < 3)
+        {
+            vaddr = m_v_addr[idx];
+            isa = m_v_addr_ISA[idx];
+        }
+    }
+
+private:
+    ocsd_pkt_vaddr m_v_addr[3];         //!< most recently broadcast address packet
+    uint8_t        m_v_addr_ISA[3];
+};
+
+/*!
  * @class EtmV4ITrcPacket   
  * @brief ETMv4 Instuction Trace Protocol Packet.
  * @ingroup trc_pkts
@@ -95,8 +144,8 @@ public:
 
     void setExceptionInfo(const uint16_t excep_type, const uint8_t addr_interp, const uint8_t m_fault_pending, const uint8_t m_type);
     
-    void set64BitAddress(const uint64_t addr, const uint8_t IS, const uint8_t update_bits);
-    void set32BitAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits);
+    void set64BitAddress(const uint64_t addr, const uint8_t IS);
+    void set32BitAddress(const uint32_t addr, const uint8_t IS);
     void updateShortAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits);
     void setAddressExactMatch(const uint8_t idx);
 
@@ -131,6 +180,7 @@ public:
     const uint8_t &getAddrMatch() const  { return addr_exact_match_idx; };
     const ocsd_vaddr_t &getAddrVal() const { return v_addr.val; };
     const uint8_t &getAddrIS() const { return v_addr_ISA; };
+    const bool getAddr64Bit() const { return v_addr.size == VA_64BIT; };
 
     // ts
     const uint64_t getTS() const { return pkt_valid.bits.ts_valid ? ts.timestamp : 0; };
@@ -151,6 +201,11 @@ private:
     void atomSeq(std::string &valStr) const;
     void addrMatchIdx(std::string &valStr) const;
     void exceptionInfo(std::string &valStr) const;
+
+    void push_vaddr();
+    void pop_vaddr_idx(const uint8_t idx);
+
+    Etmv4PktAddrStack m_addr_stack;
 };
 
 inline void  EtmV4ITrcPacket::updateErrType(const ocsd_etmv4_i_pkt_type err_pkt_type)
@@ -374,32 +429,35 @@ inline void EtmV4ITrcPacket::setExceptionInfo(const uint16_t excep_type, const u
     exception_info.m_type = m_type;
 }
 
-inline void EtmV4ITrcPacket::set64BitAddress(const uint64_t addr, const uint8_t IS, const uint8_t update_bits)
+inline void EtmV4ITrcPacket::set64BitAddress(const uint64_t addr, const uint8_t IS)
 {
-    uint64_t update_mask = (uint64_t)-1;
-    v_addr.pkt_bits = update_bits;
+    v_addr.pkt_bits = 64;
+    v_addr.valid_bits = 64;
     v_addr.size = VA_64BIT;
-    if(v_addr.valid_bits < update_bits)
-        v_addr.valid_bits = update_bits;
-
-    if(update_bits < 64) 
-    {
-        update_mask = ((uint64_t)1 << update_bits) - 1;
-    }
-    v_addr.val = (v_addr.val & ~update_mask) | (addr & update_mask);
+    v_addr.val = addr;
     v_addr_ISA = IS;
+    push_vaddr();
 }
 
-inline void EtmV4ITrcPacket::set32BitAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits)
+inline void EtmV4ITrcPacket::set32BitAddress(const uint32_t addr, const uint8_t IS)
 {
-    ocsd_vaddr_t update_mask = OCSD_BIT_MASK(update_bits);
-    v_addr.pkt_bits = update_bits;
-    v_addr.size = VA_32BIT;
-    if((v_addr.valid_bits < update_bits) || (update_bits == 32) )  // account for dropping into AArch32
-        v_addr.valid_bits = update_bits;
+    uint64_t mask = OCSD_BIT_MASK(32);
+    v_addr.pkt_bits = 32;
 
-    v_addr.val = (v_addr.val & ~update_mask) | (addr & update_mask);
+    if (pkt_valid.bits.context_valid && context.SF)
+        v_addr.size = VA_64BIT;
+    else
+    {
+        v_addr.val &= 0xFFFFFFFF;   // ensure vaddr is only 32 bits if not 64 bit 
+        v_addr.size = VA_32BIT;
+    }
+
+    if (v_addr.valid_bits < 32) // may be 64 bit address so only set 32 if less
+        v_addr.valid_bits = 32;
+
+    v_addr.val = (v_addr.val & ~mask) | (addr & mask);
     v_addr_ISA = IS;
+    push_vaddr();
 }
 
 inline void EtmV4ITrcPacket::updateShortAddress(const uint32_t addr, const uint8_t IS, const uint8_t update_bits)
@@ -411,11 +469,14 @@ inline void EtmV4ITrcPacket::updateShortAddress(const uint32_t addr, const uint8
 
     v_addr.val = (v_addr.val & ~update_mask) | (addr & update_mask);
     v_addr_ISA = IS;
+    push_vaddr();
 }
 
 inline void EtmV4ITrcPacket::setAddressExactMatch(const uint8_t idx)
 {
-    addr_exact_match_idx = idx;    
+    addr_exact_match_idx = idx;   
+    pop_vaddr_idx(idx);
+    push_vaddr();
 }
 
 inline void EtmV4ITrcPacket::setDataSyncMarker(const uint8_t dsm_value)
@@ -442,6 +503,15 @@ inline const bool EtmV4ITrcPacket::isBadPacket() const
     return (type >= ETM4_PKT_I_BAD_SEQUENCE);
 }
 
+inline void  EtmV4ITrcPacket::push_vaddr()
+{
+    m_addr_stack.push(v_addr, v_addr_ISA);
+}
+
+inline void EtmV4ITrcPacket::pop_vaddr_idx(const uint8_t idx)
+{
+    m_addr_stack.get_idx(idx, v_addr, v_addr_ISA);
+}
 
 /** @}*/
 

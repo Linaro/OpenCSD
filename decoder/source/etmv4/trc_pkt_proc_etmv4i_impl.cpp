@@ -896,13 +896,13 @@ void EtmV4IPktProcImpl::iPktAddrCtxt()
             {
                 uint64_t val64;
                 st_idx+=extract64BitLongAddr(m_currPacketData,st_idx,m_addrIS,val64);
-                m_curr_packet.set64BitAddress(val64,m_addrIS,64);
+                m_curr_packet.set64BitAddress(val64,m_addrIS);
             }
             else
             {
                 uint32_t val32;
                 st_idx+=extract32BitLongAddr(m_currPacketData,st_idx,m_addrIS,val32);
-                m_curr_packet.set32BitAddress(val32,m_addrIS,32);
+                m_curr_packet.set32BitAddress(val32,m_addrIS);
             }
             extractAndSetContextInfo(m_currPacketData,st_idx);
             m_process_state = SEND_PKT;
@@ -986,13 +986,13 @@ void EtmV4IPktProcImpl::iPktLongAddr()
         {
             uint64_t val64;
             st_idx+=extract64BitLongAddr(m_currPacketData,st_idx,m_addrIS,val64);
-            m_curr_packet.set64BitAddress(val64,m_addrIS,64);
+            m_curr_packet.set64BitAddress(val64,m_addrIS);
         }
         else
         {
             uint32_t val32;
             st_idx+=extract32BitLongAddr(m_currPacketData,st_idx,m_addrIS,val32);
-            m_curr_packet.set32BitAddress(val32,m_addrIS,32);
+            m_curr_packet.set32BitAddress(val32,m_addrIS);
         }
         m_process_state = SEND_PKT;
     }
@@ -1094,7 +1094,7 @@ void EtmV4IPktProcImpl::iPktQ()
             else
             {
                 idx+=extract32BitLongAddr(m_currPacketData,idx,m_addrIS,q_addr);
-                m_curr_packet.set32BitAddress(q_addr,m_addrIS,32);
+                m_curr_packet.set32BitAddress(q_addr,m_addrIS);
             }
         }
 

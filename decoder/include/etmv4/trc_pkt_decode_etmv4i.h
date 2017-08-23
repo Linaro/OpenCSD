@@ -43,7 +43,6 @@
 
 #include <deque>
 
-class AddrValStack;
 class TrcStackElem;
 class TrcStackElemParam;
 class TrcStackElemCtxt;
@@ -99,9 +98,6 @@ private:
 
     // timestamping
     uint64_t m_timestamp;   // last broadcast global Timestamp.
-
-    // address values stack   
-    AddrValStack *m_pAddrRegs;
 
     // state and context 
     uint32_t m_context_id;              // most recent context ID

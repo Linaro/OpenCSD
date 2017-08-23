@@ -127,6 +127,8 @@ void EtmV4ITrcPacket::toString(std::string &str) const
     case ETM4_PKT_I_ADDR_MATCH:
         addrMatchIdx(valStr);
         str += ", " + valStr;
+        trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32, v_addr.valid_bits, v_addr.val, true);
+        str += "; Addr=" + valStr + "; " + ctxtStr;
         break;
 
     case ETM4_PKT_I_ATOM_F1:

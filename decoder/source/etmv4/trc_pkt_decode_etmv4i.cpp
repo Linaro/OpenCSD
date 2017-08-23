@@ -57,7 +57,6 @@ TrcPktDecodeEtmV4I::TrcPktDecodeEtmV4I(int instIDNum)
 
 TrcPktDecodeEtmV4I::~TrcPktDecodeEtmV4I()   
 {
-    delete m_pAddrRegs;
 }
 
 /*********************** implementation packet decoding interface */
@@ -211,9 +210,6 @@ void TrcPktDecodeEtmV4I::initDecoder()
     m_cond_key_max_incr = 0;
     m_IASize64 = false;
 
-    // set up the broadcast address stack
-    m_pAddrRegs = new (std::nothrow) AddrValStack();
-
     // reset decoder state to unsynced
     resetDecoder();
 }
@@ -241,7 +237,6 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     addr.isa = 0;
     addr.val = 0;
     
-    m_pAddrRegs->push(addr);    // preload first value with 0x0
     m_P0_stack.clear();
     m_output_elem.init();
     m_excep_proc = EXCEP_POP;
@@ -257,7 +252,6 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     Complete = true;
     bool is_addr = false;
     bool is_except = false;
-    bool is_64L = false;
     
     switch(m_curr_packet_in->getType())
     {
@@ -328,7 +322,12 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
         if(pElem)
         {
-            pElem->setAddrMatch(m_curr_packet_in->getAddrMatch());  // must wait till speculation is resolved before we know the rigth address / index match
+            etmv4_addr_val_t addr;
+
+            // address match - just grab whatever the current value is...
+            addr.val = m_curr_packet_in->getAddrVal();
+            addr.isa = m_curr_packet_in->getAddrIS();
+            pElem->setAddr(addr);
             m_P0_stack.push_front(pElem);
         }
         else
@@ -339,7 +338,6 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
 
     case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
-        is_64L = true;
     case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_32IS1:    
         {
@@ -356,9 +354,6 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_L_32IS1:
     case ETM4_PKT_I_ADDR_L_64IS0:
     case ETM4_PKT_I_ADDR_L_64IS1:
-        if((m_curr_packet_in->getType() == ETM4_PKT_I_ADDR_L_64IS0) ||
-           (m_curr_packet_in->getType() == ETM4_PKT_I_ADDR_L_64IS1))
-           is_64L = true;
     case ETM4_PKT_I_ADDR_S_IS0:
     case ETM4_PKT_I_ADDR_S_IS1:
         {
@@ -369,7 +364,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
 
                 addr.val = m_curr_packet_in->getAddrVal();
                 addr.isa = m_curr_packet_in->getAddrIS();
-                pElem->setAddr(addr,is_64L);
+                pElem->setAddr(addr);
                 m_P0_stack.push_front(pElem);
             }
             else
@@ -585,39 +580,11 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
 
             case P0_ADDR:
                 {
-                etmv4_addr_val_t new_addr;
                 TrcStackElemAddr *pAddrElem = dynamic_cast<TrcStackElemAddr *>(pElem);
                 m_return_stack.clear_pop_pending(); // address removes the need to pop the indirect address target from the stack
                 if(pAddrElem)
                 {
-                    int match_idx = 0;
-                    if(pAddrElem->isAddrMatch(match_idx))
-                    {
-                        new_addr.val = m_pAddrRegs->get(match_idx).val;
-                        new_addr.isa = m_pAddrRegs->get(match_idx).isa;
-                        SetInstrInfoInAddrISA(m_pAddrRegs->get(match_idx).val,m_pAddrRegs->get(match_idx).isa);
-                        m_pAddrRegs->push(new_addr);
-                    }
-                    else
-                    {
-                        // if 64 bit value, or IAsize is 32 bit only...
-                        if(!m_IASize64 || pAddrElem->is64bit())
-                        {
-                            // use value immediately
-                            SetInstrInfoInAddrISA(pAddrElem->getAddr().val,pAddrElem->getAddr().isa);
-                            m_pAddrRegs->push(pAddrElem->getAddr());
-                        }
-                        else
-                        {
-                            // otherwise 32 bit values must add in the top 32 from the stack
-                            new_addr = m_pAddrRegs->get(0);
-                            new_addr.val &= ~((ocsd_vaddr_t)0xFFFFFFFF);
-                            new_addr.val |= (pAddrElem->getAddr().val & 0xFFFFFFFF);
-                            new_addr.isa = pAddrElem->getAddr().isa;
-                            SetInstrInfoInAddrISA(new_addr.val,new_addr.isa);
-                            m_pAddrRegs->push(new_addr);
-                        }                                                                                                
-                    }
+                    SetInstrInfoInAddrISA(pAddrElem->getAddr().val, pAddrElem->getAddr().isa);
                     m_need_addr = false;
                 }
                 }
@@ -1000,28 +967,8 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
         {
             // extract address
             pAddressElem = static_cast<TrcStackElemAddr *>(pElem);
-            int match_idx;
-            if(pAddressElem->isAddrMatch(match_idx))
-            {
-                m_excep_addr = m_pAddrRegs->get(match_idx);
-            }
-            else
-            {
-                // if 64 bit value, or IAsize is 32 bit only...
-                if(!m_IASize64 || pAddressElem->is64bit())
-                {
-                    // use value immediately
-                    m_excep_addr = pAddressElem->getAddr();                
-                }
-                else
-                {
-                    // otherwise 32 bit values must add in the top 32 from the stack
-                    m_excep_addr = m_pAddrRegs->get(0);
-                    m_excep_addr.val &= ~((ocsd_vaddr_t)0xFFFFFFFF);
-                    m_excep_addr.val |= (pAddressElem->getAddr().val & 0xFFFFFFFF);
-                    m_excep_addr.isa = pAddressElem->getAddr().isa;
-                }                                                                                                
-            }
+
+            m_excep_addr = pAddressElem->getAddr();                
 
             // if we have context, get that.
             if(pCtxtElem)
@@ -1032,9 +979,6 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
 
             // see if there is an implied P0 element on the exception.
             excep_implied_P0 = pExceptElem->getPrevSame();
-
-            // save the address.
-            m_pAddrRegs->push(m_excep_addr);
 
             // save the trace index.
             m_excep_index = pExceptElem->getRootIndex();
