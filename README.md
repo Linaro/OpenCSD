@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.7.0_
+_Current Version 0.7.2_
 
 ### Current support:
 
@@ -109,9 +109,10 @@ Version and Modification Information
 - _Version 0.5.4_:  Updates: X-compile for arm/arm64.  Remove deprecated VS2010 builds. Bugfix: GCC inline semantics in debug build. 
 - _Version 0.6.0_:  Packet printers moved from tests into the main library. C++ and C APIs updated to allow clients to use them. 
                     Update to allow perf to insert barrier packets (4xFSYNC) which the decoder can be made to use to reset the decode state.
-- _Version 0.6.1_:  Buxfix: instruction follower bug on A32 branch to T32.
+- _Version 0.6.1_:  Bugfix: instruction follower bug on A32 branch to T32.
 - _Version 0.7.0_:  Add handling for trace return stack feature to ETMv4 and PTM trace.
-- _Version 0.7.1_:  Buxfix: ETMv3 packet processor.
+- _Version 0.7.1_:  Bugfix: ETMv3 packet processor.
+- _Version 0.7.2_:  Bugfix: ETMv4 decoder - fix exact match packet address follower.
 
 Licence Information
 ===================
