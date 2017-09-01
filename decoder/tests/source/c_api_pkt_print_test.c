@@ -651,7 +651,6 @@ static ocsd_err_t create_decoder_ptm(dcd_tree_handle_t dcd_tree_h)
 /*** STM specific settings ***/
 static ocsd_err_t create_decoder_stm(dcd_tree_handle_t dcd_tree_h)
 {
-    ocsd_err_t ret = OCSD_OK;
     ocsd_stm_cfg trace_config_stm;
 
     /* 
