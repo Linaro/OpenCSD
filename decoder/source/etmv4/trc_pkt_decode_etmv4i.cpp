@@ -232,11 +232,6 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_except_pending_addr = false;
     m_mem_nacc_pending = false;
     m_prev_overflow = false;
-
-    etmv4_addr_val_t addr;
-    addr.isa = 0;
-    addr.val = 0;
-    
     m_P0_stack.clear();
     m_output_elem.init();
     m_excep_proc = EXCEP_POP;
