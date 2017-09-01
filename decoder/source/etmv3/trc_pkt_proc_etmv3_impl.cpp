@@ -642,10 +642,11 @@ ocsd_err_t EtmV3PktProcImpl::processPayloadByte(uint8_t by)
 			
 	case ETM3_PKT_CYCLE_COUNT:
 		bTopBitSet = ((by & 0x80) == 0x80);
-        if(!bTopBitSet || ( m_currPacketData.size() >= 6))
+        if(!bTopBitSet || ( m_currPacketData.size() >= 6)) {
             m_currPktIdx = 1;
             m_curr_packet.SetCycleCount(extractCycleCount());
 			SendPacket();
+		}
 		break;
 			
 	case ETM3_PKT_I_SYNC_CYCLE:
