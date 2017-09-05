@@ -1521,8 +1521,8 @@ unsigned EtmV4IPktProcImpl::extractContField64(const std::vector<uint8_t> &buffe
                 key |= ((uint32_t)(buffer[st_idx+idx] & 0x7F)) << incr;
                 incr+=7;
             }
-            idx++;
             lastByte = (bool)((buffer[st_idx+idx] & 0x80) == 0); 
+            idx++;
         }
         else
         {
