@@ -171,7 +171,7 @@ ocsd_datapath_resp_t TrcPktProcPtm::processData(  const ocsd_trc_index_t index,
 ocsd_datapath_resp_t TrcPktProcPtm::onEOT()
 {
     ocsd_datapath_resp_t err = OCSD_RESP_FATAL_NOT_INIT;
-    if(!checkInit())
+    if(checkInit())
     {
         err = OCSD_RESP_CONT;
         if(m_currPacketData.size() > 0)
@@ -186,7 +186,7 @@ ocsd_datapath_resp_t TrcPktProcPtm::onEOT()
 ocsd_datapath_resp_t TrcPktProcPtm::onReset()
 {
     ocsd_datapath_resp_t err = OCSD_RESP_FATAL_NOT_INIT;
-    if(!checkInit())
+    if(checkInit())
     {
         InitProcessorState();
         err = OCSD_RESP_CONT;
@@ -197,7 +197,7 @@ ocsd_datapath_resp_t TrcPktProcPtm::onReset()
 ocsd_datapath_resp_t TrcPktProcPtm::onFlush()
 {
     ocsd_datapath_resp_t err = OCSD_RESP_FATAL_NOT_INIT;
-    if(!checkInit())
+    if(checkInit())
     {
          err = OCSD_RESP_CONT;
     }
@@ -223,6 +223,7 @@ void TrcPktProcPtm::InitProcessorState()
     m_async_0 = 0;
     m_waitASyncSOPkt = false;
     m_bAsyncRawOp = false;
+    m_bOPNotSyncPkt = false;
 
     m_curr_packet.ResetState();
     InitPacketState();
@@ -319,7 +320,8 @@ ocsd_datapath_resp_t TrcPktProcPtm::waitASync()
             if(m_pDataIn[m_dataInProcessed++] == 0x00)
             {
                 m_waitASyncSOPkt = true;
-                m_currPacketData.push_back(0);            
+                m_currPacketData.push_back(0); 
+                m_async_0 = 1;
             }
             else
             {
@@ -352,10 +354,15 @@ ocsd_datapath_resp_t TrcPktProcPtm::waitASync()
                 }
                 outputRawPacketToMonitor(m_curr_pkt_index,&m_curr_packet,unsynced_bytes,m_pDataIn+unsync_scan_block_start);
             }
-            resp = outputDecodedPacket(m_curr_pkt_index,&m_curr_packet);
+            if (!m_bOPNotSyncPkt)
+            {
+                resp = outputDecodedPacket(m_curr_pkt_index, &m_curr_packet);
+                m_bOPNotSyncPkt = true;
+            }
             unsync_scan_block_start += unsynced_bytes;
             m_curr_pkt_index+= unsynced_bytes;
             unsynced_bytes = 0;
+            bSendUnsyncedData = false;
         }
         
         // mark next packet as the ASYNC we are looking for.
@@ -394,7 +401,7 @@ void TrcPktProcPtm::pktASync()
 TrcPktProcPtm::async_result_t TrcPktProcPtm::findAsync()
 {
     async_result_t async_res = NOT_ASYNC;
-    bool bFound = false;
+    bool bFound = false; // found non-zero byte in sequence
     bool bByteAvail = true;
     uint8_t currByte;
     
@@ -417,7 +424,7 @@ TrcPktProcPtm::async_result_t TrcPktProcPtm::findAsync()
                 {
                     if(m_async_0 == 5)
                         async_res = ASYNC;
-                    else
+                    else if(m_async_0 > 5)
                         async_res = ASYNC_EXTRA_0;
                 }
                 bFound = true;

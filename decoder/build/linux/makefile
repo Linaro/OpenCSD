@@ -31,7 +31,7 @@
 #
 # command line options
 # DEBUG=1 	    create a debug build
-# LINUX64=1     create a 64 bit build
+#
 
 # Set project root - relative to build directory
 ifeq ($(OCSD_ROOT),)

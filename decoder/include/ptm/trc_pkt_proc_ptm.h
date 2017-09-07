@@ -104,6 +104,7 @@ protected:
     ocsd_datapath_resp_t waitASync();       //!< look for first synchronisation point in the packet stream
     bool m_waitASyncSOPkt;
     bool m_bAsyncRawOp;
+    bool m_bOPNotSyncPkt;                   //!< true if output not sync packet when waiting for ASYNC
 
     // ** packet processing functions.
     void pktASync();
