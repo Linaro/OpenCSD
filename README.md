@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.7.2_
+_Current Version 0.7.3_
 
 ### Current support:
 
@@ -113,6 +113,7 @@ Version and Modification Information
 - _Version 0.7.0_:  Add handling for trace return stack feature to ETMv4 and PTM trace.
 - _Version 0.7.1_:  Bugfix: ETMv3 packet processor.
 - _Version 0.7.2_:  Bugfix: ETMv4 decoder - fix exact match packet address follower.
+- _Version 0.7.3_:  Bugfix: PTM decoder - issues with initialisation and ASYNC detection.
 
 Licence Information
 ===================
