@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.7.3_
+_Current Version 0.7.4_
 
 ### Current support:
 
@@ -52,18 +52,14 @@ output packet.
 Note on the Git Repository.
 ---------------------------
 
-At present, the git repository for OpenCSD contains both branches/tags for the OpenCSD library itself, and branches that 
-have the perf updates that are not yet upstream in the main linux tree for using perf to record and decode trace.
+This git repository for OpenCSD contains only source for the OpenCSD decoder library.
+From version 0.4, releases appear as versioned tags on the master branch.
 
-These perf branches are snapshots of the kernel tree and are thus quite large. 
-It is advised if only the OpenCSD library is required, clone only selected branches.
-Otherwise, downloading may take some time.
+From version 0.7.4, the required updates to CoreSight drivers and perf, that are not
+currently upstream in the linux kernel tree, are now contained in a separate
+repository to be found at:
 
-e.g.
-
-    git clone -b opencsd-0v003 --single-branch https://github.com/Linaro/OpenCSD 
-
-(From version 0.4, releases appear as versioned tags on the master branch.)
+https://github.com/Linaro/perf-opencsd
 
 
 Documentation
@@ -114,6 +110,7 @@ Version and Modification Information
 - _Version 0.7.1_:  Bugfix: ETMv3 packet processor.
 - _Version 0.7.2_:  Bugfix: ETMv4 decoder - fix exact match packet address follower.
 - _Version 0.7.3_:  Bugfix: PTM decoder - issues with initialisation and ASYNC detection.
+- _Version 0.7.4_:  Notification of change of repository for perf extensions. gcc 6.x build fixes.
 
 Licence Information
 ===================
