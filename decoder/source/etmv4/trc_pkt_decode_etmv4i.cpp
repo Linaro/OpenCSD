@@ -35,7 +35,6 @@
 
 #include "etmv4/trc_pkt_decode_etmv4i.h"
 
-#include "trc_etmv4_stack_elem.h"
 #include "common/trc_gen_elem.h"
 
 
@@ -232,7 +231,7 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_except_pending_addr = false;
     m_mem_nacc_pending = false;
     m_prev_overflow = false;
-    m_P0_stack.clear();
+    m_P0_stack.delete_all();
     m_output_elem.init();
     m_excep_proc = EXCEP_POP;
     m_flush_EOT = false;
@@ -260,22 +259,14 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
 
     case ETM4_PKT_I_TRACE_ON:
         {
-            TrcStackElemParam *pElem = 
-                new (std::nothrow) TrcStackElemParam( P0_TRC_ON, false, m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-                m_P0_stack.push_front(pElem);
-            else
+            if (m_P0_stack.createParamElemNoParam(P0_TRC_ON, false, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
                 bAllocErr = true;
         }
         break;
 
     case ETM4_PKT_I_OVERFLOW:
         {
-            TrcStackElemParam *pElem = 
-                new (std::nothrow) TrcStackElemParam( P0_OVERFLOW, false, m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-                m_P0_stack.push_front(pElem);
-            else
+            if (m_P0_stack.createParamElemNoParam(P0_OVERFLOW, false, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
                 bAllocErr = true;
         }
         break;
@@ -287,47 +278,29 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ATOM_F5:
     case ETM4_PKT_I_ATOM_F6:
         {
-            TrcStackElemAtom *pElem = new (std::nothrow) TrcStackElemAtom(m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-            {
-                pElem->setAtom(m_curr_packet_in->getAtom());
-                m_P0_stack.push_front(pElem);
-                m_curr_spec_depth += m_curr_packet_in->getAtom().num;
-            }
-            else
+            if (m_P0_stack.createAtomElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->getAtom()) == 0)
                 bAllocErr = true;
+            else
+                m_curr_spec_depth += m_curr_packet_in->getAtom().num;
         }
         break;
 
     case ETM4_PKT_I_CTXT:
         {
-        TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
-        if(pElem)
-        {
-            pElem->setContext(m_curr_packet_in->getContext());
-            m_P0_stack.push_front(pElem);
-        }
-        else
-            bAllocErr = true;
+            if (m_P0_stack.createContextElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->getContext()) == 0)
+                bAllocErr = true;
         }
         break;
 
     case ETM4_PKT_I_ADDR_MATCH:
         {
-        TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
-        if(pElem)
-        {
             etmv4_addr_val_t addr;
 
-            // address match - just grab whatever the current value is...
             addr.val = m_curr_packet_in->getAddrVal();
             addr.isa = m_curr_packet_in->getAddrIS();
-            pElem->setAddr(addr);
-            m_P0_stack.push_front(pElem);
-        }
-        else
-            bAllocErr = true;
-        is_addr = true;
+            if (m_P0_stack.createAddrElem(m_curr_packet_in->getType(), m_index_curr_pkt, addr) == 0)
+                bAllocErr = true;
+            is_addr = true;
         }
         break;
 
@@ -336,13 +309,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_32IS1:    
         {
-            TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-            {
-                pElem->setContext(m_curr_packet_in->getContext());
-                m_P0_stack.push_front(pElem);
-            }
-            else
+            if (m_P0_stack.createContextElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->getContext()) == 0)
                 bAllocErr = true;
         }
     case ETM4_PKT_I_ADDR_L_32IS0:
@@ -352,17 +319,11 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_S_IS0:
     case ETM4_PKT_I_ADDR_S_IS1:
         {
-            TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-            {
-                etmv4_addr_val_t addr;
+            etmv4_addr_val_t addr;
 
-                addr.val = m_curr_packet_in->getAddrVal();
-                addr.isa = m_curr_packet_in->getAddrIS();
-                pElem->setAddr(addr);
-                m_P0_stack.push_front(pElem);
-            }
-            else
+            addr.val = m_curr_packet_in->getAddrVal();
+            addr.isa = m_curr_packet_in->getAddrIS();
+            if (m_P0_stack.createAddrElem(m_curr_packet_in->getType(), m_index_curr_pkt, addr) == 0)
                 bAllocErr = true;
             is_addr = true;
         }
@@ -371,45 +332,33 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     // Exceptions
     case ETM4_PKT_I_EXCEPT:
          {
-            TrcStackElemExcept *pElem = new (std::nothrow) TrcStackElemExcept(m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
+            if (m_P0_stack.createExceptElem(m_curr_packet_in->getType(), m_index_curr_pkt, 
+                                            (m_curr_packet_in->exception_info.addr_interp == 0x2), 
+                                            m_curr_packet_in->exception_info.exceptionType) == 0)
+                bAllocErr = true;
+            else
             {
-                pElem->setPrevSame(m_curr_packet_in->exception_info.addr_interp == 0x2);
-                m_P0_stack.push_front(pElem);
                 m_except_pending_addr = true;  // wait for following packets before marking for commit.
                 is_except = true;
-                pElem->setExcepNum(m_curr_packet_in->exception_info.exceptionType);
             }
-            else
-                bAllocErr = true;
-         }
-         break;
+        }
+        break;
 
     case ETM4_PKT_I_EXCEPT_RTN:
         {
             // P0 element if V7M profile.
             bool bV7MProfile = (m_config->archVersion() == ARCH_V7) && (m_config->coreProfile() == profile_CortexM);
-            TrcStackElemParam *pElem = 
-                new (std::nothrow) TrcStackElemParam(P0_EXCEP_RET, bV7MProfile, m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-                m_P0_stack.push_front(pElem);
-            else
+            if (m_P0_stack.createParamElemNoParam(P0_EXCEP_RET, bV7MProfile, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
                 bAllocErr = true;
-
         }
         break;
 
     // event trace
     case ETM4_PKT_I_EVENT:
         {
-            TrcStackElemParam *pElem = 
-                new (std::nothrow) TrcStackElemParam( P0_EVENT, false, m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-            {
-                pElem->setParam(m_curr_packet_in->event_val,0);
-                m_P0_stack.push_front(pElem);
-            }
-            else
+            std::vector<uint32_t> params;
+            params[0] = (uint32_t)m_curr_packet_in->event_val;
+            if (m_P0_stack.createParamElem(P0_EVENT, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
                 bAllocErr = true;
 
         }
@@ -420,14 +369,9 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_CCNT_F2:
     case ETM4_PKT_I_CCNT_F3:
         {
-            TrcStackElemParam *pElem = 
-                new (std::nothrow) TrcStackElemParam( P0_CC, false, m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-            {
-                pElem->setParam(m_curr_packet_in->getCC(),0);
-                m_P0_stack.push_front(pElem);
-            }
-            else
+            std::vector<uint32_t> params;
+            params[0] = m_curr_packet_in->getCC();
+            if (m_P0_stack.createParamElem(P0_EVENT, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
                 bAllocErr = true;
 
         }
@@ -437,18 +381,13 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_TIMESTAMP:
         {
             bool bTSwithCC = m_config->enabledCCI();
-            TrcStackElemParam *pElem = 
-                new (std::nothrow) TrcStackElemParam( bTSwithCC ? P0_TS_CC : P0_TS, false, m_curr_packet_in->getType(), m_index_curr_pkt);
-            if(pElem)
-            {
-                uint64_t ts = m_curr_packet_in->getTS();
-                pElem->setParam((uint32_t)(ts & 0xFFFFFFFF),0);
-                pElem->setParam((uint32_t)((ts>>32) & 0xFFFFFFFF),1);
-                if(bTSwithCC)
-                    pElem->setParam(m_curr_packet_in->getCC(),2);
-                m_P0_stack.push_front(pElem);
-            }
-            else
+            uint64_t ts = m_curr_packet_in->getTS();
+            std::vector<uint32_t> params;
+            params[0] = (uint32_t)(ts & 0xFFFFFFFF);
+            params[1] = (uint32_t)((ts >> 32) & 0xFFFFFFFF);
+            if (bTSwithCC)
+                params[2] = m_curr_packet_in->getCC();
+            if (m_P0_stack.createParamElem(P0_EVENT, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
                 bAllocErr = true;
 
         }
@@ -687,7 +626,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
             }
 
             if(bPopElem)
-                m_P0_stack.pop_back();  // remove element from stack;
+                m_P0_stack.delete_back();  // remove element from stack;
 
             // if response not continue, then break out of the loop.
             if(!OCSD_DATA_RESP_IS_CONT(resp))
@@ -751,7 +690,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
             // scan for outstanding events, TS and CC, before any outstanding
             // P0 commit elements.
             pElem = m_P0_stack.back();
-            m_P0_stack.pop_back();
+            
             switch(pElem->getP0Type())
             {
                 // clear stack and stop
@@ -761,7 +700,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
             case P0_EXCEP:
             case P0_EXCEP_RET:
             case P0_OVERFLOW:
-                m_P0_stack.clear();
+                m_P0_stack.delete_all();
                 break;
 
                 //skip
@@ -802,7 +741,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
                 }
                 break;
             }
-
+            m_P0_stack.delete_back();
         }
 
         if(OCSD_DATA_RESP_IS_CONT(resp) && (m_P0_stack.size() == 0))
@@ -984,6 +923,7 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
             else
                 m_excep_proc = EXCEP_RANGE;
         }
+        m_P0_stack.delete_popped();
     }
 
     // output a range element

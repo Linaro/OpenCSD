@@ -40,8 +40,7 @@
 #include "etmv4/trc_cmp_cfg_etmv4.h"
 #include "common/trc_gen_elem.h"
 #include "common/trc_ret_stack.h"
-
-#include <deque>
+#include "etmv4/trc_etmv4_stack_elem.h"
 
 class TrcStackElem;
 class TrcStackElemParam;
@@ -139,7 +138,7 @@ private:
     processor_state_t m_curr_state;
 
 //** P0 element stack
-    std::deque<TrcStackElem *> m_P0_stack;  //!< P0 decode element stack
+    EtmV4P0Stack m_P0_stack;    //!< P0 decode element stack
 
     int m_P0_commit;    //!< number of elements to commit
 
@@ -163,7 +162,7 @@ private:
     ocsd_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
 
     bool m_mem_nacc_pending;    //!< need to output a memory access failure packet
-    ocsd_vaddr_t m_nacc_addr;  //!< 
+    ocsd_vaddr_t m_nacc_addr;  //!< record unaccessible address 
 
     ocsd_pe_context m_pe_context;  //!< current context information
     etmv4_trace_info_t m_trace_info; //!< trace info for this trace run.

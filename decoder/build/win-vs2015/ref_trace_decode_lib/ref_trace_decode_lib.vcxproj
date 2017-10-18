@@ -345,6 +345,7 @@
     <ClInclude Include="..\..\..\include\etmv4\etmv4_decoder.h" />
     <ClInclude Include="..\..\..\include\etmv4\trc_cmp_cfg_etmv4.h" />
     <ClInclude Include="..\..\..\include\etmv4\trc_dcd_mngr_etmv4i.h" />
+    <ClInclude Include="..\..\..\include\etmv4\trc_etmv4_stack_elem.h" />
     <ClInclude Include="..\..\..\include\etmv4\trc_pkt_decode_etmv4i.h" />
     <ClInclude Include="..\..\..\include\etmv4\trc_pkt_elem_etmv4d.h" />
     <ClInclude Include="..\..\..\include\etmv4\trc_pkt_elem_etmv4i.h" />
@@ -396,7 +397,6 @@
     <ClInclude Include="..\..\..\include\trc_gen_elem_types.h" />
     <ClInclude Include="..\..\..\include\trc_pkt_types.h" />
     <ClInclude Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.h" />
-    <ClInclude Include="..\..\..\source\etmv4\trc_etmv4_stack_elem.h" />
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4d_impl.h" />
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.h" />
     <ClInclude Include="..\..\..\source\trc_frame_deformatter_impl.h" />
@@ -408,6 +408,7 @@
     <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3.cpp" />
     <ClCompile Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_cmp_cfg_etmv4.cpp" />
+    <ClCompile Include="..\..\..\source\etmv4\trc_etmv4_stack_elem.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_decode_etmv4i.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4d.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4i.cpp" />

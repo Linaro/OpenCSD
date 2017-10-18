@@ -191,9 +191,6 @@
     <ClInclude Include="..\..\..\include\etmv4\trc_pkt_decode_etmv4i.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\source\etmv4\trc_etmv4_stack_elem.h">
-      <Filter>Header Files\etmv4</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc.h">
       <Filter>Header Files\mem_acc</Filter>
     </ClInclude>
@@ -356,6 +353,9 @@
     <ClInclude Include="..\..\..\include\common\trc_ret_stack.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\etmv4\trc_etmv4_stack_elem.h">
+      <Filter>Header Files\etmv4</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -480,6 +480,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\trc_ret_stack.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv4\trc_etmv4_stack_elem.cpp">
+      <Filter>Source Files\etmv4</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
