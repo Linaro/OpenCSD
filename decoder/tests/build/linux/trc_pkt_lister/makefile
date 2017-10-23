@@ -74,7 +74,7 @@ copy_libs:
 
 #### build rules
 $(BUILD_DIR)/%.o : %.cpp
-			$(CPP) $(CPP_FLAGS) $(CPP_INCLUDES) $< -o $@ 
+			$(CPP) $(CPP_FLAGS) $(CPP_INCLUDES) $< -o $@
 
 #### clean
 .PHONY: clean
