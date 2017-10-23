@@ -73,12 +73,19 @@ copy_libs:
 
 
 #### build rules
+## object dependencies
+DEPS := $(OBJECTS:%.o=%.d)
+
+-include $(DEPS)
+
+## object compile
 $(BUILD_DIR)/%.o : %.cpp
-			$(CPP) $(CPP_FLAGS) $(CPP_INCLUDES) $< -o $@
+			$(CPP) $(CPP_FLAGS) $(CPP_INCLUDES) -MMD $< -o $@
 
 #### clean
 .PHONY: clean
 clean :
 			rm -f  $(BIN_TEST_TARGET_DIR)/$(PROG) $(OBJECTS)
+			rm -f  $(DEPS)
 
 # end of file makefile

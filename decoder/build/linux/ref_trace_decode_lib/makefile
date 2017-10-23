@@ -123,13 +123,21 @@ build_dir:
 	mkdir -p $(BUILD_DIR)
 
 ##### build rules
+
+## object dependencies
+DEPS := $(OBJECTS:%.o=%.d)
+
+-include $(DEPS)
+
+## object compile
 $(BUILD_DIR)/%.o : %.cpp
-	$(CPP) $(CPP_FLAGS) $(CPP_INCLUDES) $< -o $@
+	$(CPP) $(CPP_FLAGS) $(CPP_INCLUDES) -MMD  $< -o $@
 
 
 #### clean
 .PHONY: clean
 clean:
 	rm -f $(OBJECTS)
+	rm -f $(DEPS)
 	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).a
 	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).so
