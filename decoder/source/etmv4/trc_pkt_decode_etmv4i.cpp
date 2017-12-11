@@ -33,7 +33,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "etmv4/trc_pkt_decode_etmv4i.h"
+#include "opencsd/etmv4/trc_pkt_decode_etmv4i.h"
 
 #include "common/trc_gen_elem.h"
 

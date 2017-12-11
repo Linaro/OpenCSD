@@ -36,15 +36,15 @@
 #define ARM_OCSD_C_API_TYPES_H_INCLUDED
 
 /* select the library types that are C compatible - the interface data types */
-#include "ocsd_if_types.h"
-#include "trc_gen_elem_types.h"
-#include "trc_pkt_types.h"
+#include "opencsd/ocsd_if_types.h"
+#include "opencsd/trc_gen_elem_types.h"
+#include "opencsd/trc_pkt_types.h"
 
 /* pull in the protocol decoder types. */
-#include "etmv3/trc_pkt_types_etmv3.h"
-#include "etmv4/trc_pkt_types_etmv4.h"
-#include "ptm/trc_pkt_types_ptm.h"
-#include "stm/trc_pkt_types_stm.h"
+#include "opencsd/etmv3/trc_pkt_types_etmv3.h"
+#include "opencsd/etmv4/trc_pkt_types_etmv4.h"
+#include "opencsd/ptm/trc_pkt_types_ptm.h"
+#include "opencsd/stm/trc_pkt_types_stm.h"
 
 /** @ingroup lib_c_api
 @{*/

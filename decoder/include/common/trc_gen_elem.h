@@ -34,7 +34,7 @@
 #ifndef ARM_TRC_GEN_ELEM_H_INCLUDED
 #define ARM_TRC_GEN_ELEM_H_INCLUDED
 
-#include "trc_gen_elem_types.h"
+#include "opencsd/trc_gen_elem_types.h"
 #include "trc_printable_elem.h"
 #include "ocsd_pe_context.h"
 

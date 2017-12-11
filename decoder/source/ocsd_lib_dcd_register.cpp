@@ -35,10 +35,10 @@
 #include "common/ocsd_lib_dcd_register.h"
 
 // include built-in decode manager headers
-#include "etmv4/trc_dcd_mngr_etmv4i.h"
-#include "etmv3/trc_dcd_mngr_etmv3.h"
-#include "ptm/trc_dcd_mngr_ptm.h"
-#include "stm/trc_dcd_mngr_stm.h"
+#include "opencsd/etmv4/trc_dcd_mngr_etmv4i.h"
+#include "opencsd/etmv3/trc_dcd_mngr_etmv3.h"
+#include "opencsd/ptm/trc_dcd_mngr_ptm.h"
+#include "opencsd/stm/trc_dcd_mngr_stm.h"
 
 // create array of built-in decoders to register with library 
 static built_in_decoder_info_t sBuiltInArray[] = {

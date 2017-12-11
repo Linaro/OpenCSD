@@ -34,8 +34,8 @@
 #ifndef ARM_OCSD_C_API_CUST_IMPL_H_INCLUDED
 #define ARM_OCSD_C_API_CUST_IMPL_H_INCLUDED
 
-#include "c_api/ocsd_c_api_types.h"
-#include "c_api/ocsd_c_api_custom.h"
+#include "opencsd/c_api/ocsd_c_api_types.h"
+#include "opencsd/c_api/ocsd_c_api_custom.h"
 
 /** @addtogroup ocsd_ext_dcd
 @{*/

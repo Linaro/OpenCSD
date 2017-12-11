@@ -33,7 +33,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "etmv4/trc_etmv4_stack_elem.h"
+#include "opencsd/etmv4/trc_etmv4_stack_elem.h"
 
 /* implementation of P0 element stack in ETM v4 trace*/
 TrcStackElemParam *EtmV4P0Stack::createParamElemNoParam(const p0_elem_t p0_type, const bool isP0, const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index)

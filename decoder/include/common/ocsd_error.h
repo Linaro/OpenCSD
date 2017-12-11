@@ -36,7 +36,7 @@
 #ifndef ARM_OCSD_ERROR_H_INCLUDED
 #define ARM_OCSD_ERROR_H_INCLUDED
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 #include <string>
 /** @ingroup ocsd_infrastructure
 @{*/

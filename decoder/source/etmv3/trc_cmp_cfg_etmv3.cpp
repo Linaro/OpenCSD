@@ -33,7 +33,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "etmv3/trc_cmp_cfg_etmv3.h"
+#include "opencsd/etmv3/trc_cmp_cfg_etmv3.h"
 
 EtmV3Config::EtmV3Config()
 {

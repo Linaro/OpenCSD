@@ -1,5 +1,5 @@
 /*!
- * \file       trc_gen_elem_types.h
+ * \file       opencsd/trc_gen_elem_types.h
  * \brief      OpenCSD : Decoder Output Generic Element types.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
@@ -41,7 +41,7 @@
   * 
 @{*/
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 
 /**  Enum for generic element types */
 typedef enum _ocsd_gen_trc_elem_t 
@@ -123,4 +123,4 @@ typedef enum _event_t {
 /** @}*/
 #endif // ARM_TRC_GEN_ELEM_TYPES_H_INCLUDED
 
-/* End of File trc_gen_elem_types.h */
+/* End of File opencsd/trc_gen_elem_types.h */

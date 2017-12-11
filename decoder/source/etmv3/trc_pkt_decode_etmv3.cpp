@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "etmv3/trc_pkt_decode_etmv3.h"
+#include "opencsd/etmv3/trc_pkt_decode_etmv3.h"
 
 #define DCD_NAME "DCD_ETMV3"
 

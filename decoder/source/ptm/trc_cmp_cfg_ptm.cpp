@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "ptm/trc_cmp_cfg_ptm.h"
+#include "opencsd/ptm/trc_cmp_cfg_ptm.h"
 
 PtmConfig::PtmConfig()
 {

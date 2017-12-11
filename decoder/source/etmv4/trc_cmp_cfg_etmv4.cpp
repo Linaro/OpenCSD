@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "etmv4/trc_cmp_cfg_etmv4.h"
+#include "opencsd/etmv4/trc_cmp_cfg_etmv4.h"
 
 EtmV4Config::EtmV4Config()   
 {

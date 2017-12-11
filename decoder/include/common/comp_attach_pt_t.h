@@ -36,7 +36,7 @@
 #define ARM_COMP_ATTACH_PT_T_H_INCLUDED
 
 #include <vector>
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 
 /** @defgroup ocsd_infrastructure  OpenCSD Library : Library Component Infrastructure
 

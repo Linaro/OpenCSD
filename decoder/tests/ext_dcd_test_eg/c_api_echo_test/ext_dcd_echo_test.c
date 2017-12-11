@@ -36,9 +36,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "c_api/opencsd_c_api.h"
-#include "c_api/ocsd_c_api_types.h"
-#include "c_api/ocsd_c_api_cust_impl.h"
+#include "opencsd/c_api/opencsd_c_api.h"
+#include "opencsd/c_api/ocsd_c_api_types.h"
+#include "opencsd/c_api/ocsd_c_api_cust_impl.h"
 
 #include "ext_dcd_echo_test_fact.h"
 #include "ext_dcd_echo_test.h"

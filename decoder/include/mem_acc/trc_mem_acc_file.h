@@ -40,7 +40,7 @@
 #include <fstream>
 #include <list>
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 #include "mem_acc/trc_mem_acc_base.h"
 
 // an add-on region to a file - allows setting of a region at a none-zero offset for a file.

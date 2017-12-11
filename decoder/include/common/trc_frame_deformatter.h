@@ -34,7 +34,7 @@
 #ifndef ARM_TRC_FRAME_DEFORMATTER_H_INCLUDED
 #define ARM_TRC_FRAME_DEFORMATTER_H_INCLUDED
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 
 #include "interfaces/trc_data_raw_in_i.h"
 #include "comp_attach_pt_t.h"

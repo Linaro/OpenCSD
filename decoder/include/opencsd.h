@@ -36,9 +36,9 @@
 #define ARM_OPENCSD_H_INCLUDED
 
 /** C interface types */
-#include "ocsd_if_types.h"
-#include "trc_pkt_types.h"
-#include "trc_gen_elem_types.h"
+#include "opencsd/ocsd_if_types.h"
+#include "opencsd/trc_pkt_types.h"
+#include "opencsd/trc_gen_elem_types.h"
 
 /* C++ abstract interfaces */
 #include "interfaces/trc_data_raw_in_i.h"
@@ -59,10 +59,10 @@
 /** Implemented Protocol decoders */
 #include "common/trc_frame_deformatter.h"
 
-#include "etmv3/etmv3_decoder.h"
-#include "etmv4/etmv4_decoder.h"
-#include "ptm/ptm_decoder.h"
-#include "stm/stm_decoder.h"
+#include "opencsd/etmv3/etmv3_decoder.h"
+#include "opencsd/etmv4/etmv4_decoder.h"
+#include "opencsd/ptm/ptm_decoder.h"
+#include "opencsd/stm/stm_decoder.h"
 
 /** C++ library object types */
 #include "common/ocsd_error_logger.h"

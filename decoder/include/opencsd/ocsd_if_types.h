@@ -1,5 +1,5 @@
 /*!
- * \file       ocsd_if_types.h
+ * \file       opencsd/ocsd_if_types.h
  * \brief      OpenCSD : Standard Types used in the library interfaces.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
@@ -589,4 +589,4 @@ typedef struct _ocsd_swt_info {
 /** @}*/
 #endif // ARM_OCSD_IF_TYPES_H_INCLUDED
 
-/* End of File ocsd_if_types.h */
+/* End of File opencsd/ocsd_if_types.h */

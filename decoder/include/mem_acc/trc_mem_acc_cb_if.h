@@ -35,7 +35,7 @@
 #ifndef ARM_TRC_MEM_ACC_CB_IF_H_INCLUDED
 #define ARM_TRC_MEM_ACC_CB_IF_H_INCLUDED
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 
 /*!
  * @class TrcMemAccCBIF

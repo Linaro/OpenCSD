@@ -33,7 +33,7 @@
 #ifndef ARM_TRC_ETMV4_STACK_ELEM_H_INCLUDED
 #define ARM_TRC_ETMV4_STACK_ELEM_H_INCLUDED
 
-#include "etmv4/trc_pkt_types_etmv4.h"
+#include "opencsd/etmv4/trc_pkt_types_etmv4.h"
 
 #include <deque>
 #include <vector>

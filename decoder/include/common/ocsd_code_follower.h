@@ -35,8 +35,8 @@
 #ifndef ARM_OCSD_CODE_FOLLOWER_H_INCLUDED
 #define ARM_OCSD_CODE_FOLLOWER_H_INCLUDED
 
-#include "ocsd_if_types.h"
-#include "trc_pkt_types.h"
+#include "opencsd/ocsd_if_types.h"
+#include "opencsd/trc_pkt_types.h"
 #include "comp_attach_pt_t.h"
 #include "interfaces/trc_tgt_mem_access_i.h"
 #include "interfaces/trc_instr_decode_i.h"

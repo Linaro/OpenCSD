@@ -36,7 +36,7 @@
 #ifndef ARM_OCSD_C_API_CUSTOM_OBJ_H_INCLUDED
 #define ARM_OCSD_C_API_CUSTOM_OBJ_H_INCLUDED
 
-#include "c_api/ocsd_c_api_custom.h"
+#include "opencsd/c_api/ocsd_c_api_custom.h"
 #include "common/ocsd_dcd_mngr_i.h"
 
 /***** Decoder manager interface ******************************/

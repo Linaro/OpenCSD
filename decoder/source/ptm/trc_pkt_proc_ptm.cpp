@@ -32,8 +32,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "ptm/trc_pkt_proc_ptm.h"
-#include "ptm/trc_cmp_cfg_ptm.h"
+#include "opencsd/ptm/trc_pkt_proc_ptm.h"
+#include "opencsd/ptm/trc_cmp_cfg_ptm.h"
 #include "common/ocsd_error.h"
 
 

@@ -36,11 +36,11 @@
 #define ARM_TRC_PKT_DECODE_ETMV4I_H_INCLUDED
 
 #include "common/trc_pkt_decode_base.h"
-#include "etmv4/trc_pkt_elem_etmv4i.h"
-#include "etmv4/trc_cmp_cfg_etmv4.h"
+#include "opencsd/etmv4/trc_pkt_elem_etmv4i.h"
+#include "opencsd/etmv4/trc_cmp_cfg_etmv4.h"
 #include "common/trc_gen_elem.h"
 #include "common/trc_ret_stack.h"
-#include "etmv4/trc_etmv4_stack_elem.h"
+#include "opencsd/etmv4/trc_etmv4_stack_elem.h"
 
 class TrcStackElem;
 class TrcStackElemParam;

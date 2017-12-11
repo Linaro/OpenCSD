@@ -34,7 +34,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "etmv4/trc_pkt_elem_etmv4i.h"
+#include "opencsd/etmv4/trc_pkt_elem_etmv4i.h"
 
 EtmV4ITrcPacket::EtmV4ITrcPacket()
 {

@@ -38,7 +38,7 @@
 
 #include <map>
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 #include "common/ocsd_dcd_mngr_i.h"
 
 /*!

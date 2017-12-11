@@ -41,8 +41,8 @@
 
 
 #include "common/trc_pkt_decode_base.h"
-#include "stm/trc_pkt_elem_stm.h"
-#include "stm/trc_cmp_cfg_stm.h"
+#include "opencsd/stm/trc_pkt_elem_stm.h"
+#include "opencsd/stm/trc_cmp_cfg_stm.h"
 #include "common/trc_gen_elem.h"
 
 class TrcPktDecodeStm : public TrcPktDecodeBase<StmTrcPacket, STMConfig>

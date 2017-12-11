@@ -1,5 +1,5 @@
 /*!
- * \file       trc_pkt_types.h
+ * \file       opencsd/trc_pkt_types.h
  * \brief      OpenCSD: Common "C" types for trace packets.
  * 
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
@@ -37,7 +37,7 @@
 #define ARM_TRC_PKT_TYPES_H_INCLUDED
 
 #include <stdint.h>
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 
 /** @defgroup trc_pkts  OpenCSD Library : Trace Packet Types
 
@@ -134,4 +134,4 @@ typedef enum _ocsd_armv7_exception {
 
 #endif // ARM_TRC_PKT_TYPES_H_INCLUDED
 
-/* End of File trc_pkt_types.h */
+/* End of File opencsd/trc_pkt_types.h */

@@ -36,7 +36,7 @@
 #ifndef ARM_TRC_ERROR_LOG_I_H_INCLUDED
 #define ARM_TRC_ERROR_LOG_I_H_INCLUDED
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 #include <string>
 
 class ocsdError;

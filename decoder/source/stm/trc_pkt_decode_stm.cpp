@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "stm/trc_pkt_decode_stm.h"
+#include "opencsd/stm/trc_pkt_decode_stm.h"
 #define DCD_NAME "DCD_STM"
 
 TrcPktDecodeStm::TrcPktDecodeStm()

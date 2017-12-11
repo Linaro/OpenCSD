@@ -35,7 +35,7 @@
 #define ARM_EXT_DCD_ECHO_TEST_H_INCLUDED
 
 #include <inttypes.h>
-#include "c_api/ocsd_c_api_custom.h"
+#include "opencsd/c_api/ocsd_c_api_custom.h"
 
 /*
  Echo test decoder designed  to test the external decoder C - API infrastructure.

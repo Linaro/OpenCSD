@@ -35,9 +35,9 @@
 #ifndef ARM_TRC_PKT_PROC_ETMV4I_IMPL_H_INCLUDED
 #define ARM_TRC_PKT_PROC_ETMV4I_IMPL_H_INCLUDED
 
-#include "etmv4/trc_pkt_proc_etmv4.h"
-#include "etmv4/trc_cmp_cfg_etmv4.h"
-#include "etmv4/trc_pkt_elem_etmv4i.h"
+#include "opencsd/etmv4/trc_pkt_proc_etmv4.h"
+#include "opencsd/etmv4/trc_cmp_cfg_etmv4.h"
+#include "opencsd/etmv4/trc_pkt_elem_etmv4i.h"
 
 class EtmV4IPktProcImpl
 {

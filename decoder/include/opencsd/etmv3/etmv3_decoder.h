@@ -36,11 +36,11 @@
 #ifndef ARM_ETMV3_DECODER_H_INCLUDED
 #define ARM_ETMV3_DECODER_H_INCLUDED
 
-#include "etmv3/trc_cmp_cfg_etmv3.h"
-#include "etmv3/trc_pkt_elem_etmv3.h"
-#include "etmv3/trc_pkt_proc_etmv3.h"
-#include "etmv3/trc_pkt_types_etmv3.h"
-#include "etmv3/trc_pkt_decode_etmv3.h"
+#include "opencsd/etmv3/trc_cmp_cfg_etmv3.h"
+#include "opencsd/etmv3/trc_pkt_elem_etmv3.h"
+#include "opencsd/etmv3/trc_pkt_proc_etmv3.h"
+#include "opencsd/etmv3/trc_pkt_types_etmv3.h"
+#include "opencsd/etmv3/trc_pkt_decode_etmv3.h"
 
 #endif // ARM_ETMV3_DECODER_H_INCLUDED
 

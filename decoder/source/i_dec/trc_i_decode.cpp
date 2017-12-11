@@ -32,7 +32,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 #include "i_dec/trc_i_decode.h"
 #include "i_dec/trc_idec_arminst.h"
 

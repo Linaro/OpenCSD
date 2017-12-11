@@ -33,7 +33,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
 
-#include "etmv4/trc_pkt_elem_etmv4d.h"
+#include "opencsd/etmv4/trc_pkt_elem_etmv4d.h"
 
 EtmV4DTrcPacket::EtmV4DTrcPacket()
 {

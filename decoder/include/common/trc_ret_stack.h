@@ -35,7 +35,7 @@
 #ifndef ARM_TRC_RET_STACK_H_INCLUDED
 #define ARM_TRC_RET_STACK_H_INCLUDED
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 
 // uncomment below for return stack logging
 // #define TRC_RET_STACK_DEBUG

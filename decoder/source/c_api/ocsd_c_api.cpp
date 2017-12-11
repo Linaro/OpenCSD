@@ -38,7 +38,7 @@
 #include "opencsd.h"
 
 /* C-API and wrapper objects */
-#include "c_api/opencsd_c_api.h"
+#include "opencsd/c_api/opencsd_c_api.h"
 #include "ocsd_c_api_obj.h"
 
 /** MSVC2010 unwanted export workaround */

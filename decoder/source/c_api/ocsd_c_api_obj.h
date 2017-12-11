@@ -8,7 +8,7 @@
 #ifndef ARM_OCSD_C_API_OBJ_H_INCLUDED
 #define ARM_OCSD_C_API_OBJ_H_INCLUDED
 
-#include "c_api/ocsd_c_api_types.h"
+#include "opencsd/c_api/ocsd_c_api_types.h"
 #include "interfaces/trc_gen_elem_in_i.h"
 #include "common/ocsd_msg_logger.h" 
 

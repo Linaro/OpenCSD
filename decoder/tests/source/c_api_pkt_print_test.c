@@ -53,7 +53,7 @@
 #include <stdlib.h>
 
 /* include the C-API library header */
-#include "c_api/opencsd_c_api.h"
+#include "opencsd/c_api/opencsd_c_api.h"
 
 /* include the test external decoder factory and decoder types headers 
    - separate from the main library includes by definition as external decoder. 

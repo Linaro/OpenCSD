@@ -33,7 +33,7 @@
  */ 
 
 #include <sstream>
-#include "ptm/trc_pkt_decode_ptm.h"
+#include "opencsd/ptm/trc_pkt_decode_ptm.h"
 
 #define DCD_NAME "DCD_PTM"
 

@@ -35,8 +35,8 @@
 #define ARM_TRC_PKT_DECODE_PTM_H_INCLUDED
 
 #include "common/trc_pkt_decode_base.h"
-#include "ptm/trc_pkt_elem_ptm.h"
-#include "ptm/trc_cmp_cfg_ptm.h"
+#include "opencsd/ptm/trc_pkt_elem_ptm.h"
+#include "opencsd/ptm/trc_cmp_cfg_ptm.h"
 #include "common/trc_gen_elem.h"
 #include "common/trc_ret_stack.h"
 

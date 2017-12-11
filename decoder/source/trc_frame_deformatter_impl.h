@@ -35,7 +35,7 @@
 #ifndef ARM_TRC_FRAME_DECODER_IMPL_H_INCLUDED
 #define ARM_TRC_FRAME_DECODER_IMPL_H_INCLUDED
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 #include "common/comp_attach_pt_t.h"
 #include "interfaces/trc_data_raw_in_i.h"
 #include "interfaces/trc_data_rawframe_in_i.h"

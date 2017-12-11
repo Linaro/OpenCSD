@@ -36,9 +36,9 @@
 #ifndef ARM_TRC_PKT_PROC_ETMV3_IMPL_H_INCLUDED
 #define ARM_TRC_PKT_PROC_ETMV3_IMPL_H_INCLUDED
 
-#include "etmv3/trc_pkt_proc_etmv3.h"
-#include "etmv3/trc_cmp_cfg_etmv3.h"
-#include "etmv3/trc_pkt_elem_etmv3.h"
+#include "opencsd/etmv3/trc_pkt_proc_etmv3.h"
+#include "opencsd/etmv3/trc_cmp_cfg_etmv3.h"
+#include "opencsd/etmv3/trc_pkt_elem_etmv3.h"
 
 #define MAX_PACKET_SIZE 32
 #define ASYNC_SIZE 6

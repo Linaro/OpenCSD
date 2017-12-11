@@ -35,7 +35,7 @@
 /* pull in the C++ decode library */
 #include "opencsd.h"
 
-#include "c_api/opencsd_c_api.h"
+#include "opencsd/c_api/opencsd_c_api.h"
 #include "ocsd_c_api_custom_obj.h"
 #include "common/ocsd_lib_dcd_register.h"
 

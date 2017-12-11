@@ -39,7 +39,7 @@
 #define __STDC_CONSTANT_MACROS 1
 #endif
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 #include <cstdint>
 
 /*

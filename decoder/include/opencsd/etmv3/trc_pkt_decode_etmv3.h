@@ -41,8 +41,8 @@
 #include "common/ocsd_code_follower.h"
 #include "common/ocsd_gen_elem_list.h"
 
-#include "etmv3/trc_pkt_elem_etmv3.h"
-#include "etmv3/trc_cmp_cfg_etmv3.h"
+#include "opencsd/etmv3/trc_pkt_elem_etmv3.h"
+#include "opencsd/etmv3/trc_cmp_cfg_etmv3.h"
 
 /**************** Atom handling class **************************************/
 class Etmv3Atoms

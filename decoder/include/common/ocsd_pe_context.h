@@ -34,7 +34,7 @@
 #ifndef ARM_OCSD_PE_CONTEXT_H_INCLUDED
 #define ARM_OCSD_PE_CONTEXT_H_INCLUDED
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 
 /*! @class OcsdPeContext 
  *  @brief Handler for the ocsd_pe_context structure.

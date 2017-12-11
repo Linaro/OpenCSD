@@ -34,7 +34,7 @@
 #ifndef ARM_TRC_PKT_TYPES_STM_H_INCLUDED
 #define ARM_TRC_PKT_TYPES_STM_H_INCLUDED
 
-#include "trc_pkt_types.h"
+#include "opencsd/trc_pkt_types.h"
 
 /** @addtogroup trc_pkts
 @{*/

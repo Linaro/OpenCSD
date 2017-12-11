@@ -36,7 +36,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "ptm/trc_pkt_elem_ptm.h"
+#include "opencsd/ptm/trc_pkt_elem_ptm.h"
 
 PtmTrcPacket::PtmTrcPacket()
 {

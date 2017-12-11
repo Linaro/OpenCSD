@@ -34,7 +34,7 @@
 
 #include <sstream>
 #include <iomanip>
-#include "stm/trc_pkt_elem_stm.h"
+#include "opencsd/stm/trc_pkt_elem_stm.h"
 
 StmTrcPacket::StmTrcPacket()
 {

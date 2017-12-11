@@ -35,7 +35,7 @@
 #define ARM_TRC_I_DECODE_H_INCLUDED
 
 #include "interfaces/trc_instr_decode_i.h"
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 
 class TrcIDecode : public IInstrDecode  
 {

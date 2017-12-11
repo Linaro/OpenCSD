@@ -37,7 +37,7 @@
 
 #include <vector>
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 #include "interfaces/trc_tgt_mem_access_i.h"
 #include "interfaces/trc_error_log_i.h"
 #include "mem_acc/trc_mem_acc_base.h"

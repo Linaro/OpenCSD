@@ -36,7 +36,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "etmv3/trc_pkt_elem_etmv3.h"
+#include "opencsd/etmv3/trc_pkt_elem_etmv3.h"
 
 EtmV3TrcPacket::EtmV3TrcPacket()
 {

@@ -35,7 +35,7 @@
 #ifndef ARM_OCSD_DCD_MNGR_I_H_INCLUDED
 #define ARM_OCSD_DCD_MNGR_I_H_INCLUDED
 
-#include "ocsd_if_types.h"
+#include "opencsd/ocsd_if_types.h"
 #include "common/trc_cs_config.h"
 #include "common/trc_component.h"
 

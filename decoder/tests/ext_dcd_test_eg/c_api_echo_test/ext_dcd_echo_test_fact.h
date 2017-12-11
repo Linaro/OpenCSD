@@ -39,7 +39,7 @@
    back with a simple "protocol" decoded - not based on real protocol.
   */
 
-#include "c_api/ocsd_c_api_custom.h"
+#include "opencsd/c_api/ocsd_c_api_custom.h"
 
 /* return an initialised structure with the factory functions */
 extern ocsd_extern_dcd_fact_t *ext_echo_get_dcd_fact();
