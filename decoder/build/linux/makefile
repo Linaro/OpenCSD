@@ -61,11 +61,18 @@ export OCSD_SOURCE=$(OCSD_ROOT)/source
 
 export OCSD_TESTS=$(OCSD_ROOT)/tests
 
+export LIB_UAPI_INC_DIR=opencsd
+
 # tools
 export MASTER_CC=$(CROSS_COMPILE)gcc
 export MASTER_CPP=$(CROSS_COMPILE)g++
 export MASTER_LINKER=$(CROSS_COMPILE)g++
 export MASTER_LIB=$(CROSS_COMPILE)ar
+INSTALL=install
+
+# installation directory
+INSTALL_LIB_DIR=/usr/lib/
+export INSTALL_INCLUDE_DIR=/usr/include/
 
 # compile flags
 MASTER_CC_FLAGS := -c -Wall -DLINUX
@@ -125,6 +132,11 @@ all: libs tests
 
 libs: $(LIB_BASE_NAME)_lib  $(LIB_CAPI_NAME)_lib
 
+install: libs
+	$(INSTALL) --mode=644 $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so $(INSTALL_LIB_DIR)/
+	$(INSTALL) --mode=644 $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so $(INSTALL_LIB_DIR)/
+	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make install_inc
+
 ################################
 # build  OpenCSD trace decode library
 #
@@ -177,3 +189,8 @@ clean_tests:
 	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && make clean
 	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && make clean
 	cd $(OCSD_ROOT)/tests/build/linux/c_api_pkt_print_test && make clean
+
+clean_install:
+	rm -f $(INSTALL_LIB_DIR)/lib$(LIB_BASE_NAME).so
+	rm -f $(INSTALL_LIB_DIR)/lib$(LIB_CAPI_NAME).so
+	rm -rf $(INSTALL_INCLUDE_DIR)/$(LIB_UAPI_INC_DIR)

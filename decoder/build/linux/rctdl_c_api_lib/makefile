@@ -52,6 +52,8 @@ CPP_INCLUDES= \
 OBJECTS=$(BUILD_DIR)/ocsd_c_api.o \
 		$(BUILD_DIR)/ocsd_c_api_custom_obj.o
 
+INST_INC_SRC=$(OCSD_INCLUDE)/$(LIB_UAPI_INC_DIR)
+INST_INC_DST=$(INSTALL_INCLUDE_DIR)/$(LIB_UAPI_INC_DIR)
 
 all: build_dir $(OBJECTS)
 	mkdir -p $(LIB_TARGET_DIR)
@@ -80,3 +82,24 @@ clean:
 	rm -f $(DEPS)
 	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).a
 	rm -f $(LIB_TARGET_DIR)/$(LIB_NAME).so
+
+#### install the necessary include files for the c-api library on linux 
+install_inc:
+	mkdir -p $(INST_INC_DST)/
+	cp -d $(INST_INC_SRC)/trc_gen_elem_types.h $(INST_INC_DST)/.
+	cp -d $(INST_INC_SRC)/ocsd_if_types.h $(INST_INC_DST)/.
+	cp -d $(INST_INC_SRC)/trc_pkt_types.h $(INST_INC_DST)/.
+	mkdir -p $(INST_INC_DST)/ptm
+	cp -d $(INST_INC_SRC)/ptm/trc_pkt_types_ptm.h $(INST_INC_DST)/ptm/.
+	mkdir -p $(INST_INC_DST)/stm
+	cp -d $(INST_INC_SRC)/stm/trc_pkt_types_stm.h $(INST_INC_DST)/stm/.
+	mkdir -p $(INST_INC_DST)/etmv3
+	cp -d $(INST_INC_SRC)/etmv3/trc_pkt_types_etmv3.h $(INST_INC_DST)/etmv3/.
+	mkdir -p $(INST_INC_DST)/etmv4
+	cp -d $(INST_INC_SRC)/etmv4/trc_pkt_types_etmv4.h $(INST_INC_DST)/etmv4/.
+	mkdir -p $(INST_INC_DST)/c_api
+	cp -d $(INST_INC_SRC)/c_api/ocsd_c_api_types.h $(INST_INC_DST)/c_api/.
+	cp -d $(INST_INC_SRC)/c_api/opencsd_c_api.h $(INST_INC_DST)/c_api/.
+	cp -d $(INST_INC_SRC)/c_api/ocsd_c_api_custom.h $(INST_INC_DST)/c_api/.
+
+
