@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.7.5_
+_Current Version 0.8.0_
 
 ### Current support:
 
@@ -112,6 +112,8 @@ Version and Modification Information
 - _Version 0.7.3_:  Bugfix: PTM decoder - issues with initialisation and ASYNC detection.
 - _Version 0.7.4_:  Notification of change of repository for perf extensions. gcc 6.x build fixes.
 - _Version 0.7.5_:  Bugfix: ETMv4 decoder memory leak. Linux build update - header dependencies force rebuild.
+- _Version 0.8.0_:  Header restructure and build update to enable linux version to install library and C-API headers in standard locations.
+                    Library output naming changed from 'cstraced' to 'opencsd'.
 
 Licence Information
 ===================
