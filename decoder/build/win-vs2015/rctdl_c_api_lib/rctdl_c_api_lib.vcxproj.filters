@@ -15,25 +15,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_types.h">
+    <ClInclude Include="..\..\..\include\opencsd\c_api\ocsd_c_api_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\c_api\opencsd_c_api.h">
+    <ClInclude Include="..\..\..\include\opencsd\c_api\opencsd_c_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\source\c_api\ocsd_c_api_obj.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_custom.h">
+    <ClInclude Include="..\..\..\include\opencsd\c_api\ocsd_c_api_custom.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\source\c_api\ocsd_c_api_custom_obj.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_cust_fact.h">
+    <ClInclude Include="..\..\..\include\opencsd\c_api\ocsd_c_api_cust_fact.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\c_api\ocsd_c_api_cust_impl.h">
+    <ClInclude Include="..\..\..\include\opencsd\c_api\ocsd_c_api_cust_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

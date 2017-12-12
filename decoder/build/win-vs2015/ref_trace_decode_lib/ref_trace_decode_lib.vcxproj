@@ -39,6 +39,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ref_trace_decode_lib</RootNamespace>
     <ProjectName>opencsd_lib</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -164,6 +165,7 @@
     <OutDir>..\..\..\lib\win$(PlatformArchitecture)\dbg\</OutDir>
     <TargetName>lib$(LIB_BASE_NAME)</TargetName>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -335,22 +337,22 @@
     <ClInclude Include="..\..\..\include\common\trc_pkt_proc_base.h" />
     <ClInclude Include="..\..\..\include\common\trc_printable_elem.h" />
     <ClInclude Include="..\..\..\include\common\trc_ret_stack.h" />
-    <ClInclude Include="..\..\..\include\etmv3\etmv3_decoder.h" />
-    <ClInclude Include="..\..\..\include\etmv3\trc_cmp_cfg_etmv3.h" />
-    <ClInclude Include="..\..\..\include\etmv3\trc_dcd_mngr_etmv3.h" />
-    <ClInclude Include="..\..\..\include\etmv3\trc_pkt_decode_etmv3.h" />
-    <ClInclude Include="..\..\..\include\etmv3\trc_pkt_elem_etmv3.h" />
-    <ClInclude Include="..\..\..\include\etmv3\trc_pkt_proc_etmv3.h" />
-    <ClInclude Include="..\..\..\include\etmv3\trc_pkt_types_etmv3.h" />
-    <ClInclude Include="..\..\..\include\etmv4\etmv4_decoder.h" />
-    <ClInclude Include="..\..\..\include\etmv4\trc_cmp_cfg_etmv4.h" />
-    <ClInclude Include="..\..\..\include\etmv4\trc_dcd_mngr_etmv4i.h" />
-    <ClInclude Include="..\..\..\include\etmv4\trc_etmv4_stack_elem.h" />
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_decode_etmv4i.h" />
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_elem_etmv4d.h" />
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_elem_etmv4i.h" />
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_proc_etmv4.h" />
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_types_etmv4.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\etmv3_decoder.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_cmp_cfg_etmv3.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_dcd_mngr_etmv3.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_pkt_decode_etmv3.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_pkt_elem_etmv3.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_pkt_proc_etmv3.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_pkt_types_etmv3.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\etmv4_decoder.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_cmp_cfg_etmv4.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_dcd_mngr_etmv4i.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_etmv4_stack_elem.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_decode_etmv4i.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_elem_etmv4d.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_elem_etmv4i.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_proc_etmv4.h" />
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_types_etmv4.h" />
     <ClInclude Include="..\..\..\include\interfaces\trc_abs_typed_base_i.h" />
     <ClInclude Include="..\..\..\include\interfaces\trc_data_rawframe_in_i.h" />
     <ClInclude Include="..\..\..\include\interfaces\trc_data_raw_in_i.h" />
@@ -371,7 +373,7 @@
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb_if.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_file.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_mapper.h" />
-    <ClInclude Include="..\..\..\include\ocsd_if_types.h" />
+    <ClInclude Include="..\..\..\include\opencsd\ocsd_if_types.h" />
     <ClInclude Include="..\..\..\include\ocsd_if_version.h" />
     <ClInclude Include="..\..\..\include\opencsd.h" />
     <ClInclude Include="..\..\..\include\pkt_printers\gen_elem_printer.h" />
@@ -380,22 +382,22 @@
     <ClInclude Include="..\..\..\include\pkt_printers\raw_frame_printer.h" />
     <ClInclude Include="..\..\..\include\pkt_printers\trc_pkt_printers.h" />
     <ClInclude Include="..\..\..\include\pkt_printers\trc_print_fact.h" />
-    <ClInclude Include="..\..\..\include\ptm\ptm_decoder.h" />
-    <ClInclude Include="..\..\..\include\ptm\trc_cmp_cfg_ptm.h" />
-    <ClInclude Include="..\..\..\include\ptm\trc_dcd_mngr_ptm.h" />
-    <ClInclude Include="..\..\..\include\ptm\trc_pkt_decode_ptm.h" />
-    <ClInclude Include="..\..\..\include\ptm\trc_pkt_elem_ptm.h" />
-    <ClInclude Include="..\..\..\include\ptm\trc_pkt_proc_ptm.h" />
-    <ClInclude Include="..\..\..\include\ptm\trc_pkt_types_ptm.h" />
-    <ClInclude Include="..\..\..\include\stm\stm_decoder.h" />
-    <ClInclude Include="..\..\..\include\stm\trc_cmp_cfg_stm.h" />
-    <ClInclude Include="..\..\..\include\stm\trc_dcd_mngr_stm.h" />
-    <ClInclude Include="..\..\..\include\stm\trc_pkt_decode_stm.h" />
-    <ClInclude Include="..\..\..\include\stm\trc_pkt_elem_stm.h" />
-    <ClInclude Include="..\..\..\include\stm\trc_pkt_proc_stm.h" />
-    <ClInclude Include="..\..\..\include\stm\trc_pkt_types_stm.h" />
-    <ClInclude Include="..\..\..\include\trc_gen_elem_types.h" />
-    <ClInclude Include="..\..\..\include\trc_pkt_types.h" />
+    <ClInclude Include="..\..\..\include\opencsd\ptm\ptm_decoder.h" />
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_cmp_cfg_ptm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_dcd_mngr_ptm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_pkt_decode_ptm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_pkt_elem_ptm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_pkt_proc_ptm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_pkt_types_ptm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\stm\stm_decoder.h" />
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_cmp_cfg_stm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_dcd_mngr_stm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_pkt_decode_stm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_pkt_elem_stm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_pkt_proc_stm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_pkt_types_stm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\trc_gen_elem_types.h" />
+    <ClInclude Include="..\..\..\include\opencsd\trc_pkt_types.h" />
     <ClInclude Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.h" />
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4d_impl.h" />
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.h" />

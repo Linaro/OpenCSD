@@ -122,52 +122,52 @@
     <ClInclude Include="..\..\..\include\interfaces\trc_data_rawframe_in_i.h">
       <Filter>interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv3\etmv3_decoder.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\etmv3_decoder.h">
       <Filter>Header Files\etmv3</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv3\trc_pkt_elem_etmv3.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_pkt_elem_etmv3.h">
       <Filter>Header Files\etmv3</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv3\trc_cmp_cfg_etmv3.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_cmp_cfg_etmv3.h">
       <Filter>Header Files\etmv3</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv3\trc_pkt_proc_etmv3.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_pkt_proc_etmv3.h">
       <Filter>Header Files\etmv3</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv3\trc_pkt_types_etmv3.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_pkt_types_etmv3.h">
       <Filter>Header Files\etmv3</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_proc_etmv4.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_proc_etmv4.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_types_etmv4.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_types_etmv4.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_elem_etmv4d.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_elem_etmv4d.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_elem_etmv4i.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_elem_etmv4i.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv4\trc_cmp_cfg_etmv4.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_cmp_cfg_etmv4.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv4\etmv4_decoder.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\etmv4_decoder.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\ptm\trc_pkt_elem_ptm.h">
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_pkt_elem_ptm.h">
       <Filter>Header Files\ptm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\ptm\trc_cmp_cfg_ptm.h">
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_cmp_cfg_ptm.h">
       <Filter>Header Files\ptm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\ptm\trc_pkt_types_ptm.h">
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_pkt_types_ptm.h">
       <Filter>Header Files\ptm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\ptm\trc_pkt_proc_ptm.h">
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_pkt_proc_ptm.h">
       <Filter>Header Files\ptm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\ptm\ptm_decoder.h">
+    <ClInclude Include="..\..\..\include\opencsd\ptm\ptm_decoder.h">
       <Filter>Header Files\ptm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_base.h">
@@ -188,28 +188,28 @@
     <ClInclude Include="..\..\..\include\i_dec\trc_i_decode.h">
       <Filter>Header Files\i_dec</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv4\trc_pkt_decode_etmv4i.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_decode_etmv4i.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc.h">
       <Filter>Header Files\mem_acc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\stm\stm_decoder.h">
+    <ClInclude Include="..\..\..\include\opencsd\stm\stm_decoder.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\stm\trc_pkt_elem_stm.h">
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_pkt_elem_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\stm\trc_cmp_cfg_stm.h">
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_cmp_cfg_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\stm\trc_pkt_proc_stm.h">
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_pkt_proc_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\stm\trc_pkt_types_stm.h">
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_pkt_types_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv3\trc_pkt_decode_etmv3.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_pkt_decode_etmv3.h">
       <Filter>Header Files\etmv3</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb_if.h">
@@ -218,7 +218,7 @@
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb.h">
       <Filter>Header Files\mem_acc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\ptm\trc_pkt_decode_ptm.h">
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_pkt_decode_ptm.h">
       <Filter>Header Files\ptm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4d_impl.h">
@@ -275,16 +275,7 @@
     <ClInclude Include="..\..\..\include\common\trc_printable_elem.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\ocsd_if_types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\opencsd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\trc_gen_elem_types.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\trc_pkt_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\common\ocsd_pe_context.h">
@@ -311,22 +302,22 @@
     <ClInclude Include="..\..\..\include\interfaces\trc_abs_typed_base_i.h">
       <Filter>interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv4\trc_dcd_mngr_etmv4i.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_dcd_mngr_etmv4i.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv3\trc_dcd_mngr_etmv3.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv3\trc_dcd_mngr_etmv3.h">
       <Filter>Source Files\etmv3</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\ptm\trc_dcd_mngr_ptm.h">
+    <ClInclude Include="..\..\..\include\opencsd\ptm\trc_dcd_mngr_ptm.h">
       <Filter>Header Files\ptm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\stm\trc_dcd_mngr_stm.h">
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_dcd_mngr_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\common\trc_pkt_elem_base.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\stm\trc_pkt_decode_stm.h">
+    <ClInclude Include="..\..\..\include\opencsd\stm\trc_pkt_decode_stm.h">
       <Filter>Header Files\stm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\ocsd_if_version.h">
@@ -353,8 +344,17 @@
     <ClInclude Include="..\..\..\include\common\trc_ret_stack.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\etmv4\trc_etmv4_stack_elem.h">
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_etmv4_stack_elem.h">
       <Filter>Header Files\etmv4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\ocsd_if_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\trc_gen_elem_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\trc_pkt_types.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
