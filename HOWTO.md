@@ -244,11 +244,11 @@ have also been collected.
 
 Off Target OpenCSD Compilation
 ------------------------------
-As of this writing the openCSD library is not part of the perf tools source.
-It is available on [github][1] and needs to be compiled before perf. Checkout the
+The openCSD library is not part of the perf tools.  It is available on
+[github][1] and needs to be compiled before the perf tools. Checkout the
 required branch/tag version into a local directory.
 
-    linaro@t430:~/linaro/coresight$ git clone -b v0.4.1 https://github.com/Linaro/OpenCSD.git my-opencsd
+    linaro@t430:~/linaro/coresight$ git clone -b v0.8 https://github.com/Linaro/OpenCSD.git my-opencsd
     Cloning into 'OpenCSD'...
     remote: Counting objects: 2063, done.
     remote: Total 2063 (delta 0), reused 0 (delta 0), pack-reused 2063
@@ -271,42 +271,91 @@ the host's (which has nothing to do with the target) architecture:
     ...
 
     linaro@t430:~/linaro/coresight/my-opencsd/decoder/build/linux$ ls ../../lib/linux64/dbg/
-    libcstraced.a  libcstraced_c_api.a  libcstraced_c_api.so  libcstraced.so 
+    libopencsd.a  libopencsd_c_api.a  libopencsd_c_api.so  libopencsd.so
+
+From there the header file and libraries need to be installed on the system,
+something that requires root privileges.  The default installation path is
+/usr/include/opencsd for the header files and /usr/lib/ for the libraries:
+
+    linaro@t430:~/linaro/coresight/my-opencsd/decoder/build/linux$ sudo make install
+    linaro@t430:~/linaro/coresight/my-opencsd/decoder/build/linux$ ls -l /usr/include/opencsd
+    total 60
+    drwxr-xr-x 2 root root  4096 Dec 12 10:19 c_api
+    drwxr-xr-x 2 root root  4096 Dec 12 10:19 etmv3
+    drwxr-xr-x 2 root root  4096 Dec 12 10:19 etmv4
+    -rw-r--r-- 1 root root 28049 Dec 12 10:19 ocsd_if_types.h
+    drwxr-xr-x 2 root root  4096 Dec 12 10:19 ptm
+    drwxr-xr-x 2 root root  4096 Dec 12 10:19 stm
+    -rw-r--r-- 1 root root  7264 Dec 12 10:19 trc_gen_elem_types.h
+    -rw-r--r-- 1 root root  3972 Dec 12 10:19 trc_pkt_types.h
+
+    linaro@t430:~/linaro/coresight/my-opencsd/decoder/build/linux$ ls -l /usr/lib/libopencsd*
+    -rw-r--r-- 1 root root  598720 Dec 12 10:19 /usr/lib/libopencsd_c_api.so
+    -rw-r--r-- 1 root root 4692200 Dec 12 10:19 /usr/lib/libopencsd.so
+
+A "clean_install" target is also available so that openCSD installed files can
+be removed from a system.  Going forward the goal is to have the openCSD library
+packaged as a Debian or RPM archive so that it can be installed from a
+distribution without having to be compiled.
 
 
 Off Target Perf Tools Compilation
 ---------------------------------
-As stated above not all the pieces of the solution have been upstreamed.  To
-get all the components the latest `perf-opencsd-master` needs to be
-obtained:
+As mentionned above the openCSD library is not part of the perf tools' code base
+and needs to be installed on a system prior to compilation.  Information about
+the status of the openCSD library on a system is given at compile time by the
+perf tools build script:
 
-    linaro@t430:~/linaro/coresight$ git clone -b perf-opencsd-master https://github.com/Linaro/perf-opencsd.git perf-opencsd-master
-    ...
-    ...
+    linaro@t430:~/linaro/linux-kernel$ make -C tools/perf
+    Auto-detecting system features:
+    ...                         dwarf: [ on  ]
+    ...            dwarf_getlocations: [ on  ]
+    ...                         glibc: [ on  ]
+    ...                          gtk2: [ on  ]
+    ...                      libaudit: [ on  ]
+    ...                        libbfd: [ OFF ]
+    ...                        libelf: [ on  ]
+    ...                       libnuma: [ OFF ]
+    ...        numa_num_possible_cpus: [ OFF ]
+    ...                       libperl: [ on  ]
+    ...                     libpython: [ on  ]
+    ...                      libslang: [ on  ]
+    ...                     libcrypto: [ on  ]
+    ...                     libunwind: [ OFF ]
+    ...            libdw-dwarf-unwind: [ on  ]
+    ...                          zlib: [ on  ]
+    ...                          lzma: [ OFF ]
+    ...                     get_cpuid: [ on  ]
+    ...                           bpf: [ on  ]
+    ...                    libopencsd: [ on  ]  <-------
 
-    linaro@t430:~/linaro/coresight$ ls perf-opencsd-master/
-    arch   certs    CREDITS  Documentation  firmware  include  ipc     Kconfig  lib          Makefile  net     REPORTING-BUGS  scripts   sound  usr
-    block  COPYING  crypto   drivers        fs        init     Kbuild  kernel   MAINTAINERS  mm        README  samples         security  tools  virt 
 
-Since the openCSD library is not part of the perf tools, an environment
-variable telling the build scripts where to find the library is needed.  If
-the `CSTRACE_PATH` variable is not defined the compilation will still be
-successful, but handling of CoreSight trace data won't be supported.
+At the end of the compilation a new perf binary is available in `tools/perf/`:
 
-**See perf-test-scripts below for assistance in creating a build and test enviroment.**
+    linaro@t430:~/linaro/linux-kernel$ ldd tools/perf/perf
+	linux-vdso.so.1 =>  (0x00007fff135db000)
+	libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f15f9176000)
+	librt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x00007f15f8f6e000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f15f8c64000)
+	libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f15f8a60000)
+	libopencsd_c_api.so => /usr/lib/libopencsd_c_api.so (0x00007f15f884e000)   <-------
+	libelf.so.1 => /usr/lib/x86_64-linux-gnu/libelf.so.1 (0x00007f15f8635000)
+	libdw.so.1 => /usr/lib/x86_64-linux-gnu/libdw.so.1 (0x00007f15f83ec000)
+	libaudit.so.1 => /lib/x86_64-linux-gnu/libaudit.so.1 (0x00007f15f81c5000)
+	libslang.so.2 => /lib/x86_64-linux-gnu/libslang.so.2 (0x00007f15f7e38000)
+	libperl.so.5.22 => /usr/lib/x86_64-linux-gnu/libperl.so.5.22 (0x00007f15f7a5d000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f15f7693000)
+	libpython2.7.so.1.0 => /usr/lib/x86_64-linux-gnu/libpython2.7.so.1.0 (0x00007f15f7104000)
+	libz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007f15f6eea000)
+	/lib64/ld-linux-x86-64.so.2 (0x0000559b88038000)
+	libopencsd.so => /usr/lib/libopencsd.so (0x00007f15f6c62000)    <-------
+	libstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007f15f68df000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f15f66c9000)
+	liblzma.so.5 => /lib/x86_64-linux-gnu/liblzma.so.5 (0x00007f15f64a6000)
+	libbz2.so.1.0 => /lib/x86_64-linux-gnu/libbz2.so.1.0 (0x00007f15f6296000)
+	libcrypt.so.1 => /lib/x86_64-linux-gnu/libcrypt.so.1 (0x00007f15f605e000)
+	libutil.so.1 => /lib/x86_64-linux-gnu/libutil.so.1 (0x00007f15f5e5a000)
 
-    linaro@t430:~/linaro/coresight$ cd perf-opencsd-master
-    linaro@t430:~/linaro/coresight/perf-opencsd-4.9$ export CSTRACE_PATH=~/linaro/coresight/my-opencsd/decoder
-    linaro@t430:~/linaro/coresight/perf-opencsd-4.9$ make -C tools/perf
-    ...
-    ...
-    linaro@t430:~/linaro/coresight/perf-opencsd-master ls -l tools/perf/perf
-    -rwxrwxr-x 1 linaro linaro 6276360 Mar  3 10:05 tools/perf/perf
-
-
-When compiling Perf, some perl libraries may not be present on the host system.
-Adding the "NO_LIBPERL=1" option will prevent the build script from complaining
-too much.
 
 Additional debug output from the decoder can be compiled in by setting the
 `CSTRACE_RAW` environment variable. Setting this to `packed` gets trace frame
@@ -316,8 +365,6 @@ output as follows:-
     Frame Data; Index    576;   ID_DATA[0x14]; d7 d6 d7 d6 d7 d6 d7 d6 fd fb d7 d6 d7 d6 e0
     
 Set to any other value will remove the RAW_PACKED lines.
-
-At the end of the compilation a new perf binary is available in `tools/perf/`
 
 
 Trace Decoding with Perf Report
@@ -347,7 +394,6 @@ to be sure everything is clean.
 
     linaro@t430:~/linaro/coresight/sept20$ rm -rf ~/.debug
     linaro@t430:~/linaro/coresight/sept20$ cp -dpR .debug ~/
-    linaro@t430:~/linaro/coresight/sept20$ export LD_LIBRARY_PATH=~/linaro/coresight/my-opencsd/decoder/lib/linux64/dbg/
     linaro@t430:~/linaro/coresight/sept20$ ../perf-opencsd-master/tools/perf/perf report --stdio
 
     # To display the perf.data header info, please use --header/--header-only options.
@@ -546,8 +592,11 @@ will add the --dump option to the end of the command line and run
 Generating coverage files for Feedback Directed Optimization: AutoFDO
 ---------------------------------------------------------------------
 
-Below is an example of using ARM ETM for autoFDO.  It requires autofdo
-(https://github.com/google/autofdo) and gcc version 5.  The bubble
+Below is an example of using ARM ETM for autoFDO. The updates to the perf
+support for this is experimental and available on the 'autoFDO' branch of
+the [perf-opencsd github repository][1].
+
+It also requires autofdo (https://github.com/google/autofdo) and gcc version 5.  The bubble
 sort example is from the AutoFDO tutorial (https://gcc.gnu.org/wiki/AutoFDO/Tutorial).
 
         $ gcc-5 -O3 sort.c -o sort_optimized
