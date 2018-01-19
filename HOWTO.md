@@ -306,7 +306,7 @@ and needs to be installed on a system prior to compilation.  Information about
 the status of the openCSD library on a system is given at compile time by the
 perf tools build script:
 
-    linaro@t430:~/linaro/linux-kernel$ make -C tools/perf
+    linaro@t430:~/linaro/linux-kernel$ make VF=1 -C tools/perf
     Auto-detecting system features:
     ...                         dwarf: [ on  ]
     ...            dwarf_getlocations: [ on  ]
