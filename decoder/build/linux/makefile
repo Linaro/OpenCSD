@@ -68,7 +68,7 @@ export MASTER_CC=$(CROSS_COMPILE)gcc
 export MASTER_CPP=$(CROSS_COMPILE)g++
 export MASTER_LINKER=$(CROSS_COMPILE)g++
 export MASTER_LIB=$(CROSS_COMPILE)ar
-INSTALL=install
+export INSTALL=install
 
 # installation directory
 INSTALL_LIB_DIR=/usr/lib/
