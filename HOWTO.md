@@ -366,6 +366,25 @@ output as follows:-
     
 Set to any other value will remove the RAW_PACKED lines.
 
+Working with a debug version of the openCSD library
+---------------------------------------------------
+When compiling the perf tools it is possible to reference another version of
+the openCSD library than the one installed on the system.  This is useful when
+working with multiple development trees or having the desire to keep system
+libraries intact.  Two environment variable are available to tell the perf tools
+build script where to get the header file and libraries, namely CSINCLUDES and
+CSLIBS:
+
+    linaro@t430:~/linaro/linux-kernel$ export CSINCLUDES=~/linaro/coresight/my-opencsd/decoder/include/
+    linaro@t430:~/linaro/linux-kernel$ export CSLIBS=~/linaro/coresight/my-opencsd/decoder/lib/linux64-rel/
+    linaro@t430:~/linaro/linux-kernel$ make VF=1 -C tools/perf
+
+This will have the effect of compiling and linking against the provided library.
+Since the system's openCSD library is in the loader's search patch the
+LD_LIBRARY_PATH environment variable needs to be set.
+
+    linaro@t430:~/linaro/linux-kernel$ export LD_LIBRARY_PATH=$CSLIBS
+
 
 Trace Decoding with Perf Report
 -------------------------------
