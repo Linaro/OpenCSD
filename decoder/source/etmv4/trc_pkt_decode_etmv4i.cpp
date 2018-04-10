@@ -371,7 +371,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
         {
             std::vector<uint32_t> params = { 0 };
             params[0] = m_curr_packet_in->getCC();
-            if (m_P0_stack.createParamElem(P0_EVENT, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
+            if (m_P0_stack.createParamElem(P0_CC, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
                 bAllocErr = true;
 
         }
@@ -387,7 +387,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             params[1] = (uint32_t)((ts >> 32) & 0xFFFFFFFF);
             if (bTSwithCC)
                 params[2] = m_curr_packet_in->getCC();
-            if (m_P0_stack.createParamElem(P0_EVENT, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
+            if (m_P0_stack.createParamElem(bTSwithCC ? P0_TS_CC : P0_TS, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
                 bAllocErr = true;
 
         }
@@ -757,7 +757,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::flushEOT()
 ocsd_datapath_resp_t TrcPktDecodeEtmV4I::outputCC(TrcStackElemParam *pParamElem)
 {
     m_output_elem.setType(OCSD_GEN_TRC_ELEM_CYCLE_COUNT);
-    m_output_elem.cycle_count = pParamElem->getParam(0);
+    m_output_elem.setCycleCount(pParamElem->getParam(0));
     return outputTraceElementIdx(pParamElem->getRootIndex(),m_output_elem);
 }
 

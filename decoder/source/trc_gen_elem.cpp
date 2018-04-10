@@ -150,6 +150,13 @@ void OcsdTraceElement::toString(std::string &str) const
             printSWInfoPkt(oss);
             break;
 
+        case OCSD_GEN_TRC_ELEM_EVENT:
+            if(trace_event.ev_type == EVENT_TRIGGER)
+                oss << " Trigger; ";
+            else if(trace_event.ev_type == EVENT_NUMBERED)
+                oss << " Numbered:" << std::dec << trace_event.ev_number << "; ";
+            break;
+
         default: break;
         }
         if(has_cc)
