@@ -63,12 +63,17 @@
 
 /* path to test snapshots, relative to tests/bin/<plat>/<dbg|rel> build output dir */
 #ifdef _WIN32
-const char *default_path_to_snapshot = "..\\..\\..\\snapshots\\juno_r1_1\\";
-const char *tc2_snapshot = "..\\..\\..\\snapshots\\TC2\\";
+const char *default_base_snapshot_path="..\\..\\..\\snapshots";
+const char *juno_snapshot = "\\juno_r1_1\\";
+const char *tc2_snapshot = "\\TC2\\";
 #else
-const char *default_path_to_snapshot = "../../../snapshots/juno_r1_1/";
-const char *tc2_snapshot = "../../../snapshots/TC2/";
+const char *default_base_snapshot_path = "../../snapshots";
+const char *juno_snapshot = "/juno_r1_1/";
+const char *tc2_snapshot = "/TC2/";
 #endif
+static const char *selected_snapshot;
+static const char *usr_snapshot_path = 0;
+#define MAX_TRACE_FILE_PATH_LEN 512
 
 /* trace data and memory file dump names and values - taken from snapshot metadata */
 const char *trace_data_filename = "cstrace.bin";
@@ -114,6 +119,7 @@ static int test_lib_printers = 0;
 static int process_cmd_line(int argc, char *argv[])
 {
     int idx = 1;
+    int len = 0;
 
     while(idx < argc)
     {
@@ -137,13 +143,13 @@ static int process_cmd_line(int argc, char *argv[])
         else if(strcmp(argv[idx],"-etmv3") == 0)
         {
             test_protocol =  OCSD_PROTOCOL_ETMV3;
-            default_path_to_snapshot = tc2_snapshot;
+            selected_snapshot = tc2_snapshot;
             mem_dump_address = mem_dump_address_tc2;
         }
         else if(strcmp(argv[idx],"-ptm") == 0)
         {
             test_protocol =  OCSD_PROTOCOL_PTM;
-            default_path_to_snapshot = tc2_snapshot;
+            selected_snapshot = tc2_snapshot;
             mem_dump_address = mem_dump_address_tc2;
         }
         else if(strcmp(argv[idx],"-stm") == 0)
@@ -181,6 +187,26 @@ static int process_cmd_line(int argc, char *argv[])
         {
             test_lib_printers = 1;
         }
+        else if(strcmp(argv[idx],"-ss_path") == 0)
+        {
+            idx++;
+            if((idx >= argc) || (strlen(argv[idx]) == 0))
+            {
+                printf("-ss_path: Missing path parameter or zero length\n");
+                return -1;
+            }
+            else
+            {
+                len = strlen(argv[idx]);
+                if(len >  (MAX_TRACE_FILE_PATH_LEN - 32))
+                {
+                    printf("-ss_path: path too long\n");
+                    return -1;
+                }
+                usr_snapshot_path = argv[idx];
+            }
+            
+        }
         else if(strcmp(argv[idx],"-help") == 0)
         {
             return -1;
@@ -200,6 +226,7 @@ static void print_cmd_line_help()
     printf("-raw / -raw_packed: print raw unpacked / packed data;\n");
     printf("-test_printstr | -test_libprint : ttest lib printstr callback | test lib based packet printers\n");
     printf("-test_region_file | -test_cb : mem accessor - test multi region file API | test callback API (default single memory file)\n\n");
+    printf("-ss_path <path> : path from cwd to /snapshots/ directory. Test prog will append required test subdir\n");
 }
 
 /************************************************************************/
@@ -290,15 +317,19 @@ static void destroy_mem_acc_cb(dcd_tree_handle_t dcd_tree_h)
 static ocsd_err_t create_test_memory_acc(dcd_tree_handle_t handle)
 {
     ocsd_err_t ret = OCSD_OK;
-    char mem_file_path[512];
+    char mem_file_path[MAX_TRACE_FILE_PATH_LEN];
     uint32_t i0adjust = 0x100;
     int i = 0;
-
+    
     /* region list to test multi region memory file API */
     ocsd_file_mem_region_t region_list[4];
 
     /* path to the file containing the memory image traced - raw binary data in the snapshot  */
-    strcpy(mem_file_path,default_path_to_snapshot);
+    if(usr_snapshot_path != 0)
+        strcpy(mem_file_path,usr_snapshot_path);
+    else
+        strcpy(mem_file_path,default_base_snapshot_path);
+    strcat(mem_file_path,selected_snapshot);
     strcat(mem_file_path,memory_dump_filename);
 
     /* 
@@ -899,9 +930,12 @@ int process_trace_data(FILE *pf)
 int main(int argc, char *argv[])
 {
     FILE *trace_data;
-    char trace_file_path[512];
+    char trace_file_path[MAX_TRACE_FILE_PATH_LEN];
     int ret = 0, i, len;
     char message[512];
+
+    /* default to juno */
+    selected_snapshot = juno_snapshot;
 
     /* command line params */
     if(process_cmd_line(argc,argv) != 0)
@@ -911,8 +945,13 @@ int main(int argc, char *argv[])
     }
     
     /* trace data file path */
-    strcpy(trace_file_path,default_path_to_snapshot);
+    if(usr_snapshot_path != 0)
+        strcpy(trace_file_path,usr_snapshot_path);
+    else
+        strcpy(trace_file_path,default_base_snapshot_path);
+    strcat(trace_file_path,selected_snapshot);
     strcat(trace_file_path,trace_data_filename);
+    printf("opening %s trace data file\n",trace_file_path);
     trace_data = fopen(trace_file_path,"rb");
 
     if(trace_data != NULL)
