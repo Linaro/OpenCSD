@@ -33,9 +33,7 @@
 #
 
 CC := $(MASTER_CC)
-CC_FLAGS := $(MASTER_CC_FLAGS) -Wno-switch
 LINKER := $(MASTER_LINKER)	
-LINKER_FLAGS := $(MASTER_LINKER_FLAGS) 
 
 PROG = c_api_pkt_print_test
 
@@ -60,7 +58,7 @@ test_app: 	$(OBJECTS) $(BIN_TEST_TARGET_DIR)/$(PROG)
 
  $(BIN_TEST_TARGET_DIR)/$(PROG):
 			mkdir -p  $(BIN_TEST_TARGET_DIR)
-			$(LINKER) $(LINKER_FLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
+			$(LINKER) $(LDFLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
 			cp $(LIB_TARGET_DIR)/*.so .
 
 build_dir:
@@ -81,12 +79,14 @@ DEPS := $(OBJECTS:%.o=%.d)
 
 ## object compile
 $(BUILD_DIR)/%.o : %.c
-			$(CC) $(CC_FLAGS) $(CC_INCLUDES) -MMD $< -o $@ 
+			$(CC) $(CFLAGS) $(CC_INCLUDES) -MMD $< -o $@ 
 
 #### clean
 .PHONY: clean
 clean :
-	rm -f  $(BIN_TEST_TARGET_DIR)/$(PROG) $(OBJECTS)
-	rm -f  $(DEPS)
+	-rm $(BIN_TEST_TARGET_DIR)/$(PROG) $(OBJECTS)
+	-rm $(DEPS)
+	-rm ./*.so
+	-rmdir $(BUILD_DIR)
 
 # end of file makefile

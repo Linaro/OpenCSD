@@ -32,10 +32,8 @@
 # RCTDL - test makefile for snapshot lister test.
 #
 
-CPP := $(MASTER_CPP)
-CPP_FLAGS := $(MASTER_CPP_FLAGS) -Wno-switch
+CXX := $(MASTER_CXX)
 LINKER := $(MASTER_LINKER)	
-LINKER_FLAGS := $(MASTER_LINKER_FLAGS) 
 
 PROG = trc_pkt_lister
 
@@ -43,7 +41,7 @@ BUILD_DIR=./$(PLAT_DIR)
 
 VPATH	=	 $(OCSD_TESTS)/source 
 
-CPP_INCLUDES	=	\
+CXX_INCLUDES	=	\
 			-I$(OCSD_TESTS)/source \
 			-I$(OCSD_INCLUDE) \
 			-I$(OCSD_TESTS)/snapshot_parser_lib/include
@@ -60,7 +58,7 @@ test_app: 	$(OBJECTS) $(BIN_TEST_TARGET_DIR)/$(PROG)
 
  $(BIN_TEST_TARGET_DIR)/$(PROG):
 			mkdir -p  $(BIN_TEST_TARGET_DIR)
-			$(LINKER) $(LINKER_FLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
+			$(LINKER) $(LDFLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
 
 build_dir:
 	mkdir -p $(BUILD_DIR)
@@ -68,7 +66,7 @@ build_dir:
 .PHONY: copy_libs
 
 copy_libs:
-	cp $(LIB_TARGET_DIR)/*.so $(BIN_TEST_TARGET_DIR)/.
+	cp $(LIB_TARGET_DIR)/*.so* $(BIN_TEST_TARGET_DIR)/.
 
 
 
@@ -80,12 +78,14 @@ DEPS := $(OBJECTS:%.o=%.d)
 
 ## object compile
 $(BUILD_DIR)/%.o : %.cpp
-			$(CPP) $(CPP_FLAGS) $(CPP_INCLUDES) -MMD $< -o $@
+			$(CXX) $(CXXFLAGS) $(CXX_INCLUDES) -MMD $< -o $@
 
 #### clean
 .PHONY: clean
 clean :
-			rm -f  $(BIN_TEST_TARGET_DIR)/$(PROG) $(OBJECTS)
-			rm -f  $(DEPS)
+	-rm $(BIN_TEST_TARGET_DIR)/$(PROG) $(OBJECTS)
+	-rm $(DEPS)
+	-rm $(BIN_TEST_TARGET_DIR)/*.so*
+	-rmdir $(BUILD_DIR)
 
 # end of file makefile
