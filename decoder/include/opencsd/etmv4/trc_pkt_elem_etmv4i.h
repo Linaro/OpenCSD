@@ -444,18 +444,20 @@ inline void EtmV4ITrcPacket::set32BitAddress(const uint32_t addr, const uint8_t 
     uint64_t mask = OCSD_BIT_MASK(32);
     v_addr.pkt_bits = 32;
 
-    if (pkt_valid.bits.context_valid && context.SF)
-        v_addr.size = VA_64BIT;
+	if (pkt_valid.bits.context_valid && context.SF)
+	{
+		v_addr.size = VA_64BIT;
+		if (v_addr.valid_bits < 32) // may be updating a 64 bit address so only set 32 if currently less.
+			v_addr.valid_bits = 32;
+		v_addr.val = (v_addr.val & ~mask) | (addr & mask);
+	}
     else
     {
-        v_addr.val &= 0xFFFFFFFF;   // ensure vaddr is only 32 bits if not 64 bit 
+		v_addr.val = addr;
         v_addr.size = VA_32BIT;
-    }
-
-    if (v_addr.valid_bits < 32) // may be 64 bit address so only set 32 if less
-        v_addr.valid_bits = 32;
-
-    v_addr.val = (v_addr.val & ~mask) | (addr & mask);
+		v_addr.valid_bits = 32;
+	}
+	    
     v_addr_ISA = IS;
     push_vaddr();
 }
