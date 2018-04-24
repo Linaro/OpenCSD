@@ -105,7 +105,8 @@ typedef struct _ocsd_generic_trace_elem {
         uint32_t exception_number;          /**< exception number for exception type packets */
         trace_event_t  trace_event;         /**< Trace event - trigger etc      */
         trace_on_reason_t trace_on_reason;  /**< reason for the trace on packet */
-        ocsd_swt_info_t sw_trace_info;       /**< software trace packet info    */
+        ocsd_swt_info_t sw_trace_info;      /**< software trace packet info    */
+		uint32_t num_instr_range;	        /**< number of instructions covered by range packet (for T32 this cannot be calculated from en-st/i_size) */
     };
 
     const void *ptr_extended_data;        /**< pointer to extended data buffer (data trace, sw trace payload) / custom structure */

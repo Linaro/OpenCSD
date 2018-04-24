@@ -73,7 +73,7 @@ public:
 
     void setTraceOnReason(const trace_on_reason_t reason);
 
-    void setAddrRange(const ocsd_vaddr_t  st_addr, const ocsd_vaddr_t en_addr);
+    void setAddrRange(const ocsd_vaddr_t  st_addr, const ocsd_vaddr_t en_addr, const int num_instr = 1);
     void setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype);
     void setAddrStart(const ocsd_vaddr_t  st_addr) { this->st_addr = st_addr; };
 
@@ -122,10 +122,11 @@ inline void OcsdTraceElement::setEvent(const event_t ev_type, const uint16_t num
     trace_event.ev_number = ev_type == EVENT_NUMBERED ? number : 0;
 }
 
-inline void OcsdTraceElement::setAddrRange(const ocsd_vaddr_t  st_addr, const ocsd_vaddr_t en_addr)
+inline void OcsdTraceElement::setAddrRange(const ocsd_vaddr_t  st_addr, const ocsd_vaddr_t en_addr, const int num_instr /* = 1 */)
 {
     this->st_addr = st_addr;
     this->en_addr = en_addr;
+    this->num_instr_range = num_instr;
 }
 
 inline void OcsdTraceElement::setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype)

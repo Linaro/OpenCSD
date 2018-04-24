@@ -612,6 +612,7 @@ ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const waypoint_trace_
     ocsd_mem_space_acc_t mem_space = (m_pe_context.security_level == ocsd_sec_secure) ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
 
     m_output_elem.st_addr = m_output_elem.en_addr = m_instr_info.instr_addr;
+    m_output_elem.num_instr_range = 0;
 
     bWPFound = false;
 
@@ -634,6 +635,7 @@ ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const waypoint_trace_
 
             // update the range decoded address in the output packet.
             m_output_elem.en_addr = m_instr_info.instr_addr;
+            m_output_elem.num_instr_range++;
 
             m_output_elem.last_i_type = m_instr_info.type;
             // either walking to match the next instruction address or a real waypoint

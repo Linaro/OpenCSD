@@ -1036,6 +1036,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceTo
     ocsd_mem_space_acc_t mem_space = m_is_secure ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
 
     m_output_elem.st_addr = m_output_elem.en_addr = m_instr_info.instr_addr;
+    m_output_elem.num_instr_range = 0;
 
     bWPFound = false;
 
@@ -1057,6 +1058,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceTo
 
             // update the range decoded address in the output packet.
             m_output_elem.en_addr = m_instr_info.instr_addr;
+            m_output_elem.num_instr_range++;
 
             // either walking to match the next instruction address or a real watchpoint
             if(traceToAddrNext)
@@ -1068,7 +1070,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceTo
         {
             // not enough memory accessible.
             m_mem_nacc_pending = true;
-            m_nacc_addr = m_instr_info.instr_addr;
+            m_nacc_addr = m_instr_info.instr_addr;           
         }
     }
     return err;
