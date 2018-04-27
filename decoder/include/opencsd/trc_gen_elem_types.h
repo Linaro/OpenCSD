@@ -58,7 +58,7 @@ typedef enum _ocsd_gen_trc_elem_t
     OCSD_GEN_TRC_ELEM_EXCEPTION_RET,   /*!< expection return */
     OCSD_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
     OCSD_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count - cycles since last cycle count value - associated with a preceding instruction range. */
-    OCSD_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger, (TBC - perhaps have a set of event types - cut down additional processing?)  */   
+    OCSD_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger or numbered event  */   
     OCSD_GEN_TRC_ELEM_SWTRACE,         /*!< Software trace packet - may contain data payload. */
     OCSD_GEN_TRC_ELEM_CUSTOM,          /*!< Fully custom packet type - used by none-ARM architecture decoders */
 } ocsd_gen_trc_elem_t;

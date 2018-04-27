@@ -73,11 +73,19 @@ Run `doxygen` on the `./doxygen_config.dox` file located in the `./docs` directo
 This will produce the documentation in the `./docs/html` directory. The doxygen configuration also includes
 the `*.md` files as part of the documentation.
 
+Application Programming using the Library
+-----------------------------------------
 
-Building the Library
---------------------
+See the [programmers guide](@ref prog_guide) for details on usage of the library in custom applications.
+(`./docs/prog_guide/prog_guide_main.md`).
+
+
+Building and Installing the Library
+-----------------------------------
 
 See [build_libs.md](@ref build_lib) in the `./docs` directory for build details.
+
+The linux build makefile now contains options to install the library for a linux environment.
 
 
 How the Library is used in Linux `perf`
@@ -119,6 +127,7 @@ Version and Modification Information
 - _Version 0.8.3_:  Bugfix: ETMv4 decoder issues fixed.
 - _Version 0.8.4_:  build: makefile updates and improvements to get build process compatible with Debian packaging.
 - _Version 0.9.0_:  Performance improvements for perf: Additional info in instruction range output packet. Caching memory accesses. 
+				    Added Programmers guide to documentation.
 
 
 Licence Information
