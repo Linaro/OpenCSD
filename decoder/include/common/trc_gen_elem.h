@@ -74,7 +74,7 @@ public:
     void setTraceOnReason(const trace_on_reason_t reason);
 
     void setAddrRange(const ocsd_vaddr_t  st_addr, const ocsd_vaddr_t en_addr, const int num_instr = 1);
-    void setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype);
+    void setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype, const uint8_t size);
     void setAddrStart(const ocsd_vaddr_t  st_addr) { this->st_addr = st_addr; };
 
     void setSWTInfo(const ocsd_swt_info_t swt_info) { sw_trace_info = swt_info; };
@@ -129,9 +129,10 @@ inline void OcsdTraceElement::setAddrRange(const ocsd_vaddr_t  st_addr, const oc
     this->num_instr_range = num_instr;
 }
 
-inline void OcsdTraceElement::setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype)
+inline void OcsdTraceElement::setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype, const uint8_t size)
 {
     last_instr_exec = exec ? 1 : 0;
+    last_instr_sz = size & 0x7;
     this->last_i_type = last_i_type;
     this->last_i_subtype = last_i_subtype;
 }

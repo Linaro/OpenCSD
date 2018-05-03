@@ -106,6 +106,7 @@ void OcsdTraceElement::toString(std::string &str) const
         case OCSD_GEN_TRC_ELEM_INSTR_RANGE:
             oss << "exec range=0x" << std::hex << st_addr << ":[0x" << en_addr << "] ";
             oss << "num_i(" << std::dec << num_instr_range << ") ";
+            oss << "last_sz(" << last_instr_sz << ") ";
             oss << "(ISA=" << s_isa_str[(int)isa] << ") ";
             oss << ((last_instr_exec == 1) ? "E " : "N ");
             if((int)last_i_type < T_SIZE)
