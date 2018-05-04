@@ -73,6 +73,7 @@ Performance event 0x0D counts these.
 */
 int inst_ARM_is_direct_branch(uint32_t inst);
 int inst_Thumb_is_direct_branch(uint32_t inst);
+int inst_Thumb_is_direct_branch_link(uint32_t inst, uint8_t *is_link, uint8_t *is_cond);
 int inst_A64_is_direct_branch(uint32_t inst);
 
 /*
@@ -83,6 +84,7 @@ int inst_Thumb_branch_destination(uint32_t addr, uint32_t inst, uint32_t *pnpc);
 int inst_A64_branch_destination(uint64_t addr, uint32_t inst, uint64_t *pnpc);
 
 int inst_ARM_is_indirect_branch(uint32_t inst);
+int inst_Thumb_is_indirect_branch_link(uint32_t inst, uint8_t *is_link);
 int inst_Thumb_is_indirect_branch(uint32_t inst);
 int inst_A64_is_indirect_branch(uint32_t inst);
 

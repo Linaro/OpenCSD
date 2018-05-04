@@ -172,20 +172,20 @@ ocsd_err_t TrcIDecode::DecodeT32(ocsd_instr_info *instr_info)
     instr_info->type =  OCSD_INSTR_OTHER;  // default type
     instr_info->next_isa = instr_info->isa; // assume same ISA 
     instr_info->is_link = 0;
+    instr_info->is_conditional = 0;
 
-    if(inst_Thumb_is_indirect_branch(instr_info->opcode))
-    {
-        instr_info->type = OCSD_INSTR_BR_INDIRECT;
-        instr_info->is_link = inst_Thumb_is_branch_and_link(instr_info->opcode);
-    }
-    else if(inst_Thumb_is_direct_branch(instr_info->opcode))
+
+    if(inst_Thumb_is_direct_branch_link(instr_info->opcode,&instr_info->is_link, &instr_info->is_conditional))
     {
         inst_Thumb_branch_destination((uint32_t)instr_info->instr_addr,instr_info->opcode,&branchAddr);
         instr_info->type = OCSD_INSTR_BR;
         instr_info->branch_addr = (ocsd_vaddr_t)(branchAddr & ~0x1);
         if((branchAddr & 0x1) == 0)
             instr_info->next_isa = ocsd_isa_arm;
-        instr_info->is_link = inst_Thumb_is_branch_and_link(instr_info->opcode);
+    }
+    else if (inst_Thumb_is_indirect_branch_link(instr_info->opcode, &instr_info->is_link))
+    {
+        instr_info->type = OCSD_INSTR_BR_INDIRECT;
     }
     else if((barrier = inst_Thumb_barrier(instr_info->opcode)) != ARM_BARRIER_NONE)
     {
@@ -202,8 +202,7 @@ ocsd_err_t TrcIDecode::DecodeT32(ocsd_instr_info *instr_info)
             break;
         }
     }
-
-    instr_info->is_conditional = inst_Thumb_is_conditional(instr_info->opcode);
+    
     instr_info->thumb_it_conditions = inst_Thumb_is_IT(instr_info->opcode);
 
     return OCSD_OK;

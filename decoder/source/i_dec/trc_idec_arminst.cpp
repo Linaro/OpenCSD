@@ -119,22 +119,37 @@ int inst_ARM_is_indirect_branch(uint32_t inst)
     return is_indirect_branch;
 }
 
-
 int inst_Thumb_is_direct_branch(uint32_t inst)
 {
+    uint8_t link, cond;
+    return inst_Thumb_is_direct_branch_link(inst, &link, &cond);
+}
+
+int inst_Thumb_is_direct_branch_link(uint32_t inst, uint8_t *is_link, uint8_t *is_cond)
+{
     int is_direct_branch = 1;
+
     if ((inst & 0xf0000000) == 0xd0000000 && (inst & 0x0e000000) != 0x0e000000) {
         /* B<c> (encoding T1) */
+        *is_cond = 1;
     } else if ((inst & 0xf8000000) == 0xe0000000) {
         /* B (encoding T2) */
     } else if ((inst & 0xf800d000) == 0xf0008000 && (inst & 0x03800000) != 0x03800000) {
         /* B (encoding T3) */
+        *is_cond = 1;
     } else if ((inst & 0xf8009000) == 0xf0009000) {
         /* B (encoding T4); BL (encoding T1) */
+        if (inst & 0x00004000) {
+            *is_link = 1;
+            instr_sub_type = OCSD_S_INSTR_BR_LINK;
+        }
     } else if ((inst & 0xf800d001) == 0xf000c000) {
         /* BLX (imm) (encoding T2) */
+        *is_link = 1;
+        instr_sub_type = OCSD_S_INSTR_BR_LINK;
     } else if ((inst & 0xf5000000) == 0xb1000000) {
         /* CB(NZ) */
+        *is_cond = 1;
     } else {
         is_direct_branch = 0;
     }
@@ -144,10 +159,21 @@ int inst_Thumb_is_direct_branch(uint32_t inst)
 
 int inst_Thumb_is_indirect_branch(uint32_t inst)
 {
+    uint8_t link;
+    return inst_Thumb_is_indirect_branch_link(inst, &link);
+}
+
+int inst_Thumb_is_indirect_branch_link(uint32_t inst, uint8_t *is_link)
+{
     /* See e.g. PFT Table 2-3 and Table 2-5 */
     int is_branch = 1;
+    
     if ((inst & 0xff000000) == 0x47000000) {
         /* BX, BLX (reg) */
+        if (inst & 0x00800000) {
+            *is_link = 1;
+            instr_sub_type = OCSD_S_INSTR_BR_LINK;
+        }
     } else if ((inst & 0xff000000) == 0xbd000000) {
         /* POP {pc} */
     } else if ((inst & 0xfd870000) == 0x44870000) {
