@@ -39,12 +39,17 @@
 /* mappers base class */
 /************************************************************************************/
 
+#define USING_MEM_ACC_CACHE
+
 TrcMemAccMapper::TrcMemAccMapper() :
     m_acc_curr(0),
     m_trace_id_curr(0),
     m_using_trace_id(false),
     m_err_log(0)
 {
+#ifdef USING_MEM_ACC_CACHE
+    m_cache.enableCaching(true);
+#endif
 }
 
 TrcMemAccMapper::TrcMemAccMapper(bool using_trace_id) : 
@@ -53,10 +58,19 @@ TrcMemAccMapper::TrcMemAccMapper(bool using_trace_id) :
     m_using_trace_id(using_trace_id),
     m_err_log(0)
 {
+#ifdef USING_MEM_ACC_CACHE
+    m_cache.enableCaching(true);
+#endif
 }
 
 TrcMemAccMapper::~TrcMemAccMapper()
 {
+}
+
+void TrcMemAccMapper::setErrorLog(ITraceErrorLog *err_log_i)
+{ 
+    m_err_log = err_log_i; 
+    m_cache.setErrorLog(err_log_i);
 }
 
 // memory access interface
@@ -65,8 +79,23 @@ ocsd_err_t TrcMemAccMapper::ReadTargetMemory(const ocsd_vaddr_t address, const u
     bool bReadFromCurr = true;
 
     /* see if the address is in any range we know */
-    if(!readFromCurrent(address,  mem_space, cs_trace_id))
-       bReadFromCurr = findAccessor(address,  mem_space, cs_trace_id);
+    if (!readFromCurrent(address, mem_space, cs_trace_id))
+    {
+        bReadFromCurr = findAccessor(address, mem_space, cs_trace_id);
+        if (m_cache.enabled())
+            m_cache.invalidateAll();
+    }
+
+    // read from cache - or load a new cache page and read....
+    if (m_cache.enabled())
+    {
+        uint32_t cacheBytes = m_cache.readBytesFromCache(m_acc_curr, address, mem_space, *num_bytes, p_buffer);
+        if (cacheBytes == *num_bytes)
+        {
+            *num_bytes = cacheBytes;
+            return OCSD_OK;
+        }
+    }
 
     /* if bReadFromCurr then we know m_acc_curr is set */
     if(bReadFromCurr)
@@ -84,8 +113,12 @@ void TrcMemAccMapper::RemoveAllAccessors()
     {
         TrcMemAccFactory::DestroyAccessor(pAcc);
         pAcc = getNextAccessor();
+        if (m_cache.enabled())
+            m_cache.invalidateAll();
     }
     clearAccessorList();
+    if (m_cache.enabled())
+        m_cache.logAndClearCounts();
 }
 
 ocsd_err_t TrcMemAccMapper::RemoveAccessorByAddress(const ocsd_vaddr_t st_address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id /* = 0 */)
@@ -95,9 +128,13 @@ ocsd_err_t TrcMemAccMapper::RemoveAccessorByAddress(const ocsd_vaddr_t st_addres
     {
         err = RemoveAccessor(m_acc_curr);
         m_acc_curr = 0;
+        if (m_cache.enabled())
+            m_cache.invalidateAll();
     }
     else
         err = OCSD_ERR_INVALID_PARAM_VAL;
+    if (m_cache.enabled())
+        m_cache.logAndClearCounts();
     return err;
 }
 

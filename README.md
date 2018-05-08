@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.8.4_
+_Current Version 0.9.0_
 
 ### Current support:
 
@@ -118,6 +118,7 @@ Version and Modification Information
 - _Version 0.8.2_:  Bugfix: C++ init errors fixed for CLANG build process.
 - _Version 0.8.3_:  Bugfix: ETMv4 decoder issues fixed.
 - _Version 0.8.4_:  build: makefile updates and improvements to get build process compatible with Debian packaging.
+- _Version 0.9.0_:  Performance improvements for perf: Additional info in instruction range output packet. Caching memory accesses. 
 
 
 Licence Information

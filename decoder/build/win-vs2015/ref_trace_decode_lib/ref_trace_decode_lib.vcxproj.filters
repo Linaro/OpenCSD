@@ -356,6 +356,9 @@
     <ClInclude Include="..\..\..\include\opencsd\trc_pkt_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cache.h">
+      <Filter>Header Files\mem_acc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -483,6 +486,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\etmv4\trc_etmv4_stack_elem.cpp">
       <Filter>Source Files\etmv4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_cache.cpp">
+      <Filter>Source Files\mem_acc</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

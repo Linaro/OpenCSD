@@ -78,7 +78,8 @@ MEMACCOBJ=	$(BUILD_DIR)/trc_mem_acc_mapper.o \
 			$(BUILD_DIR)/trc_mem_acc_bufptr.o \
 			$(BUILD_DIR)/trc_mem_acc_file.o \
 			$(BUILD_DIR)/trc_mem_acc_base.o \
-			$(BUILD_DIR)/trc_mem_acc_cb.o
+			$(BUILD_DIR)/trc_mem_acc_cb.o \
+			$(BUILD_DIR)/trc_mem_acc_cache.o
 
 STMOBJ=		$(BUILD_DIR)/trc_pkt_elem_stm.o \
 			$(BUILD_DIR)/trc_pkt_proc_stm.o \
