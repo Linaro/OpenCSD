@@ -82,26 +82,26 @@ ocsd_err_t TrcMemAccMapper::ReadTargetMemory(const ocsd_vaddr_t address, const u
     if (!readFromCurrent(address, mem_space, cs_trace_id))
     {
         bReadFromCurr = findAccessor(address, mem_space, cs_trace_id);
-        if (m_cache.enabled())
+
+        // found a new accessor - invalidate any cache entries used by the previous one.
+        if (m_cache.enabled() && bReadFromCurr)
             m_cache.invalidateAll();
     }
 
-    // read from cache - or load a new cache page and read....
-    if (m_cache.enabled())
-    {
-        uint32_t cacheBytes = m_cache.readBytesFromCache(m_acc_curr, address, mem_space, *num_bytes, p_buffer);
-        if (cacheBytes == *num_bytes)
-        {
-            *num_bytes = cacheBytes;
-            return OCSD_OK;
-        }
-    }
-
     /* if bReadFromCurr then we know m_acc_curr is set */
-    if(bReadFromCurr)
-        *num_bytes = m_acc_curr->readBytes(address,  mem_space, *num_bytes,p_buffer);
+    if (bReadFromCurr)
+    {
+        if (m_cache.enabled())
+        {
+            // read from cache - or load a new cache page and read....
+            uint32_t cacheBytes = m_cache.readBytesFromCache(m_acc_curr, address, mem_space, *num_bytes, p_buffer);
+            if (cacheBytes == *num_bytes)
+                return OCSD_OK;
+        }
+        *num_bytes = m_acc_curr->readBytes(address, mem_space, *num_bytes, p_buffer);
+    }
     else
-        *num_bytes = 0;
+        *num_bytes = 0;  // no memory accessor to fulfil this request.
     return OCSD_OK;
 }
 
