@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.9.0_
+_Current Version 0.9.1_
 
 ### Current support:
 
@@ -128,6 +128,7 @@ Version and Modification Information
 - _Version 0.8.4_:  build: makefile updates and improvements to get build process compatible with Debian packaging.
 - _Version 0.9.0_:  Performance improvements for perf: Additional info in instruction range output packet. Caching memory accesses. 
 				    Added Programmers guide to documentation.
+- _Version 0.9.1_:  Bugfix: Crash during decode when first memory access is to address where no image provided.
 
 
 Licence Information
