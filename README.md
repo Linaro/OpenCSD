@@ -138,6 +138,8 @@ Version and Modification Information
 - _Version 0.9.0_:  Performance improvements for perf: Additional info in instruction range output packet. Caching memory accesses. 
 				    Added Programmers guide to documentation.
 - _Version 0.9.1_:  Bugfix: Crash during decode when first memory access is to address where no image provided.
+- _Version 0.9.2_:  Bugfix: ETMv4: Incorrect Exception number output for Genric exception packets.
+                    AutoFDO: update documentation for AutoFDO usage and add in "record.sh" script
 
 
 Licence Information
