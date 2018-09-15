@@ -96,6 +96,15 @@ with the standard linux perfomance analysis tool `perf`.
 
 See [HOWTO.md](@ref howto_perf) for details.
 
+How to use the Library, perf and Trace for AutoFDO
+--------------------------------------------------
+Capturing trace using perf and decoding using the library can 
+generate profiles for AutoFDO.
+
+See [autofdo.md](@ref AutoFDO) for details and scripts.
+
+(`./tests/auto-fdo/autofdo.md`).
+
 
 Version and Modification Information
 ====================================
