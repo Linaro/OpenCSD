@@ -909,7 +909,7 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
                  updateContext(pCtxtElem);
 
             // record the exception number
-            m_output_elem.exception_number = pExceptElem->getExcepNum();
+           m_excep_number = pExceptElem->getExcepNum();
 
             // see if there is an implied P0 element on the exception.
             excep_implied_P0 = pExceptElem->getPrevSame();
@@ -1010,6 +1010,7 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
         // add end address as preferred return address to end addr in element
         m_output_elem.en_addr = m_excep_addr.val;
         m_output_elem.excep_ret_addr = 1;
+        m_output_elem.exception_number = m_excep_number;
         resp = outputTraceElementIdx(m_excep_index,m_output_elem);  
         m_excep_proc = EXCEP_POP;
     }   
