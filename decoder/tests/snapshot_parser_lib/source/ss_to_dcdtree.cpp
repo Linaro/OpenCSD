@@ -507,15 +507,24 @@ void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &d
     while(it != dumps.end())
     {        
         dumpFilePathName = m_pReader->getSnapShotDir() + it->path;
-        if(!TrcMemAccessorFile::isExistingFileAccessor(dumpFilePathName))
-        {
-            ocsd_err_t err = m_pDecodeTree->addBinFileMemAcc(it->address,OCSD_MEM_SPACE_ANY,dumpFilePathName);
-            if(err != OCSD_OK)
-            {                            
-                std::ostringstream oss;
-                oss << "Failed to create memory accessor for file " << dumpFilePathName << ".";
-                LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,oss.str()));
-            }
+        ocsd_file_mem_region_t region;
+        ocsd_err_t err = OCSD_OK;
+
+        region.start_address = it->address;
+        region.file_offset = it->offset;
+        region.region_size = it->length;
+
+        // ensure we respect optional length and offset parameter and
+        // allow multiple dump entries with same file name to define regions
+        if (!TrcMemAccessorFile::isExistingFileAccessor(dumpFilePathName))
+            err = m_pDecodeTree->addBinFileRegionMemAcc(&region, 1, OCSD_MEM_SPACE_ANY, dumpFilePathName);
+        else
+            err = m_pDecodeTree->updateBinFileRegionMemAcc(&region, 1, OCSD_MEM_SPACE_ANY, dumpFilePathName);
+        if(err != OCSD_OK)
+        {                            
+            std::ostringstream oss;
+            oss << "Failed to create memory accessor for file " << dumpFilePathName << ".";
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,oss.str()));
         }
         it++;
     }

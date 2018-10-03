@@ -315,6 +315,36 @@ ocsd_err_t DecodeTree::addBinFileRegionMemAcc(const ocsd_file_mem_region_t *regi
     return err;
 }
 
+ocsd_err_t DecodeTree::updateBinFileRegionMemAcc(const ocsd_file_mem_region_t *region_array, const int num_regions, const ocsd_mem_space_acc_t mem_space, const std::string &filepath)
+{
+    if (!hasMemAccMapper())
+        return OCSD_ERR_NOT_INIT;
+
+    if ((region_array == 0) || (num_regions == 0) || (filepath.length() == 0))
+        return OCSD_ERR_INVALID_PARAM_VAL;
+
+    ocsd_err_t err = OCSD_ERR_INVALID_PARAM_VAL;
+    TrcMemAccessorFile *pAcc = TrcMemAccessorFile::getExistingFileAccessor(filepath);
+    if (!pAcc) 
+        return OCSD_ERR_INVALID_PARAM_VAL;
+
+    int curr_region_idx = 0;
+    while (curr_region_idx < num_regions)
+    {
+        // check "new" range
+        if (!pAcc->addrStartOfRange(region_array[curr_region_idx].start_address))
+        {
+            // ensure adds cleanly
+            if (!pAcc->AddOffsetRange(region_array[curr_region_idx].start_address,
+                region_array[curr_region_idx].region_size,
+                region_array[curr_region_idx].file_offset))
+                return OCSD_ERR_INVALID_PARAM_VAL;  // otherwise bail out
+        }
+        curr_region_idx++;
+    }
+    return OCSD_OK;
+}
+
 ocsd_err_t DecodeTree::addCallbackMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context)
 {
     if(!hasMemAccMapper())
