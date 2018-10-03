@@ -100,7 +100,7 @@ export LIB_TEST_TARGET_DIR=$(OCSD_TESTS)/lib/$(PLAT_DIR)
 export BIN_TEST_TARGET_DIR=$(OCSD_TESTS)/bin/$(PLAT_DIR)
 
 # Fish version out of header file (converting from hex)
-getver:=printf "%d" $$(awk '/\#define VARNAME/ { print $$3 }' $(OCSD_ROOT)/include/ocsd_if_version.h)
+getver:=printf "%d" $$(awk '/\#define VARNAME/ { print $$3 }' $(OCSD_ROOT)/include/opencsd/ocsd_if_version.h)
 export SO_MAJOR_VER := $(shell $(subst VARNAME,OCSD_VER_MAJOR,$(getver)))
 SO_MINOR_VER := $(shell $(subst VARNAME,OCSD_VER_MINOR,$(getver)))
 SO_PATCH_VER := $(shell $(subst VARNAME,OCSD_VER_PATCH,$(getver)))

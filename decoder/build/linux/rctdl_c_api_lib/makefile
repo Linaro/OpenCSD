@@ -103,6 +103,7 @@ install_inc:
 	$(INSTALL) -d --mode=0755 $(INST_INC_DST)/
 	$(INSTALL) --mode=0644 $(INST_INC_SRC)/trc_gen_elem_types.h $(INST_INC_DST)/
 	$(INSTALL) --mode=0644 $(INST_INC_SRC)/ocsd_if_types.h $(INST_INC_DST)/
+	$(INSTALL) --mode=0644 $(INST_INC_SRC)/ocsd_if_version.h $(INST_INC_DST)/
 	$(INSTALL) --mode=0644 $(INST_INC_SRC)/trc_pkt_types.h $(INST_INC_DST)/
 	$(INSTALL) -d --mode=0755 $(INST_INC_DST)/ptm
 	$(INSTALL) --mode=0644 $(INST_INC_SRC)/ptm/trc_pkt_types_ptm.h $(INST_INC_DST)/ptm/

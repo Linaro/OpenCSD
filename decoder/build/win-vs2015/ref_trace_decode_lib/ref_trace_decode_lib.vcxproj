@@ -375,8 +375,8 @@
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_file.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_mapper.h" />
     <ClInclude Include="..\..\..\include\opencsd\ocsd_if_types.h" />
-    <ClInclude Include="..\..\..\include\ocsd_if_version.h" />
     <ClInclude Include="..\..\..\include\opencsd.h" />
+    <ClInclude Include="..\..\..\include\opencsd\ocsd_if_version.h" />
     <ClInclude Include="..\..\..\include\pkt_printers\gen_elem_printer.h" />
     <ClInclude Include="..\..\..\include\pkt_printers\item_printer.h" />
     <ClInclude Include="..\..\..\include\pkt_printers\pkt_printer_t.h" />
