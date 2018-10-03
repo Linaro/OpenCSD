@@ -51,9 +51,10 @@ declare -a test_dirs_decode=( "juno-ret-stck"
                               "trace_cov_a15"
                               "stm_only"
                               "stm_only-2"
-                              "stm_only_juno"
+                              "stm_only-juno"
                               "TC2"
                               "Snowball"
+                              "test-file-mem-offsets"
                             )
 
 
