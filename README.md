@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.9.1_
+_Current Version 0.9.3_
 
 ### Current support:
 
@@ -140,6 +140,9 @@ Version and Modification Information
 - _Version 0.9.1_:  Bugfix: Crash during decode when first memory access is to address where no image provided.
 - _Version 0.9.2_:  Bugfix: ETMv4: Incorrect Exception number output for Genric exception packets.
                     AutoFDO: update documentation for AutoFDO usage and add in "record.sh" script
+- _Version 0.9.3_:  Bugfix: Test snapshot library not handling 'offset' parameters in dump file sections.
+                    Install: ocsd_if_version.h moved to opencsd/include to allow installation on OS & use in compiling client apps.
+
 
 
 Licence Information
