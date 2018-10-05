@@ -5,7 +5,6 @@
  * \copyright  Copyright (c) 2015, ARM Limited. All Rights Reserved.
  */
 
-
 /* 
  * Redistribution and use in source and binary forms, with or without modification, 
  * are permitted provided that the following conditions are met:
@@ -39,7 +38,6 @@ block identification and trace decode.
 */
 
 #include "i_dec/trc_idec_arminst.h"
-
 
 #include <stddef.h>  /* for NULL */
 #include <assert.h>
@@ -75,7 +73,6 @@ int inst_ARM_is_direct_branch(uint32_t inst)
     return is_direct_branch;
 }
 
-
 int inst_ARM_is_indirect_branch(uint32_t inst)
 {
     int is_indirect_branch = 1;
@@ -88,14 +85,24 @@ int inst_ARM_is_indirect_branch(uint32_t inst)
         }
     } else if ((inst & 0x0ff000d0) == 0x01200010) {
         /* BLX (register), BX */
+        if ((inst & 0xFF) == 0x1E)
+            instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET; /* BX LR */
+    } else if ((inst & 0x0ff000f0) == 0x01200020) {
+        /* BXJ: in v8 this behaves like BX */
     } else if ((inst & 0x0e108000) == 0x08108000) {
         /* POP {...,pc} or LDMxx {...,pc} */
+        if ((inst & 0x0FFFA000) == 0x08BD8000) /* LDMIA SP!,{...,pc} */
+            instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET;
     } else if ((inst & 0x0e50f000) == 0x0410f000) {
         /* LDR PC,imm... inc. POP {PC} */
+        if ( (inst & 0x01ff0000) == 0x009D0000)
+            instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET; /* LDR PC, [SP], #imm */
     } else if ((inst & 0x0e50f010) == 0x0610f000) {
         /* LDR PC,reg */
     } else if ((inst & 0x0fe0f000) == 0x01a0f000) {
         /* MOV PC,rx */
+        if ((inst & 0x00100FFF) == 0x00E) /* ensure the S=0, LSL #0 variant - i.e plain MOV */
+            instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET; /* MOV PC, R14 */
     } else if ((inst & 0x0f900080) == 0x01000000) {
         /* "Miscellaneous instructions" - in DP space */
         is_indirect_branch = 0;
@@ -156,7 +163,6 @@ int inst_Thumb_is_direct_branch_link(uint32_t inst, uint8_t *is_link, uint8_t *i
     return is_direct_branch;
 }
 
-
 int inst_Thumb_is_indirect_branch(uint32_t inst)
 {
     uint8_t link;
@@ -174,10 +180,18 @@ int inst_Thumb_is_indirect_branch_link(uint32_t inst, uint8_t *is_link)
             *is_link = 1;
             instr_sub_type = OCSD_S_INSTR_BR_LINK;
         }
+        else if ((inst & 0x00780000) == 0x00700000) {
+            instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET;  /* BX LR */
+        }
+    } else if ((inst & 0xfff0d000) == 0xf3c08000) {
+        /* BXJ: in v8 this behaves like BX */
     } else if ((inst & 0xff000000) == 0xbd000000) {
         /* POP {pc} */
+        instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET;
     } else if ((inst & 0xfd870000) == 0x44870000) {
         /* MOV PC,reg or ADD PC,reg */
+        if ((inst & 0xffff0000) == 0x46f700000)
+            instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET; /* MOV PC,LR */
     } else if ((inst & 0xfff0ffe0) == 0xe8d0f000) {
         /* TBB/TBH */
     } else if ((inst & 0xffd00000) == 0xe8100000) {
@@ -192,16 +206,19 @@ int inst_Thumb_is_indirect_branch_link(uint32_t inst, uint8_t *is_link)
         /* LDR PC,literal (T2) */
     } else if ((inst & 0xfff0f800) == 0xf850f800) {
         /* LDR PC,imm (T4) */
+        if((inst & 0x000f0f00) == 0x000d0b00)
+            instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET; /* LDR PC, [SP], #imm*/
     } else if ((inst & 0xfff0ffc0) == 0xf850f000) {
         /* LDR PC,reg (T2) */
     } else if ((inst & 0xfe508000) == 0xe8108000) {
         /* LDM PC */
+        if ((inst & 0x0FFF0000) == 0x08BD0000) /* LDMIA [SP]!, */
+            instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET; /* POP {...,pc} */
     } else {
         is_branch = 0;
     }
     return is_branch;
 }
-
 
 int inst_A64_is_direct_branch(uint32_t inst)
 {
@@ -217,7 +234,6 @@ int inst_A64_is_direct_branch(uint32_t inst)
     }
     return is_direct_branch;
 }
-
 
 int inst_A64_is_indirect_branch(uint32_t inst)
 {
@@ -235,7 +251,6 @@ int inst_A64_is_indirect_branch(uint32_t inst)
     }
     return is_indirect_branch;
 }
-
 
 int inst_ARM_branch_destination(uint32_t addr, uint32_t inst, uint32_t *pnpc)
 {
@@ -260,7 +275,6 @@ int inst_ARM_branch_destination(uint32_t addr, uint32_t inst, uint32_t *pnpc)
     }
     return is_direct_branch;
 }
-
 
 int inst_Thumb_branch_destination(uint32_t addr, uint32_t inst, uint32_t *pnpc)
 {
@@ -316,7 +330,6 @@ int inst_Thumb_branch_destination(uint32_t addr, uint32_t inst, uint32_t *pnpc)
     return is_direct_branch;
 }
 
-
 int inst_A64_branch_destination(uint64_t addr, uint32_t inst, uint64_t *pnpc)
 {
     uint64_t npc;
@@ -348,20 +361,17 @@ int inst_ARM_is_branch(uint32_t inst)
            inst_ARM_is_direct_branch(inst);
 }
 
-
 int inst_Thumb_is_branch(uint32_t inst)
 {
     return inst_Thumb_is_indirect_branch(inst) ||
            inst_Thumb_is_direct_branch(inst);
 }
 
-
 int inst_A64_is_branch(uint32_t inst)
 {
     return inst_A64_is_indirect_branch(inst) ||
            inst_A64_is_direct_branch(inst);
 }
-
 
 int inst_ARM_is_branch_and_link(uint32_t inst)
 {
@@ -385,7 +395,6 @@ int inst_ARM_is_branch_and_link(uint32_t inst)
     return is_branch;
 }
 
-
 int inst_Thumb_is_branch_and_link(uint32_t inst)
 {
     int is_branch = 1;
@@ -400,7 +409,6 @@ int inst_Thumb_is_branch_and_link(uint32_t inst)
     }
     return is_branch;
 }
-
 
 int inst_A64_is_branch_and_link(uint32_t inst)
 {
@@ -417,12 +425,10 @@ int inst_A64_is_branch_and_link(uint32_t inst)
     return is_branch;
 }
 
-
 int inst_ARM_is_conditional(uint32_t inst)
 {
     return (inst & 0xe0000000) != 0xe0000000;
 }
-
 
 int inst_Thumb_is_conditional(uint32_t inst)
 {
@@ -438,7 +444,6 @@ int inst_Thumb_is_conditional(uint32_t inst)
     }
     return 0;
 }
-
 
 unsigned int inst_Thumb_is_IT(uint32_t inst)
 {
@@ -459,7 +464,6 @@ unsigned int inst_Thumb_is_IT(uint32_t inst)
     }
 }
 
-
 /*
 Test whether an A64 instruction is conditional.
 
@@ -479,7 +483,6 @@ int inst_A64_is_conditional(uint32_t inst)
     }
     return 0;
 }
-
 
 arm_barrier_t inst_ARM_barrier(uint32_t inst)
 {
@@ -509,7 +512,6 @@ arm_barrier_t inst_ARM_barrier(uint32_t inst)
         return ARM_BARRIER_NONE;
     }
 }
-
 
 arm_barrier_t inst_Thumb_barrier(uint32_t inst)
 {
@@ -542,7 +544,6 @@ arm_barrier_t inst_Thumb_barrier(uint32_t inst)
     }
 }
 
-
 arm_barrier_t inst_A64_barrier(uint32_t inst)
 {
     if ((inst & 0xfffff09f) == 0xd503309f) {
@@ -561,19 +562,16 @@ arm_barrier_t inst_A64_barrier(uint32_t inst)
     }
 }
 
-
 int inst_ARM_is_UDF(uint32_t inst)
 {
     return (inst & 0xfff000f0) == 0xe7f000f0;
 }
-
 
 int inst_Thumb_is_UDF(uint32_t inst)
 {
     return (inst & 0xff000000) == 0xde000000 ||   /* T1 */
            (inst & 0xfff0f000) == 0xf7f0a000;     /* T2 */
 }
-
 
 int inst_A64_is_UDF(uint32_t inst)
 {

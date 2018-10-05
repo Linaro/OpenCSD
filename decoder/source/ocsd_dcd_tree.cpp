@@ -323,7 +323,6 @@ ocsd_err_t DecodeTree::updateBinFileRegionMemAcc(const ocsd_file_mem_region_t *r
     if ((region_array == 0) || (num_regions == 0) || (filepath.length() == 0))
         return OCSD_ERR_INVALID_PARAM_VAL;
 
-    ocsd_err_t err = OCSD_ERR_INVALID_PARAM_VAL;
     TrcMemAccessorFile *pAcc = TrcMemAccessorFile::getExistingFileAccessor(filepath);
     if (!pAcc) 
         return OCSD_ERR_INVALID_PARAM_VAL;

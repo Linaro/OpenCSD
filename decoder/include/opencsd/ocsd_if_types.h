@@ -362,6 +362,7 @@ typedef enum _ocsd_instr_subtype {
     OCSD_S_INSTR_BR_LINK,      /**< branch with link */
     OCSD_S_INSTR_V8_RET,       /**< v8 ret instruction - subtype of BR_INDIRECT  */
     OCSD_S_INSTR_V8_ERET,      /**< v8 eret instruction - subtype of BR_INDIRECT */
+    OCSD_S_INSTR_V7_IMPLIED_RET,  /**< v7 instruction which could imply return e.g. MOV PC, LR; POP { ,pc} */
 } ocsd_instr_subtype;
 
 /** Instruction decode request structure. 

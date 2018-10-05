@@ -203,6 +203,7 @@ ocsd_err_t TrcIDecode::DecodeT32(ocsd_instr_info *instr_info)
         }
     }
     
+    instr_info->is_conditional = inst_Thumb_is_conditional(instr_info->opcode);
     instr_info->thumb_it_conditions = inst_Thumb_is_IT(instr_info->opcode);
 
     return OCSD_OK;

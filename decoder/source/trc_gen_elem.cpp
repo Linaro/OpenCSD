@@ -71,7 +71,8 @@ static const char *instr_sub_type[] = {
     "--- ",
     "b+link ",
     "A64:ret ",
-    "A64:eret "
+    "A64:eret ",
+    "V7:impl ret",
 };
 
 #define ST_SIZE (sizeof(instr_sub_type) / sizeof(const char *))
@@ -113,6 +114,8 @@ void OcsdTraceElement::toString(std::string &str) const
                 oss << instr_type[last_i_type];
             if((last_i_subtype != OCSD_S_INSTR_NONE) && ((int)last_i_subtype < ST_SIZE))
                 oss << instr_sub_type[last_i_subtype];
+            if (last_instr_cond)
+                oss << " <cond>";
             break;
 
         case OCSD_GEN_TRC_ELEM_ADDR_NACC:

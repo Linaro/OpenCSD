@@ -93,6 +93,8 @@ private:
 
     ocsd_datapath_resp_t returnStackPop();  // pop return stack and update instruction address.
 
+    ocsd_datapath_resp_t outputTraceRange(const bool executed, ocsd_trc_index_t index);
+
 //** intra packet state (see ETMv4 spec 6.2.1);
 
     // timestamping

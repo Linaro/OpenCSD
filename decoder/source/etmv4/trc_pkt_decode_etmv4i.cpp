@@ -778,6 +778,15 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::outputEvent(TrcStackElemParam *pParamEl
     return outputTraceElementIdx(pParamElem->getRootIndex(),m_output_elem);
 }
 
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::outputTraceRange(const bool executed, ocsd_trc_index_t index)
+{
+    m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
+    m_output_elem.setLastInstrInfo(executed, m_instr_info.type, m_instr_info.sub_type, m_instr_info.instr_size);
+    m_output_elem.setISA(m_instr_info.isa);
+    m_output_elem.setLastInstrCond(m_instr_info.is_conditional);
+    return outputTraceElementIdx(index, m_output_elem);
+}
+
 ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom, bool &bCont)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
@@ -834,10 +843,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom, bo
             }
             break;
         }
-        m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
-        m_output_elem.setLastInstrInfo((atom == ATOM_E),m_instr_info.type, m_instr_info.sub_type, m_instr_info.instr_size);
-        m_output_elem.setISA(m_instr_info.isa);
-        resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+        resp = outputTraceRange((atom == ATOM_E), pElem->getRootIndex());
 
     }
     else
@@ -848,10 +854,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom, bo
         if(m_output_elem.st_addr != m_output_elem.en_addr)
         {
             // some trace before we were out of memory access range
-            m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
-            m_output_elem.setLastInstrInfo(true,m_instr_info.type, m_instr_info.sub_type,m_instr_info.instr_size);
-            m_output_elem.setISA(m_instr_info.isa);
-            resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
+            resp = outputTraceRange(true, pElem->getRootIndex());
         }
 
         if(m_mem_nacc_pending && OCSD_DATA_RESP_IS_CONT(resp))
@@ -970,10 +973,7 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
                 break;
                 }
             }
-            m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
-            m_output_elem.setLastInstrInfo(true,m_instr_info.type, m_instr_info.sub_type,m_instr_info.instr_size);
-            m_output_elem.setISA(m_instr_info.isa);
-            resp = outputTraceElementIdx(m_excep_index, m_output_elem);
+            resp = outputTraceRange(true, m_excep_index);
             m_excep_proc = EXCEP_EXCEP;
         }
         else
@@ -984,10 +984,7 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
             if(m_output_elem.st_addr != m_output_elem.en_addr)
             {
                 // some trace before we were out of memory access range
-                m_output_elem.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
-                m_output_elem.setLastInstrInfo(true,m_instr_info.type, m_instr_info.sub_type, m_instr_info.instr_size);
-                m_output_elem.setISA(m_instr_info.isa);
-                resp = outputTraceElementIdx(m_excep_index,m_output_elem);
+                resp = outputTraceRange(true, m_excep_index);
             }
 
             m_excep_proc = m_mem_nacc_pending ? EXCEP_NACC : EXCEP_EXCEP;
