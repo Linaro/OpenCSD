@@ -70,6 +70,7 @@ typedef struct _ocsd_generic_trace_elem {
             uint32_t excep_data_marker:1;   /* 1 if the exception entry packet is a data push marker only, with no address information (used typically in v7M trace for marking data pushed onto stack) */
             uint32_t extended_data:1;       /* 1 if the packet extended data pointer is valid. Allows packet extensions for custom decoders, or additional data payloads for data trace.  */
             uint32_t has_ts:1;              /* 1 if the packet has an associated timestamp - e.g. SW/STM trace TS+Payload as a single packet */
+            uint32_t last_instr_cond:1;     /* 1 if the last instruction was conditional */
         };
         uint32_t flag_bits;
     };
@@ -121,7 +122,7 @@ __packet fields valid__: None
 Element output before the decoder has synchronised with the input stream, or synchronisation is lost.
 
 ### OCSD_GEN_TRC_ELEM_INSTR_RANGE ###
-__packet fields valid__: `isa, st_addr, en_addr, last_i_type, last_i_subtype, last_instr_exec, last_instr_sz, num_instr_range`
+__packet fields valid__: `isa, st_addr, en_addr, last_i_type, last_i_subtype, last_instr_exec, last_instr_sz, num_instr_range, last_instr_cond`
 
 __packet fields optional__: `has_cc -> cycle_count,`
 
