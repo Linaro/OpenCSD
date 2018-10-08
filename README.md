@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.9.3_
+_Current Version 0.10.0_
 
 ### Current support:
 
@@ -142,7 +142,10 @@ Version and Modification Information
                     AutoFDO: update documentation for AutoFDO usage and add in "record.sh" script
 - _Version 0.9.3_:  Bugfix: Test snapshot library not handling 'offset' parameters in dump file sections.
                     Install: ocsd_if_version.h moved to opencsd/include to allow installation on OS & use in compiling client apps.
-
+- _Version 0.10.0_: __Updates__: Add additional information about the last instruction to the generic output packet.
+                    __Docs__: update docs for updated output packet.
+                    __Bugfix__: typecast removed from OCSD_VER_NUM in ocsd_if_version.h to allow use in C pre-processor.
+                    __Bugfix__: ETMV4: Interworking ISA change between A32-T32 occasionally missed during instruction decode.
 
 
 Licence Information
