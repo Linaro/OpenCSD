@@ -180,7 +180,7 @@ void print_help()
     oss << "-ss_dir <dir>       Set the directory path to a trace snapshot\n";
     oss << "-ss_verbose         Verbose output when reading the snapshot\n";
     oss << "\nDecode:\n\n";
-    oss << "-id <n>             Set an ID to list (may be used mutiple times) - default if no id set is for all IDs to be printed\n";
+    oss << "-id <n>             Set an ID to list (may be used multiple times) - default if no id set is for all IDs to be printed\n";
     oss << "-src_name <name>    List packets from a given snapshot source name (defaults to first source found)\n";
     oss << "-decode             Full decode of the packets from the trace snapshot (default is to list undecoded packets only\n";
     oss << "-decode_only        Does not list the undecoded packets, just the trace decode.\n";

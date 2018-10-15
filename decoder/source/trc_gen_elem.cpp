@@ -49,7 +49,7 @@ static const char *s_elem_descs[][2] =
     {"OCSD_GEN_TRC_ELEM_ADDR_NACC","Tracing in inaccessible memory area."},
     {"OCSD_GEN_TRC_ELEM_ADDR_UNKNOWN","Tracing unknown address area."},
     {"OCSD_GEN_TRC_ELEM_EXCEPTION","Exception"},
-    {"OCSD_GEN_TRC_ELEM_EXCEPTION_RET","Expection return"},
+    {"OCSD_GEN_TRC_ELEM_EXCEPTION_RET","Exception return"},
     {"OCSD_GEN_TRC_ELEM_TIMESTAMP","Timestamp - preceding elements happeded before this time."},
     {"OCSD_GEN_TRC_ELEM_CYCLE_COUNT","Cycle count - cycles since last cycle count value - associated with a preceding instruction range."},
     {"OCSD_GEN_TRC_ELEM_EVENT","Event - numbered event or trigger"},
