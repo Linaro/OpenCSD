@@ -51,7 +51,7 @@ OBJECTS		=	$(BUILD_DIR)/trc_pkt_lister.o
 LIBS		=	-L$(LIB_TEST_TARGET_DIR) -lsnapshot_parser \
 				-L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME)
 
-all:  build_dir test_app copy_libs
+all:  build_dir copy_libs
 
 test_app: $(BIN_TEST_TARGET_DIR)/$(PROG)
 
@@ -64,8 +64,7 @@ build_dir:
 	mkdir -p $(BUILD_DIR)
 
 .PHONY: copy_libs
-
-copy_libs:
+copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG)
 	cp $(LIB_TARGET_DIR)/*.so* $(BIN_TEST_TARGET_DIR)/.
 
 
