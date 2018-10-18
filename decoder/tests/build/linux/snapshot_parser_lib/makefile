@@ -63,9 +63,9 @@ OBJECTS=$(BUILD_DIR)/device_info.o \
 		$(BUILD_DIR)/snapshot_reader.o \
 		$(BUILD_DIR)/ss_to_dcdtree.o
 
-all: build_dir $(OBJECTS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a
+all: build_dir $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a
 
-$(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a:
+$(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a: $(OBJECTS)
 	mkdir -p $(LIB_TEST_TARGET_DIR)
 	$(LIB) $(ARFLAGS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a $(OBJECTS)
 
