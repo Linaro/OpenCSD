@@ -139,7 +139,7 @@ $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a: $(LIB_BASE_NAME)_all
 # single command builds both .a and .so targets in sub-makefile
 $(LIB_BASE_NAME)_all:
 	mkdir -p $(LIB_TARGET_DIR)
-	cd $(OCSD_ROOT)/build/linux/ref_trace_decode_lib && make
+	cd $(OCSD_ROOT)/build/linux/ref_trace_decode_lib && $(MAKE)
 
 ################################
 # build OpenCSD trace decode C API library 
@@ -152,17 +152,17 @@ $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a:  $(LIB_CAPI_NAME)_all
 # single command builds both .a and .so targets in sub-makefile
 $(LIB_CAPI_NAME)_all:  $(LIB_BASE_NAME)_lib
 	mkdir -p $(LIB_TARGET_DIR)
-	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make
+	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && $(MAKE)
 
 #################################
 # build tests
 
 .PHONY: tests
 tests: libs
-	cd $(OCSD_ROOT)/tests/build/linux/echo_test_dcd_lib && make
-	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && make
-	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && make
-	cd $(OCSD_ROOT)/tests/build/linux/c_api_pkt_print_test && make
+	cd $(OCSD_ROOT)/tests/build/linux/echo_test_dcd_lib && $(MAKE)
+	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && $(MAKE)
+	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && $(MAKE)
+	cd $(OCSD_ROOT)/tests/build/linux/c_api_pkt_print_test && $(MAKE)
 
 #
 # build docs
@@ -179,14 +179,14 @@ clean: clean_libs clean_tests clean_docs
 .PHONY: clean_libs clean_tests clean_docs clean_install
 
 clean_libs:
-	cd $(OCSD_ROOT)/build/linux/ref_trace_decode_lib && make clean
-	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make clean
+	cd $(OCSD_ROOT)/build/linux/ref_trace_decode_lib && $(MAKE) clean
+	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && $(MAKE) clean
 
 clean_tests:
-	cd $(OCSD_ROOT)/tests/build/linux/echo_test_dcd_lib && make clean
-	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && make clean
-	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && make clean
-	cd $(OCSD_ROOT)/tests/build/linux/c_api_pkt_print_test && make clean
+	cd $(OCSD_ROOT)/tests/build/linux/echo_test_dcd_lib && $(MAKE) clean
+	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && $(MAKE) clean
+	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && $(MAKE) clean
+	cd $(OCSD_ROOT)/tests/build/linux/c_api_pkt_print_test && $(MAKE) clean
 	-rmdir $(OCSD_TESTS)/lib
 
 clean_docs:
