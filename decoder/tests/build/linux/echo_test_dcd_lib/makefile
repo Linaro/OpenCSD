@@ -48,9 +48,9 @@ CC_INCLUDES	=	\
 OBJECTS		=	$(BUILD_DIR)/ext_dcd_echo_test.o \
 				$(BUILD_DIR)/ext_dcd_echo_test_fact.o
 
-all:  build_dir  $(OBJECTS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a
+all:  build_dir $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a
 
-$(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a:
+$(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a: $(OBJECTS)
 	mkdir -p $(LIB_TEST_TARGET_DIR)
 	$(LIB) $(ARFLAGS) $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a $(OBJECTS)
 

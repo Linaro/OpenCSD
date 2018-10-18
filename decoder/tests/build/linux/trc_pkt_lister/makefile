@@ -53,10 +53,10 @@ LIBS		=	-L$(LIB_TEST_TARGET_DIR) -lsnapshot_parser \
 
 all:  build_dir test_app copy_libs
 
-test_app: 	$(OBJECTS) $(BIN_TEST_TARGET_DIR)/$(PROG)
+test_app: $(BIN_TEST_TARGET_DIR)/$(PROG)
 
 
- $(BIN_TEST_TARGET_DIR)/$(PROG):
+ $(BIN_TEST_TARGET_DIR)/$(PROG): $(OBJECTS)
 			mkdir -p  $(BIN_TEST_TARGET_DIR)
 			$(LINKER) $(LDFLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
 
