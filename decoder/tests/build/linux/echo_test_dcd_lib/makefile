@@ -57,12 +57,6 @@ $(LIB_TEST_TARGET_DIR)/$(LIB_NAME).a: $(OBJECTS)
 build_dir:
 	mkdir -p $(BUILD_DIR)
 
-.PHONY: copy_libs
-
-copy_libs:
-	cp $(LIB_TARGET_DIR)/*.so $(BIN_TEST_TARGET_DIR)/.
-
-
 #### build rules
 ## object dependencies
 DEPS := $(OBJECTS:%.o=%.d)
