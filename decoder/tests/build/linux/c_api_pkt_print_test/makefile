@@ -51,7 +51,7 @@ OBJECTS		=	$(BUILD_DIR)/c_api_pkt_print_test.o
 LIBS		=	-L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME) -l$(LIB_CAPI_NAME) \
 				-L$(LIB_TEST_TARGET_DIR) -l_echo_test_dcd
 
-all:  build_dir test_app copy_libs
+all:  build_dir copy_libs
 
 test_app: 	$(BIN_TEST_TARGET_DIR)/$(PROG)
 
@@ -65,8 +65,7 @@ build_dir:
 	mkdir -p $(BUILD_DIR)
 
 .PHONY: copy_libs
-
-copy_libs:
+copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG)
 	cp $(LIB_TARGET_DIR)/*.so $(BIN_TEST_TARGET_DIR)/.
 
 
