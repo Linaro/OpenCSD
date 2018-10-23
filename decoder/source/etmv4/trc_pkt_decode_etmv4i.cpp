@@ -784,6 +784,8 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::outputTraceRange(const bool executed, o
     m_output_elem.setLastInstrInfo(executed, m_instr_info.type, m_instr_info.sub_type, m_instr_info.instr_size);
     m_output_elem.setISA(m_instr_info.isa);
     m_output_elem.setLastInstrCond(m_instr_info.is_conditional);
+    if (executed)
+        m_instr_info.isa = m_instr_info.next_isa;
     return outputTraceElementIdx(index, m_output_elem);
 }
 

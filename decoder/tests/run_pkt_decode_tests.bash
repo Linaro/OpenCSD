@@ -63,6 +63,8 @@ echo "Running trc_pkt_lister on snapshot directories."
 mkdir -p ${OUT_DIR}
 
 # === test the decode set ===
+export LD_LIBRARY_PATH=${BIN_DIR}/.
+
 for test_dir in "${test_dirs_decode[@]}"
 do
     echo "Testing $test_dir..."
