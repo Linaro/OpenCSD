@@ -87,8 +87,14 @@ kernel and many targets are using older kernels.  To enable CoreSight trace
 on these targets, Arm have provided backports of the latest CoreSight
 drivers and ETM strobing patch at:
 
-  [TODO: link to git repos for CoreSight backports]
-  
+  <http://linux-arm.org/git?p=linux-coresight-backports.git>
+
+This repository can be cloned with:
+
+```
+git clone git://linux-arm.org/linux-coresight-backports.git
+```
+
 You can include these backports in your kernel by either merging the
 appropriate branch using git or generating patches (using `git
 format-patch`).
@@ -237,8 +243,8 @@ cycles.  With these proof-of-concept patches, the strobe parameters are
 configured via sysfs - each ETM will have `strobe_window` and
 `strobe_period` parameters in `/sys/bus/coresight/devices/NNNNNNNN.etm` and
 these values will have to be written to each (In a future version, this
-will be integrated into the drivers and perf tool).  The attached `record.sh`
-(TODO: attach!) script automates this process.
+will be integrated into the drivers and perf tool).  The `record.sh`
+script in this directory [`<opencsd>/decoder/tests/auto-fdo`] automates this process.
 
 To collect trace from an application using ETM strobing, run:
 
@@ -398,23 +404,9 @@ Use `create_gcov` for gcc.
 ## References
 
 * AutoFDO tool: <https://github.com/google/autofdo>
-    * Build fix: <https://github.com/google/autofdo/pull/73>
 * GCC's wiki on autofdo: <https://gcc.gnu.org/wiki/AutoFDO>, <https://gcc.gnu.org/wiki/AutoFDO/Tutorial>
 * Google paper: <https://ai.google/research/pubs/pub45290>
 * CoreSight kernel docs: Documentation/trace/coresight.txt
-
-## Troubleshooting
-
-TODO:
-
-* Record simple program (e.g. /bin/ls)
-    * examine raw trace - look for overflows, corruption
-* Check no errors reported
-    * mmap error indicates no route from source to sink - bad device tree
-    * try nearer sink
-    * data loss warning - bandwidth problems
-        * What if data loss is reported?
-        * Don't worry - strobing
 
 
 ## Appendix: Describing CoreSight in Devicetree
