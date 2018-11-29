@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.10.0_
+_Current Version 0.10.1_
 
 ### Current support:
 
@@ -146,6 +146,8 @@ Version and Modification Information
                     __Docs__: update docs for updated output packet.
                     __Bugfix__: typecast removed from OCSD_VER_NUM in ocsd_if_version.h to allow use in C pre-processor.
                     __Bugfix__: ETMV4: Interworking ISA change between A32-T32 occasionally missed during instruction decode.
+- _Version 0.10.1_: __Updates__: Build update - allow multi-thread make (make -j<N>).
+                    __Docs__: Minor update to AutoFDO documentation.
 
 
 Licence Information
