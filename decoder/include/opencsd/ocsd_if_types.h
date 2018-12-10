@@ -365,6 +365,22 @@ typedef enum _ocsd_instr_subtype {
     OCSD_S_INSTR_V7_IMPLIED_RET,  /**< v7 instruction which could imply return e.g. MOV PC, LR; POP { ,pc} */
 } ocsd_instr_subtype;
 
+/** exception number */
+typedef enum _ocsd_exception_num {
+    OCSD_EXC_RESET,
+    OCSD_EXC_DEBUG_HALT,
+    OCSD_EXC_CALL,
+    OCSD_EXC_TRAP,
+    OCSD_EXC_SYSTEM_ERROR,
+    OCSD_EXC_INST_DEBUG,
+    OCSD_EXC_DATA_DEBUG,
+    OCSD_EXC_ALIGNMENT,
+    OCSD_EXC_INST_FAULT,
+    OCSD_EXC_DATA_FAULT,
+    OCSD_EXC_IRQ,
+    OCSD_EXC_FIQ,
+} _ocsd_exception_num;
+
 /** Instruction decode request structure. 
  *
  *   Used in IInstrDecode  interface.
