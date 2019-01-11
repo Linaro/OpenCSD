@@ -163,6 +163,7 @@ tests: libs
 	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && $(MAKE)
 	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && $(MAKE)
 	cd $(OCSD_ROOT)/tests/build/linux/c_api_pkt_print_test && $(MAKE)
+	cd $(OCSD_ROOT)/tests/build/linux/mem_buffer_eg && $(MAKE)
 
 #
 # build docs
@@ -187,6 +188,7 @@ clean_tests:
 	cd $(OCSD_ROOT)/tests/build/linux/snapshot_parser_lib && $(MAKE) clean
 	cd $(OCSD_ROOT)/tests/build/linux/trc_pkt_lister && $(MAKE) clean
 	cd $(OCSD_ROOT)/tests/build/linux/c_api_pkt_print_test && $(MAKE) clean
+	cd $(OCSD_ROOT)/tests/build/linux/mem_buffer_eg && $(MAKE) clean
 	-rmdir $(OCSD_TESTS)/lib
 
 clean_docs:
