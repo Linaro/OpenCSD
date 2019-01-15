@@ -137,7 +137,7 @@ typedef enum _ocsd_err_t {
     OCSD_ERR_DCDREG_TYPE_UNKNOWN,       /**< attempted to find a decoder with a type that is not known in the library */
     OCSD_ERR_DCDREG_TOOMANY,            /**< attempted to register too many custom decoders */
     /* decoder config */
-    OCSD_ERR_DCD_INTERFACE_UNUSED,      /**< Attempt to connect or use and inteface not supported by this decoder. */
+    OCSD_ERR_DCD_INTERFACE_UNUSED,      /**< Attempt to connect or use and interface not supported by this decoder. */
     /* end marker*/
     OCSD_ERR_LAST
 } ocsd_err_t;

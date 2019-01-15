@@ -219,7 +219,7 @@ const char *EtmV4ITrcPacket::packetTypeName(const ocsd_etmv4_i_pkt_type type, co
 
     case ETM4_PKT_I_EXTENSION:
         pName = "I_EXTENSION";
-        pDesc = "Extention packet header.";
+        pDesc = "Extension packet header.";
         break;
 
     case ETM4_PKT_I_ADDR_CTXT_L_32IS0:

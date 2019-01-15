@@ -52,7 +52,7 @@ __Command Line Options__
 
 *Decode options*
 
-- `-id <n>`          : Set an ID to list (may be used mutiple times) - default if no id set is for all IDs to be printed.
+- `-id <n>`          : Set an ID to list (may be used multiple times) - default if no id set is for all IDs to be printed.
 - `-src_name <name>` : List packets from a given snapshot source name (defaults to first source found).
 - `-decode`          : Full decode of the packets from the trace snapshot (default is to list undecoded packets only.
 - `-decode_only`     : Does not list the undecoded packets, just the trace decode.
