@@ -90,6 +90,7 @@ protected:
     virtual void clearAccessorList() = 0;
 
     void LogMessage(const std::string &msg);
+    void LogWarn(const ocsd_err_t err, const std::string &msg);
 
     TrcMemAccessorBase *m_acc_curr;     // most recently used - try this first.
     uint8_t m_trace_id_curr;            // trace ID for the current accessor

@@ -50,6 +50,10 @@ typedef struct cache_block {
     uint8_t data[MEM_ACC_CACHE_PAGE_SIZE];
 } cache_block_t;
 
+// enable define to collect stats for debugging / cache performance tests
+//#define LOG_CACHE_STATS
+
+
 /** class TrcMemAccCache - cache small amounts of data from accessors to speed up decode. */
 class TrcMemAccCache
 {
@@ -60,9 +64,14 @@ public:
     void enableCaching(bool bEnable) { m_bCacheEnabled = bEnable; };
     void invalidateAll();
     const bool enabled() const { return m_bCacheEnabled; };
+    const bool enabled_for_size(const uint32_t reqSize) const
+    {
+        return (m_bCacheEnabled && (reqSize <= MEM_ACC_CACHE_PAGE_SIZE));
+    }
+        
     
     /** read bytes from cache if possible - load new page if needed, bail out if data not available */
-    uint32_t readBytesFromCache(TrcMemAccessorBase *p_accessor, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer);
+    ocsd_err_t readBytesFromCache(TrcMemAccessorBase *p_accessor, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, uint32_t *numBytes, uint8_t *byteBuffer);
 
     void setErrorLog(ITraceErrorLog *log);
     void logAndClearCounts();
@@ -76,13 +85,15 @@ private:
     int m_mru_idx = 0;  // in use index
     int m_mru_next_new = 0; // next new page at this index.
     bool m_bCacheEnabled = false;
-    
+
+#ifdef LOG_CACHE_STATS    
     uint32_t m_hits = 0;
     uint32_t m_misses = 0;
     uint32_t m_pages = 0;
     uint32_t m_hit_rl[MEM_ACC_CACHE_MRU_SIZE];
     uint32_t m_hit_rl_max[MEM_ACC_CACHE_MRU_SIZE];
-
+#endif
+    
     ITraceErrorLog *m_err_log = 0;
 };
 
@@ -92,8 +103,10 @@ inline TrcMemAccCache::TrcMemAccCache()
     {
         m_mru[i].st_addr = 0;
         m_mru[i].valid_len = 0;
+#ifdef LOG_CACHE_STATS
         m_hit_rl[i] = 0;
         m_hit_rl_max[i] = 0;
+#endif
     }
 }
 

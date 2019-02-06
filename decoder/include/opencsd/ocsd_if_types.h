@@ -126,6 +126,7 @@ typedef enum _ocsd_err_t {
     OCSD_ERR_MEM_ACC_FILE_NOT_FOUND,    /**< Memory access file could not be opened */
     OCSD_ERR_MEM_ACC_FILE_DIFF_RANGE,   /**< Attempt to re-use the same memory access file for a different address range */
     OCSD_ERR_MEM_ACC_RANGE_INVALID,     /**< Address range in accessor set to invalid values */
+    OCSD_ERR_MEM_ACC_BAD_LEN,           /**< Memory accessor returned a bad read length value (larger than requested */
     /* test errors - errors generated only by the test code, not the library */
     OCSD_ERR_TEST_SNAPSHOT_PARSE,       /**< test snapshot file parse error */
     OCSD_ERR_TEST_SNAPSHOT_PARSE_INFO,  /**< test snapshot file parse information */

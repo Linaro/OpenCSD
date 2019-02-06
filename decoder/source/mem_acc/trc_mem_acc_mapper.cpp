@@ -34,6 +34,7 @@
 
 #include "mem_acc/trc_mem_acc_mapper.h"
 #include "mem_acc/trc_mem_acc_file.h"
+#include "common/ocsd_error.h"
 
 /************************************************************************************/
 /* mappers base class */
@@ -77,6 +78,8 @@ void TrcMemAccMapper::setErrorLog(ITraceErrorLog *err_log_i)
 ocsd_err_t TrcMemAccMapper::ReadTargetMemory(const ocsd_vaddr_t address, const uint8_t cs_trace_id, const ocsd_mem_space_acc_t mem_space, uint32_t *num_bytes, uint8_t *p_buffer)
 {
     bool bReadFromCurr = true;
+    uint32_t readBytes = 0;
+    ocsd_err_t err = OCSD_OK;
 
     /* see if the address is in any range we know */
     if (!readFromCurrent(address, mem_space, cs_trace_id))
@@ -91,18 +94,29 @@ ocsd_err_t TrcMemAccMapper::ReadTargetMemory(const ocsd_vaddr_t address, const u
     /* if bReadFromCurr then we know m_acc_curr is set */
     if (bReadFromCurr)
     {
-        if (m_cache.enabled())
+        // use cache if enabled and the amount fits into a cache page
+        if (m_cache.enabled_for_size(*num_bytes))
         {
             // read from cache - or load a new cache page and read....
-            uint32_t cacheBytes = m_cache.readBytesFromCache(m_acc_curr, address, mem_space, *num_bytes, p_buffer);
-            if (cacheBytes == *num_bytes)
-                return OCSD_OK;
+            readBytes = *num_bytes;
+            err = m_cache.readBytesFromCache(m_acc_curr, address, mem_space, &readBytes, p_buffer);
+            if (err != OCSD_OK)
+                LogWarn(err, "Mem Acc: Cache access error");
         }
-        *num_bytes = m_acc_curr->readBytes(address, mem_space, *num_bytes, p_buffer);
+        else
+        {
+            readBytes = m_acc_curr->readBytes(address, mem_space, *num_bytes, p_buffer);
+            // guard against bad accessor returns (e.g. callback not obeying the rules for return values)
+            if (readBytes > *num_bytes)
+            {
+                err = OCSD_ERR_MEM_ACC_BAD_LEN;
+                LogWarn(err,"Mem acc: bad return length");
+            }
+        }
     }
-    else
-        *num_bytes = 0;  // no memory accessor to fulfil this request.
-    return OCSD_OK;
+
+    *num_bytes = readBytes;  
+    return err;
 }
 
 void TrcMemAccMapper::RemoveAllAccessors()
@@ -143,6 +157,16 @@ void  TrcMemAccMapper::LogMessage(const std::string &msg)
     if(m_err_log)
         m_err_log->LogMessage(ITraceErrorLog::HANDLE_GEN_INFO,OCSD_ERR_SEV_INFO,msg);
 }
+
+void TrcMemAccMapper::LogWarn(const ocsd_err_t err, const std::string &msg)
+{
+    if (m_err_log)
+    {
+        ocsdError err_ocsd(OCSD_ERR_SEV_WARN,err,msg);
+        m_err_log->LogError(ITraceErrorLog::HANDLE_GEN_INFO, &err_ocsd);
+    }
+}
+
 
 /************************************************************************************/
 /* mappers global address space class - no differentiation in core trace IDs */

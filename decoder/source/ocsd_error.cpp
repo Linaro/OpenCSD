@@ -79,6 +79,7 @@ static const char *s_errorCodeDescs[][2] = {
     {"OCSD_ERR_MEM_ACC_OVERLAP","Attempted to set an overlapping range in memory access map."},
     {"OCSD_ERR_MEM_ACC_FILE_NOT_FOUND","Memory access file could not be opened."},
     {"OCSD_ERR_MEM_ACC_FILE_DIFF_RANGE","Attempt to re-use the same memory access file for a different address range."},
+    {"OCSD_ERR_MEM_ACC_BAD_LEN","Memory accessor returned a bad read length value (larger than requested."},
     {"OCSD_ERR_MEM_ACC_RANGE_INVALID","Address range in accessor set to invalid values."},
     /* test errors - errors generated only by the test code, not the library */
     {"OCSD_ERR_TEST_SNAPSHOT_PARSE", "Test snapshot file parse error"},

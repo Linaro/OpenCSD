@@ -39,12 +39,32 @@
 #include "mem_acc/trc_mem_acc_base.h"
 #include "interfaces/trc_error_log_i.h"
 
-//#define LOG_CACHE_OPS
-//#define LOG_CACHE_STATS
+#ifdef LOG_CACHE_STATS
+#define INC_HITS_RL(idx) m_hits++; m_hit_rl[m_mru_idx]++;
+#define INC_MISS() m_misses++;
+#define INC_PAGES() m_pages++;
+#define SET_MAX_RL(idx)                         \
+    {                                           \
+        if (m_hit_rl_max[idx] < m_hit_rl[idx])  \
+            m_hit_rl_max[idx] = m_hit_rl[idx];  \
+        m_hit_rl[idx] = 0;                      \
+    }
+#define INC_RL(idx) m_hit_rl[m_mru_idx]++;
+#else
+#define INC_HITS_RL(idx)
+#define INC_MISS() 
+#define INC_PAGES() 
+#define SET_MAX_RL(idx)
+#define INC_RL(idx)  
+#endif
 
-uint32_t TrcMemAccCache::readBytesFromCache(TrcMemAccessorBase *p_accessor, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
+// uncomment to log cache ops
+//#define LOG_CACHE_OPS
+
+ocsd_err_t TrcMemAccCache::readBytesFromCache(TrcMemAccessorBase *p_accessor, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, uint32_t *numBytes, uint8_t *byteBuffer)
 {
-    uint32_t bytesRead = 0;
+    uint32_t bytesRead = 0, reqBytes = *numBytes;
+    ocsd_err_t err = OCSD_OK;
 
 #ifdef LOG_CACHE_OPS
     std::ostringstream oss;
@@ -60,12 +80,11 @@ uint32_t TrcMemAccCache::readBytesFromCache(TrcMemAccessorBase *p_accessor, cons
             oss << "TrcMemAccCache:: hit [page: " << std::dec << m_mru_idx << "[addr:0x" << std::hex << address << ", bytes: " << std::dec << reqBytes << "]\n";
             logMsg(oss.str());
 #endif
-            m_hits++;
-            m_hit_rl[m_mru_idx]++;
+            INC_HITS_RL(m_mru_idx);
         }
         else
         {
-            m_misses++;
+            INC_MISS();
 #ifdef LOG_CACHE_OPS
             oss << "TrcMemAccCache:: miss [addr:0x" << std::hex << address << ", bytes: " << std::dec << reqBytes << "]\n";
             logMsg(oss.str());
@@ -73,22 +92,29 @@ uint32_t TrcMemAccCache::readBytesFromCache(TrcMemAccessorBase *p_accessor, cons
             /* need a new cache page - check the underlying accessor for the data */
             m_mru_idx = m_mru_next_new;             
             m_mru[m_mru_idx].valid_len = p_accessor->readBytes(address, mem_space, MEM_ACC_CACHE_PAGE_SIZE, &m_mru[m_mru_idx].data[0]);
+            
+            /* check return length valid - v bad if return length more than request */
+            if (m_mru[m_mru_idx].valid_len > MEM_ACC_CACHE_PAGE_SIZE)
+            {
+                m_mru[m_mru_idx].valid_len = 0; // set to nothing returned.
+                err = OCSD_ERR_MEM_ACC_BAD_LEN;
+            }
+            
             if (m_mru[m_mru_idx].valid_len > 0)
             {
                 // got some data - so save the 
                 m_mru[m_mru_idx].st_addr = address;
 
                 // log the run length hit counts
-                if (m_hit_rl_max[m_mru_idx] < m_hit_rl[m_mru_idx])
-                    m_hit_rl_max[m_mru_idx] = m_hit_rl[m_mru_idx];
-                m_hit_rl[m_mru_idx] = 0;
-
+                SET_MAX_RL(m_mru_idx);
+                
 #ifdef LOG_CACHE_OPS
                 oss.str("");
                 oss << "TrcMemAccCache:: load [page: " << std::dec << m_mru_idx << "[addr:0x" << std::hex << address << ", bytes: " << std::dec << m_mru[m_mru_idx].valid_len << "]\n";
                 logMsg(oss.str());
 #endif
-                m_pages++;
+                INC_PAGES();
+                
                 // increment the next new page counter.
                 m_mru_next_new++;
                 if (m_mru_next_new == MEM_ACC_CACHE_MRU_SIZE)
@@ -98,7 +124,7 @@ uint32_t TrcMemAccCache::readBytesFromCache(TrcMemAccessorBase *p_accessor, cons
                 {
                     bytesRead = reqBytes;
                     memcpy(byteBuffer, &m_mru[m_mru_idx].data[address - m_mru[m_mru_idx].st_addr], reqBytes);
-                    m_hit_rl[m_mru_idx]++;
+                    INC_RL(m_mru_idx);
                 }
                 else
                 {
@@ -107,12 +133,13 @@ uint32_t TrcMemAccCache::readBytesFromCache(TrcMemAccessorBase *p_accessor, cons
                     oss << "TrcMemAccCache:: miss-after-load [page: " << std::dec << m_mru_idx << "[addr:0x" << std::hex << address << ", bytes: " << std::dec << m_mru[m_mru_idx].valid_len << "]\n";
                     logMsg(oss.str());
 #endif
-                    m_misses++;
+                    INC_MISS();
                 }
             }
         }
     }
-    return bytesRead;
+    *numBytes = bytesRead;
+    return err;
 }
 
 void TrcMemAccCache::logMsg(const std::string &szMsg)
@@ -141,8 +168,8 @@ void TrcMemAccCache::logAndClearCounts()
         oss << "Run length max page " << std::dec << i << ": " << m_hit_rl_max[i] << "\n";
         logMsg(oss.str());
     }
-#endif
     m_hits = m_misses = m_pages = 0;
+#endif
 }
 
 
