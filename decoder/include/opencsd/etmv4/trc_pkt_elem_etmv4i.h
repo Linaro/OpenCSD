@@ -115,7 +115,7 @@ public:
     void initNextPacket();  //!< clear any single packet only flags / state.
 
     void setType(const ocsd_etmv4_i_pkt_type pkt_type) { type = pkt_type; };
-    void updateErrType(const ocsd_etmv4_i_pkt_type err_pkt_type);
+    void updateErrType(const ocsd_etmv4_i_pkt_type err_pkt_type, const uint8_t val = 0);
 
     void clearTraceInfo();  //!< clear all the trace info data prior to setting for new trace info packet.
     void setTraceInfo(const uint32_t infoVal);
@@ -208,11 +208,12 @@ private:
     Etmv4PktAddrStack m_addr_stack;
 };
 
-inline void  EtmV4ITrcPacket::updateErrType(const ocsd_etmv4_i_pkt_type err_pkt_type)
+inline void  EtmV4ITrcPacket::updateErrType(const ocsd_etmv4_i_pkt_type err_pkt_type, const uint8_t err_val /* = 0 */)
 {
     // set primary type to incoming error type, set packet err type to previous primary type.
     err_type = type;
     type = err_pkt_type;
+    err_hdr_val = err_val;
 }
 
 inline void EtmV4ITrcPacket::clearTraceInfo()

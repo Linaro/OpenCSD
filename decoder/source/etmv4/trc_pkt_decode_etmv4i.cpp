@@ -251,6 +251,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     switch(m_curr_packet_in->getType())
     {
     case ETM4_PKT_I_ASYNC: // nothing to do with this packet.
+    case ETM4_PKT_I_IGNORE: // or this one.
         break;
 
     case ETM4_PKT_I_TRACE_INFO:
@@ -351,6 +352,21 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             bool bV7MProfile = (m_config->archVersion() == ARCH_V7) && (m_config->coreProfile() == profile_CortexM);
             if (m_P0_stack.createParamElemNoParam(P0_EXCEP_RET, bV7MProfile, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
                 bAllocErr = true;
+            else if (bV7MProfile)
+                m_curr_spec_depth++;
+        }
+        break;
+
+    case ETM4_PKT_I_FUNC_RET:
+        {
+            // P0 element iff V8M profile, otherwise ignore
+            if (OCSD_IS_V8_ARCH(m_config->archVersion()) && (m_config->coreProfile() == profile_CortexM))
+            {
+                if (m_P0_stack.createParamElemNoParam(P0_FUNC_RET, true, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
+                    bAllocErr = true;
+                else
+                    m_curr_spec_depth++;
+            }
         }
         break;
 
@@ -622,6 +638,13 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
                 m_output_elem.setType(OCSD_GEN_TRC_ELEM_EXCEPTION_RET);
                 resp = outputTraceElementIdx(pElem->getRootIndex(),m_output_elem);
                 if(pElem->isP0()) // are we on a core that counts ERET as P0?
+                    m_P0_commit--;
+                break;
+
+            case P0_FUNC_RET:
+                // func ret is V8M - data trace only - hint that data has been popped off the stack.
+                // at this point nothing to do till the decoder starts handling data trace.
+                if (pElem->isP0()) 
                     m_P0_commit--;
                 break;
             }

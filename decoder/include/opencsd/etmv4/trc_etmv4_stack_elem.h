@@ -56,7 +56,8 @@ typedef enum _p0_elem_t
     P0_TS,
     P0_CC,
     P0_TS_CC,
-    P0_OVERFLOW
+    P0_OVERFLOW,
+    P0_FUNC_RET,
 } p0_elem_t;
 
 
