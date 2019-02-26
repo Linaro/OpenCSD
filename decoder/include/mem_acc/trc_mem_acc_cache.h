@@ -71,7 +71,7 @@ public:
         
     
     /** read bytes from cache if possible - load new page if needed, bail out if data not available */
-    ocsd_err_t readBytesFromCache(TrcMemAccessorBase *p_accessor, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, uint32_t *numBytes, uint8_t *byteBuffer);
+    ocsd_err_t readBytesFromCache(TrcMemAccessorBase *p_accessor, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t trcID, uint32_t *numBytes, uint8_t *byteBuffer);
 
     void setErrorLog(ITraceErrorLog *log);
     void logAndClearCounts();

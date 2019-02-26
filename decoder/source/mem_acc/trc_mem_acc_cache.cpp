@@ -61,7 +61,7 @@
 // uncomment to log cache ops
 //#define LOG_CACHE_OPS
 
-ocsd_err_t TrcMemAccCache::readBytesFromCache(TrcMemAccessorBase *p_accessor, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, uint32_t *numBytes, uint8_t *byteBuffer)
+ocsd_err_t TrcMemAccCache::readBytesFromCache(TrcMemAccessorBase *p_accessor, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t trcID, uint32_t *numBytes, uint8_t *byteBuffer)
 {
     uint32_t bytesRead = 0, reqBytes = *numBytes;
     ocsd_err_t err = OCSD_OK;
@@ -91,7 +91,7 @@ ocsd_err_t TrcMemAccCache::readBytesFromCache(TrcMemAccessorBase *p_accessor, co
 #endif
             /* need a new cache page - check the underlying accessor for the data */
             m_mru_idx = m_mru_next_new;             
-            m_mru[m_mru_idx].valid_len = p_accessor->readBytes(address, mem_space, MEM_ACC_CACHE_PAGE_SIZE, &m_mru[m_mru_idx].data[0]);
+            m_mru[m_mru_idx].valid_len = p_accessor->readBytes(address, mem_space, trcID, MEM_ACC_CACHE_PAGE_SIZE, &m_mru[m_mru_idx].data[0]);
             
             /* check return length valid - v bad if return length more than request */
             if (m_mru[m_mru_idx].valid_len > MEM_ACC_CACHE_PAGE_SIZE)

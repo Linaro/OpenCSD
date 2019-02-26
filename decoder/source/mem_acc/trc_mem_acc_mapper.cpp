@@ -99,13 +99,13 @@ ocsd_err_t TrcMemAccMapper::ReadTargetMemory(const ocsd_vaddr_t address, const u
         {
             // read from cache - or load a new cache page and read....
             readBytes = *num_bytes;
-            err = m_cache.readBytesFromCache(m_acc_curr, address, mem_space, &readBytes, p_buffer);
+            err = m_cache.readBytesFromCache(m_acc_curr, address, mem_space, cs_trace_id, &readBytes, p_buffer);
             if (err != OCSD_OK)
                 LogWarn(err, "Mem Acc: Cache access error");
         }
         else
         {
-            readBytes = m_acc_curr->readBytes(address, mem_space, *num_bytes, p_buffer);
+            readBytes = m_acc_curr->readBytes(address, mem_space, cs_trace_id, *num_bytes, p_buffer);
             // guard against bad accessor returns (e.g. callback not obeying the rules for return values)
             if (readBytes > *num_bytes)
             {

@@ -343,7 +343,8 @@ public:
      * @return ocsd_err_t  : Library error code or OCSD_OK if successful.
      */
     ocsd_err_t addCallbackMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context); 
-    
+    ocsd_err_t addCallbackIDMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAccID_CB p_cb_func, const void *p_context);
+
     /*!
      * Remove the memory accessor from the map, that begins at the given address, for the memory space provided.
      *
@@ -384,6 +385,9 @@ private:
     ocsd_err_t createDecodeElement(const uint8_t CSID);
     void destroyDecodeElement(const uint8_t CSID);
     void destroyMemAccMapper();
+    ocsd_err_t initCallbackMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, 
+        const ocsd_mem_space_acc_t mem_space, void *p_cb_func, bool IDfn, const void *p_context);
+
 
     ocsd_dcd_tree_src_t m_dcd_tree_type;
 

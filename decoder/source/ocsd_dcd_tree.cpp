@@ -343,8 +343,8 @@ ocsd_err_t DecodeTree::updateBinFileRegionMemAcc(const ocsd_file_mem_region_t *r
     }
     return OCSD_OK;
 }
-
-ocsd_err_t DecodeTree::addCallbackMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context)
+ocsd_err_t DecodeTree::initCallbackMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, 
+    const ocsd_mem_space_acc_t mem_space, void *p_cb_func, bool IDfn, const void *p_context)
 {
     if(!hasMemAccMapper())
         return OCSD_ERR_NOT_INIT;
@@ -359,7 +359,11 @@ ocsd_err_t DecodeTree::addCallbackMemAcc(const ocsd_vaddr_t st_address, const oc
         TrcMemAccCB *pCBAcc = dynamic_cast<TrcMemAccCB *>(p_accessor);
         if(pCBAcc)
         {
-            pCBAcc->setCBIfFn(p_cb_func, p_context);
+            if (IDfn)
+                pCBAcc->setCBIDIfFn((Fn_MemAccID_CB)p_cb_func, p_context);
+            else
+                pCBAcc->setCBIfFn((Fn_MemAcc_CB)p_cb_func, p_context);
+
             err = m_default_mapper->AddAccessor(p_accessor,0);
         }
         else
@@ -369,6 +373,16 @@ ocsd_err_t DecodeTree::addCallbackMemAcc(const ocsd_vaddr_t st_address, const oc
             TrcMemAccFactory::DestroyAccessor(p_accessor);
     }
     return err;
+}
+
+ocsd_err_t DecodeTree::addCallbackMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context)
+{
+    return initCallbackMemAcc(st_address, en_address, mem_space, (void *)p_cb_func, false, p_context);
+}
+
+ocsd_err_t DecodeTree::addCallbackIDMemAcc(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAccID_CB p_cb_func, const void *p_context)
+{
+    return initCallbackMemAcc(st_address, en_address, mem_space, (void *)p_cb_func, true, p_context);
 }
 
 ocsd_err_t DecodeTree::removeMemAccByAddress(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space)
