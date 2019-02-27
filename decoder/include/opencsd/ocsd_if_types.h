@@ -273,10 +273,15 @@ typedef enum _ocsd_dcd_tree_src_t {
 /** Core Architecture Version */
 typedef enum _ocsd_arch_version {
     ARCH_UNKNOWN,   /**< unknown architecture */
+    ARCH_CUSTOM,    /**< None ARM, custom architecture */
     ARCH_V7,        /**< V7 architecture */
     ARCH_V8,        /**< V8 architecture */
-    ARCH_CUSTOM,    /**< None ARM, custom architecture */
+    ARCH_V8r3,      /**< V8.3 architecture */
 } ocsd_arch_version_t;
+
+// macros for arch version comparisons.
+#define OCSD_IS_V8_ARCH(arch) ((arch >= ARCH_V8) && (arch <= ARCH_V8r3))
+#define OCSD_MIN_V8_ARCH(arch) (arch >= ARCH_V8)
 
 /** Core Profile  */
 typedef enum _ocsd_core_profile {
@@ -352,7 +357,8 @@ typedef enum _ocsd_instr_type {
     OCSD_INSTR_BR,             /**< Immediate Branch instruction */
     OCSD_INSTR_BR_INDIRECT,    /**< Indirect Branch instruction */
     OCSD_INSTR_ISB,            /**< Barrier : ISB instruction */
-    OCSD_INSTR_DSB_DMB         /**< Barrier : DSB or DMB instruction */
+    OCSD_INSTR_DSB_DMB,        /**< Barrier : DSB or DMB instruction */
+    OCSD_INSTR_WFI_WFE,        /**< WFI or WFE traced as direct branch */
 } ocsd_instr_type;
 
 /** instruction sub types - addiitonal information passed to the output packets
@@ -379,6 +385,7 @@ typedef struct _ocsd_instr_info {
     ocsd_vaddr_t instr_addr;       /**< Input: Instruction address. */
     uint32_t opcode;                /**< Input: Opcode at address. 16 bit opcodes will use MS 16bits of parameter. */
     uint8_t dsb_dmb_waypoints;      /**< Input: DMB and DSB are waypoints */
+    uint8_t wfi_wfe_branch;         /**< Input: WFI, WFE classed as direct branches */
 
     /* instruction decode info */
     ocsd_instr_type type;          /**< Decoder: Current instruction type. */
