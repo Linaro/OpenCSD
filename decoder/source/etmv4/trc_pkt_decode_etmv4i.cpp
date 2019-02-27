@@ -151,6 +151,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
 
     // set up static trace instruction decode elements
     m_instr_info.dsb_dmb_waypoints = 0;
+    m_instr_info.wfi_wfe_branch = m_config->wfiwfeBranch() ? 1 : 0;
     m_instr_info.pe_type.arch = m_config->archVersion();
     m_instr_info.pe_type.profile = m_config->coreProfile();
 

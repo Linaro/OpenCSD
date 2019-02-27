@@ -179,6 +179,7 @@ ocsd_err_t TrcPktDecodePtm::onProtocolConfig()
     m_instr_info.pe_type.profile = m_config->coreProfile();
     m_instr_info.pe_type.arch = m_config->archVersion();
     m_instr_info.dsb_dmb_waypoints = m_config->dmsbWayPt() ? 1 : 0;
+    m_instr_info.wfi_wfe_branch = 0;
     return err;
 }
 
