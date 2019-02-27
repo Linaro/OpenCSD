@@ -45,6 +45,9 @@ block identification and trace decode.
 
 static ocsd_instr_subtype instr_sub_type = OCSD_S_INSTR_NONE;
 
+/* need to spot the architecture version for certain instructions */
+static uint16_t arch_version = 0x70;
+
 ocsd_instr_subtype get_instr_subtype()
 {
     return instr_sub_type;
@@ -53,6 +56,11 @@ ocsd_instr_subtype get_instr_subtype()
 void clear_instr_subtype()
 {
     instr_sub_type = OCSD_S_INSTR_NONE;
+}
+
+void set_arch_version(uint16_t version)
+{
+    arch_version = version;
 }
 
 int inst_ARM_is_direct_branch(uint32_t inst)
@@ -71,6 +79,16 @@ int inst_ARM_is_direct_branch(uint32_t inst)
         is_direct_branch = 0;
     }
     return is_direct_branch;
+}
+
+int inst_ARM_wfiwfe(uint32_t inst)
+{
+    if ( ((inst & 0xf0000000) != 0xf0000000) &&
+         ((inst & 0x0ffffffe) == 0x0320f002)
+        )
+        /* WFI & WFE may be traced as branches in etm4.3 ++ */
+        return 1;
+    return 0;
 }
 
 int inst_ARM_is_indirect_branch(uint32_t inst)
@@ -163,6 +181,22 @@ int inst_Thumb_is_direct_branch_link(uint32_t inst, uint8_t *is_link, uint8_t *i
     return is_direct_branch;
 }
 
+int inst_Thumb_wfiwfe(uint32_t inst)
+{
+    int is_wfiwfe = 1;
+    /* WFI, WFE may be branches in etm4.3++ */
+    if ((inst & 0xfffffffe) == 0xf3af8002) {
+        /* WFI & WFE (encoding T2) */
+    }
+    else if ((inst & 0xffef0000) == 0xbf200000) {
+        /* WFI & WFE (encoding T1) */
+    }
+    else {
+        is_wfiwfe = 0;
+    }
+    return is_wfiwfe;
+}
+
 int inst_Thumb_is_indirect_branch(uint32_t inst)
 {
     uint8_t link;
@@ -175,7 +209,7 @@ int inst_Thumb_is_indirect_branch_link(uint32_t inst, uint8_t *is_link)
     int is_branch = 1;
     
     if ((inst & 0xff000000) == 0x47000000) {
-        /* BX, BLX (reg) */
+        /* BX, BLX (reg) [v8M includes BXNS, BLXNS] */
         if (inst & 0x00800000) {
             *is_link = 1;
             instr_sub_type = OCSD_S_INSTR_BR_LINK;
@@ -222,6 +256,12 @@ int inst_Thumb_is_indirect_branch_link(uint32_t inst, uint8_t *is_link)
 
 int inst_A64_is_direct_branch(uint32_t inst)
 {
+    uint8_t link = 0;
+    return inst_A64_is_direct_branch_link(inst, &link);
+}
+
+int inst_A64_is_direct_branch_link(uint32_t inst, uint8_t *is_link)
+{
     int is_direct_branch = 1;
     if ((inst & 0x7c000000) == 0x34000000) {
         /* CB, TB */
@@ -229,23 +269,69 @@ int inst_A64_is_direct_branch(uint32_t inst)
         /* B<cond> */
     } else if ((inst & 0x7c000000) == 0x14000000) {
         /* B, BL imm */
+        if (inst & 0x80000000) {
+            *is_link = 1;
+            instr_sub_type = OCSD_S_INSTR_BR_LINK;
+        }
     } else {
         is_direct_branch = 0;
     }
     return is_direct_branch;
 }
 
+int inst_A64_wfiwfe(uint32_t inst)
+{
+    /* WFI, WFE may be traced as branches in etm 4.3++ */
+    if ((inst & 0xffffffdf) == 0xd503205f)
+        return 1;
+    return 0;
+}
+
 int inst_A64_is_indirect_branch(uint32_t inst)
 {
+    uint8_t link = 0;
+    return inst_A64_is_indirect_branch_link(inst, &link);
+}
+
+int inst_A64_is_indirect_branch_link(uint32_t inst, uint8_t *is_link)
+{
     int is_indirect_branch = 1;
+
     if ((inst & 0xffdffc1f) == 0xd61f0000) {
         /* BR, BLR */
+        if (inst & 0x00200000) {
+            *is_link = 1;
+            instr_sub_type = OCSD_S_INSTR_BR_LINK;
+        }
     } else if ((inst & 0xfffffc1f) == 0xd65f0000) {
         instr_sub_type = OCSD_S_INSTR_V8_RET;
         /* RET */
     } else if ((inst & 0xffffffff) == 0xd69f03e0) {
         /* ERET */
         instr_sub_type = OCSD_S_INSTR_V8_ERET;
+    } else if (arch_version >= 0x0803) {
+        /* new pointer auth instr for v8.3 arch */   
+        if ((inst & 0xffdff800) == 0xd61f0800) {
+            /* BRAA, BRAB, BLRAA, BLRBB */
+            if (inst & 0x00200000) {
+                *is_link = 1;
+                instr_sub_type = OCSD_S_INSTR_BR_LINK;
+            }
+        } else if ((inst & 0xffdff81F) == 0xd71f081F) {
+            /* BRAAZ, BRABZ, BLRAAZ, BLRBBZ */
+            if (inst & 0x00200000) {
+                *is_link = 1;
+                instr_sub_type = OCSD_S_INSTR_BR_LINK;
+            }
+        } else if ((inst & 0xfffffbff) == 0xd69f0bff) {
+            /* ERETAA, ERETAB */
+            instr_sub_type = OCSD_S_INSTR_V8_ERET;
+        } else if ((inst & 0xfffffbff) == 0xd65f0bff) {
+            /* RETAA, RETAB */
+            instr_sub_type = OCSD_S_INSTR_V8_RET;
+        } else {
+            is_indirect_branch = 0;
+        }
     } else {
         is_indirect_branch = 0;
     }
@@ -419,6 +505,17 @@ int inst_A64_is_branch_and_link(uint32_t inst)
     } else if ((inst & 0xfc000000) == 0x94000000) {
         /* BL */
         instr_sub_type = OCSD_S_INSTR_BR_LINK;
+    }  else if (arch_version >= 0x0803) {
+        /* new pointer auth instr for v8.3 arch */
+        if ((inst & 0xfffff800) == 0xd73f0800) {
+            /* BLRAA, BLRBB */
+            instr_sub_type = OCSD_S_INSTR_BR_LINK;
+        } else if ((inst & 0xfffff81F) == 0xd63f081F) {
+            /* BLRAAZ, BLRBBZ */
+            instr_sub_type = OCSD_S_INSTR_BR_LINK;
+        } else {
+            is_branch = 0;
+        }
     } else {
         is_branch = 0;
     }
