@@ -85,6 +85,7 @@ const ocsd_vaddr_t mem_dump_address_tc2=0xC0008000;
 /* test variables - set by command line to feature test API */
 static int using_mem_acc_cb = 0;    /* test the memory access callback function */
 static int use_region_file = 0;     /* test multi region memory files */
+static int using_mem_acc_cb_id = 0; /* test the mem acc callback with trace ID parameter */
 
 /* buffer to handle a packet string */
 #define PACKET_STR_LEN 1024
@@ -162,6 +163,12 @@ static int process_cmd_line(int argc, char *argv[])
             using_mem_acc_cb = 1;
             use_region_file = 0;
         }
+        else if (strcmp(argv[idx], "-test_cb_id") == 0)
+        { 
+            using_mem_acc_cb = 1;
+            use_region_file = 0;
+            using_mem_acc_cb_id = 1;
+        }
         else if(strcmp(argv[idx],"-test_region_file") == 0)
         {
             use_region_file = 1;
@@ -225,7 +232,7 @@ static void print_cmd_line_help()
     printf("-decode | -decode_only : full decode + trace packets / full decode packets only (default trace packets only)\n");
     printf("-raw / -raw_packed: print raw unpacked / packed data;\n");
     printf("-test_printstr | -test_libprint : ttest lib printstr callback | test lib based packet printers\n");
-    printf("-test_region_file | -test_cb : mem accessor - test multi region file API | test callback API (default single memory file)\n\n");
+    printf("-test_region_file | -test_cb | -test_cb_id : mem accessor - test multi region file API | test callback API [with trcid] (default single memory file)\n\n");
     printf("-ss_path <path> : path from cwd to /snapshots/ directory. Test prog will append required test subdir\n");
 }
 
@@ -238,11 +245,13 @@ static ocsd_mem_space_acc_t dump_file_mem_space = OCSD_MEM_SPACE_ANY;   /* memor
 static long mem_file_size = 0;                /* size of the memory file */
 static ocsd_vaddr_t mem_file_en_address = 0;  /* end address last inclusive address in file. */
 
+/* log the memacc output */
+/* #define LOG_MEMACC_CB */
 
 /* decode memory access using a CallBack function 
 * tests CB API and add / remove mem acc API.
 */
-static uint32_t  mem_acc_cb(const void *p_context, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
+static uint32_t do_mem_acc_cb(const void *p_context, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t trc_id, const uint32_t reqBytes, uint8_t *byteBuffer)
 {
     uint32_t read_bytes = 0;
     size_t file_read_bytes;
@@ -275,8 +284,23 @@ static uint32_t  mem_acc_cb(const void *p_context, const ocsd_vaddr_t address, c
         if(file_read_bytes < read_bytes)
             read_bytes = file_read_bytes;
     }
+#ifdef LOG_MEMACC_CB
+    sprintf(packet_str, "mem_acc_cb(addr 0x%08llX, size %d, trcID 0x%02X)\n", address, reqBytes, trc_id);
+    ocsd_def_errlog_msgout(packet_str);
+#endif
     return read_bytes;
 }
+
+static uint32_t mem_acc_cb(const void *p_context, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer)
+{
+    return do_mem_acc_cb(p_context, address, mem_space, 0xff, reqBytes, byteBuffer);
+}
+
+static uint32_t mem_acc_id_cb(const void *p_context, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t trc_id, const uint32_t reqBytes, uint8_t *byteBuffer)
+{
+    return do_mem_acc_cb(p_context, address, mem_space, trc_id, reqBytes, byteBuffer);
+}
+
 
 /* Create the memory accessor using the callback function and attach to decode tree */
 static ocsd_err_t create_mem_acc_cb(dcd_tree_handle_t dcd_tree_h, const char *mem_file_path)
@@ -289,8 +313,12 @@ static ocsd_err_t create_mem_acc_cb(dcd_tree_handle_t dcd_tree_h, const char *me
         mem_file_size = ftell(dump_file);
         mem_file_en_address = mem_dump_address + mem_file_size - 1;
 
-        err = ocsd_dt_add_callback_mem_acc(dcd_tree_h,
-            mem_dump_address,mem_file_en_address,dump_file_mem_space,&mem_acc_cb,0);
+        if (using_mem_acc_cb_id)
+            err = ocsd_dt_add_callback_trcid_mem_acc(dcd_tree_h, mem_dump_address, 
+                mem_file_en_address, dump_file_mem_space, &mem_acc_id_cb, 0);
+        else
+            err = ocsd_dt_add_callback_mem_acc(dcd_tree_h, mem_dump_address, 
+                mem_file_en_address, dump_file_mem_space, &mem_acc_cb, 0);
         if(err != OCSD_OK)
         {
             fclose(dump_file);
