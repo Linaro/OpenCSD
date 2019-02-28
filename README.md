@@ -27,11 +27,11 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.10.1_
+_Current Version 0.11.0_
 
 ### Current support:
 
-- ETMv4 (v4.1) instruction trace - packet processing and packet decode.
+- ETMv4 (v4.4) instruction trace - packet processing and packet decode.
 - PTM   (v1.1) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) data trace - packet processing.
@@ -148,6 +148,11 @@ Version and Modification Information
                     __Bugfix__: ETMV4: Interworking ISA change between A32-T32 occasionally missed during instruction decode.
 - _Version 0.10.1_: __Updates__: Build update - allow multi-thread make (make -j<N>).
                     __Docs__: Minor update to AutoFDO documentation.
+- _Version 0.11.0_: __Update__: ETM v4 decoder updated to support ETM version up to v4.4
+                    __Update__: Memory access callback function - added new callback signature to provide TraceID to client when requesting memory.
+                    __Update__: Created new example program to demonstrate using memory buffer in APIs.
+                    __Bugfix__: Typos in docs and source.
+                    __Bugfix__: Memory accessor - validate callback return values.
 
 
 Licence Information
