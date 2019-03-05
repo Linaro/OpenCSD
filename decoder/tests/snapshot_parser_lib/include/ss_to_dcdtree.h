@@ -66,6 +66,7 @@ private:
     bool createETMv4Decoder(const std::string &coreName, Parser::Parsed *devSrc, const bool bDataChannel = false);
     bool createETMv3Decoder(const std::string &coreName, Parser::Parsed *devSrc);
     bool createPTMDecoder(const std::string &coreName, Parser::Parsed *devSrc);
+    bool createETEDecoder(const std::string &coreName, Parser::Parsed *devSrc);
     // TBD add etmv4d
 
     // create a decoder related to a software trace source (ITM, STM)
