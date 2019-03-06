@@ -104,6 +104,7 @@ public:
     const uint32_t TimeStampSize() const;
 
     const bool commitOpt1() const;
+    const bool commTransP0() const;
 
     /* idr 1 */
     const uint8_t MajVersion() const;
@@ -266,6 +267,11 @@ inline const uint32_t EtmV4Config::TimeStampSize() const
 inline const bool EtmV4Config::commitOpt1() const
 {
     return (bool)((m_cfg.reg_idr0 & 0x20000000) == 0x20000000) && hasCycleCountI();
+}
+
+inline const bool EtmV4Config::commTransP0() const
+{
+    return (bool)((m_cfg.reg_idr0 & 0x40000000) == 0x0);
 }
 
     /* idr 1 */

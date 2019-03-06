@@ -97,6 +97,9 @@ protected:
     // process marker elements
     ocsd_err_t processMarkerElem(TrcStackElem *pElem);
 
+    // process a transaction element
+    ocsd_err_t processTransElem(TrcStackElem *pElem);
+
     // process a bad packet
     ocsd_err_t handleBadPacket(const char *reason);
 
@@ -133,6 +136,11 @@ private:
     ocsd_err_t returnStackPop();  // pop return stack and update instruction address.
 
     void setElemTraceRange(OcsdTraceElement &elemIn, const instr_range_t &addr_range, const bool executed, ocsd_trc_index_t index);
+
+    // true if we are ETE configured.
+    inline bool isETEConfig() {
+        return (m_config->MajVersion() >= ETE_ARCH_VERSION);
+    }
 
     ocsd_mem_space_acc_t getCurrMemSpace();
 

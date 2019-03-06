@@ -62,6 +62,10 @@ typedef enum _p0_elem_t
     P0_OVERFLOW,
     P0_FUNC_RET,
     P0_SRC_ADDR,
+    P0_TRANS_TRACE_INIT,
+    P0_TRANS_START,
+    P0_TRANS_COMMIT,
+    P0_TRANS_FAIL
 } p0_elem_t;
 
 

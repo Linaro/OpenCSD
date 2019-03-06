@@ -69,10 +69,9 @@ public:
 
     void setExcepMarker() { excep_data_marker = 1; };
     void setExceptionNum(uint32_t excepNum) { exception_number = excepNum; };
-
-
     void setTraceOnReason(const trace_on_reason_t reason);
     void setUnSyncEOTReason(const unsync_info_t reason);
+    void setTransactionType(const trace_memtrans_t trans) { mem_trans = trans; };
 
     void setAddrRange(const ocsd_vaddr_t  st_addr, const ocsd_vaddr_t en_addr, const int num_instr = 1);
     void setLastInstrInfo(const bool exec, const ocsd_instr_type last_i_type, const ocsd_instr_subtype last_i_subtype, const uint8_t size);

@@ -520,6 +520,30 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
         }
         break;
 
+        /* transactional memory packets */
+    case ETE_PKT_I_TRANS_ST:
+        {
+            if (m_P0_stack.createParamElemNoParam(P0_TRANS_START, m_config->commTransP0(), m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
+                bAllocErr = true;
+            if (m_config->commTransP0())
+                m_curr_spec_depth++;
+        }
+        break;
+
+    case ETE_PKT_I_TRANS_COMMIT:
+        {
+            if (m_P0_stack.createParamElemNoParam(P0_TRANS_COMMIT, false, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
+                bAllocErr = true;
+        }
+        break;
+
+    case ETE_PKT_I_TRANS_FAIL:
+        {
+            if (m_P0_stack.createParamElemNoParam(P0_TRANS_FAIL, false, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
+                bAllocErr = true;
+        }
+        break;
+
     /*** presently unsupported packets ***/
     /* ETE commit window - not supported in current ETE versions - blocked by packet processor */
     case ETE_PKT_I_COMMIT_WIN_MV:
@@ -589,6 +613,9 @@ void TrcPktDecodeEtmV4I::doTraceInfoPacket()
     m_trace_info = m_curr_packet_in->getTraceInfo();
     m_cc_threshold = m_curr_packet_in->getCCThreshold();
     m_curr_spec_depth = m_curr_packet_in->getCurrSpecDepth();
+    /* put a trans marker in stack if started in trans state */
+    if (m_trace_info.bits.in_trans_state)
+        m_P0_stack.createParamElemNoParam(P0_TRANS_TRACE_INIT, false, m_curr_packet_in->getType(), m_index_curr_pkt);
 
     // elements associated with data trace
 #ifdef DATA_TRACE_SUPPORTED
@@ -669,7 +696,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
 
             switch (pElem->getP0Type())
             {
-            // indicates a trace restart - beginning of trace or discontinuiuty
+                // indicates a trace restart - beginning of trace or discontinuiuty
             case P0_TRC_ON:
                 err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_TRACE_ON);
                 if (!err)
@@ -684,7 +711,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 {
                 TrcStackElemAddr *pAddrElem = dynamic_cast<TrcStackElemAddr *>(pElem);
                 m_return_stack.clear_pop_pending(); // address removes the need to pop the indirect address target from the stack
-                if(pAddrElem)
+                if (pAddrElem)
                 {
                     SetInstrInfoInAddrISA(pAddrElem->getAddr().val, pAddrElem->getAddr().isa);
                     m_need_addr = false;
@@ -695,7 +722,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
             case P0_CTXT:
                 {
                 TrcStackElemCtxt *pCtxtElem = dynamic_cast<TrcStackElemCtxt *>(pElem);
-                if(pCtxtElem)
+                if (pCtxtElem)
                 {
                     etmv4_context_t ctxt = pCtxtElem->getContext();
                     // check this is an updated context
@@ -724,7 +751,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 {
                 TrcStackElemAtom *pAtomElem = dynamic_cast<TrcStackElemAtom *>(pElem);
 
-                if(pAtomElem)
+                if (pAtomElem)
                 {
                     while(!pAtomElem->isEmpty() && m_elem_res.P0_commit && !err)
                     {
@@ -736,13 +763,13 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
 
                         // if address and context do instruction trace follower.
                         // otherwise skip atom and reduce committed elements
-                        if(!m_need_ctxt && !m_need_addr)
+                        if (!m_need_ctxt && !m_need_addr)
                         {
                             err = processAtom(atom);
                         }
                         m_elem_res.P0_commit--; // mark committed 
                     }
-                    if(!pAtomElem->isEmpty())   
+                    if (!pAtomElem->isEmpty())
                         bPopElem = false;   // don't remove if still atoms to process.
                 }
                 }
@@ -781,6 +808,15 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
             case P0_Q:
                 err = processQElement();
                 m_elem_res.P0_commit--;
+				break;
+
+            case P0_TRANS_START:
+                if (m_config->commTransP0())
+                    m_elem_res.P0_commit--;
+            case P0_TRANS_COMMIT:
+            case P0_TRANS_FAIL:
+            case P0_TRANS_TRACE_INIT:
+                err = processTransElem(pElem);
                 break;
             }
 
@@ -854,6 +890,25 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElemOnEOT()
             //skip
         case P0_ADDR:
         case P0_CTXT:
+            break;
+
+            // trans
+            // P0 trans - clear and stop, otherwise skip
+        case P0_TRANS_START:
+            if (m_config->commTransP0())
+                m_P0_stack.delete_all();
+            break;
+
+            // non-speculative trans fail / commit - could appear at EoT after valid trace
+            // but without a subsequent P0 that would force output.
+        case P0_TRANS_FAIL:
+        case P0_TRANS_COMMIT:
+            if (m_max_spec_depth == 0 || m_curr_spec_depth == 0)
+                err = processTransElem(pElem);
+            break;
+
+            // others - skip non P0
+        case P0_TRANS_TRACE_INIT:
             break;
 
             // output
@@ -1095,6 +1150,17 @@ ocsd_err_t TrcPktDecodeEtmV4I::processMarkerElem(TrcStackElem *pElem)
     return err;
 }
 
+ocsd_err_t TrcPktDecodeEtmV4I::processTransElem(TrcStackElem *pElem)
+{
+    ocsd_err_t err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_MEMTRANS);
+    if (!err)
+    {
+        outElem().setTransactionType((trace_memtrans_t)((int)OCSD_MEM_TRANS_FAIL -
+            ((int)P0_TRANS_FAIL - (int)pElem->getP0Type())));
+    }
+    return err;
+}
+
 ocsd_err_t TrcPktDecodeEtmV4I::addElemCC(TrcStackElemParam *pParamElem)
 {
     ocsd_err_t err = OCSD_OK;
@@ -1150,6 +1216,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
     TrcStackElem *pElem = m_P0_stack.back();  // get the atom element
     WP_res_t WPRes;
     instr_range_t addr_range;
+    bool ETE_ERET = false;
 
     // new element for this processed atom
     if ((err = m_out_elem.addElem(pElem->getRootIndex())) != OCSD_OK)
@@ -1198,10 +1265,22 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
                 if (m_instr_info.is_link)
                     m_return_stack.push(nextAddr,m_instr_info.isa);
                 m_return_stack.set_pop_pending();  // need to know next packet before we know what is to happen
+
+                /* ETE does not have ERET trace packets - however to maintain the illusion if we see an ERET
+                   output a gen elem ERET packet */
+                if (isETEConfig() && (m_instr_info.sub_type == OCSD_S_INSTR_V8_ERET))
+                    ETE_ERET = true;
             }
             break;
         }
         setElemTraceRange(outElem(), addr_range, (atom == ATOM_E), pElem->getRootIndex());
+
+        if (ETE_ERET)
+        {
+            err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_EXCEPTION_RET);
+            if (err)
+                return err;
+        }
     }
     else
     {

@@ -168,9 +168,10 @@ typedef union _etmv4_trace_info_t {
     uint32_t val;   //!< trace info full value.
     struct {
         uint32_t cc_enabled:1;      //!< 1 if cycle count enabled
-        uint32_t cond_enabled:3;    //!< conditional trace enabeld type
+        uint32_t cond_enabled:3;    //!< conditional trace enabled type.
         uint32_t p0_load:1;         //!< 1 if tracing with P0 load elements (for data trace)
         uint32_t p0_store:1;        //!< 1 if tracing with P0 store elements (for data trace)
+        uint32_t in_trans_state:1;  //!< 1 if starting trace when in a transactional state (ETE trace).
     } bits;         //!< bitfields for trace info value.
 } etmv4_trace_info_t;
 
@@ -377,6 +378,7 @@ typedef struct _ocsd_etmv4_cfg
     ocsd_core_profile_t    core_prof;  /**< Core Profile */
 } ocsd_etmv4_cfg;
 
+#define ETE_ARCH_VERSION 0x5
 
 /** @}*/
 /** @}*/
