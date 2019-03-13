@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.11.0_
+_Current Version 0.11.1_
 
 ### Current support:
 
@@ -153,6 +153,9 @@ Version and Modification Information
                     __Update__: Created new example program to demonstrate using memory buffer in APIs.
                     __Bugfix__: Typos in docs and source.
                     __Bugfix__: Memory accessor - validate callback return values.
+- _Version 0.11.1_: __Update__: build:- change -fpic to -fPIC to allow Debian build on sparc.
+                    __Bugfix__: build:- remove unused variable
+                    
 
 
 Licence Information
