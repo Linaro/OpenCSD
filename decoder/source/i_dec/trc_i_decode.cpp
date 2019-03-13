@@ -70,7 +70,6 @@ ocsd_err_t TrcIDecode::DecodeInstruction(ocsd_instr_info *instr_info)
 void TrcIDecode::SetArchVersion(ocsd_instr_info *instr_info)
 {
     uint16_t arch = 0x0700;
-    bool m_profile = (instr_info->pe_type.profile == profile_CortexM);
 
     switch (instr_info->pe_type.arch)
     {
