@@ -21,10 +21,10 @@ supplemented with modifications to the CoreSight framework and drivers to be
 usable by the Perf core.  The remaining out of tree patches are being
 upstreamed incrementally.
 
-From there compiling the perf tools with `make -C tools/perf` will yield a
-`perf` executable that will support CoreSight trace collection.  Note that if
-traces are to be decompressed *off* target, there is no need to download and
-compile the openCSD library (on the target).
+From there compiling the perf tools with `make -C tools/perf CORESIGHT=1` will
+yield a `perf` executable that will support CoreSight trace collection.  Note
+that if traces are to be decompressed *off* target, there is no need to download
+and compile the openCSD library (on the target).
 
 Before launching a trace run a sink that will collect trace data needs to be
 identified.  All CoreSight blocks identified by the framework are registed in
@@ -306,7 +306,7 @@ and needs to be installed on a system prior to compilation.  Information about
 the status of the openCSD library on a system is given at compile time by the
 perf tools build script:
 
-    linaro@t430:~/linaro/linux-kernel$ make VF=1 -C tools/perf
+    linaro@t430:~/linaro/linux-kernel$ make CORESIGHT=1 VF=1 -C tools/perf
     Auto-detecting system features:
     ...                         dwarf: [ on  ]
     ...            dwarf_getlocations: [ on  ]
