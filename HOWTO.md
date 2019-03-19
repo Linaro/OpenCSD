@@ -376,8 +376,8 @@ build script where to get the header file and libraries, namely CSINCLUDES and
 CSLIBS:
 
     linaro@t430:~/linaro/linux-kernel$ export CSINCLUDES=~/linaro/coresight/my-opencsd/decoder/include/
-    linaro@t430:~/linaro/linux-kernel$ export CSLIBS=~/linaro/coresight/my-opencsd/decoder/lib/linux64-rel/
-    linaro@t430:~/linaro/linux-kernel$ make VF=1 -C tools/perf
+    linaro@t430:~/linaro/linux-kernel$ export CSLIBS=~/linaro/coresight/my-opencsd/decoder/lib/builddir/
+    linaro@t430:~/linaro/linux-kernel$ make CORESIGHT=1 VF=1 -C tools/perf
 
 This will have the effect of compiling and linking against the provided library.
 Since the system's openCSD library is in the loader's search patch the
