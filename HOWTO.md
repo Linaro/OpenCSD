@@ -617,8 +617,6 @@ See autofdo.md (@ref AutoFDO) for details and scripts.
 The Linaro CoreSight Team
 -------------------------
 - Mike Leach
-- Tor Jeremiassen
-- Chunyan Zang
 - Mathieu Poirier
 
 
