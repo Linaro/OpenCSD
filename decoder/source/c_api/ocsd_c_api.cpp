@@ -74,7 +74,7 @@ static std::map<dcd_tree_handle_t, lib_dt_data_list *> s_data_map;
 /* C API functions                                                             */
 /*******************************************************************************/
 
-/** Get Library version. Return a 32 bit version in form MMMMnnpp - MMMM = major verison, nn = minor version, pp = patch version */ 
+/** Get Library version. Return a 32 bit version in form MMMMnnpp - MMMM = major version, nn = minor version, pp = patch version */ 
 OCSD_C_API uint32_t ocsd_get_version(void) 
 { 
     return ocsdVersion::vers_num();
