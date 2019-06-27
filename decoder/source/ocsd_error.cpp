@@ -61,6 +61,7 @@ static const char *s_errorCodeDescs[][2] = {
     {"OCSD_ERR_DATA_DECODE_FATAL", "A decoder in the data path has returned a fatal error."},
     /* frame deformatter errors */
     {"OCSD_ERR_DFMTR_NOTCONTTRACE", "Trace input to deformatter none-continuous"},
+    {"OCSD_ERR_DFMTR_BAD_FHSYNC", "Bad frame or half frame sync in trace deformatter"},
     /* packet processor errors - protocol issues etc */
     {"OCSD_ERR_BAD_PACKET_SEQ","Bad packet sequence"},
     {"OCSD_ERR_INVALID_PCKT_HDR","Invalid packet header"},

@@ -79,15 +79,19 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
         if(m_pReader->getTraceBufferSourceTree(SourceName, tree))
         {
             int numDecodersCreated = 0; // count how many we create - if none then give up.
+            uint32_t formatter_flags = OCSD_DFRMTR_FRAME_MEM_ALIGN;
 
             /* make a note of the trace binary file name + path to ss directory */            
             m_BufferFileName = m_pReader->getSnapShotDir() + tree.buffer_info.dataFileName;
 
             ocsd_dcd_tree_src_t src_format = tree.buffer_info.dataFormat == "source_data" ? OCSD_TRC_SRC_SINGLE : OCSD_TRC_SRC_FRAME_FORMATTED;
 
+            if (tree.buffer_info.dataFormat == "dstream_coresight")
+                formatter_flags = OCSD_DFRMTR_HAS_FSYNCS;
+
             /* create the initial device tree */
             // TBD:     handle syncs / hsyncs data from TPIU
-            m_pDecodeTree = DecodeTree::CreateDecodeTree(src_format,OCSD_DFRMTR_FRAME_MEM_ALIGN); 
+            m_pDecodeTree = DecodeTree::CreateDecodeTree(src_format, formatter_flags);
             if(m_pDecodeTree == 0)
             {
                 LogError("Failed to create decode tree object\n");
