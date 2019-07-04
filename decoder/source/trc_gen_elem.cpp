@@ -123,9 +123,14 @@ void OcsdTraceElement::toString(std::string &str) const
             break;
 
         case OCSD_GEN_TRC_ELEM_EXCEPTION:
-            if(excep_ret_addr == 1)
+            if (excep_ret_addr == 1)
             {
-                oss << "pref ret addr:0x" << std::hex << en_addr << "; ";
+                oss << "pref ret addr:0x" << std::hex << en_addr; 
+                if (excep_ret_addr_br_tgt)
+                {
+                    oss << " [addr also prev br tgt]";
+                }
+                oss << "; ";
             }
             oss << "excep num (0x" << std::setfill('0') << std::setw(2) << std::hex << exception_number << ") ";
             break;
