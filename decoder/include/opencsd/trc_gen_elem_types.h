@@ -52,6 +52,7 @@ typedef enum _ocsd_gen_trc_elem_t
     OCSD_GEN_TRC_ELEM_EO_TRACE,        /*!< end of the available trace in the buffer.  */
     OCSD_GEN_TRC_ELEM_PE_CONTEXT,      /*!< PE status update / change (arch, ctxtid, vmid etc).  */
     OCSD_GEN_TRC_ELEM_INSTR_RANGE,     /*!< traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key  */
+    OCSD_GEN_TRC_ELEM_I_RANGE_NOPATH,  /*!< traced N instructions in a range, but incomplete information as to program execution path from start to end of range */
     OCSD_GEN_TRC_ELEM_ADDR_NACC,       /*!< tracing in inaccessible memory area  */ 
     OCSD_GEN_TRC_ELEM_ADDR_UNKNOWN,    /*!< address currently unknown - need address packet update */
     OCSD_GEN_TRC_ELEM_EXCEPTION,       /*!< exception - start address may be exception target, end address may be preferred ret addr. */
