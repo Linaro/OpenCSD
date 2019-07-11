@@ -79,6 +79,9 @@ protected:
     // process an exception element - output instruction trace + exception generic type.
     ocsd_datapath_resp_t processException(); 
 
+    // process Q element
+    ocsd_datapath_resp_t processQElement();
+
     // process a bad packet
     ocsd_datapath_resp_t handleBadPacket(const char *reason);
 
@@ -147,7 +150,7 @@ private:
     // packet decode state
     bool m_need_ctxt;   //!< need context to continue
     bool m_need_addr;   //!< need an address to continue
-    bool m_except_pending_addr;    //!< next address packet is part of exception.
+    bool m_elem_pending_addr;    //!< next address packet is needed for prev element.
 
     // exception packet processing state (may need excep elem only, range+excep, range+
     typedef enum {
