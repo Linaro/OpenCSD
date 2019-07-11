@@ -46,6 +46,7 @@ static const char *s_elem_descs[][2] =
     {"OCSD_GEN_TRC_ELEM_EO_TRACE","End of the available trace in the buffer."},
     {"OCSD_GEN_TRC_ELEM_PE_CONTEXT","PE status update / change (arch, ctxtid, vmid etc)."},
     {"OCSD_GEN_TRC_ELEM_INSTR_RANGE","Traced N consecutive instructions from addr (no intervening events or data elements), may have data assoc key"},
+    {"OCSD_GEN_TRC_ELEM_I_RANGE_NOPATH","Traced N instructions in a range, but incomplete information as to program execution path from start to end of range"},
     {"OCSD_GEN_TRC_ELEM_ADDR_NACC","Tracing in inaccessible memory area."},
     {"OCSD_GEN_TRC_ELEM_ADDR_UNKNOWN","Tracing unknown address area."},
     {"OCSD_GEN_TRC_ELEM_EXCEPTION","Exception"},
@@ -120,6 +121,11 @@ void OcsdTraceElement::toString(std::string &str) const
 
         case OCSD_GEN_TRC_ELEM_ADDR_NACC:
             oss << " 0x" << std::hex << st_addr << " ";
+            break;
+
+        case OCSD_GEN_TRC_ELEM_I_RANGE_NOPATH:
+            oss << "first 0x" << std::hex << st_addr << ":[next 0x" << en_addr << "] ";
+            oss << "num_i(" << std::dec << num_instr_range << ") ";
             break;
 
         case OCSD_GEN_TRC_ELEM_EXCEPTION:
