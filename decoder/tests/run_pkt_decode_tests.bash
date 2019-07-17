@@ -38,7 +38,6 @@
 
 OUT_DIR=./results
 SNAPSHOT_DIR=./snapshots
-BIN_DIR=./bin/linux64/rel
 
 # directories for tests using full decode
 declare -a test_dirs_decode=( "juno-ret-stck"
@@ -68,6 +67,6 @@ export LD_LIBRARY_PATH=${BIN_DIR}/.
 for test_dir in "${test_dirs_decode[@]}"
 do
     echo "Testing $test_dir..."
-    ${BIN_DIR}/trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" -decode -logfilename "${OUT_DIR}/$test_dir.ppl"
+    trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" -decode -logfilename "${OUT_DIR}/$test_dir.ppl"
     echo "Done : Return $?"
 done
