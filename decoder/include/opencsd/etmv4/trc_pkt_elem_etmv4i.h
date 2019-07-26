@@ -224,7 +224,9 @@ inline void EtmV4ITrcPacket::clearTraceInfo()
     pkt_valid.bits.spec_depth_valid = 0;
     pkt_valid.bits.cc_thresh_valid  = 0;
 
-    pkt_valid.bits.ts_valid = 0;    // mark TS as invalid - must be re-updated after trace info.
+    // set these as defaults - if they don't appear in TINFO this is the state.
+    setTraceInfo(0);        
+    setTraceInfoSpec(0);   
 }
 
 inline void EtmV4ITrcPacket::setTraceInfo(const uint32_t infoVal)
