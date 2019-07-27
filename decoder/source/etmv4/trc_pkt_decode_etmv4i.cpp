@@ -507,6 +507,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
     bool bPause = false;    // pause commit operation 
     bool bPopElem = true;       // do we remove the element from the stack (multi atom elements may need to stay!)
     int num_commit_req = m_P0_commit;
+    ocsd_trc_index_t err_idx = 0;
 
     Complete = true; // assume we exit due to completion of commit operation
 
@@ -517,8 +518,9 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
         if(m_P0_stack.size() > 0)
         {
             pElem = m_P0_stack.back();  // get oldest element
-            
-            switch(pElem->getP0Type())
+            err_idx = pElem->getRootIndex(); // save index in case of error.
+
+            switch (pElem->getP0Type())
             {
             // indicates a trace restart - beginning of trace or discontinuiuty
             case P0_TRC_ON:
@@ -661,10 +663,6 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
         else
         {
             // too few elements for commit operation - decode error.
-            ocsd_trc_index_t err_idx = 0;
-            if(pElem)
-                err_idx = pElem->getRootIndex();
-              
             resp = OCSD_RESP_FATAL_INVALID_DATA;
             LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_COMMIT_PKT_OVERRUN,err_idx,m_CSID,"Not enough elements to commit"));
             bPause = true;
