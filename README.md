@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.11.2_
+_Current Version 0.12.0_
 
 ### Current support:
 
@@ -156,7 +156,15 @@ Version and Modification Information
 - _Version 0.11.1_: __Update__: build:- change -fpic to -fPIC to allow Debian build on sparc.
                     __Bugfix__: build:- remove unused variable
 - _Version 0.11.2_: __Update__: docs:- HOWTO.md update to match new perf build requirements.
-                    __Bugfix__: Minor spelling typos fixed.                   
+                    __Bugfix__: Minor spelling typos fixed.
+- _Version 0.12.0_: __Update__: Frame deformatter - TPIU FSYNC and HSYNC support added.
+                    __Update__: ETM v4: Bugfix & clarification on Exception trace handling. Where exception occurs at a branch target before any instructions
+                    have been executed, the preferred return address is also the target address of the branch instruction. This case now includes as specific flag in
+                    the packet. Additionally any context change associated with this target address was being applied incorrectly.
+                    __Update__: Core / Architecture mapping to core names as used by test programs / snapshots updated to include additional recent ARM cores.
+                    __Update__: Docs: Update to reflect new exception flag. Update test program example to reflect latest output.
+                    __Bugfix__: ETM v4: Valid trace info packet was not handled correctly (0x01, 0x00).
+                    __Bugfix__: ETM v4: Error messaging on commit stack overflow.
 
 
 Licence Information

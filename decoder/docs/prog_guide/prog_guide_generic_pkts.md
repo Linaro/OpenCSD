@@ -71,6 +71,7 @@ typedef struct _ocsd_generic_trace_elem {
             uint32_t extended_data:1;       /* 1 if the packet extended data pointer is valid. Allows packet extensions for custom decoders, or additional data payloads for data trace.  */
             uint32_t has_ts:1;              /* 1 if the packet has an associated timestamp - e.g. SW/STM trace TS+Payload as a single packet */
             uint32_t last_instr_cond:1;     /* 1 if the last instruction was conditional */
+            uint32_t excep_ret_addr_br_tgt:1; /* 1 if exception return address (en_addr) is also the target of a taken branch addr from the previous range. */
         };
         uint32_t flag_bits;
     };
@@ -224,7 +225,7 @@ The packet will be sent once when unknown address occurs. Further `OCSD_GEN_TRC_
 ### OCSD_GEN_TRC_ELEM_EXCEPTION ###
 __packet fields valid__: `exception_number`
 
-__packet fields optional__: `has_cc -> cycle_count, excep_ret_addr -> en_addr, excep_data_marker`
+__packet fields optional__: `has_cc -> cycle_count, excep_ret_addr -> en_addr, excep_data_marker, excep_ret_addr_br_tgt`
 
 __protocol specific__: ETMv4, ETMv3, PTM
 
@@ -232,6 +233,8 @@ All protocols will include the exception number in the packet.
 
 __ETMv4__ : This protocol may provide the preferred return address for the exception - this is the address of
 the instruction that could be executed on exception return. This address appears in `en_addr` if `excep_ret_addr` = 1.
+
+Additionally, this address could also represent the target address of a branch, if the exception occured at the branch target, before any further instructions were execute. If htis is the case then the excep_ret_addr_br_tgt flag will be set. This makes explicit what was previously only implied by teh packet ordered. This information could be used for clients such as perf that branch source/target address pairs.
 
 __ETMv3__ : This can set the `excep_data_marker` flag. This indicates that the exception packet is a marker
 to indicate exception entry in a 7M profile core, for the purposes of tracking data. This will __not__ provide
