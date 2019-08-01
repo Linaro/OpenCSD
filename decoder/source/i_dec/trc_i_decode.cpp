@@ -163,6 +163,11 @@ ocsd_err_t TrcIDecode::DecodeA64(ocsd_instr_info *instr_info, struct decode_info
     {
         instr_info->type = OCSD_INSTR_WFI_WFE;
     }
+    else if (OCSD_IS_ARCH_MINVER(info->arch_version, ARCH_AA64))
+    {
+        if (inst_A64_Tstart(instr_info->opcode))
+            instr_info->type = OCSD_INSTR_TSTART;
+    }
 
     instr_info->is_conditional = inst_A64_is_conditional(instr_info->opcode);
 

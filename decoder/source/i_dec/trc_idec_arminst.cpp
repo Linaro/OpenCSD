@@ -274,6 +274,13 @@ int inst_A64_wfiwfe(uint32_t inst, struct decode_info *info)
     return 0;
 }
 
+int inst_A64_Tstart(uint32_t inst)
+{
+    if ((inst & 0xffffffe0) == 0xd5233060)
+        return 1;
+    return 0;
+}
+
 int inst_A64_is_indirect_branch(uint32_t inst, struct decode_info *info)
 {
     uint8_t link = 0;

@@ -81,7 +81,6 @@ CoreArchProfileMap::CoreArchProfileMap()
     }
 }
 
-
 ocsd_arch_profile_t CoreArchProfileMap::getArchProfile(const std::string &coreName)
 {
     ocsd_arch_profile_t ap = { ARCH_UNKNOWN, profile_Unknown };

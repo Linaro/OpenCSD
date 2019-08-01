@@ -354,7 +354,7 @@ typedef enum _ocsd_ex_level
 } ocsd_ex_level;
 
 
-/** instruction types - significant for waypoint calculaitons */
+/** instruction types - significant for waypoint calculations */
 typedef enum _ocsd_instr_type {
     OCSD_INSTR_OTHER,          /**< Other instruction - not significant for waypoints. */
     OCSD_INSTR_BR,             /**< Immediate Branch instruction */
@@ -362,6 +362,7 @@ typedef enum _ocsd_instr_type {
     OCSD_INSTR_ISB,            /**< Barrier : ISB instruction */
     OCSD_INSTR_DSB_DMB,        /**< Barrier : DSB or DMB instruction */
     OCSD_INSTR_WFI_WFE,        /**< WFI or WFE traced as direct branch */
+    OCSD_INSTR_TSTART,         /**< PE Arch feature FEAT_TME - TSTART instruction */
 } ocsd_instr_type;
 
 /** instruction sub types - addiitonal information passed to the output packets
