@@ -549,6 +549,7 @@ typedef struct _ocsd_file_mem_region {
 #define OCSD_BUILTIN_DCD_ETMV4I     "ETMV4I"    /**< ETMv4 instruction decoder */
 #define OCSD_BUILTIN_DCD_ETMV4D     "ETMV4D"    /**< ETMv4 data decoder */
 #define OCSD_BUILTIN_DCD_PTM        "PTM"       /**< PTM decoder */
+#define OCSD_BUILTIN_DCD_ETE        "ETE"       /**< ETE decoder */
 
 /*! Trace Protocol Builtin Types + extern
  */
@@ -561,6 +562,7 @@ typedef enum _ocsd_trace_protocol_t {
     OCSD_PROTOCOL_ETMV4D,  /**< ETMV4 data trace protocol decoder. */
     OCSD_PROTOCOL_PTM,     /**< PTM program flow instruction trace protocol decoder. */
     OCSD_PROTOCOL_STM,     /**< STM system trace protocol decoder. */
+    OCSD_PROTOCOL_ETE,     /**< ETE trace protocol decoder */
 
 /* others to be added here */
     OCSD_PROTOCOL_BUILTIN_END,  /**< Invalid protocol - built-in protocol types end marker */

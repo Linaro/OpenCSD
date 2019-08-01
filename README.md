@@ -31,6 +31,7 @@ _Current Version 0.14.4_
 
 ### Current support:
 
+- ETE   (v1.1) instruction trace - packet processing and packet decode.
 - ETMv4 (v4.5 [A/R profile] v4.4 [M profile]) instruction trace - packet processing and packet decode.
 - PTM   (v1.1) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) instruction trace - packet processing and packet decode.

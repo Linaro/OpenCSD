@@ -64,6 +64,12 @@
     <Filter Include="Source Files\pkt_printers">
       <UniqueIdentifier>{baf047d0-0ff7-4502-b42b-4f1fda94d54b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ete">
+      <UniqueIdentifier>{3d119e90-c89b-4f27-8163-305924453e1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ete">
+      <UniqueIdentifier>{8cfdb19c-28fc-4e79-b8d5-4e54907b1f82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\LICENSE">
@@ -356,6 +362,21 @@
     <ClInclude Include="..\..\..\include\common\ocsd_gen_elem_stack.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\ete\trc_pkt_types_ete.h">
+      <Filter>Header Files\ete</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\ete\trc_cmp_cfg_ete.h">
+      <Filter>Header Files\ete</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\ete\trc_dcd_mngr_ete.h">
+      <Filter>Header Files\ete</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\ete\ete_decoder.h">
+      <Filter>Header Files\ete</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_proc_etmv4i.h">
+      <Filter>Header Files\etmv4</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -483,6 +504,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\ocsd_gen_elem_stack.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ete\trc_cmp_cfg_ete.cpp">
+      <Filter>Source Files\ete</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

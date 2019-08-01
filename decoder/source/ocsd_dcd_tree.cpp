@@ -621,6 +621,7 @@ ocsd_err_t DecodeTree::addPacketPrinter(uint8_t CSID, bool bMonitor, ItemPrinter
             switch (protocol)
             {
             case  OCSD_PROTOCOL_ETMV4I:
+            case  OCSD_PROTOCOL_ETE:
             {
                 PacketPrinter<EtmV4ITrcPacket> *pTPrinter = dynamic_cast<PacketPrinter<EtmV4ITrcPacket> *>(pPrinter);
                 if (bMonitor)
