@@ -311,13 +311,13 @@ int inst_A64_is_indirect_branch_link(uint32_t inst, uint8_t *is_link)
         instr_sub_type = OCSD_S_INSTR_V8_ERET;
     } else if (arch_version >= 0x0803) {
         /* new pointer auth instr for v8.3 arch */   
-        if ((inst & 0xffdff800) == 0xd61f0800) {
+        if ((inst & 0xffdff800) == 0xd71f0800) {
             /* BRAA, BRAB, BLRAA, BLRBB */
             if (inst & 0x00200000) {
                 *is_link = 1;
                 instr_sub_type = OCSD_S_INSTR_BR_LINK;
             }
-        } else if ((inst & 0xffdff81F) == 0xd71f081F) {
+        } else if ((inst & 0xffdff81F) == 0xd61f081F) {
             /* BRAAZ, BRABZ, BLRAAZ, BLRBBZ */
             if (inst & 0x00200000) {
                 *is_link = 1;
