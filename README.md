@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.12.0_
+_Current Version 0.12.1_
 
 ### Current support:
 
@@ -165,6 +165,11 @@ Version and Modification Information
                     __Update__: Docs: Update to reflect new exception flag. Update test program example to reflect latest output.
                     __Bugfix__: ETM v4: Valid trace info packet was not handled correctly (0x01, 0x00).
                     __Bugfix__: ETM v4: Error messaging on commit stack overflow.
+- _Version 0.12.1_: __Update__: build: remove -g option from release build.
+                    __Update__: tests: Snapshots can now use generic arch+profile names rather than core names, e.g. ARMv8-A
+                    __Bugfix__: Instruction decode - v8.3 B[L]A{A|B}[Z] instructions mis-identified.
+                    __Bugfix__: Transition from A64 to A32 can be mis-decoded if the trace implementation represents the transition 
+                    as an individual address packet followed by a context packet. 
 
 
 Licence Information

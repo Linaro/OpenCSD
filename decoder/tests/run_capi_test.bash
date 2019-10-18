@@ -40,24 +40,6 @@ OUT_DIR=./results
 SNAPSHOT_DIR=./snapshots
 BIN_DIR=./bin/linux64/rel
 
-# directories for tests using full decode
-declare -a test_dirs_decode=( "juno-ret-stck"
-                              "a57_single_step"
-                              "bugfix-exact-match"
-                              "juno-uname-001"
-                              "juno-uname-002"
-                              "juno_r1_1"
-                              "tc2-ptm-rstk-t32"
-                              "trace_cov_a15"
-                              "stm_only"
-                              "stm_only-2"
-                              "stm_only-juno"
-                              "TC2"
-                              "Snowball"
-                              "test-file-mem-offsets"
-                            )
-
-
 echo "Running trc_pkt_lister on snapshot directories."
 
 mkdir -p ${OUT_DIR}
@@ -65,19 +47,8 @@ mkdir -p ${OUT_DIR}
 # === test the decode set ===
 export LD_LIBRARY_PATH=${BIN_DIR}/.
 
-for test_dir in "${test_dirs_decode[@]}"
-do
-    echo "Testing $test_dir..."
-    ${BIN_DIR}/trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" -decode -logfilename "${OUT_DIR}/$test_dir.ppl"
-    echo "Done : Return $?"
-done
-
-# === test the TPIU deformatter ===
-echo "Testing a55-test-tpiu..."
-${BIN_DIR}/trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/a55-test-tpiu" -dstream_format -o_raw_packed -o_raw_unpacked -logfilename "${OUT_DIR}/a55-test-tpiu.ppl"
-echo "Done : Return $?"
 
 # === test the C-API lib ===
-echo "Testing C-API library"
+echo "Testing C-API"
 ${BIN_DIR}/c_api_pkt_print_test -ss_path ${SNAPSHOT_DIR} -decode
 mv ./c_api_test.log ./${OUT_DIR}/c_api_test.ppl
