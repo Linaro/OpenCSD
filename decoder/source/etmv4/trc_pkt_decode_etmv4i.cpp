@@ -236,6 +236,7 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_output_elem.init();
     m_excep_info.proc = EXCEP_POP;
     m_flush_EOT = false;
+    m_last_IS = 0;
 }
 
 // this function can output an immediate generic element if this covers the complete packet decode, 
@@ -289,7 +290,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
 
     case ETM4_PKT_I_CTXT:
         {
-            if (m_P0_stack.createContextElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->getContext()) == 0)
+            if (m_P0_stack.createContextElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->getContext(), m_last_IS) == 0)
                 bAllocErr = true;
         }
         break;
@@ -299,7 +300,8 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             etmv4_addr_val_t addr;
 
             addr.val = m_curr_packet_in->getAddrVal();
-            addr.isa = m_curr_packet_in->getAddrIS();
+            addr.isa = m_last_IS = m_curr_packet_in->getAddrIS();
+
             if (m_P0_stack.createAddrElem(m_curr_packet_in->getType(), m_index_curr_pkt, addr) == 0)
                 bAllocErr = true;
             is_addr = true;
@@ -311,7 +313,8 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
     case ETM4_PKT_I_ADDR_CTXT_L_32IS1:    
         {
-            if (m_P0_stack.createContextElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->getContext()) == 0)
+            m_last_IS = m_curr_packet_in->getAddrIS();
+            if (m_P0_stack.createContextElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->getContext(),m_last_IS) == 0)
                 bAllocErr = true;
         }
     case ETM4_PKT_I_ADDR_L_32IS0:
@@ -324,7 +327,8 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
             etmv4_addr_val_t addr;
 
             addr.val = m_curr_packet_in->getAddrVal();
-            addr.isa = m_curr_packet_in->getAddrIS();
+            addr.isa = m_last_IS = m_curr_packet_in->getAddrIS();
+
             if (m_P0_stack.createAddrElem(m_curr_packet_in->getType(), m_index_curr_pkt, addr) == 0)
                 bAllocErr = true;
             is_addr = true;
@@ -1051,10 +1055,7 @@ ocsd_datapath_resp_t  TrcPktDecodeEtmV4I::processException()
 void TrcPktDecodeEtmV4I::SetInstrInfoInAddrISA(const ocsd_vaddr_t addr_val, const uint8_t isa)
 {
     m_instr_info.instr_addr = addr_val;
-    if(m_is_64bit)
-        m_instr_info.isa = ocsd_isa_aarch64;
-    else
-        m_instr_info.isa = (isa == 0) ? ocsd_isa_arm : ocsd_isa_thumb2;
+    m_instr_info.isa = calcISA(m_is_64bit, isa);
 }
 
 // trace an instruction range to a waypoint - and set next address to restart from.
@@ -1128,6 +1129,9 @@ void TrcPktDecodeEtmV4I::updateContext(TrcStackElemCtxt *pCtxtElem)
         m_output_elem.context.vmid_valid = 1;
         m_vmid_id = m_output_elem.context.vmid = ctxt.VMID;
     }
+
+    // need to update ISA in case context follows address.
+    m_output_elem.isa = m_instr_info.isa = calcISA(m_is_64bit, pCtxtElem->getIS());
     m_need_ctxt = false;
 }
 

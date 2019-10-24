@@ -88,6 +88,12 @@ protected:
      
 private:
     void SetInstrInfoInAddrISA(const ocsd_vaddr_t addr_val, const uint8_t isa); 
+    const ocsd_isa calcISA(const bool SF, const uint8_t IS) const
+    {
+        if (SF)
+            return ocsd_isa_aarch64;
+        return (IS == 0) ? ocsd_isa_arm : ocsd_isa_thumb2;
+    }
 
     ocsd_err_t traceInstrToWP(bool &bWPFound, const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);      //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
 
@@ -105,6 +111,7 @@ private:
     uint32_t m_vmid_id;                 // most recent VMID
     bool m_is_secure;                   // true if Secure
     bool m_is_64bit;                    // true if 64 bit
+    uint8_t m_last_IS;                  // last instruction set value from address packet.
 
     // cycle counts 
     int m_cc_threshold;

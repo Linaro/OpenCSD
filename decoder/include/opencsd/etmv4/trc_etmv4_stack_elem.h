@@ -133,9 +133,12 @@ protected:
 public:
     void setContext(const  etmv4_context_t &ctxt) { m_context = ctxt; };
     const  etmv4_context_t &getContext() const  { return m_context; }; 
+    void setIS(const uint8_t IS) { m_IS = IS; };
+    const uint8_t getIS() const { return m_IS; };
 
 private:
      etmv4_context_t m_context;
+     uint8_t m_IS;  //!< IS value at time of generation of packet.
 };
 
 inline TrcStackElemCtxt::TrcStackElemCtxt(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index) :
@@ -265,7 +268,7 @@ public:
     TrcStackElem *createParamElemNoParam(const p0_elem_t p0_type, const bool isP0, const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, bool back = false);
     TrcStackElemAtom *createAtomElem (const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const ocsd_pkt_atom &atom);
     TrcStackElemExcept *createExceptElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const bool bSame, const uint16_t excepNum);
-    TrcStackElemCtxt *createContextElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_context_t &context);
+    TrcStackElemCtxt *createContextElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_context_t &context, const uint8_t IS);
     TrcStackElemAddr *createAddrElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_addr_val_t &addr_val);
 
 private:
