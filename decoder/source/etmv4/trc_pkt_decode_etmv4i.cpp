@@ -101,6 +101,14 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
                 m_curr_state = DECODE_PKTS;
                 m_return_stack.flush();
             }
+            /* ETE spec allows early event packets. */
+            else if ((m_config->MajVersion() >= 0x5) && 
+                     (m_curr_packet_in->getType() == ETM4_PKT_I_EVENT))
+            {
+                err = decodePacket();
+                if (err)
+                    resp = OCSD_RESP_FATAL_INVALID_DATA;
+            }
             bPktDone = true;
             break;
 
