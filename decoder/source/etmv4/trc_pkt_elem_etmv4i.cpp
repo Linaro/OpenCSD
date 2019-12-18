@@ -161,6 +161,7 @@ void EtmV4ITrcPacket::toString(std::string &str) const
         {
             std::ostringstream oss;
             oss << "; INFO=" << std::hex << "0x" << trace_info.val;
+            oss << " { CC." << std::dec << trace_info.bits.cc_enabled << " }";
             if (trace_info.bits.cc_enabled)
                 oss << "; CC_THRESHOLD=" << std::hex << "0x" << cc_threshold;
             str += oss.str();
