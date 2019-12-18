@@ -72,6 +72,10 @@ do
     echo "Done : Return $?"
 done
 
+# === test a packet only example ===
+echo "Testing init-short-addr..."
+${BIN_DIR}/trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/init-short-addr" -pkt_mon -logfilename "${OUT_DIR}/init-short-addr.ppl"
+
 # === test the TPIU deformatter ===
 echo "Testing a55-test-tpiu..."
 ${BIN_DIR}/trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/a55-test-tpiu" -dstream_format -o_raw_packed -o_raw_unpacked -logfilename "${OUT_DIR}/a55-test-tpiu.ppl"
@@ -79,5 +83,7 @@ echo "Done : Return $?"
 
 # === test the C-API lib ===
 echo "Testing C-API library"
-${BIN_DIR}/c_api_pkt_print_test -ss_path ${SNAPSHOT_DIR} -decode
+${BIN_DIR}/c_api_pkt_print_test -ss_path ${SNAPSHOT_DIR} -decode > /dev/null
+echo "Done : Return $?"
+echo "moving result file."
 mv ./c_api_test.log ./${OUT_DIR}/c_api_test.ppl
