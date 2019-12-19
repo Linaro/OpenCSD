@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.12.1_
+_Current Version 0.12.2_
 
 ### Current support:
 
@@ -170,6 +170,10 @@ Version and Modification Information
                     __Bugfix__: Instruction decode - v8.3 B[L]A{A|B}[Z] instructions mis-identified.
                     __Bugfix__: Transition from A64 to A32 can be mis-decoded if the trace implementation represents the transition 
                     as an individual address packet followed by a context packet. 
+- _Version 0.12.2_: __Bugfix__: Clean up memory leaks.
+                    __Bugfix__: ETMv4: Ensure addressing history zeroed after TINFO.
+                    __Update__: Allow GCC version to be included in build output path.
+                    __Bugfix__: Packet printing update when WFI/WFE is P0 element.
 
 
 Licence Information
