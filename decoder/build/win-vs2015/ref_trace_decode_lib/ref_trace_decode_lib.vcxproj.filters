@@ -221,12 +221,6 @@
     <ClInclude Include="..\..\..\include\opencsd\ptm\trc_pkt_decode_ptm.h">
       <Filter>Header Files\ptm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4d_impl.h">
-      <Filter>Source Files\etmv4</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.h">
-      <Filter>Source Files\etmv4</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\source\etmv3\trc_pkt_proc_etmv3_impl.h">
       <Filter>Source Files\etmv3</Filter>
     </ClInclude>
@@ -391,12 +385,6 @@
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4i.cpp">
       <Filter>Source Files\etmv4</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4.cpp">
-      <Filter>Source Files\etmv4</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i_impl.cpp">
-      <Filter>Source Files\etmv4</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_decode_etmv4i.cpp">
       <Filter>Source Files\etmv4</Filter>
     </ClCompile>
@@ -489,6 +477,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_cache.cpp">
       <Filter>Source Files\mem_acc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i.cpp">
+      <Filter>Source Files\etmv4</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
