@@ -62,7 +62,8 @@ static const char *instr_type[] = {
     "BR  ",
     "iBR ",
     "ISB ",
-    "DSB.DMB"
+    "DSB.DMB",
+    "WFI.WFE"
 };
 
 #define T_SIZE (sizeof(instr_type) / sizeof(const char *))
