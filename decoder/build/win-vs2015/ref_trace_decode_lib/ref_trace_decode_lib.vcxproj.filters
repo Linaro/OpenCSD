@@ -353,6 +353,9 @@
     <ClInclude Include="..\..\..\include\opencsd\ocsd_if_version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\common\ocsd_gen_elem_stack.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -378,9 +381,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_proc_ptm.cpp">
       <Filter>Source Files\ptm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4d.cpp">
-      <Filter>Source Files\etmv4</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4i.cpp">
       <Filter>Source Files\etmv4</Filter>
@@ -480,6 +480,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i.cpp">
       <Filter>Source Files\etmv4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\ocsd_gen_elem_stack.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

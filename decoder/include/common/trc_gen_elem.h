@@ -94,7 +94,8 @@ public:
     // return current context
     const ocsd_pe_context &getContext() const {  return context; };
 
-    
+    void copyPersistentData(const OcsdTraceElement &src);
+
 private:
     void printSWInfoPkt(std::ostringstream &oss) const;
     void clearPerPktData(); //!< clear flags that indicate validity / have values on a per packet basis
@@ -201,6 +202,12 @@ inline void OcsdTraceElement::setExtendedDataPtr(const void *data_ptr)
     ptr_extended_data = data_ptr;
 }
 
+// set persistent data between output packets.
+inline void OcsdTraceElement::copyPersistentData(const OcsdTraceElement &src)
+{
+    isa = src.isa;
+    context = src.context;
+}
 
 /** @}*/
 
