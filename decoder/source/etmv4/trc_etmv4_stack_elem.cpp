@@ -128,4 +128,29 @@ TrcStackQElem *EtmV4P0Stack::createQElem(const ocsd_etmv4_i_pkt_type root_pkt, c
     return pElem;
 }
 
+// iteration functions
+void EtmV4P0Stack::from_front_init()
+{
+    m_iter = m_P0_stack.begin();
+}
+
+TrcStackElem *EtmV4P0Stack::from_front_next()
+{
+    TrcStackElem *pElem = 0;
+    if (m_iter != m_P0_stack.end())
+    {
+        pElem = *m_iter++;
+    }
+    return pElem;
+}
+
+void EtmV4P0Stack::erase_curr_from_front()
+{
+    std::deque<TrcStackElem *>::iterator erase_iter;
+    erase_iter = m_iter;
+    erase_iter--;
+    m_P0_stack.erase(erase_iter);
+}
+
+
 /* End of file trc_etmv4_stack_elem.cpp */

@@ -230,6 +230,7 @@ public:
 
     const ocsd_atm_val commitOldest();
     int cancelNewest(const int nCancel);
+    void mispredictNewest();
     const bool isEmpty() const { return (m_atom.num == 0); };
 
 private:
@@ -257,6 +258,16 @@ inline int TrcStackElemAtom::cancelNewest(const int nCancel)
     int nRemove = (nCancel <= m_atom.num) ? nCancel : m_atom.num;
     m_atom.num -= nRemove;
     return nRemove;
+}
+
+// mispredict newest - flip the bit of the newest atom
+inline void TrcStackElemAtom::mispredictNewest()
+{
+    uint32_t mask = 0x1 << (m_atom.num - 1);
+    if (m_atom.En_bits & mask)
+        m_atom.En_bits &= ~mask;
+    else
+        m_atom.En_bits |= mask;
 }
 
 /************************************************************/
@@ -294,13 +305,20 @@ public:
 
     void push_front(TrcStackElem *pElem);
     void push_back(TrcStackElem *pElem);        // insert element when processing
-    void pop_back();
+    void pop_back(bool pend_delete = true);
+    void pop_front(bool pend_delete = true);
     TrcStackElem *back();
     TrcStackElem *front();
     size_t size();
 
+    // iterate through stack from front
+    void from_front_init();
+    TrcStackElem *from_front_next();
+    void erase_curr_from_front();  // erase the element last returned 
+    
     void delete_all();
     void delete_back();
+    void delete_front();
     void delete_popped();
 
     // creation functions - create and push if successful.
@@ -314,7 +332,7 @@ public:
 private:
     std::deque<TrcStackElem *> m_P0_stack;  //!< P0 decode element stack
     std::vector<TrcStackElem *> m_popped_elem;  //!< save list of popped but not deleted elements.
-
+    std::deque<TrcStackElem *>::iterator m_iter;    //!< iterate across the list w/o removing stuff
 };
 
 inline EtmV4P0Stack::~EtmV4P0Stack()
@@ -336,10 +354,18 @@ inline void EtmV4P0Stack::push_back(TrcStackElem *pElem)
 }
 
 // pop last element pointer off the stack and stash it for later deletion
-inline void EtmV4P0Stack::pop_back()
+inline void EtmV4P0Stack::pop_back(bool pend_delete /* = true */)
 {
-    m_popped_elem.push_back(m_P0_stack.back());
+    if (pend_delete)
+        m_popped_elem.push_back(m_P0_stack.back());
     m_P0_stack.pop_back();
+}
+
+inline void EtmV4P0Stack::pop_front(bool pend_delete /* = true */)
+{
+    if (pend_delete)
+        m_popped_elem.push_back(m_P0_stack.front());
+    m_P0_stack.pop_front();
 }
 
 // pop last element pointer off the stack and delete immediately
@@ -352,6 +378,19 @@ inline void EtmV4P0Stack::delete_back()
         m_P0_stack.pop_back();
     }
 }
+
+// pop first element pointer off the stack and delete immediately
+inline void EtmV4P0Stack::delete_front()
+{
+    if (m_P0_stack.size() > 0)
+    {
+        TrcStackElem* pElem = m_P0_stack.front();
+        delete pElem;
+        m_P0_stack.pop_front();
+    }
+}
+
+
 
 // get a pointer to the last element on the stack
 inline TrcStackElem *EtmV4P0Stack::back()

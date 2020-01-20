@@ -72,6 +72,9 @@ protected:
     ocsd_datapath_resp_t resolveElements();   // commit/cancel trace elements generated from latest / prior packets & send to output - may get wait response, or flag completion.
     ocsd_err_t commitElements(); // commit elements - process element stack to generate output packets.
     ocsd_err_t commitElemOnEOT();
+    ocsd_err_t cancelElements();    // cancel elements. These not output  
+    ocsd_err_t mispredictAtom();    // mispredict an atom
+    ocsd_err_t discardElements();   // discard elements and flush
 
     void doTraceInfoPacket();
     void updateContext(TrcStackElemCtxt *pCtxtElem, OcsdTraceElement &elem);
@@ -81,6 +84,9 @@ protected:
 
     // process an exception element - output instruction trace + exception generic type.
     ocsd_err_t processException(); 
+
+    // process an element that cannot be cancelled / discarded
+    ocsd_err_t processTS_CC_EventElem(TrcStackElem *pElem); 
 
     // process a bad packet
     ocsd_err_t handleBadPacket(const char *reason);
@@ -103,15 +109,21 @@ private:
         WP_NACC
     } WP_res_t;
 
+    typedef struct {
+        ocsd_vaddr_t st_addr;
+        ocsd_vaddr_t en_addr;
+        uint32_t num_instr;
+    } instr_range_t;
+
     //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
-    ocsd_err_t traceInstrToWP(OcsdTraceElement &elemIn, WP_res_t &WPRes, const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);
+    ocsd_err_t traceInstrToWP(instr_range_t &instr_range, WP_res_t &WPRes, const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);
 
     inline const bool WPFound(WP_res_t res) const { return (res == WP_FOUND); };
     inline const bool WPNacc(WP_res_t res) const { return (res == WP_NACC); };
         
     ocsd_err_t returnStackPop();  // pop return stack and update instruction address.
 
-    void setElemTraceRange(OcsdTraceElement &elemIn, const bool executed, ocsd_trc_index_t index);
+    void setElemTraceRange(OcsdTraceElement &elemIn, const instr_range_t &addr_range, const bool executed, ocsd_trc_index_t index);
 
 //** intra packet state (see ETMv4 spec 6.2.1);
 
@@ -128,10 +140,11 @@ private:
     // cycle counts 
     int m_cc_threshold;
 
-    // speculative trace (unsupported at present in the decoder).
+    // speculative trace 
     int m_curr_spec_depth;                
-    int m_max_spec_depth; 
-    
+    int m_max_spec_depth;   // nax depth - from ID reg, beyond which auto-commit occurs 
+    int m_unseen_spec_elem; // speculative elements at decode start
+
 /** Remove elements that are associated with data trace */
 #ifdef DATA_TRACE_SUPPORTED
     // data trace associative elements (unsupported at present in the decoder).
@@ -164,7 +177,26 @@ private:
 //** P0 element stack
     EtmV4P0Stack m_P0_stack;    //!< P0 decode element stack
 
-    int m_P0_commit;    //!< number of elements to commit
+    // element resolution
+    struct {
+        int P0_commit;    //!< number of elements to commit
+        int P0_cancel;    //!< elements to cancel
+        bool mispredict;  //!< mispredict latest atom
+        bool discard;     //!< discard elements 
+    } m_elem_res;
+
+    //! true if any of the element resolution fields are non-zero
+    const bool isElemForRes() const {
+        return (m_elem_res.P0_commit || m_elem_res.P0_cancel || 
+            m_elem_res.mispredict || m_elem_res.discard);
+    }
+
+    void clearElemRes() {
+        m_elem_res.P0_commit = 0;
+        m_elem_res.P0_cancel = 0;
+        m_elem_res.mispredict = false;
+        m_elem_res.discard = false;
+    }
 
     // packet decode state
     bool m_need_ctxt;   //!< need context to continue

@@ -177,6 +177,68 @@ void EtmV4ITrcPacket::toString(std::string &str) const
             str += oss.str();
         }
         break;
+
+    case ETM4_PKT_I_CANCEL_F1:
+        {
+            std::ostringstream oss;
+            oss << "; Cancel(" << std::dec << cancel_elements << ")";
+            str += oss.str();
+        }
+        break;
+
+    case ETM4_PKT_I_CANCEL_F1_MISPRED:
+        {
+            std::ostringstream oss;
+            oss << "; Cancel(" << std::dec << cancel_elements << "), Mispredict";
+            str += oss.str();
+        }
+        break;
+
+    case ETM4_PKT_I_MISPREDICT:
+        {
+            std::ostringstream oss;
+            oss << "; ";
+            if (atom.num) {
+                atomSeq(valStr);
+                oss << "Atom: " << valStr << ", ";
+            }
+            oss << "Mispredict";
+            str += oss.str();
+        }
+        break;
+
+    case ETM4_PKT_I_CANCEL_F2:
+        {
+            std::ostringstream oss;
+            oss << "; ";
+            if (atom.num) {
+                atomSeq(valStr);
+                oss << "Atom: " << valStr << ", ";
+            }
+            oss << "Cancel(1), Mispredict";
+            str += oss.str();
+        }
+        break;
+
+    case ETM4_PKT_I_CANCEL_F3:
+        {
+            std::ostringstream oss;
+            oss << "; ";
+            if (atom.num) {
+                oss << "Atom: E, ";
+            }
+            oss << "Cancel(" << std::dec << cancel_elements << "), Mispredict";
+            str += oss.str();
+        }
+        break;
+
+    case ETM4_PKT_I_COMMIT:
+        {
+            std::ostringstream oss;
+            oss << "; Commit(" << std::dec << commit_elements << ")";
+            str += oss.str();
+        }
+        break;
     }
 }
 
@@ -296,6 +358,12 @@ const char *EtmV4ITrcPacket::packetTypeName(const ocsd_etmv4_i_pkt_type type, co
         pName = "I_CANCEL_F1";
         pDesc = "Cancel Format 1.";
         break;
+
+    case ETM4_PKT_I_CANCEL_F1_MISPRED:
+        pName = "I_CANCEL_F1_MISPRED";
+        pDesc = "Cancel Format 1 + Mispredict.";
+        break;
+
 
     case ETM4_PKT_I_MISPREDICT:
         pName = "I_MISPREDICT";

@@ -179,6 +179,7 @@ public:
 
     // atom
     const ocsd_pkt_atom &getAtom() const { return atom; };
+    const int getNumAtoms() const { return atom.num; };
 
     // context
     const etmv4_context_t &getContext() const { return context; };
@@ -194,6 +195,10 @@ public:
 
     // cc
     const uint32_t getCC() const { return pkt_valid.bits.cc_valid ? cycle_count : 0; };
+
+    // speculation
+    const int getCommitElem() const { return commit_elements; };
+    const int getCancelElem() const { return cancel_elements; };
 
     // packet type
     const bool isBadPacket() const;

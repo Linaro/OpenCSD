@@ -1287,14 +1287,11 @@ void TrcPktProcEtmV4I::BuildIPacketTable()
     m_i_table[0x2D].pkt_type = ETM4_PKT_I_COMMIT;
     m_i_table[0x2D].pptkFn   = &TrcPktProcEtmV4I::iPktSpeclRes;
 
-    // b0010 111x - cancel f1
-    for(int i = 0; i < 2; i++)
-    {
-        // G++ doesn't understand [0x2E+i] so...
-        int idx = i + 0x2E;
-        m_i_table[idx].pkt_type = ETM4_PKT_I_CANCEL_F1;
-        m_i_table[idx].pptkFn   = &TrcPktProcEtmV4I::iPktSpeclRes;
-    }
+    // b0010 111x - cancel f1 (mis pred)
+    m_i_table[0x2E].pkt_type = ETM4_PKT_I_CANCEL_F1;
+    m_i_table[0x2E].pptkFn = &TrcPktProcEtmV4I::iPktSpeclRes;
+    m_i_table[0x2F].pkt_type = ETM4_PKT_I_CANCEL_F1_MISPRED;
+    m_i_table[0x2F].pptkFn = &TrcPktProcEtmV4I::iPktSpeclRes;
 
     // b0011 00xx - mis predict
     for(int i = 0; i < 4; i++)
