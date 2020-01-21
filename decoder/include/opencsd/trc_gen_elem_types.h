@@ -76,6 +76,16 @@ typedef struct _trace_event_t {
     uint16_t ev_number;        /**< event number if numbered event type */
 } trace_event_t;
 
+typedef enum _unsync_info_t {
+    UNSYNC_UNKNOWN,         /**< unknown /undefined */
+    UNSYNC_INIT_DECODER,    /**< decoder intialisation - start of trace. */
+    UNSYNC_RESET_DECODER,   /**< decoder reset. */
+    UNSYNC_OVERFLOW,        /**< overflow packet - need to re-sync / end of trace after overflow. */
+    UNSYNC_DISCARD,         /**< specl trace discard - need to re-sync. */
+    UNSYNC_BAD_PACKET,      /**< bad packet at input - resync to restart. */
+    UNSYNC_EOT,             /**< end of trace - no additional info */
+} unsync_info_t;
+
 typedef struct _ocsd_generic_trace_elem {
     ocsd_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
     ocsd_isa           isa;          /**< instruction set for executed instructions */
@@ -111,6 +121,7 @@ typedef struct _ocsd_generic_trace_elem {
         trace_on_reason_t trace_on_reason;  /**< reason for the trace on packet */
         ocsd_swt_info_t sw_trace_info;      /**< software trace packet info    */
 		uint32_t num_instr_range;	        /**< number of instructions covered by range packet (for T32 this cannot be calculated from en-st/i_size) */
+        unsync_info_t unsync_eot_info;      /**< additional information for unsync / end-of-trace packets. */
     };
 
     const void *ptr_extended_data;        /**< pointer to extended data buffer (data trace, sw trace payload) / custom structure */

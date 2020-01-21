@@ -173,6 +173,7 @@ private:
     } processor_state_t;
 
     processor_state_t m_curr_state;
+    unsync_info_t m_unsync_eot_info;   //!< addition info when / why unsync / eot
 
 //** P0 element stack
     EtmV4P0Stack m_P0_stack;    //!< P0 decode element stack

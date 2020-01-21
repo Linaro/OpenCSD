@@ -96,6 +96,16 @@ static const char *s_isa_str[] = {
    "Unk"       /**< ISA not yet known */
 };
 
+static const char *s_unsync_reason[] = {
+    "undefined",            // UNSYNC_UNKNOWN - unknown /undefined
+    "init-decoder",         // UNSYNC_INIT_DECODER - decoder intialisation - start of trace.
+    "reset-decoder",        // UNSYNC_RESET_DECODER - decoder reset.
+    "overflow",             // UNSYNC_OVERFLOW - overflow packet - need to re-sync
+    "discard",              // UNSYNC_DISCARD - specl trace discard - need to re-sync
+    "bad-packet",           // UNSYNC_BAD_PACKET - bad packet at input - resync to restart.
+    "end-of-trace",         // UNSYNC_EOT - end of trace info.
+};
+
 void OcsdTraceElement::toString(std::string &str) const
 {
     std::ostringstream oss;
@@ -172,6 +182,12 @@ void OcsdTraceElement::toString(std::string &str) const
                 oss << " Trigger; ";
             else if(trace_event.ev_type == EVENT_NUMBERED)
                 oss << " Numbered:" << std::dec << trace_event.ev_number << "; ";
+            break;
+
+        case OCSD_GEN_TRC_ELEM_EO_TRACE:
+        case OCSD_GEN_TRC_ELEM_NO_SYNC:
+            if (unsync_eot_info <= UNSYNC_EOT)
+                oss << " [" << s_unsync_reason[unsync_eot_info] << "]";
             break;
 
         default: break;
