@@ -61,6 +61,7 @@ typedef enum _p0_elem_t
     P0_Q,
     P0_OVERFLOW,
     P0_FUNC_RET,
+    P0_SRC_ADDR,
 } p0_elem_t;
 
 
@@ -103,6 +104,7 @@ class TrcStackElemAddr : public TrcStackElem
 {
 protected:
     TrcStackElemAddr(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
+    TrcStackElemAddr(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const bool src_addr);
     virtual ~TrcStackElemAddr() {};
 
     friend class EtmV4P0Stack;
@@ -121,6 +123,14 @@ inline TrcStackElemAddr::TrcStackElemAddr(const ocsd_etmv4_i_pkt_type root_pkt, 
     m_addr_val.val = 0;
     m_addr_val.isa = 0;
 }
+
+inline TrcStackElemAddr::TrcStackElemAddr(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const bool src_addr) :
+    TrcStackElem(src_addr ? P0_SRC_ADDR : P0_ADDR, false, root_pkt, root_index)
+{
+    m_addr_val.val = 0;
+    m_addr_val.isa = 0;
+}
+
 
 /************************************************************/
 /** Q element */
@@ -357,6 +367,7 @@ public:
     TrcStackElemAddr *createAddrElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_addr_val_t &addr_val);
     TrcStackQElem *createQElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const int count);
     TrcStackElemMarker *createMarkerElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const trace_marker_payload_t &marker);
+    TrcStackElemAddr *createSrcAddrElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_addr_val_t &addr_val);
 
 private:
     std::deque<TrcStackElem *> m_P0_stack;  //!< P0 decode element stack

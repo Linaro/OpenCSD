@@ -358,7 +358,25 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
 
             if (m_P0_stack.createAddrElem(m_curr_packet_in->getType(), m_index_curr_pkt, addr) == 0)
                 bAllocErr = true;
-            is_addr = true;
+            is_addr = true;  // may be waiting for target address from indirect branch
+        }
+        break;
+
+    case ETE_PKT_I_SRC_ADDR_MATCH:
+    case ETE_PKT_I_SRC_ADDR_S_IS0:
+    case ETE_PKT_I_SRC_ADDR_S_IS1:
+    case ETE_PKT_I_SRC_ADDR_L_32IS0:
+    case ETE_PKT_I_SRC_ADDR_L_32IS1:
+    case ETE_PKT_I_SRC_ADDR_L_64IS0:
+    case ETE_PKT_I_SRC_ADDR_L_64IS1:
+        {
+            etmv4_addr_val_t addr;
+
+            addr.val = m_curr_packet_in->getAddrVal();
+            addr.isa = m_curr_packet_in->getAddrIS();
+            if (m_P0_stack.createSrcAddrElem(m_curr_packet_in->getType(), m_index_curr_pkt, addr) == 0)
+                bAllocErr = true;
+            m_curr_spec_depth++;
         }
         break;
 
@@ -503,7 +521,12 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
         break;
 
     /*** presently unsupported packets ***/
-    /* conditional instruction tracing */
+    /* ETE commit window - not supported in current ETE versions - blocked by packet processor */
+    case ETE_PKT_I_COMMIT_WIN_MV:
+        err = OCSD_ERR_UNSUPP_DECODE_PKT;
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, "ETE Commit Window Move, unsupported packet type."));
+        break;
+        /* conditional instruction tracing */
     case ETM4_PKT_I_COND_FLUSH:
     case ETM4_PKT_I_COND_I_F1:
     case ETM4_PKT_I_COND_I_F2:
@@ -748,6 +771,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 // at this point nothing to do till the decoder starts handling data trace.
                 if (pElem->isP0()) 
                     m_elem_res.P0_commit--;
+                break;
+
+            case P0_SRC_ADDR:
+                err = processSourceAddress();
+                m_elem_res.P0_commit--;
                 break;
 
             case P0_Q:
@@ -1208,55 +1236,62 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
     TrcStackElemAddr *pAddressElem = 0;
     TrcStackElemCtxt *pCtxtElem = 0;
     bool branch_target = false;    // exception address implies prior branch target address
-    ocsd_vaddr_t excep_ret_addr;
+    ocsd_vaddr_t excep_ret_addr = 0;
     ocsd_trc_index_t excep_pkt_index;
     WP_res_t WPRes = WP_NOT_FOUND;
+    bool ETE_resetPkt = false;
 
     // grab the exception element off the stack
     pExceptElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack.back());  // get the exception element
     excep_pkt_index = pExceptElem->getRootIndex();
     branch_target = pExceptElem->getPrevSame();
+    if (pExceptElem->getRootPkt() == ETE_PKT_I_PE_RESET)
+        ETE_resetPkt = true;
     m_P0_stack.pop_back(); // remove the exception element
 
-    pElem = m_P0_stack.back();  // look at next element.
-    if(pElem->getP0Type() == P0_CTXT)
+    // ETE reset has no follow up address, the rest of the exceptions do....
+    if (!ETE_resetPkt) 
     {
-        pCtxtElem = dynamic_cast<TrcStackElemCtxt *>(pElem);
-        m_P0_stack.pop_back(); // remove the context element
-        pElem = m_P0_stack.back();  // next one should be an address element
-    }
-   
-   if(pElem->getP0Type() != P0_ADDR)
-   {
-       // no following address element - indicate processing error.      
-       LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_PACKET_SEQ, excep_pkt_index,m_CSID,"Address missing in exception packet."));
-       return OCSD_ERR_BAD_PACKET_SEQ;
-   }
-   else
-   {
-        // extract address
-        pAddressElem = static_cast<TrcStackElemAddr *>(pElem);
-        excep_ret_addr = pAddressElem->getAddr().val;
-
-        // see if there is an address + optional context element implied 
-        // prior to the exception.
-        if (branch_target)
+        pElem = m_P0_stack.back();  // look at next element.
+        if (pElem->getP0Type() == P0_CTXT)
         {
-            // this was a branch target address - update current setting
-            bool b64bit = m_instr_info.isa == ocsd_isa_aarch64;
-            if (pCtxtElem) {
-                b64bit = pCtxtElem->getContext().SF;
-            }
-
-            // as the exception address was also a branch target address then update the 
-            // current maintained address value. This also means that there is no range to
-            // output before the exception packet.
-            m_instr_info.instr_addr = excep_ret_addr; 
-            m_instr_info.isa = (pAddressElem->getAddr().isa == 0) ?
-                    (b64bit ? ocsd_isa_aarch64 : ocsd_isa_arm) : ocsd_isa_thumb2;
-            m_need_addr = false;
+            pCtxtElem = dynamic_cast<TrcStackElemCtxt *>(pElem);
+            m_P0_stack.pop_back(); // remove the context element
+            pElem = m_P0_stack.back();  // next one should be an address element
         }
-    }   
+
+        if (pElem->getP0Type() != P0_ADDR)
+        {
+            // no following address element - indicate processing error.      
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_BAD_PACKET_SEQ, excep_pkt_index, m_CSID, "Address missing in exception packet."));
+            return OCSD_ERR_BAD_PACKET_SEQ;
+        }
+        else
+        {
+            // extract address
+            pAddressElem = static_cast<TrcStackElemAddr *>(pElem);
+            excep_ret_addr = pAddressElem->getAddr().val;
+
+            // see if there is an address + optional context element implied 
+            // prior to the exception.
+            if (branch_target)
+            {
+                // this was a branch target address - update current setting
+                bool b64bit = m_instr_info.isa == ocsd_isa_aarch64;
+                if (pCtxtElem) {
+                    b64bit = pCtxtElem->getContext().SF;
+                }
+
+                // as the exception address was also a branch target address then update the 
+                // current maintained address value. This also means that there is no range to
+                // output before the exception packet.
+                m_instr_info.instr_addr = excep_ret_addr;
+                m_instr_info.isa = (pAddressElem->getAddr().isa == 0) ?
+                    (b64bit ? ocsd_isa_aarch64 : ocsd_isa_arm) : ocsd_isa_thumb2;
+                m_need_addr = false;
+            }
+        }
+    }
 
     // need to output something - set up an element
     if ((err = m_out_elem.addElem(excep_pkt_index)))
@@ -1272,69 +1307,72 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
             return err;
     }
 
-    // if the preferred return address is not the end of the last output range...
-    if (m_instr_info.instr_addr != excep_ret_addr)
-    {        
-        bool range_out = false;
-        instr_range_t addr_range;
-
-        // look for match to return address.
-        err = traceInstrToWP(addr_range, WPRes, true, excep_ret_addr);
-
-        if(err != OCSD_OK)
+    if (!ETE_resetPkt)
+    {
+        // if the preferred return address is not the end of the last output range...
+        if (m_instr_info.instr_addr != excep_ret_addr)
         {
-            if(err == OCSD_ERR_UNSUPPORTED_ISA)
+            bool range_out = false;
+            instr_range_t addr_range;
+
+            // look for match to return address.
+            err = traceInstrToWP(addr_range, WPRes, true, excep_ret_addr);
+
+            if (err != OCSD_OK)
             {
-                m_need_addr = true;
-                m_need_ctxt = true;
-                LogError(ocsdError(OCSD_ERR_SEV_WARN,err, excep_pkt_index,m_CSID,"Warning: unsupported instruction set processing exception packet."));
+                if (err == OCSD_ERR_UNSUPPORTED_ISA)
+                {
+                    m_need_addr = true;
+                    m_need_ctxt = true;
+                    LogError(ocsdError(OCSD_ERR_SEV_WARN, err, excep_pkt_index, m_CSID, "Warning: unsupported instruction set processing exception packet."));
+                }
+                else
+                {
+                    LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, excep_pkt_index, m_CSID, "Error processing exception packet."));
+                }
+                return err;
             }
-            else
-            {
-                LogError(ocsdError(OCSD_ERR_SEV_ERROR,err, excep_pkt_index,m_CSID,"Error processing exception packet."));
-            }
-            return err;
-        }
 
-        if(WPFound(WPRes))
-        {
-            // waypoint address found - output range
-            setElemTraceRange(outElem(), addr_range, true, excep_pkt_index);
-            range_out = true;
-        }
-        else
-        {
-            // no waypoint - likely inaccessible memory range.
-            m_need_addr = true; // need an address update 
-            
-            if(addr_range.st_addr != addr_range.en_addr)
+            if (WPFound(WPRes))
             {
-                // some trace before we were out of memory access range
+                // waypoint address found - output range
                 setElemTraceRange(outElem(), addr_range, true, excep_pkt_index);
                 range_out = true;
             }
+            else
+            {
+                // no waypoint - likely inaccessible memory range.
+                m_need_addr = true; // need an address update 
+
+                if (addr_range.st_addr != addr_range.en_addr)
+                {
+                    // some trace before we were out of memory access range
+                    setElemTraceRange(outElem(), addr_range, true, excep_pkt_index);
+                    range_out = true;
+                }
+            }
+
+            // used the element need another for NACC or EXCEP.
+            if (range_out)
+            {
+                if ((err = m_out_elem.addElem(excep_pkt_index)))
+                    return err;
+            }
         }
 
-        // used the element need another for NACC or EXCEP.
-        if (range_out)
+        // watchpoint walk resulted in inaccessible memory call...
+        if (WPNacc(WPRes))
         {
+
+            outElem().setType(OCSD_GEN_TRC_ELEM_ADDR_NACC);
+            outElem().st_addr = m_instr_info.instr_addr;
+
+            // used the element - need another for the final exception packet.
             if ((err = m_out_elem.addElem(excep_pkt_index)))
                 return err;
         }
     }
-   
-    // watchpoint walk resulted in inaccessible memory call...
-    if (WPNacc(WPRes))
-    {
-        
-        outElem().setType(OCSD_GEN_TRC_ELEM_ADDR_NACC);
-        outElem().st_addr = m_instr_info.instr_addr;
 
-        // used the element - need another for the final exception packet.
-        if ((err = m_out_elem.addElem(excep_pkt_index)))
-            return err;
-    }
-    
     // output exception element.
     outElem().setType(OCSD_GEN_TRC_ELEM_EXCEPTION);
 
@@ -1476,6 +1514,143 @@ ocsd_err_t TrcPktDecodeEtmV4I::processQElement()
         LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pQElem->getRootIndex(), m_CSID, "Error processing Q packet"));
     }
     m_P0_stack.delete_popped();
+    return err;
+}
+
+ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
+{
+    ocsd_err_t err = OCSD_OK;
+    TrcStackElemAddr *pElem = dynamic_cast<TrcStackElemAddr *>(m_P0_stack.back());  // get the address element
+    etmv4_addr_val_t srcAddr = pElem->getAddr();
+    uint32_t opcode, bytesReq = 4;
+    ocsd_mem_space_acc_t mem_space = m_is_secure ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
+    ocsd_vaddr_t currAddr = m_instr_info.instr_addr;    // get the latest decoded address.
+    instr_range_t out_range;
+
+    // check we can read instruction @ source address
+    err = accessMemory(srcAddr.val, mem_space, &bytesReq, (uint8_t *)&opcode);
+    if (err != OCSD_OK)
+    {        
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pElem->getRootIndex(), m_CSID, "Mem access error processing source address packet."));
+        return err;
+    }
+
+    if (bytesReq != 4)
+    {
+        // can't access - no bytes returned - output nacc.
+        err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_ADDR_NACC);
+        outElem().setAddrStart(srcAddr.val);
+        return err;
+    }
+
+    // analyze opcode @ source address. 
+    m_instr_info.opcode = opcode;
+    m_instr_info.instr_addr = srcAddr.val;
+    err = instrDecode(&m_instr_info);
+    if (err != OCSD_OK)
+    {        
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pElem->getRootIndex(), m_CSID, "Instruction decode error processing source address packet."));
+        return err;
+    }
+    m_instr_info.instr_addr += m_instr_info.instr_size;
+
+    // initial instruction count for the range.
+    out_range.num_instr = 1;
+
+    // calculate range traced...
+    if (m_need_addr || (currAddr > srcAddr.val))
+    {
+        // we were waiting for a target address, or missing trace 
+        // that indicates how we got to the source address.
+        m_need_addr = false;
+        out_range.st_addr = srcAddr.val;
+    }
+    else
+        out_range.st_addr = currAddr;
+    out_range.en_addr = m_instr_info.instr_addr;
+
+    // count instructions
+    if (out_range.en_addr - out_range.st_addr > m_instr_info.instr_size)
+    {
+        if (m_instr_info.isa != ocsd_isa_thumb2)
+        {
+            // all 4 byte instructions - just calculate...
+            out_range.num_instr = (uint32_t)(out_range.en_addr - out_range.st_addr) / 4;
+        }
+        else
+        {
+            // need to count T32 - 2 or 4 byte instructions
+            ocsd_instr_info instr; // going back to start of range so make a copy of info.
+            bool bMemAccErr = false;
+
+            instr.instr_addr = out_range.st_addr;
+            instr.isa = m_instr_info.isa;
+            instr.pe_type = m_instr_info.pe_type;
+            instr.dsb_dmb_waypoints = m_instr_info.dsb_dmb_waypoints;
+            instr.wfi_wfe_branch = m_instr_info.wfi_wfe_branch;
+            out_range.num_instr = 0;
+
+            while ((instr.instr_addr < out_range.en_addr) && !bMemAccErr)
+            {
+                bytesReq = 4;
+                err = accessMemory(instr.instr_addr, mem_space, &bytesReq, (uint8_t *)&opcode);
+                if (err != OCSD_OK)
+                {
+                    LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pElem->getRootIndex(), m_CSID, "Mem access error processing source address packet."));
+                    return err;
+                }
+
+                if (bytesReq == 4)
+                {
+                    err = instrDecode(&instr);
+                    if (err != OCSD_OK)
+                    {
+                        LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pElem->getRootIndex(), m_CSID, "Instruction decode error processing source address packet."));
+                        return err;
+                    }
+                    instr.instr_addr += instr.instr_size;
+                    out_range.num_instr++;
+                }
+                else
+                {
+                    // something inaccessible between last and current...
+                    bMemAccErr = true;
+
+                    err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_ADDR_NACC);
+                    if (err)
+                        return err;
+                    outElem().setAddrStart(srcAddr.val);
+
+                    // force range to the one instruction
+                    out_range.num_instr = 1;
+                    out_range.st_addr = srcAddr.val;
+                    out_range.en_addr = m_instr_info.instr_addr;  // instr after the decoded instruction @ srcAddr.
+                }
+            }
+        }
+    }
+
+    // got to the source address - output trace range, and instruction as E atom.
+    switch (m_instr_info.type)
+    {
+    case OCSD_INSTR_BR:
+        if (m_instr_info.is_link)
+            m_return_stack.push(m_instr_info.instr_addr, m_instr_info.isa);
+        m_instr_info.instr_addr = m_instr_info.branch_addr;
+        break;
+
+    case OCSD_INSTR_BR_INDIRECT:
+        m_need_addr = true; // indirect branch taken - need new address.
+        if (m_instr_info.is_link)
+            m_return_stack.push(m_instr_info.instr_addr, m_instr_info.isa);
+        m_return_stack.set_pop_pending();  // need to know next packet before we know what is to happen
+        break;
+    }
+    m_instr_info.isa = m_instr_info.next_isa;
+
+    // set the trace range element.
+    m_out_elem.addElem(pElem->getRootIndex());
+    setElemTraceRange(outElem(), out_range, true, pElem->getRootIndex());
     return err;
 }
 

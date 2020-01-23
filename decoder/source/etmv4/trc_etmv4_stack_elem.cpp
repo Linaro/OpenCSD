@@ -139,6 +139,17 @@ TrcStackElemMarker *EtmV4P0Stack::createMarkerElem(const ocsd_etmv4_i_pkt_type r
     return pElem;
 }
 
+TrcStackElemAddr *EtmV4P0Stack::createSrcAddrElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_addr_val_t &addr_val)
+{
+    TrcStackElemAddr *pElem = new (std::nothrow) TrcStackElemAddr(root_pkt, root_index, true);
+    if (pElem)
+    {
+        pElem->setAddr(addr_val);
+        push_front(pElem);
+    }
+    return pElem;
+}
+
 // iteration functions
 void EtmV4P0Stack::from_front_init()
 {

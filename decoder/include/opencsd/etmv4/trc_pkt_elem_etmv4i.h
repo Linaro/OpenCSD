@@ -207,6 +207,8 @@ public:
     virtual void toString(std::string &str) const;
     virtual void toStringFmt(const uint32_t fmtFlags, std::string &str) const;
 
+    void setProtocolVersion(const uint8_t version) { protocol_version = version; };
+
 private:
     const char *packetTypeName(const ocsd_etmv4_i_pkt_type type, const char **pDesc) const;
     void contextStr(std::string &ctxtStr) const;
@@ -216,6 +218,8 @@ private:
 
     void push_vaddr();
     void pop_vaddr_idx(const uint8_t idx);
+
+    const bool isETE() const { return (protocol_version & 0xF0) == 0x50; };
 
     Etmv4PktAddrStack m_addr_stack;
 };

@@ -88,6 +88,9 @@ protected:
     // process Q element
     ocsd_err_t processQElement();
 
+    // process a source address element
+    ocsd_err_t processSourceAddress();
+
     // process an element that cannot be cancelled / discarded
     ocsd_err_t processTS_CC_EventElem(TrcStackElem *pElem); 
 

@@ -117,6 +117,7 @@ private:
     #define TINFO_KEY_SECT  0x02 
     #define TINFO_SPEC_SECT 0x04
     #define TINFO_CYCT_SECT 0x08
+    #define TINFO_WNDW_SECT 0x10
     #define TINFO_CTRL      0x20
     #define TINFO_ALL_SECT  0x1F
     #define TINFO_ALL       0x3F

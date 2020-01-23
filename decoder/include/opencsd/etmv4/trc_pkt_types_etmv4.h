@@ -1,6 +1,6 @@
 /*
  * \file       trc_pkt_types_etmv4.h
- * \brief      OpenCSD : ETMv4 packet info
+ * \brief      OpenCSD : ETMv4 / ETE packet info
  * 
  * \copyright  Copyright (c) 2015,2019 ARM Limited. All Rights Reserved.
  */
@@ -41,7 +41,7 @@
 /** @addtogroup trc_pkts
 @{*/
 
-/** @name ETMv4 Packet Types
+/** @name ETMv4 Packet Types, ETE packet Types
 @{*/
 
 /** I stream packets. */
@@ -70,9 +70,12 @@ typedef enum _ocsd_etmv4_i_pkt_type
         ETM4_PKT_I_FUNC_RET =           0x05,   /*!< b00000101 (V8M only) */
     // Exceptions
         ETM4_PKT_I_EXCEPT =             0x06,   /*!< b00000110 */
-        ETM4_PKT_I_EXCEPT_RTN =         0x07,   /*!< b00000111 */
+        ETM4_PKT_I_EXCEPT_RTN =         0x07,   /*!< b00000111 (ETE invalid) */
 
-        /* unused encodings             0x08-0xB     b00001000 to b00001011 */
+        /* unused encoding              0x08         b00001000 */
+        ETE_PKT_I_COMMIT_WIN_MV =       0x09,   /*!  b00001001 (ETE only - unused in current versions) */
+        ETE_PKT_I_TRANS_ST =            0x0A,   /*!  b00001010 (ETE only) */
+        ETE_PKT_I_TRANS_COMMIT =        0x0B,   /*!  b00001011 (ETE only) */
 
     /* cycle count packets */
         ETM4_PKT_I_CCNT_F2 =            0x0C,   /*!< b0000110x */
@@ -91,7 +94,7 @@ typedef enum _ocsd_etmv4_i_pkt_type
         ETM4_PKT_I_CANCEL_F2 =          0x34,   /*!< b001101xx */
         ETM4_PKT_I_CANCEL_F3 =          0x38,   /*!< b00111xxx */
 
-    /* conditional instruction tracing */
+    /* conditional instruction tracing - (reserved encodings ETE) */
         ETM4_PKT_I_COND_I_F2 =          0x40,   /*!< b01000000 - b01000010 */
         ETM4_PKT_I_COND_FLUSH =         0x43,   /*!< b01000011 */
         ETM4_PKT_I_COND_RES_F4 =        0x44,   /*!< b0100010x, b01000110 */
@@ -132,7 +135,15 @@ typedef enum _ocsd_etmv4_i_pkt_type
     /* Q packets */
         ETM4_PKT_I_Q = 0xA0,                    /*!< b1010xxxx  */
 
-        /* unused encodings             0xB0-0xBF    b1011xxxx  */
+    /* ETE source address packets, unused ETMv4 */
+        ETE_PKT_I_SRC_ADDR_MATCH =      0xB0,   /*!< b101100xx  */
+        ETE_PKT_I_SRC_ADDR_S_IS0 =      0xB4,   /*!< b10110100  */
+        ETE_PKT_I_SRC_ADDR_S_IS1 =      0xB5,   /*!< b10110101  */
+        ETE_PKT_I_SRC_ADDR_L_32IS0 =    0xB6,   /*!< b10110110  */
+        ETE_PKT_I_SRC_ADDR_L_32IS1 =    0xB7,   /*!< b10110111  */
+        ETE_PKT_I_SRC_ADDR_L_64IS0 =    0xB8,   /*!< b10111000  */
+        ETE_PKT_I_SRC_ADDR_L_64IS1 =    0xB9,   /*!< b10111001  */
+        /* unused encodings             0xBA-0xBF    b10111010 - b10111111  */
 
     /* Atom packets */
         ETM4_PKT_I_ATOM_F6 =            0xC0,   /*!< b11000000 - b11010100 0xC0 - 0xD4, b11100000 - b11110100 0xE0 - 0xF4 */
@@ -146,6 +157,10 @@ typedef enum _ocsd_etmv4_i_pkt_type
         ETM4_PKT_I_ASYNC = 0x100,              //!< b00000000
         ETM4_PKT_I_DISCARD = 0x103,            //!< b00000011
         ETM4_PKT_I_OVERFLOW = 0x105,           //!< b00000101
+
+    // ETE extended types 
+        ETE_PKT_I_PE_RESET = 0x400,     // base type is exception packet.
+        ETE_PKT_I_TRANS_FAIL = 0x401,   // base type is exception packet.
 
 } ocsd_etmv4_i_pkt_type;
 
@@ -276,6 +291,9 @@ typedef struct _ocsd_etmv4_i_pkt
     // original header type when packet type changed to error on decode error.
     ocsd_etmv4_i_pkt_type err_type;
     uint8_t err_hdr_val;
+
+    // protocol version - validity of ETE specific fields 0xMm == v Major.minor
+    uint8_t protocol_version;
 
 } ocsd_etmv4_i_pkt;
 
