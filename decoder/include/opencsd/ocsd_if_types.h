@@ -494,13 +494,14 @@ typedef struct _ocsd_file_mem_region {
 
 /** @name Packet Processor Operation Control Flags
     common operational flags - bottom 16 bits,
-    component specific - top 16 bits.
+    protocol component specific - top 16 bits.
+    (common flags share bitfield with pkt decoder common flags and create flags)
 @{*/
 
-#define OCSD_OPFLG_PKTPROC_NOFWD_BAD_PKTS  0x00000001  /**< don't forward bad packets up data path */
-#define OCSD_OPFLG_PKTPROC_NOMON_BAD_PKTS  0x00000002  /**< don't forward bad packets to monitor interface */
-#define OCSD_OPFLG_PKTPROC_ERR_BAD_PKTS    0x00000004  /**< throw error for bad packets - halt decoding. */
-#define OCSD_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS 0x00000008  /**< switch to unsynced state on bad packets - wait for next sync point */
+#define OCSD_OPFLG_PKTPROC_NOFWD_BAD_PKTS  0x00000010  /**< don't forward bad packets up data path */
+#define OCSD_OPFLG_PKTPROC_NOMON_BAD_PKTS  0x00000020  /**< don't forward bad packets to monitor interface */
+#define OCSD_OPFLG_PKTPROC_ERR_BAD_PKTS    0x00000040  /**< throw error for bad packets - halt decoding. */
+#define OCSD_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS 0x00000080  /**< switch to unsynced state on bad packets - wait for next sync point */
 
 /** mask to combine all common packet processor operational control flags */
 #define OCSD_OPFLG_PKTPROC_COMMON (OCSD_OPFLG_PKTPROC_NOFWD_BAD_PKTS | \
@@ -508,14 +509,18 @@ typedef struct _ocsd_file_mem_region {
                                     OCSD_OPFLG_PKTPROC_ERR_BAD_PKTS | \
                                     OCSD_OPFLG_PKTPROC_UNSYNC_ON_BAD_PKTS  )
 
+/** mask for the component spcific flags */
+#define OCSD_OPFLG_COMP_MODE_MASK 0xFFFF0000
+
 /** @}*/
 
 /** @name Packet Decoder Operation Control Flags
     common operational flags - bottom 16 bits,
-    component specific - top 16 bits.
-@{*/
+    protcol component specific - top 16 bits.
+    (common flags share bitfield with pkt processor common flags and create flags)
+    @{*/
 
-#define OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS  0x00000001  /**< throw error on bad packets input (default is to unsync and wait) */
+#define OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS  0x00000100  /**< throw error on bad packets input (default is to unsync and wait) */
 
 /** mask to combine all common packet processor operational control flags */
 #define OCSD_OPFLG_PKTDEC_COMMON (OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
@@ -524,7 +529,8 @@ typedef struct _ocsd_file_mem_region {
 
 /** @name Decoder creation information
 
-    Flags to use when creating decoders by name
+    Flags to use when creating decoders by name.
+    - share bitfield with pkt processor flags and packet decoder common flags.
 
     Builtin decoder names.
 

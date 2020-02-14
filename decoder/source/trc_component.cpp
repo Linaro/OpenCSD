@@ -148,9 +148,7 @@ void TraceComponent::updateErrorLogLevel()
 
 ocsd_err_t TraceComponent::setComponentOpMode(uint32_t op_flags)
 {
-    if( (~m_supported_op_flags & op_flags) != 0)
-        return OCSD_ERR_INVALID_PARAM_VAL;
-    m_op_flags = op_flags;
+    m_op_flags = op_flags & m_supported_op_flags;
     return OCSD_OK;
 }
 
