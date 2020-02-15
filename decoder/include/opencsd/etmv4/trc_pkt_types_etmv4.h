@@ -380,6 +380,8 @@ typedef struct _ocsd_etmv4_cfg
 
 #define ETE_ARCH_VERSION 0x5
 
+#define ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS 0x00010000 /**< Split source address output ranges for N-atoms */
+
 /** @}*/
 /** @}*/
 #endif // ARM_TRC_PKT_TYPES_ETMV4_H_INCLUDED

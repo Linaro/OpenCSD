@@ -39,7 +39,8 @@
 
 #define DCD_NAME "DCD_ETMV4"
 
-static const uint32_t ETMV4_SUPPORTED_DECODE_OP_FLAGS = OCSD_OPFLG_PKTDEC_COMMON;
+static const uint32_t ETMV4_SUPPORTED_DECODE_OP_FLAGS = OCSD_OPFLG_PKTDEC_COMMON |
+                        ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS;
 
 TrcPktDecodeEtmV4I::TrcPktDecodeEtmV4I()
     : TrcPktDecodeBase(DCD_NAME)
@@ -1206,16 +1207,22 @@ ocsd_err_t TrcPktDecodeEtmV4I::addElemEvent(TrcStackElemParam *pParamElem)
     return err;
 }
 
-void TrcPktDecodeEtmV4I::setElemTraceRange(OcsdTraceElement &elemIn, const instr_range_t &addr_range, 
-                                           const bool executed, ocsd_trc_index_t index)
+void TrcPktDecodeEtmV4I::setElemTraceRange(OcsdTraceElement &elemIn, const instr_range_t &addr_range,
+    const bool executed, ocsd_trc_index_t index)
+{
+    setElemTraceRangeInstr(elemIn, addr_range, executed, index, m_instr_info);
+}
+
+void TrcPktDecodeEtmV4I::setElemTraceRangeInstr(OcsdTraceElement &elemIn, const instr_range_t &addr_range,
+    const bool executed, ocsd_trc_index_t index, ocsd_instr_info &instr)
 {
     elemIn.setType(OCSD_GEN_TRC_ELEM_INSTR_RANGE);
-    elemIn.setLastInstrInfo(executed, m_instr_info.type, m_instr_info.sub_type, m_instr_info.instr_size);
-    elemIn.setISA(m_instr_info.isa);
-    elemIn.setLastInstrCond(m_instr_info.is_conditional);
+    elemIn.setLastInstrInfo(executed, instr.type, instr.sub_type, instr.instr_size);
+    elemIn.setISA(instr.isa);
+    elemIn.setLastInstrCond(instr.is_conditional);
     elemIn.setAddrRange(addr_range.st_addr, addr_range.en_addr, addr_range.num_instr);
     if (executed)
-        m_instr_info.isa = m_instr_info.next_isa;
+        instr.isa = instr.next_isa;
 }
 
 ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
@@ -1610,12 +1617,12 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
     TrcStackElemAddr *pElem = dynamic_cast<TrcStackElemAddr *>(m_P0_stack.back());  // get the address element
     etmv4_addr_val_t srcAddr = pElem->getAddr();
     uint32_t opcode, bytesReq = 4;
-    ocsd_mem_space_acc_t mem_space = m_is_secure ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
     ocsd_vaddr_t currAddr = m_instr_info.instr_addr;    // get the latest decoded address.
     instr_range_t out_range;
+    bool bSplitRangeOnN = getComponentOpMode() & ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS;
 
     // check we can read instruction @ source address
-    err = accessMemory(srcAddr.val, mem_space, &bytesReq, (uint8_t *)&opcode);
+    err = accessMemory(srcAddr.val, getCurrMemSpace(), &bytesReq, (uint8_t *)&opcode);
     if (err != OCSD_OK)
     {        
         LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pElem->getRootIndex(), m_CSID, "Mem access error processing source address packet."));
@@ -1659,14 +1666,14 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
     // count instructions
     if (out_range.en_addr - out_range.st_addr > m_instr_info.instr_size)
     {
-        if (m_instr_info.isa != ocsd_isa_thumb2)
+        if ((m_instr_info.isa != ocsd_isa_thumb2) && !bSplitRangeOnN)
         {
             // all 4 byte instructions - just calculate...
             out_range.num_instr = (uint32_t)(out_range.en_addr - out_range.st_addr) / 4;
         }
         else
         {
-            // need to count T32 - 2 or 4 byte instructions
+            // need to count T32 - 2 or 4 byte instructions or we are spotting N atoms
             ocsd_instr_info instr; // going back to start of range so make a copy of info.
             bool bMemAccErr = false;
 
@@ -1680,7 +1687,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
             while ((instr.instr_addr < out_range.en_addr) && !bMemAccErr)
             {
                 bytesReq = 4;
-                err = accessMemory(instr.instr_addr, mem_space, &bytesReq, (uint8_t *)&opcode);
+                err = accessMemory(instr.instr_addr, getCurrMemSpace(), &bytesReq, (uint8_t *)&opcode);
                 if (err != OCSD_OK)
                 {
                     LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pElem->getRootIndex(), m_CSID, "Mem access error processing source address packet."));
@@ -1689,14 +1696,34 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
 
                 if (bytesReq == 4)
                 {
+                    instr.opcode = opcode;
                     err = instrDecode(&instr);
                     if (err != OCSD_OK)
                     {
                         LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pElem->getRootIndex(), m_CSID, "Instruction decode error processing source address packet."));
                         return err;
                     }
+
                     instr.instr_addr += instr.instr_size;
                     out_range.num_instr++;
+
+                    /* if we are doing N atom ranges ...*/
+                    if (bSplitRangeOnN && (instr.instr_addr < out_range.en_addr))
+                    {
+                        if (instr.type != OCSD_INSTR_OTHER)
+                        {
+                            instr_range_t mid_range = out_range;
+                            mid_range.en_addr = instr.instr_addr;
+
+                            err = m_out_elem.addElem(pElem->getRootIndex());
+                            if (err)
+                                return err;
+                            setElemTraceRangeInstr(outElem(), mid_range, false, pElem->getRootIndex(), instr);
+
+                            out_range.st_addr = mid_range.en_addr;
+                            out_range.num_instr = 0;
+                        }
+                    }
                 }
                 else
                 {

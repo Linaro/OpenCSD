@@ -136,6 +136,8 @@ private:
     ocsd_err_t returnStackPop();  // pop return stack and update instruction address.
 
     void setElemTraceRange(OcsdTraceElement &elemIn, const instr_range_t &addr_range, const bool executed, ocsd_trc_index_t index);
+    void setElemTraceRangeInstr(OcsdTraceElement &elemIn, const instr_range_t &addr_range, 
+                                const bool executed, ocsd_trc_index_t index, ocsd_instr_info &instr);
 
     // true if we are ETE configured.
     inline bool isETEConfig() {
