@@ -52,7 +52,7 @@ public:
     
     void initialise(SnapShotReader *m_pReader, ITraceErrorLog *m_pErrLogInterface);
 
-    bool createDecodeTree(const std::string &SourceBufferName, bool bPacketProcOnly);
+    bool createDecodeTree(const std::string &SourceBufferName, bool bPacketProcOnly, uint32_t add_create_flags = 0);
     void destroyDecodeTree();
     DecodeTree *getDecodeTree() const { return m_pDecodeTree; };
     const char *getBufferFileName() const { return m_BufferFileName.c_str(); };
@@ -92,7 +92,7 @@ private:
     void processDumpfiles(std::vector<Parser::DumpDef> &dumps);
 
 
-
+    uint32_t m_add_create_flags;
 
     bool m_bInit;
     DecodeTree *m_pDecodeTree;

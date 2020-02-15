@@ -73,6 +73,7 @@ static int test_waits = 0;
 static bool dstream_format = false;
 static bool tpiu_format = false;
 static bool has_hsync = false;
+static bool src_addr_n = false;
 
 int main(int argc, char* argv[])
 {
@@ -193,6 +194,7 @@ void print_help()
     oss << "-o_raw_packed       Output raw packed trace frames\n";
     oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
     oss << "-test_waits <N>     Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder\n";
+    oss << "-src_addr_n         Split source address ranges on N atoms";
     oss << "\nOutput:\n";
     oss << "   Setting any of these options cancels the default output to file & stdout,\n   using _only_ the options supplied.\n\n";
     oss << "-logstdout          Output to stdout -> console.\n";
@@ -390,6 +392,10 @@ bool process_cmd_line_opts(int argc, char* argv[])
                 no_undecoded_packets = true;
                 decode = true; 
             }
+            else if (strcmp(argv[optIdx], "-src_addr_n") == 0)
+            {
+                src_addr_n = true;
+            }
             else if((strcmp(argv[optIdx], "-help") == 0) || (strcmp(argv[optIdx], "--help") == 0) || (strcmp(argv[optIdx], "-h") == 0))
             {
                 print_help();
@@ -536,7 +542,7 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
 
     tree_creator.initialise(&reader, &err_logger);
 
-    if(tree_creator.createDecodeTree(trace_buffer_name, (decode == false)))
+    if(tree_creator.createDecodeTree(trace_buffer_name, (decode == false), src_addr_n ? ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS : 0))
     {
         DecodeTree *dcd_tree = tree_creator.getDecodeTree();
         dcd_tree->setAlternateErrorLogger(&err_logger);

@@ -45,6 +45,7 @@ CreateDcdTreeFromSnapShot::CreateDcdTreeFromSnapShot() :
     m_BufferFileName("")
 {
     m_errlog_handle = 0;
+    m_add_create_flags = 0;
 }
 
 CreateDcdTreeFromSnapShot::~CreateDcdTreeFromSnapShot()
@@ -63,8 +64,9 @@ void CreateDcdTreeFromSnapShot::initialise(SnapShotReader *pReader, ITraceErrorL
     }
 }
 
-bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, bool bPacketProcOnly)
+bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, bool bPacketProcOnly, uint32_t add_create_flags)
 {    
+    m_add_create_flags = add_create_flags;
     if(m_bInit)
     {
         if(!m_pReader->snapshotReadOK())
@@ -281,7 +283,7 @@ bool CreateDcdTreeFromSnapShot::createETMv4Decoder(const std::string &coreName, 
         EtmV4Config configObj(&config);
         const char *decoderName = bDataChannel ? OCSD_BUILTIN_DCD_ETMV4D : OCSD_BUILTIN_DCD_ETMV4I;
 
-        err = m_pDecodeTree->createDecoder(decoderName, m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER,&configObj);
+        err = m_pDecodeTree->createDecoder(decoderName, m_add_create_flags | (m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER),&configObj);
         
         if(err ==  OCSD_OK)
             createdDecoder = true;
@@ -328,7 +330,7 @@ bool CreateDcdTreeFromSnapShot::createETEDecoder(const std::string &coreName, Pa
         ETEConfig configObj(&config);
         const char *decoderName = OCSD_BUILTIN_DCD_ETE;
 
-        err = m_pDecodeTree->createDecoder(decoderName, m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER, &configObj);
+        err = m_pDecodeTree->createDecoder(decoderName, m_add_create_flags | (m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER), &configObj);
 
         if (err == OCSD_OK)
             createdDecoder = true;
