@@ -45,12 +45,25 @@ declare -a test_dirs_decode=( "001-ack_test"
                               "002-ack_test_scr"
                               "ete_ip"
                               "ete_mem"
+                              "ete_spec_1"
+                              "ete_spec_2"
+                              "ete_spec_3"
                               "event_test"
                               "infrastructure"
+                              "src_addr"
+                              "tme_simple"
+                              "tme_tcancel"
                               "tme_test"
                               "trace_file_cid_vmid"
                               "trace_file_vmid"
                             )
+
+
+# directories for tests using I_SRC_ADDR_range option
+declare -a test_dirs_decode_src_addr_opt=( "002-ack_test_scr"
+                              "ete_ip"
+                              "src_addr"
+                              )
 
 
 echo "Running trc_pkt_lister on snapshot directories."
@@ -64,5 +77,12 @@ for test_dir in "${test_dirs_decode[@]}"
 do
     echo "Testing $test_dir..."
     ${BIN_DIR}/trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" -decode -logfilename "${OUT_DIR}/$test_dir.ppl"
+    echo "Done : Return $?"
+done
+
+for test_dir_n in "${test_dirs_decode_src_addr_opt[@]}"
+do
+    echo "Testing with -src_addr_n  $test_dir_n..."
+    ${BIN_DIR}/trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_n" -decode -src_addr_n -logfilename "${OUT_DIR}/${test_dir_n}_src_addr_N.ppl"
     echo "Done : Return $?"
 done
