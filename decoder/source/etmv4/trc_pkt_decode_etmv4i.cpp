@@ -1313,9 +1313,6 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(instr_range_t &range, WP_res_t &WP
     uint32_t bytesReq;
     ocsd_err_t err = OCSD_OK;
 
-    // TBD?: update mem space to allow for EL as well.
-    ocsd_mem_space_acc_t mem_space = m_is_secure ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
-
     range.st_addr = range.en_addr = m_instr_info.instr_addr;
     range.num_instr = 0;
 
@@ -1325,7 +1322,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(instr_range_t &range, WP_res_t &WP
     {
         // start off by reading next opcode;
         bytesReq = 4;
-        err = accessMemory(m_instr_info.instr_addr,mem_space,&bytesReq,(uint8_t *)&opcode);
+        err = accessMemory(m_instr_info.instr_addr, getCurrMemSpace(),&bytesReq,(uint8_t *)&opcode);
         if(err != OCSD_OK) break;
 
         if(bytesReq == 4) // got data back
@@ -1406,5 +1403,30 @@ ocsd_err_t TrcPktDecodeEtmV4I::handleBadPacket(const char *reason)
         m_unsync_eot_info = UNSYNC_BAD_PACKET;
     }
     return err;
+}
+
+inline ocsd_mem_space_acc_t TrcPktDecodeEtmV4I::getCurrMemSpace()
+{
+    static ocsd_mem_space_acc_t SMemSpace[] = {
+        OCSD_MEM_SPACE_EL1S,
+        OCSD_MEM_SPACE_EL1S,
+        OCSD_MEM_SPACE_EL2S,
+        OCSD_MEM_SPACE_EL3
+    };
+
+    static ocsd_mem_space_acc_t NSMemSpace[] = {
+        OCSD_MEM_SPACE_EL1N,
+        OCSD_MEM_SPACE_EL1N,
+        OCSD_MEM_SPACE_EL2,
+        OCSD_MEM_SPACE_EL3
+    };
+
+    /* if no valid EL value - just use S/NS */
+    if (!outElem().context.el_valid)
+        return  m_is_secure ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
+    
+    /* mem space according to EL + S/NS */
+    int el = (int)(outElem().context.exception_level) & 0x3;
+    return m_is_secure ? SMemSpace[el] : NSMemSpace[el];
 }
 /* End of File trc_pkt_decode_etmv4i.cpp */

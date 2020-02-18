@@ -125,6 +125,8 @@ private:
 
     void setElemTraceRange(OcsdTraceElement &elemIn, const instr_range_t &addr_range, const bool executed, ocsd_trc_index_t index);
 
+    ocsd_mem_space_acc_t getCurrMemSpace();
+
 //** intra packet state (see ETMv4 spec 6.2.1);
 
     // timestamping
