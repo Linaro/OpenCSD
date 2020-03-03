@@ -646,8 +646,10 @@ void TrcPktProcEtmV4I::iPktSpeclRes(const uint8_t lastByte)
             case 0x2: m_curr_packet.setAtomPacket(ATOM_PATTERN, 0x3, 2); break; // EE
             case 0x3: m_curr_packet.setAtomPacket(ATOM_PATTERN, 0x0, 1); break; // N
             }
-            if(m_curr_packet.getType() == ETM4_PKT_I_CANCEL_F2)
+            if (m_curr_packet.getType() == ETM4_PKT_I_CANCEL_F2)
                 m_curr_packet.setCancelElements(1);
+            else
+                m_curr_packet.setCancelElements(0);
             m_process_state = SEND_PKT;
             break;
 
@@ -669,7 +671,6 @@ void TrcPktProcEtmV4I::iPktSpeclRes(const uint8_t lastByte)
                 m_curr_packet.setCommitElements(field_val);
             else
                 m_curr_packet.setCancelElements(field_val);
-            // TBD: sanity check with max spec depth here?
             m_process_state = SEND_PKT;
         }
     }

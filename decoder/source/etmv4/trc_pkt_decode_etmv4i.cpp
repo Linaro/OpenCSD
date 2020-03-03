@@ -828,6 +828,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
     bool P0StackDone = false;  // checked all P0 elements on the stack
     TrcStackElem *pElem = 0;   // stacked element pointer
     EtmV4P0Stack temp;
+    int num_cancel_req = m_elem_res.P0_cancel;
     
     while (m_elem_res.P0_cancel)
     {
@@ -841,7 +842,19 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
                 // get the newest element
                 pElem = m_P0_stack.front();
                 if (pElem->isP0()) {
-                    m_elem_res.P0_cancel--;
+                    if (pElem->getP0Type() == P0_ATOM)
+                    { 
+                        TrcStackElemAtom *pAtomElem = (TrcStackElemAtom *)pElem;
+                        // atom - cancel N atoms
+                        m_elem_res.P0_cancel -= pAtomElem->cancelNewest(m_elem_res.P0_cancel);
+                        if (pAtomElem->isEmpty())
+                            m_P0_stack.delete_front();  // remove the element
+                    }
+                    else
+                    {
+                        m_elem_res.P0_cancel--;
+                        m_P0_stack.delete_front();  // remove the element
+                    }
                 } else {
                 // not P0, make a keep / remove decision
                     switch (pElem->getP0Type())
@@ -874,6 +887,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
             // too few elements for commit operation - decode error.
             err = OCSD_ERR_COMMIT_PKT_OVERRUN;
             LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, m_index_curr_pkt, m_CSID, "Not enough elements to cancel"));
+            m_elem_res.P0_cancel = 0;
+            break;
         }
        
         if (temp.size())
@@ -886,6 +901,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
             }
         }
     }
+    m_curr_spec_depth -= num_cancel_req - m_elem_res.P0_cancel;
     return err;
 }
 
@@ -914,7 +930,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::mispredictAtom()
             }
             else if (pElem->getP0Type() == P0_ADDR)
             {
-                // nned to disregard any addresses that appear between mispredict and the atom in question
+                // need to disregard any addresses that appear between mispredict and the atom in question
                 m_P0_stack.erase_curr_from_front();
             }
         }
@@ -937,16 +953,27 @@ ocsd_err_t TrcPktDecodeEtmV4I::discardElements()
 {
     ocsd_err_t err = OCSD_OK;
     TrcStackElem *pElem = 0;   // stacked element pointer
-    
+
+    // dump P0, elemnts - output remaining CC / TS
     while ((m_P0_stack.size() > 0) && !err)
     {
         pElem = m_P0_stack.back();
         err = processTS_CC_EventElem(pElem);
         m_P0_stack.delete_back();
     }
-    m_elem_res.discard = false;
+
+    // clear all speculation info
+    clearElemRes(); 
+    m_curr_spec_depth = 0;
+
+    // set decode state
     m_curr_state = NO_SYNC;
     m_unsync_eot_info = m_prev_overflow ? UNSYNC_OVERFLOW : UNSYNC_DISCARD;
+
+    // unsync so need context & address.
+    m_need_ctxt = true;
+    m_need_addr = true;
+    m_elem_pending_addr = false;
     return err;
 }
 
