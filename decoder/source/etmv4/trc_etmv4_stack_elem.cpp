@@ -90,14 +90,17 @@ TrcStackElemExcept *EtmV4P0Stack::createExceptElem(const ocsd_etmv4_i_pkt_type r
     return pElem;
 }
 
-TrcStackElemCtxt *EtmV4P0Stack::createContextElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_context_t &context, const uint8_t IS)
+TrcStackElemCtxt *EtmV4P0Stack::createContextElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_context_t &context, const uint8_t IS, const bool back /*= false*/)
 {
     TrcStackElemCtxt *pElem = new (std::nothrow) TrcStackElemCtxt(root_pkt, root_index);
     if (pElem)
     {
         pElem->setContext(context);
         pElem->setIS(IS);
-        push_front(pElem);
+        if (back)
+            push_back(pElem);
+        else
+            push_front(pElem);
     }
     return pElem;
 
@@ -109,6 +112,17 @@ TrcStackElemAddr *EtmV4P0Stack::createAddrElem(const ocsd_etmv4_i_pkt_type root_
     if (pElem)
     {
         pElem->setAddr(addr_val);
+        push_front(pElem);
+    }
+    return pElem;
+}
+
+TrcStackQElem *EtmV4P0Stack::createQElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const int count)
+{
+    TrcStackQElem *pElem = new (std::nothrow) TrcStackQElem(root_pkt, root_index);
+    if (pElem)
+    {
+        pElem->setInstrCount(count);
         push_front(pElem);
     }
     return pElem;

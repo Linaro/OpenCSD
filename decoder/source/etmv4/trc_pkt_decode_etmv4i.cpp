@@ -229,7 +229,7 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_cond_r_key = 0;
     m_need_ctxt = true;
     m_need_addr = true;
-    m_except_pending_addr = false;
+    m_elem_pending_addr = false;
     m_mem_nacc_pending = false;
     m_prev_overflow = false;
     m_P0_stack.delete_all();
@@ -314,7 +314,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     case ETM4_PKT_I_ADDR_CTXT_L_32IS1:    
         {
             m_last_IS = m_curr_packet_in->getAddrIS();
-            if (m_P0_stack.createContextElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->getContext(),m_last_IS) == 0)
+            if (m_P0_stack.createContextElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->getContext(), m_last_IS) == 0)
                 bAllocErr = true;
         }
     case ETM4_PKT_I_ADDR_L_32IS0:
@@ -344,7 +344,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
                 bAllocErr = true;
             else
             {
-                m_except_pending_addr = true;  // wait for following packets before marking for commit.
+                m_elem_pending_addr = true;  // wait for following packets before marking for commit.
                 is_except = true;
             }
         }
@@ -446,10 +446,17 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
     // data synchronisation markers
     case ETM4_PKT_I_NUM_DS_MKR:
     case ETM4_PKT_I_UNNUM_DS_MKR:
-    /* Q packets */
-    case ETM4_PKT_I_Q:
+        // all currently unsupported
+        {
+        ocsd_err_severity_t sev = OCSD_ERR_SEV_ERROR;
+#ifdef OCSD_WARN_UNSUPPORTED
+        sev = OCSD_ERR_SEV_WARN;
+        resp = OCSD_RESP_WARN_CONT;
+#else
         resp = OCSD_RESP_FATAL_INVALID_DATA;
-        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,"Unsupported packet type."));
+#endif
+        LogError(ocsdError(sev, OCSD_ERR_BAD_DECODE_PKT, "Unsupported packet type."));
+        }
         break;
 
     default:
@@ -460,21 +467,12 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::decodePacket(bool &Complete)
 
     }
 
-    // we need to wait for following address after exception 
+    // we need to wait for following address after certain packets
     // - work out if we have seen enough here...
-    if(m_except_pending_addr && !is_except)
+    if (is_addr && m_elem_pending_addr)
     {
-        m_except_pending_addr = false;  //next packet has to be an address
-        // exception packet sequence complete
-        if(is_addr)
-        {
-            m_curr_spec_depth++;   // exceptions are P0 elements so up the spec depth to commit if needed.
-        }
-        else
-        {
-            resp = OCSD_RESP_FATAL_INVALID_DATA;
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_BAD_DECODE_PKT,"Expected Address packet to follow exception packet."));
-        }
+        m_curr_spec_depth++;  // increase spec depth for element waiting on address.
+        m_elem_pending_addr = false;  // can't be waiting on both
     }
 
     if(bAllocErr)
@@ -519,7 +517,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::commitElements(bool &Complete)
 
     while(m_P0_commit && !bPause)
     {
-        if(m_P0_stack.size() > 0)
+        if (m_P0_stack.size() > 0)
         {
             pElem = m_P0_stack.back();  // get oldest element
             err_idx = pElem->getRootIndex(); // save index in case of error.
@@ -1088,14 +1086,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceTo
 
             // increment address - may be adjusted by direct branch value later
             m_instr_info.instr_addr += m_instr_info.instr_size;
-
-            // update the range decoded address in the output packet.
-            m_output_elem.en_addr = m_instr_info.instr_addr;
             m_output_elem.num_instr_range++;
 
             // either walking to match the next instruction address or a real watchpoint
             if(traceToAddrNext)
-                bWPFound = (m_output_elem.en_addr == nextAddrMatch);
+                bWPFound = (m_instr_info.instr_addr == nextAddrMatch);
             else
                 bWPFound = (m_instr_info.type != OCSD_INSTR_OTHER);
         }
@@ -1106,6 +1101,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(bool &bWPFound, const bool traceTo
             m_nacc_addr = m_instr_info.instr_addr;           
         }
     }
+    // update the range decoded address in the output packet.
+    m_output_elem.en_addr = m_instr_info.instr_addr;
     return err;
 }
 

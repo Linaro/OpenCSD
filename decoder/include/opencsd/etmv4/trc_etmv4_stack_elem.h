@@ -56,6 +56,7 @@ typedef enum _p0_elem_t
     P0_TS,
     P0_CC,
     P0_TS_CC,
+    P0_Q,
     P0_OVERFLOW,
     P0_FUNC_RET,
 } p0_elem_t;
@@ -117,6 +118,44 @@ inline TrcStackElemAddr::TrcStackElemAddr(const ocsd_etmv4_i_pkt_type root_pkt, 
 {
     m_addr_val.val = 0;
     m_addr_val.isa = 0;
+}
+
+/************************************************************/
+/** Q element */
+class TrcStackQElem : public TrcStackElem
+{
+protected:
+    TrcStackQElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
+    virtual ~TrcStackQElem() {};
+
+    friend class EtmV4P0Stack;
+
+public:
+    void setInstrCount(const int instr_count) { m_instr_count = instr_count; };
+    const int getInstrCount() const { return m_instr_count;  }
+
+    void setAddr(const etmv4_addr_val_t &addr_val) 
+    {
+        m_addr_val = addr_val; 
+        m_has_addr = true; 
+    };
+    const etmv4_addr_val_t &getAddr() const { return m_addr_val; };
+    const bool hasAddr() const { return  m_has_addr; };
+
+private:
+    bool m_has_addr;
+    etmv4_addr_val_t m_addr_val;
+    int m_instr_count;
+
+};
+
+inline TrcStackQElem::TrcStackQElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index) :
+    TrcStackElem(P0_Q , true, root_pkt, root_index)
+{
+    m_addr_val.val = 0;
+    m_addr_val.isa = 0;
+    m_has_addr = false;
+    m_instr_count = 0;
 }
 
 /************************************************************/
@@ -257,6 +296,7 @@ public:
     void push_back(TrcStackElem *pElem);        // insert element when processing
     void pop_back();
     TrcStackElem *back();
+    TrcStackElem *front();
     size_t size();
 
     void delete_all();
@@ -268,9 +308,9 @@ public:
     TrcStackElem *createParamElemNoParam(const p0_elem_t p0_type, const bool isP0, const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, bool back = false);
     TrcStackElemAtom *createAtomElem (const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const ocsd_pkt_atom &atom);
     TrcStackElemExcept *createExceptElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const bool bSame, const uint16_t excepNum);
-    TrcStackElemCtxt *createContextElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_context_t &context, const uint8_t IS);
+    TrcStackElemCtxt *createContextElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_context_t &context, const uint8_t IS, const bool back = false);
     TrcStackElemAddr *createAddrElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_addr_val_t &addr_val);
-
+    TrcStackQElem *createQElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const int count);
 private:
     std::deque<TrcStackElem *> m_P0_stack;  //!< P0 decode element stack
     std::vector<TrcStackElem *> m_popped_elem;  //!< save list of popped but not deleted elements.
@@ -317,6 +357,11 @@ inline void EtmV4P0Stack::delete_back()
 inline TrcStackElem *EtmV4P0Stack::back()
 {
     return m_P0_stack.back();
+}
+
+inline TrcStackElem *EtmV4P0Stack::front()
+{
+    return m_P0_stack.front();
 }
 
 // remove and delete all the elements left on the stack
