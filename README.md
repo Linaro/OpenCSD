@@ -27,11 +27,11 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.12.2_
+_Current Version 0.14.0_
 
 ### Current support:
 
-- ETMv4 (v4.4) instruction trace - packet processing and packet decode.
+- ETMv4 (v4.5 [A/R profile] v4.4 [M profile]) instruction trace - packet processing and packet decode.
 - PTM   (v1.1) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) data trace - packet processing.
@@ -55,12 +55,11 @@ Note on the Git Repository.
 This git repository for OpenCSD contains only source for the OpenCSD decoder library.
 From version 0.4, releases appear as versioned tags on the master branch.
 
-From version 0.7.4, the required updates to CoreSight drivers and perf, that are not
-currently upstream in the linux kernel tree, are now contained in a separate
-repository to be found at:
+CoreSight kernel drivers and perf suport for CoreSight trace is maintained in the latest
+upstream kernel versions.
 
-https://github.com/Linaro/perf-opencsd
-
+One exception is a minor patch required for autoFDO support. 
+See [autofdo.md](@ref AutoFDO).
 
 Documentation
 -------------
@@ -174,6 +173,19 @@ Version and Modification Information
                     __Bugfix__: ETMv4: Ensure addressing history zeroed after TINFO.
                     __Update__: Allow GCC version to be included in build output path.
                     __Bugfix__: Packet printing update when WFI/WFE is P0 element.
+
+- _Version 0.13.x_ : Intermediate development version.
+
+- _Version 0.14.0_: __Update__: ETMv4 - decoder update & simplification to handle advanced trace features.
+                    __Update__: ETMv4 - decoder support for speculative trace.
+                    __Update__: Generic Elements: Additional information in EOT, UNSYNC, ON packets to give reason.
+                    __Update__: Memaccess: Add EL2 secure memory space flag.
+                    __Update__: Documentation: Updated for release changes and to reflect latest kernel version support for CoreSight.
+                    __Update__: Perf helper scripts updated to reflect latest build flow.
+                    __Bugfix__: Fix for component operational flag inputs.
+                    
+
+
 
 
 Licence Information
