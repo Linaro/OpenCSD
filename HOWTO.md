@@ -202,6 +202,28 @@ Command line options in `perf record` to use these features are part of the opti
 
 At current version,  `perf record` and `perf script` do not use this additional information.
 
+The cs_etm perf event
+---------------------
+
+System information for this perf pmu event can be found at: 
+
+	/sys/devices/cs_etm
+
+This contains internal format of the parameters described above:	
+
+	root@linaro-developer:~# ls /sys/devices/cs_etm/format
+	contextid  cycacc  retstack  sinkid  timestamp
+
+and names of registered sinks:
+	
+	root@linaro-developer:~# ls /sys/devices/cs_etm/sinks
+	tmc_etf0  tmc_etr0  tpiu0
+
+Note: The `sinkid` parameter is there to document the usage of a 32-bit internal parameter to
+pass the sink name used in the cs_etm/@sink/ command to the kernel drivers. It can be used 
+directly as cs_etm/sinkid=<hash_value>/ but this is not recommended as the values used are 
+considered opaque and subject to changes.
+
 On Target Trace Collection
 --------------------------
 The entire program flow will have been recorded in the `perf.data` file.
@@ -366,8 +388,8 @@ output as follows:-
     
 Set to any other value will remove the RAW_PACKED lines.
 
-Working with a debug version of the openCSD library
----------------------------------------------------
+Working with an alternate version of the openCSD library
+--------------------------------------------------------
 When compiling the perf tools it is possible to reference another version of
 the openCSD library than the one installed on the system.  This is useful when
 working with multiple development trees or having the desire to keep system
@@ -407,9 +429,13 @@ where the perf tools and openCSD library have been compiled.
     -rw------- 1 linaro linaro   78016 Feb 24 12:21 perf.data
     -rw-rw-r-- 1 linaro linaro 1245881 Feb 24 12:25 uname.v4.user.sept20.tgz
 
-Perf is expecting files related to the trace capture (`perf.data`) to be located
-under `~/.debug` [3].  This example will remove the current `~/.debug` directory
-to be sure everything is clean.  
+Perf is expecting files related to the trace capture (`perf.data`) to be located in the `buildid` directory.
+By default this is under `~/.debug`.  Alternatively the default `buildid` directory can be changed 
+using the command:
+
+     perf config --system buildid.dir=/my/own/buildid/dir
+
+This example will remove the current `~/.debug` directory to be sure everything is clean.  
 
     linaro@t430:~/linaro/coresight/sept20$ rm -rf ~/.debug
     linaro@t430:~/linaro/coresight/sept20$ cp -dpR .debug ~/
@@ -586,12 +612,18 @@ Use as follows:-
 
 1. Prior to building perf, edit `perf-setup-env.bash` to conform to your environment. There are four lines at the top of the file that will require editing.
 
-2. Execute the script using the command
+2. Execute the script using the command:
 
         source perf-setup-env.bash
 
-   This will set up all the environment variables mentioned in the sections on building and running
-   perf above, and these are used by the `perf-test...` scripts to run the tests.
+   This will set up a perf execute environment for using the perf report and script commands.
+	
+   Alternatively use the command:
+   
+		source perf-setup-env.base buildenv
+		
+   This will add in the build environment variables mentioned in the sections on building above alongside the
+   environment for using the used by the `perf-test...` scripts to run the tests.
 
 3. Build perf as described above.
 4. Follow the instructions for downloading the test capture, or create a capture from your target.
@@ -633,4 +665,3 @@ Best regards,
 
 [2]: http://people.linaro.org/~mathieu.poirier/openCSD/uname.v4.user.sept20.tgz
  
-[3]: Get in touch with us if you know a way to change this.
