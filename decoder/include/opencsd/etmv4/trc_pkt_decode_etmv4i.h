@@ -85,6 +85,9 @@ protected:
     // process an exception element - output instruction trace + exception generic type.
     ocsd_err_t processException(); 
 
+    // process Q element
+    ocsd_err_t processQElement();
+
     // process an element that cannot be cancelled / discarded
     ocsd_err_t processTS_CC_EventElem(TrcStackElem *pElem); 
 

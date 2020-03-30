@@ -1072,7 +1072,7 @@ void TrcPktProcEtmV4I::iPktQ(const uint8_t lastByte)
         default:
             m_curr_packet.err_type =  m_curr_packet.type;
             m_curr_packet.type = ETM4_PKT_I_BAD_SEQUENCE;
-            //SendBadIPacket( PKT_BAD_SEQUENCE, "ERROR: Bad Q packet type", PKT_Q );
+            m_process_state = SEND_PKT;
             break;
         }
     }

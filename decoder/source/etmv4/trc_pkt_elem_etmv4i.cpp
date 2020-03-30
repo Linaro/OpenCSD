@@ -239,8 +239,34 @@ void EtmV4ITrcPacket::toString(std::string &str) const
             str += oss.str();
         }
         break;
+
+    case ETM4_PKT_I_Q:
+        {
+            std::ostringstream oss;
+            if (Q_pkt.count_present)
+            {
+                oss << "; Count(" << std::dec << Q_pkt.q_count << ")";
+                str += oss.str();
+            }
+            else
+                str += "; Count(Unknown)";
+
+            if (Q_pkt.addr_match) 
+            {
+                addrMatchIdx(valStr);
+                str += "; " + valStr;
+            }
+
+            if (Q_pkt.addr_present || Q_pkt.addr_match)
+            {
+                trcPrintableElem::getValStr(valStr, (v_addr.size == VA_64BIT) ? 64 : 32, v_addr.valid_bits, v_addr.val, true, (v_addr.pkt_bits < 64) ? v_addr.pkt_bits : 0);
+                str += "; Addr=" + valStr;
+            }
+        }
+        break;
     }
-}
+
+}   
 
 void EtmV4ITrcPacket::toStringFmt(const uint32_t fmtFlags, std::string &str) const
 {

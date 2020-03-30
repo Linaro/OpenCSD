@@ -218,11 +218,6 @@ ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
         err = OCSD_ERR_HW_CFG_UNSUPP;
         LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace on conditional non-branch elements not supported."));
     }
-    else if(m_config->enabledQE())
-    {
-        err = OCSD_ERR_HW_CFG_UNSUPP;
-        LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace using Q elements not supported."));
-    }
     return err;
 }
 
@@ -484,9 +479,30 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
         m_elem_res.discard = true;
         break;
 
-    /*** presently unsupported packets ***/
-    /* Q elemnts */
+        /* Q packets */
     case ETM4_PKT_I_Q:
+        {
+            TrcStackQElem *pQElem = m_P0_stack.createQElem(m_curr_packet_in->getType(), m_index_curr_pkt, m_curr_packet_in->Q_pkt.q_count);
+            if (pQElem)
+            {
+                if (m_curr_packet_in->Q_pkt.addr_present)
+                {
+                    etmv4_addr_val_t addr;
+
+                    addr.val = m_curr_packet_in->getAddrVal();
+                    addr.isa = m_curr_packet_in->getAddrIS();
+                    pQElem->setAddr(addr);
+                    m_curr_spec_depth++;
+                }
+                else
+                    m_elem_pending_addr = true;
+            }
+            else
+                bAllocErr = true;
+        }
+        break;
+
+    /*** presently unsupported packets ***/
     /* conditional instruction tracing */
     case ETM4_PKT_I_COND_FLUSH:
     case ETM4_PKT_I_COND_I_F1:
@@ -729,6 +745,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 if (pElem->isP0()) 
                     m_elem_res.P0_commit--;
                 break;
+
+            case P0_Q:
+                err = processQElement();
+                m_elem_res.P0_commit--;
+                break;
             }
 
             if(bPopElem)
@@ -794,6 +815,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElemOnEOT()
             case P0_EXCEP:
             case P0_EXCEP_RET:
             case P0_OVERFLOW:
+            case P0_Q:
                 m_P0_stack.delete_all();
                 break;
 
@@ -1297,6 +1319,137 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
     outElem().exception_number = pExceptElem->getExcepNum();
 
     m_P0_stack.delete_popped();     // clear the used elements from the stack
+    return err;
+}
+
+ocsd_err_t TrcPktDecodeEtmV4I::processQElement()
+{
+    ocsd_err_t err = OCSD_OK;
+    TrcStackQElem *pQElem;
+    etmv4_addr_val_t QAddr; // address where trace restarts 
+    int iCount = 0;
+
+    pQElem = dynamic_cast<TrcStackQElem *>(m_P0_stack.back());  // get the exception element
+    m_P0_stack.pop_back(); // remove the Q element.
+
+    if (!pQElem->hasAddr())  // no address - it must be next on the stack....
+    {
+        TrcStackElemAddr *pAddressElem = 0;
+        TrcStackElemCtxt *pCtxtElem = 0;
+        TrcStackElem *pElem = 0;
+
+        pElem = m_P0_stack.back();  // look at next element.
+        if (pElem->getP0Type() == P0_CTXT)
+        {
+            pCtxtElem = dynamic_cast<TrcStackElemCtxt *>(pElem);
+            m_P0_stack.pop_back(); // remove the context element
+            pElem = m_P0_stack.back();  // next one should be an address element
+        }
+
+        if (pElem->getP0Type() != P0_ADDR)
+        {
+            // no following address element - indicate processing error.
+            err = OCSD_ERR_BAD_PACKET_SEQ;
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pQElem->getRootIndex(), m_CSID, "Address missing in Q packet."));
+            m_P0_stack.delete_popped();
+            return err;
+        }
+        pAddressElem = dynamic_cast<TrcStackElemAddr *>(pElem);
+        QAddr = pAddressElem->getAddr();
+        m_P0_stack.pop_back();  // remove the address element
+        m_P0_stack.delete_popped(); // clear used elements
+
+        // return the context element for processing next time.
+        if (pCtxtElem)
+        {
+            // need a new copy at the back - old one will be deleted as popped.
+            m_P0_stack.createContextElem(pCtxtElem->getRootPkt(), pCtxtElem->getRootIndex(), pCtxtElem->getContext(),true);
+        }
+    }
+    else
+        QAddr = pQElem->getAddr();
+
+    // process the Q element with address. 
+    iCount = pQElem->getInstrCount();
+
+    bool isBranch = false;
+
+    // need to output something - set up an element
+    if ((err = m_out_elem.addElem(pQElem->getRootIndex())))
+        return err;
+
+    instr_range_t addr_range;
+    addr_range.st_addr = addr_range.en_addr = m_instr_info.instr_addr;
+    addr_range.num_instr = 0;
+
+    // walk iCount instructions
+    for (int i = 0; i < iCount; i++)
+    {
+        uint32_t opcode;
+        uint32_t bytesReq = 4;
+
+        err = accessMemory(m_instr_info.instr_addr, getCurrMemSpace(), &bytesReq, (uint8_t *)&opcode);
+        if (err != OCSD_OK) break;
+
+        if (bytesReq == 4) // got data back
+        {
+            m_instr_info.opcode = opcode;
+            err = instrDecode(&m_instr_info);
+            if (err != OCSD_OK) break;
+
+            // increment address - may be adjusted by direct branch value later
+            m_instr_info.instr_addr += m_instr_info.instr_size;
+            addr_range.num_instr++;
+
+            isBranch = (m_instr_info.type == OCSD_INSTR_BR) ||
+                (m_instr_info.type == OCSD_INSTR_BR_INDIRECT);
+
+            // on a branch no way of knowing if taken - bail out
+            if (isBranch)
+                break;
+        }
+        else
+            break;  // missing memory
+
+    }
+
+    if (err == OCSD_OK)
+    {
+        bool inCompleteRange = true;
+        if (iCount && (addr_range.num_instr == (unsigned)iCount))
+        {
+            if ((m_instr_info.instr_addr == QAddr.val) ||    // complete range
+                (isBranch)) // or ends on branch - only way we know if branch taken.
+            {
+                // output a range and continue
+                inCompleteRange = false;
+                // update the range decoded address in the output packet.
+                addr_range.en_addr = m_instr_info.instr_addr;
+                setElemTraceRange(outElem(), addr_range, true, pQElem->getRootIndex());
+            }
+        }
+
+        if (inCompleteRange)
+        {   
+            // unknown instructions executed.
+            addr_range.en_addr = QAddr.val;
+            addr_range.num_instr = iCount;
+
+            outElem().setType(OCSD_GEN_TRC_ELEM_I_RANGE_NOPATH);
+            outElem().setAddrRange(addr_range.st_addr, addr_range.en_addr, addr_range.num_instr);
+            outElem().setISA(calcISA(m_is_64bit, QAddr.isa));
+        }
+
+        // after the Q element, tracing resumes at the address supplied
+        SetInstrInfoInAddrISA(QAddr.val, QAddr.isa);
+        m_need_addr = false;
+    }
+    else
+    {
+        // output error and halt decode.
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, pQElem->getRootIndex(), m_CSID, "Error processing Q packet"));
+    }
+    m_P0_stack.delete_popped();
     return err;
 }
 
