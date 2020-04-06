@@ -1388,7 +1388,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::handleBadPacket(const char *reason)
 {
     ocsd_err_t err = OCSD_OK;
 
-    if(getComponentOpMode() && OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
+    if(getComponentOpMode() & OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
     {
         // error out - stop decoding
         err = OCSD_ERR_BAD_DECODE_PKT;
