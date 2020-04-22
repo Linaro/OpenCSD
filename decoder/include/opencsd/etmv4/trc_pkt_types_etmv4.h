@@ -119,7 +119,8 @@ typedef enum _ocsd_etmv4_i_pkt_type
         ETM4_PKT_I_ADDR_CTXT_L_64IS0 =  0x85,   /*!< b10000101  */
         ETM4_PKT_I_ADDR_CTXT_L_64IS1,           /*!< b10000110  */
         /* unused encoding              0x87         b10000111  */
-        /* unused encodings             0x88-0x8F    b10001xxx  */
+        ETE_PKT_I_TS_MARKER =           0x88,   /*!< b10001000  */
+        /* unused encodings             0x89-0x8F    b10001001 to b10001111  */
         ETM4_PKT_I_ADDR_MATCH =         0x90,   /*!< b10010000 to b10010010 0x92 */
         /* unused encodings             0x93-0x94    b10010011 to b10010010 */
         ETM4_PKT_I_ADDR_S_IS0 =         0x95,   /*!< b10010101  */

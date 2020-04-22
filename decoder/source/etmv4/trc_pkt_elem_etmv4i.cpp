@@ -507,6 +507,11 @@ const char *EtmV4ITrcPacket::packetTypeName(const ocsd_etmv4_i_pkt_type type, co
         pDesc = "Address & Context, Long, 64 bit, IS1.";
         break;
 
+    case ETE_PKT_I_TS_MARKER:
+        pName = "I_TS_MARKER";
+        pDesc = "Timestamp Marker";
+        break;
+
     case ETM4_PKT_I_ADDR_MATCH:
         pName = "I_ADDR_MATCH";
         pDesc = "Exact Address Match.";

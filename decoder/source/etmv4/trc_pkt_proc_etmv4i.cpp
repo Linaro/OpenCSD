@@ -1501,6 +1501,12 @@ void TrcPktProcEtmV4I::BuildIPacketTable()
         m_i_table[0x85+i].pptkFn   = &TrcPktProcEtmV4I::iPktAddrCtxt;
     }
 
+    // 0b1000 1000 - ETE 1.1 TS Marker
+    if (m_config.MajVersion() >= 0x5)
+    {
+        m_i_table[0x88].pkt_type = ETE_PKT_I_TS_MARKER;
+        m_i_table[0x88].pptkFn = &TrcPktProcEtmV4I::iPktNoPayload;
+    }
     // 0b1001 0000 to b1001 0010 - exact match addr
     for(int i = 0; i < 3; i++)
     {

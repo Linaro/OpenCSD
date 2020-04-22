@@ -270,6 +270,7 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_out_elem.resetElemStack();
     m_last_IS = 0;
     clearElemRes();
+    m_ete_first_ts_marker = false;
 
     // elements associated with data trace
 #ifdef DATA_TRACE_SUPPORTED
@@ -462,6 +463,16 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
             if (m_P0_stack.createParamElem(bTSwithCC ? P0_TS_CC : P0_TS, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
                 bAllocErr = true;
 
+        }
+        break;
+
+    case ETE_PKT_I_TS_MARKER:
+        {
+            trace_marker_payload_t marker;
+            marker.type = ELEM_MARKER_TS;
+            marker.value = 0;
+            if (m_P0_stack.createMarkerElem(m_curr_packet_in->getType(), m_index_curr_pkt, marker) == 0)
+                bAllocErr = true;
         }
         break;
 
@@ -1106,6 +1117,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::discardElements()
 ocsd_err_t TrcPktDecodeEtmV4I::processTS_CC_EventElem(TrcStackElem *pElem)
 {
     ocsd_err_t err = OCSD_OK;
+    // ignore ts for ETE if not seen first TS marker on systems that use this.
+    bool bPermitTS = !m_config->eteHasTSMarker() || m_ete_first_ts_marker;
 
     switch (pElem->getP0Type())
     {
@@ -1120,7 +1133,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processTS_CC_EventElem(TrcStackElem *pElem)
         case P0_TS:
         {
             TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
-            if (pParamElem)
+            if (pParamElem && bPermitTS)
                 err = addElemTS(pParamElem, false);
         }
         break;
@@ -1136,7 +1149,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processTS_CC_EventElem(TrcStackElem *pElem)
         case P0_TS_CC:
         {
             TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
-            if (pParamElem)
+            if (pParamElem && bPermitTS)
                 err = addElemTS(pParamElem, true);
         }
         break;
@@ -1149,6 +1162,9 @@ ocsd_err_t TrcPktDecodeEtmV4I::processMarkerElem(TrcStackElem *pElem)
 {
     ocsd_err_t err = OCSD_OK;
     TrcStackElemMarker *pMarkerElem = dynamic_cast<TrcStackElemMarker *>(pElem);
+
+    if (m_config->eteHasTSMarker() && (pMarkerElem->getMarker().type == ELEM_MARKER_TS))
+        m_ete_first_ts_marker = true;
 
     if (!err)
     {
