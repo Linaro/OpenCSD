@@ -61,6 +61,7 @@ typedef enum _ocsd_gen_trc_elem_t
     OCSD_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count - cycles since last cycle count value - associated with a preceding instruction range. */
     OCSD_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger or numbered event  */   
     OCSD_GEN_TRC_ELEM_SWTRACE,         /*!< Software trace packet - may contain data payload. */
+    OCSD_GEN_TRC_ELEM_SYNC_MARKER,     /*!< Synchronisation marker - marks position in stream of an element that is output later. */
     OCSD_GEN_TRC_ELEM_CUSTOM,          /*!< Fully custom packet type - used by none-ARM architecture decoders */
 } ocsd_gen_trc_elem_t;
 
@@ -85,6 +86,15 @@ typedef enum _unsync_info_t {
     UNSYNC_BAD_PACKET,      /**< bad packet at input - resync to restart. */
     UNSYNC_EOT,             /**< end of trace - no additional info */
 } unsync_info_t;
+
+typedef enum _trace_sync_marker_t {
+    ELEM_MARKER_TS,        /**< Marker for timestamp element */
+} trace_sync_marker_t;
+
+typedef struct _trace_marker_payload_t {
+    trace_sync_marker_t type;   /**< type of sync marker */
+    uint32_t value;             /**< sync marker value - usage depends on type */
+} trace_marker_payload_t;
 
 typedef struct _ocsd_generic_trace_elem {
     ocsd_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
@@ -122,6 +132,7 @@ typedef struct _ocsd_generic_trace_elem {
         ocsd_swt_info_t sw_trace_info;      /**< software trace packet info    */
 		uint32_t num_instr_range;	        /**< number of instructions covered by range packet (for T32 this cannot be calculated from en-st/i_size) */
         unsync_info_t unsync_eot_info;      /**< additional information for unsync / end-of-trace packets. */
+        trace_marker_payload_t sync_marker; /**< marker element - sync later element to position in stream */
     };
 
     const void *ptr_extended_data;        /**< pointer to extended data buffer (data trace, sw trace payload) / custom structure */

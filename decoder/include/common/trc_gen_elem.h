@@ -82,6 +82,8 @@ public:
     void setSWTInfo(const ocsd_swt_info_t swt_info) { sw_trace_info = swt_info; };
     void setExtendedDataPtr(const void *data_ptr);
 
+    void setSyncMarker(const trace_marker_payload_t &marker);
+
 // stringize the element
 
     virtual void toString(std::string &str) const;
@@ -206,6 +208,11 @@ inline void OcsdTraceElement::setExtendedDataPtr(const void *data_ptr)
 {
     extended_data = 1;
     ptr_extended_data = data_ptr;
+}
+
+inline void OcsdTraceElement::setSyncMarker(const trace_marker_payload_t &marker)
+{
+    sync_marker = marker;
 }
 
 // set persistent data between output packets.
