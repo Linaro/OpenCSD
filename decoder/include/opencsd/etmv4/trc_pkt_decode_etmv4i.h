@@ -91,6 +91,9 @@ protected:
     // process an element that cannot be cancelled / discarded
     ocsd_err_t processTS_CC_EventElem(TrcStackElem *pElem); 
 
+    // process marker elements
+    ocsd_err_t processMarkerElem(TrcStackElem *pElem);
+
     // process a bad packet
     ocsd_err_t handleBadPacket(const char *reason);
 

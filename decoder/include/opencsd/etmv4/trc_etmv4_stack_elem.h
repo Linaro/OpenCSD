@@ -34,6 +34,7 @@
 #define ARM_TRC_ETMV4_STACK_ELEM_H_INCLUDED
 
 #include "opencsd/etmv4/trc_pkt_types_etmv4.h"
+#include "opencsd/trc_gen_elem_types.h"
 
 #include <deque>
 #include <vector>
@@ -56,6 +57,7 @@ typedef enum _p0_elem_t
     P0_TS,
     P0_CC,
     P0_TS_CC,
+    P0_MARKER,
     P0_Q,
     P0_OVERFLOW,
     P0_FUNC_RET,
@@ -295,6 +297,31 @@ inline TrcStackElemParam::TrcStackElemParam(const p0_elem_t p0_type, const bool 
 }
 
 /************************************************************/
+/** Marker element */
+
+class TrcStackElemMarker : public TrcStackElem
+{
+protected:
+    TrcStackElemMarker(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
+    virtual ~TrcStackElemMarker() {};
+
+    friend class EtmV4P0Stack;
+
+public:
+    void setMarker(const trace_marker_payload_t &marker) { m_marker = marker; };
+    const trace_marker_payload_t &getMarker() const { return m_marker; };
+
+private:
+    trace_marker_payload_t m_marker;
+};
+
+inline TrcStackElemMarker::TrcStackElemMarker(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index) :
+    TrcStackElem(P0_MARKER, false, root_pkt, root_index)
+{
+}
+
+
+/************************************************************/
 /* P0 element stack that allows push of elements, and deletion of elements when done.
 */
 class EtmV4P0Stack
@@ -329,6 +356,8 @@ public:
     TrcStackElemCtxt *createContextElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_context_t &context, const uint8_t IS, const bool back = false);
     TrcStackElemAddr *createAddrElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_addr_val_t &addr_val);
     TrcStackQElem *createQElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const int count);
+    TrcStackElemMarker *createMarkerElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const trace_marker_payload_t &marker);
+
 private:
     std::deque<TrcStackElem *> m_P0_stack;  //!< P0 decode element stack
     std::vector<TrcStackElem *> m_popped_elem;  //!< save list of popped but not deleted elements.

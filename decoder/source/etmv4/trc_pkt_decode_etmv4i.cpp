@@ -693,6 +693,10 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 err = processTS_CC_EventElem(pElem);
                 break;
 
+            case P0_MARKER:
+                err = processMarkerElem(pElem);
+                break;
+
             case P0_ATOM:
                 {
                 TrcStackElemAtom *pAtomElem = dynamic_cast<TrcStackElemAtom *>(pElem);
@@ -831,6 +835,10 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElemOnEOT()
         case P0_TS_CC:
             err = processTS_CC_EventElem(pElem);
             break;
+
+        case P0_MARKER:
+            err = processMarkerElem(pElem);
+            break;
         }
         m_P0_stack.delete_back();
     }
@@ -886,6 +894,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
                     case P0_TS:
                     case P0_CC:
                     case P0_TS_CC:
+                    case P0_MARKER:
                         m_P0_stack.pop_front(false);
                         temp.push_back(pElem);
                         break;
@@ -980,7 +989,10 @@ ocsd_err_t TrcPktDecodeEtmV4I::discardElements()
     while ((m_P0_stack.size() > 0) && !err)
     {
         pElem = m_P0_stack.back();
-        err = processTS_CC_EventElem(pElem);
+        if (pElem->getP0Type() == P0_MARKER)
+            err = processMarkerElem(pElem);
+        else
+            err = processTS_CC_EventElem(pElem);
         m_P0_stack.delete_back();
     }
 
@@ -1039,6 +1051,20 @@ ocsd_err_t TrcPktDecodeEtmV4I::processTS_CC_EventElem(TrcStackElem *pElem)
     }
     return err;
 
+}
+
+ocsd_err_t TrcPktDecodeEtmV4I::processMarkerElem(TrcStackElem *pElem)
+{
+    ocsd_err_t err = OCSD_OK;
+    TrcStackElemMarker *pMarkerElem = dynamic_cast<TrcStackElemMarker *>(pElem);
+
+    if (!err)
+    {
+        err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_SYNC_MARKER);
+        if (!err)
+            m_out_elem.getCurrElem().setSyncMarker(pMarkerElem->getMarker());
+    }
+    return err;
 }
 
 ocsd_err_t TrcPktDecodeEtmV4I::addElemCC(TrcStackElemParam *pParamElem)
