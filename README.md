@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.14.1_
+_Current Version 0.14.2_
 
 ### Current support:
 
@@ -203,6 +203,13 @@ Version and Modification Information
 - _Version 0.14.1_: 
     - __Update__: ETMv4 - Add support for Q elements.
     - __Bugfix__: build: fix logic issue for && operator. (github issue #23, sumitted by yabinc)
+
+- _Version 0.14.2_: 
+    - __Update__: Architecture versioning. Set enum tag values to make conversion to numeric version easier.
+    - __Update__: I-decode: remove global temporary decode state data and replace with local instance data
+                  to make library more easily usable in multi-threaded programs.
+    - __Bugfix__: I-decode: Some Thumb instructions not correctly reported as implied returns.
+                  (github issue #24, submitted by kongy).
 
 
 Licence Information
