@@ -273,11 +273,11 @@ typedef enum _ocsd_dcd_tree_src_t {
 
 /** Core Architecture Version */
 typedef enum _ocsd_arch_version {
-    ARCH_UNKNOWN,   /**< unknown architecture */
-    ARCH_CUSTOM,    /**< None ARM, custom architecture */
-    ARCH_V7,        /**< V7 architecture */
-    ARCH_V8,        /**< V8 architecture */
-    ARCH_V8r3,      /**< V8.3 architecture */
+    ARCH_UNKNOWN = 0x0000,   /**< unknown architecture */
+    ARCH_CUSTOM = 0x0001,    /**< None ARM, custom architecture */
+    ARCH_V7 = 0x0700,        /**< V7 architecture */
+    ARCH_V8 = 0x0800,        /**< V8 architecture */
+    ARCH_V8r3 = 0x0803,      /**< V8.3 architecture */
 } ocsd_arch_version_t;
 
 // macros for arch version comparisons.
