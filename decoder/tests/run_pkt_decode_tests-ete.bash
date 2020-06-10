@@ -35,10 +35,20 @@
 # may change due to bugfix / enhancements) or assess the validity  of the trace output.
 #
 #################################################################################
+# Usage options:-
+# * default: run tests on binary + libs in ./bin/linux64/rel
+# run_pkt_decode_tests.bash
+#
+# * use installed opencsd libraries & program
+# run_pkt_decode_tests.bash use-installed
+#
+# * use supplied path for binary + libs (must have trailing /)
+# run_pkt_decode_tests.bash <custom>/<path>/
+#
 
 OUT_DIR=./results-ete
 SNAPSHOT_DIR=./snapshots-ete
-BIN_DIR=./bin/linux64/rel
+BIN_DIR=./bin/linux64/rel/
 
 # directories for tests using full decode
 declare -a test_dirs_decode=( "001-ack_test"
@@ -57,6 +67,7 @@ declare -a test_dirs_decode=( "001-ack_test"
                               "tme_test"
                               "trace_file_cid_vmid"
                               "trace_file_vmid"
+                              "ts_marker"
                             )
 
 
@@ -71,19 +82,30 @@ echo "Running trc_pkt_lister on snapshot directories."
 
 mkdir -p ${OUT_DIR}
 
-# === test the decode set ===
-export LD_LIBRARY_PATH=${BIN_DIR}/.
+if [ "$1" == "use-installed" ]; then
+    BIN_DIR=""
+elif [ "$1" != "" ]; then
+    BIN_DIR=$1
+fi
 
+echo "Tests using BIN_DIR = ${BIN_DIR}"
+
+if [ "${BIN_DIR}" != "" ]; then
+    export LD_LIBRARY_PATH=${BIN_DIR}.
+    echo "LD_LIBRARY_PATH set to ${BIN_DIR}"
+fi
+
+# === test the decode set ===
 for test_dir in "${test_dirs_decode[@]}"
 do
     echo "Testing $test_dir..."
-    ${BIN_DIR}/trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" -decode -logfilename "${OUT_DIR}/$test_dir.ppl"
+    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" -decode -logfilename "${OUT_DIR}/$test_dir.ppl"
     echo "Done : Return $?"
 done
 
 for test_dir_n in "${test_dirs_decode_src_addr_opt[@]}"
 do
     echo "Testing with -src_addr_n  $test_dir_n..."
-    ${BIN_DIR}/trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_n" -decode -src_addr_n -logfilename "${OUT_DIR}/${test_dir_n}_src_addr_N.ppl"
+    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_n" -decode -src_addr_n -logfilename "${OUT_DIR}/${test_dir_n}_src_addr_N.ppl"
     echo "Done : Return $?"
 done
