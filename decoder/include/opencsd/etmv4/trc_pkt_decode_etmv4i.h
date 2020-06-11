@@ -211,7 +211,6 @@ private:
 
     ocsd_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
 
-    ocsd_pe_context m_pe_context;  //!< current context information
     etmv4_trace_info_t m_trace_info; //!< trace info for this trace run.
 
     bool m_prev_overflow;
