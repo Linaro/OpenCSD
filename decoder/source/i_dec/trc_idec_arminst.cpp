@@ -224,7 +224,7 @@ int inst_Thumb_is_indirect_branch_link(uint32_t inst, uint8_t *is_link)
         instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET;
     } else if ((inst & 0xfd870000) == 0x44870000) {
         /* MOV PC,reg or ADD PC,reg */
-        if ((inst & 0xffff0000) == 0x46f700000)
+        if ((inst & 0xffff0000) == 0x46f70000)
             instr_sub_type = OCSD_S_INSTR_V7_IMPLIED_RET; /* MOV PC,LR */
     } else if ((inst & 0xfff0ffe0) == 0xe8d0f000) {
         /* TBB/TBH */
