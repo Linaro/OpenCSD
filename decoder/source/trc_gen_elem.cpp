@@ -109,7 +109,7 @@ static const char *s_unsync_reason[] = {
 void OcsdTraceElement::toString(std::string &str) const
 {
     std::ostringstream oss;
-    int num_str = ((sizeof(s_elem_descs) / sizeof(const char *)) / 2);
+    int num_str = sizeof(s_elem_descs) / sizeof(s_elem_descs[0]);
     int typeIdx = (int)this->elem_type;
     if(typeIdx < num_str)
     {
