@@ -114,16 +114,20 @@ all: libs tests
 
 libs: $(LIB_BASE_NAME)_lib  $(LIB_CAPI_NAME)_lib
 
+DEF_SO_PERM ?= 644
+
 install: libs tests
 	mkdir -p $(INSTALL_LIB_DIR) $(INSTALL_INCLUDE_DIR) $(INSTALL_BIN_DIR)
 	cp -d $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so $(INSTALL_LIB_DIR)/
 	cp -d $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so.$(SO_MAJOR_VER) $(INSTALL_LIB_DIR)/
-	$(INSTALL) --mode=644 $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so.$(SO_VER) $(INSTALL_LIB_DIR)/
+	$(INSTALL) --mode=$(DEF_SO_PERM) $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so.$(SO_VER) $(INSTALL_LIB_DIR)/
 	cp -d $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so $(INSTALL_LIB_DIR)/
 	cp -d $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so.$(SO_MAJOR_VER) $(INSTALL_LIB_DIR)/
-	$(INSTALL) --mode=644 $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so.$(SO_VER) $(INSTALL_LIB_DIR)/
+	$(INSTALL) --mode=$(DEF_SO_PERM) $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so.$(SO_VER) $(INSTALL_LIB_DIR)/
+ifndef DISABLE_STATIC
 	$(INSTALL) --mode=644 $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a $(INSTALL_LIB_DIR)/
 	$(INSTALL) --mode=644 $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a $(INSTALL_LIB_DIR)/
+endif
 	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make install_inc
 	$(INSTALL) --mode=755 $(BIN_TEST_TARGET_DIR)/trc_pkt_lister $(INSTALL_BIN_DIR)/ 
 
