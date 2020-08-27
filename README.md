@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.14.2_
+_Current Version 0.14.3_
 
 ### Current support:
 
@@ -210,6 +210,11 @@ Version and Modification Information
                   to make library more easily usable in multi-threaded programs.
     - __Bugfix__: I-decode: Some Thumb instructions not correctly reported as implied returns.
                   (github issue #24, submitted by kongy).
+
+- _Version 0.14.3_:
+    - __Update__: Fix makefile to be compliant with RPM base distros. (github issue #26, submitted by jlinton)
+    - __Update__: Add section to autofdo document.
+    - __Bugfix__: STM: fix bug that was missing ASYNC packets. (github issue #27, reported by subhasish Karmakar)
 
 
 Licence Information
