@@ -42,7 +42,7 @@ ocsd_err_t TrcIDecode::DecodeInstruction(ocsd_instr_info *instr_info)
     struct decode_info info;
 
     info.instr_sub_type = OCSD_S_INSTR_NONE;
-    info.arch_version = (uint16_t)(instr_info->pe_type.arch);
+    info.arch_version = instr_info->pe_type.arch;
 
     switch(instr_info->isa)
     {

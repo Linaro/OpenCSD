@@ -44,7 +44,7 @@
 
 /* supplementary decode information */
 struct decode_info {
-    uint16_t arch_version;
+    ocsd_arch_version_t arch_version;
     ocsd_instr_subtype instr_sub_type;
 };
 

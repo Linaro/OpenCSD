@@ -278,11 +278,13 @@ typedef enum _ocsd_arch_version {
     ARCH_V7 = 0x0700,        /**< V7 architecture */
     ARCH_V8 = 0x0800,        /**< V8 architecture */
     ARCH_V8r3 = 0x0803,      /**< V8.3 architecture */
+    ARCH_AA64 = 0x0864,      /**< Min v8r3 plus additional AA64 PE features */
+    ARCH_V8_max = ARCH_AA64,
 } ocsd_arch_version_t;
 
 // macros for arch version comparisons.
-#define OCSD_IS_V8_ARCH(arch) ((arch >= ARCH_V8) && (arch <= ARCH_V8r3))
-#define OCSD_MIN_V8_ARCH(arch) (arch >= ARCH_V8)
+#define OCSD_IS_V8_ARCH(arch) ((arch >= ARCH_V8) && (arch <= ARCH_V8_max))
+#define OCSD_IS_ARCH_MINVER(arch, min_arch) (arch >= min_arch)
 
 /** Core Profile  */
 typedef enum _ocsd_core_profile {

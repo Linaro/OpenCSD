@@ -288,7 +288,7 @@ int inst_A64_is_indirect_branch_link(uint32_t inst, uint8_t *is_link, struct dec
     } else if ((inst & 0xffffffff) == 0xd69f03e0) {
         /* ERET */
         info->instr_sub_type = OCSD_S_INSTR_V8_ERET;
-    } else if (info->arch_version >= 0x0803) {
+    } else if (OCSD_IS_ARCH_MINVER(info->arch_version, ARCH_V8r3)) {
         /* new pointer auth instr for v8.3 arch */   
         if ((inst & 0xffdff800) == 0xd71f0800) {
             /* BRAA, BRAB, BLRAA, BLRBB */
@@ -484,7 +484,7 @@ int inst_A64_is_branch_and_link(uint32_t inst, struct decode_info *info)
     } else if ((inst & 0xfc000000) == 0x94000000) {
         /* BL */
         info->instr_sub_type = OCSD_S_INSTR_BR_LINK;
-    }  else if (info->arch_version >= 0x0803) {
+    }  else if (OCSD_IS_ARCH_MINVER(info->arch_version, ARCH_V8r3)) {
         /* new pointer auth instr for v8.3 arch */
         if ((inst & 0xfffff800) == 0xd73f0800) {
             /* BLRAA, BLRBB */
