@@ -121,7 +121,7 @@ arm_barrier_t inst_A64_barrier(uint32_t inst);
 
 int inst_ARM_wfiwfe(uint32_t inst);
 int inst_Thumb_wfiwfe(uint32_t inst);
-int inst_A64_wfiwfe(uint32_t inst);
+int inst_A64_wfiwfe(uint32_t inst, struct decode_info *info);
 
 /*
 Test whether an instruction is definitely undefined, e.g. because

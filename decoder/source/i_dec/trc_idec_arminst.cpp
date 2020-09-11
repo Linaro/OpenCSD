@@ -258,11 +258,19 @@ int inst_A64_is_direct_branch_link(uint32_t inst, uint8_t *is_link, struct decod
     return is_direct_branch;
 }
 
-int inst_A64_wfiwfe(uint32_t inst)
+int inst_A64_wfiwfe(uint32_t inst, struct decode_info *info)
 {
     /* WFI, WFE may be traced as branches in etm 4.3++ */
     if ((inst & 0xffffffdf) == 0xd503205f)
         return 1;
+
+    /* new feature introduced post v8.3 */
+    if (OCSD_IS_ARCH_MINVER(info->arch_version, ARCH_AA64))
+    {
+        /* WFIT / WFET for later archs */
+        if ((inst & 0xffffffc0) == 0xd5031000)
+            return 1;
+    }
     return 0;
 }
 
