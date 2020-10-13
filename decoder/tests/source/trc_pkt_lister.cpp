@@ -518,8 +518,9 @@ void ConfigureFrameDeMux(DecodeTree *dcd_tree, RawFramePrinter **framePrinter)
         if (!configFlags)
         {
             configFlags = OCSD_DFRMTR_FRAME_MEM_ALIGN;
-            pDeformatter->Configure(configFlags);
         }
+        pDeformatter->Configure(configFlags);
+
         if (outRawPacked || outRawUnpacked)
         {
             if (outRawPacked) configFlags |= OCSD_DFRMTR_PACKED_RAW_OUT;
