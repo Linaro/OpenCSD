@@ -185,9 +185,9 @@ void print_help()
     oss << "\nDecode:\n\n";
     oss << "-id <n>             Set an ID to list (may be used multiple times) - default if no id set is for all IDs to be printed\n";
     oss << "-src_name <name>    List packets from a given snapshot source name (defaults to first source found)\n";
-    oss << "-dstream_format     Input is DSTREAM framed.";
-    oss << "-tpiu               Input from TPIU - sync by FSYNC.";
-    oss << "-tpiu_hsync         Input from TPIU - sync by FSYNC and HSYNC.";
+    oss << "-dstream_format     Input is DSTREAM framed.\n";
+    oss << "-tpiu               Input from TPIU - sync by FSYNC.\n";
+    oss << "-tpiu_hsync         Input from TPIU - sync by FSYNC and HSYNC.\n";
     oss << "-decode             Full decode of the packets from the trace snapshot (default is to list undecoded packets only\n";
     oss << "-decode_only        Does not list the undecoded packets, just the trace decode.\n";
     oss << "-o_raw_packed       Output raw packed trace frames\n";
