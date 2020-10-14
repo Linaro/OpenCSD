@@ -36,6 +36,7 @@ CXX := $(MASTER_CXX)
 LINKER := $(MASTER_LINKER)	
 
 PROG = trc_pkt_lister
+PROG_S = trc_pkt_lister_s
 
 BUILD_DIR=./$(PLAT_DIR)
 
@@ -60,11 +61,17 @@ test_app: $(BIN_TEST_TARGET_DIR)/$(PROG)
 			mkdir -p  $(BIN_TEST_TARGET_DIR)
 			$(LINKER) $(LDFLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
 
+$(BIN_TEST_TARGET_DIR)/$(PROG_S): $(OBJECTS)
+			mkdir -p  $(BIN_TEST_TARGET_DIR)
+			$(LINKER) -static $(LDFLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG_S)
+
+
+
 build_dir:
 	mkdir -p $(BUILD_DIR)
 
 .PHONY: copy_libs
-copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG)
+copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG) $(BIN_TEST_TARGET_DIR)/$(PROG_S)
 	cp $(LIB_TARGET_DIR)/*.so* $(BIN_TEST_TARGET_DIR)/.
 
 
