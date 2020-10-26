@@ -87,12 +87,12 @@ kernel and many targets are using older kernels.  To enable CoreSight trace
 on these targets, Arm have provided backports of the latest CoreSight
 drivers and ETM strobing patch at:
 
-  <http://linux-arm.org/git?p=linux-coresight-backports.git>
+  <https://gitlab.arm.com/linux-arm/linux-coresight-backports>
 
 This repository can be cloned with:
 
 ```
-git clone git://linux-arm.org/linux-coresight-backports.git
+git clone https://git.gitlab.arm.com/linux-arm/linux-coresight-backports.git
 ```
 
 You can include these backports in your kernel by either merging the
