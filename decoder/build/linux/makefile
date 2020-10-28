@@ -65,9 +65,9 @@ export INSTALL=install
 # installation directory
 PREFIX ?=/usr
 LIB_PATH ?= lib
-INSTALL_LIB_DIR=$(PREFIX)/$(LIB_PATH)
-INSTALL_BIN_DIR=$(PREFIX)/bin
-export INSTALL_INCLUDE_DIR=$(PREFIX)/include/
+INSTALL_LIB_DIR=$(DESTDIR)$(PREFIX)/$(LIB_PATH)
+INSTALL_BIN_DIR=$(DESTDIR)$(PREFIX)/bin
+export INSTALL_INCLUDE_DIR=$(DESTDIR)$(PREFIX)/include/
 
 # compile flags
 CFLAGS += $(CPPFLAGS) -c -Wall -DLINUX -Wno-switch -Wlogical-op -fPIC
