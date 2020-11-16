@@ -52,16 +52,16 @@ OBJECTS		=	$(BUILD_DIR)/trc_pkt_lister.o
 LIBS		=	-L$(LIB_TEST_TARGET_DIR) -lsnapshot_parser \
 				-L$(LIB_TARGET_DIR) -l$(LIB_BASE_NAME)
 
-all:  build_dir copy_libs
+all: copy_libs
 
 test_app: $(BIN_TEST_TARGET_DIR)/$(PROG)
 
 
- $(BIN_TEST_TARGET_DIR)/$(PROG): $(OBJECTS)
+ $(BIN_TEST_TARGET_DIR)/$(PROG): $(OBJECTS) | build_dir
 			mkdir -p  $(BIN_TEST_TARGET_DIR)
 			$(LINKER) $(LDFLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
 
-$(BIN_TEST_TARGET_DIR)/$(PROG_S): $(OBJECTS)
+$(BIN_TEST_TARGET_DIR)/$(PROG_S): $(OBJECTS) | build_dir
 			mkdir -p  $(BIN_TEST_TARGET_DIR)
 			$(LINKER) -static $(LDFLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG_S)
 
@@ -71,7 +71,7 @@ build_dir:
 	mkdir -p $(BUILD_DIR)
 
 .PHONY: copy_libs
-copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG) $(BIN_TEST_TARGET_DIR)/$(PROG_S)
+copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG) $(BIN_TEST_TARGET_DIR)/$(PROG_S) 
 	cp $(LIB_TARGET_DIR)/*.so* $(BIN_TEST_TARGET_DIR)/.
 
 
@@ -83,7 +83,7 @@ DEPS := $(OBJECTS:%.o=%.d)
 -include $(DEPS)
 
 ## object compile
-$(BUILD_DIR)/%.o : %.cpp
+$(BUILD_DIR)/%.o : %.cpp | build_dir
 			$(CXX) $(CXXFLAGS) $(CXX_INCLUDES) -MMD $< -o $@
 
 #### clean
