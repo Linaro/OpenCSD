@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.14.3_
+_Current Version 0.14.4_
 
 ### Current support:
 
@@ -216,6 +216,13 @@ Version and Modification Information
     - __Update__: Add section to autofdo document.
     - __Bugfix__: STM: fix bug that was missing ASYNC packets. (github issue #27, reported by subhasish Karmakar)
 
+- _Version 0.14.4_:
+    - __Update__: makefile: Add DESTDIR to install targets. (github issue #30)
+    - __Update__: tests: add script to run single test only.
+    - __Update__: docs: update to location of ARM coresight driver backports directory.
+    - __Bugfix__: ETMv3: Fix missing comma in string list. (github issue #31)
+    - __Bugfix__: makefile: tests: Fix build race problem (github issue #32)
+    - __Bugfix__: tests: fix ignore tpiu command line options (github issue #28)
 
 Licence Information
 ===================
