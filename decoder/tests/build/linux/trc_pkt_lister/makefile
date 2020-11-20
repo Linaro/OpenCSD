@@ -71,7 +71,10 @@ build_dir:
 	mkdir -p $(BUILD_DIR)
 
 .PHONY: copy_libs
-copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG) $(BIN_TEST_TARGET_DIR)/$(PROG_S) 
+ifdef TEST_STATIC_LINKING
+copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG_S) 
+endif
+copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG)
 	cp $(LIB_TARGET_DIR)/*.so* $(BIN_TEST_TARGET_DIR)/.
 
 
@@ -90,6 +93,9 @@ $(BUILD_DIR)/%.o : %.cpp | build_dir
 .PHONY: clean
 clean :
 	-rm $(BIN_TEST_TARGET_DIR)/$(PROG) $(OBJECTS)
+ifdef TEST_STATIC_LINKING
+	-rm $(BIN_TEST_TARGET_DIR)/$(PROG_S)
+endif
 	-rm $(DEPS)
 	-rm $(BIN_TEST_TARGET_DIR)/*.so*
 	-rmdir $(BUILD_DIR)

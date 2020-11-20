@@ -202,3 +202,4 @@ clean_install:
 	-rm    $(INSTALL_LIB_DIR)/lib$(LIB_BASE_NAME).*
 	-rm    $(INSTALL_LIB_DIR)/lib$(LIB_CAPI_NAME).*
 	-rm -r $(INSTALL_INCLUDE_DIR)/$(LIB_UAPI_INC_DIR)
+	-rm    $(INSTALL_BIN_DIR)/trc_pkt_lister
