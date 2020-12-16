@@ -525,7 +525,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
         //resp = OCSD_RESP_FATAL_INVALID_DATA;
 #endif
         err = OCSD_ERR_UNSUPP_DECODE_PKT;
-        LogError(ocsdError(sev, err, "Data trace releated, unsupported packet type."));
+        LogError(ocsdError(sev, err, "Data trace related, unsupported packet type."));
         }
         break;
 
