@@ -310,6 +310,7 @@
     <None Include="..\..\..\..\TODO" />
     <None Include="..\..\..\docs\build_libs.md" />
     <None Include="..\..\..\docs\external_custom.md" />
+    <None Include="..\..\..\docs\man\trc_pkt_lister.1" />
     <None Include="..\..\..\docs\test_progs.md" />
   </ItemGroup>
   <ItemGroup>
