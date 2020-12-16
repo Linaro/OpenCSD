@@ -11,6 +11,7 @@ trc_pkt_lister \- decodes captured CoreSight\*R trace
 [ \-src_name \fI<name>\fP ]
 [ \-decode ]
 [ \-decode_only ]
+[ \-src_addr_n ]
 [ \-o_raw_packed ]
 [ \-o_raw_unpacked ]
 [ \-logstdout ]
@@ -53,6 +54,10 @@ Full decode of the packets from the trace snapshot (default is to list undecoded
 .TP
 .B \-decode_only
 Does not list the undecoded packets, just the trace decode.
+.TP
+.B \-src\_addr\_n
+In ETE protocol, indicate skipped N atoms in source address packet ranges by breaking the decode 
+range into multiple ranges on N atoms.
 .TP
 .B \-o\_raw\_packed
 Output raw packed trace frames.

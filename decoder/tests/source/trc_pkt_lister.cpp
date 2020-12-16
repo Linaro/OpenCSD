@@ -194,7 +194,7 @@ void print_help()
     oss << "-o_raw_packed       Output raw packed trace frames\n";
     oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
     oss << "-test_waits <N>     Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder\n";
-    oss << "-src_addr_n         Split source address ranges on N atoms";
+    oss << "-src_addr_n         ETE protocol: Split source address ranges on N atoms\n";
     oss << "\nOutput:\n";
     oss << "   Setting any of these options cancels the default output to file & stdout,\n   using _only_ the options supplied.\n\n";
     oss << "-logstdout          Output to stdout -> console.\n";
