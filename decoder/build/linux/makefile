@@ -68,6 +68,7 @@ LIB_PATH ?= lib
 INSTALL_LIB_DIR=$(DESTDIR)$(PREFIX)/$(LIB_PATH)
 INSTALL_BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 export INSTALL_INCLUDE_DIR=$(DESTDIR)$(PREFIX)/include/
+INSTALL_MAN_DIR=$(DESTDIR)$(PREFIX)/share/man/man1
 
 # compile flags
 CFLAGS += $(CPPFLAGS) -c -Wall -DLINUX -Wno-switch -Wlogical-op -fPIC
@@ -130,6 +131,9 @@ ifndef DISABLE_STATIC
 endif
 	cd $(OCSD_ROOT)/build/linux/rctdl_c_api_lib && make install_inc
 	$(INSTALL) --mode=755 $(BIN_TEST_TARGET_DIR)/trc_pkt_lister $(INSTALL_BIN_DIR)/ 
+
+install_man:
+	$(INSTALL) --mode=644 $(OCSD_ROOT)/docs/man/trc_pkt_lister.1 $(INSTALL_MAN_DIR)/
 
 
 ################################
@@ -203,3 +207,4 @@ clean_install:
 	-rm    $(INSTALL_LIB_DIR)/lib$(LIB_CAPI_NAME).*
 	-rm -r $(INSTALL_INCLUDE_DIR)/$(LIB_UAPI_INC_DIR)
 	-rm    $(INSTALL_BIN_DIR)/trc_pkt_lister
+	-rm    $(INSTALL_MAN_DIR)/trc_pkt_lister.1
