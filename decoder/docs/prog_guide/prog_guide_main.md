@@ -272,6 +272,7 @@ The different trace source types have different configuration structures, classe
 
 | protocol  | config struct       |  class      |  name define                 | 
 |:----------|:--------------------|:------------|:-----------------------------|
+| __ETE__   | @ref ocsd_ete_cfg   | ETEConfig   | @ref OCSD_BUILTIN_DCD_ETE    |
 | __ETMv4__ | @ref ocsd_etmv4_cfg | EtmV4Config | @ref OCSD_BUILTIN_DCD_ETMV4I |
 | __ETMv3__ | @ref ocsd_etmv3_cfg | EtmV3Config | @ref OCSD_BUILTIN_DCD_ETMV3  |
 | __PTM__   | @ref ocsd_ptm_cfg   | PtmConfig   | @ref OCSD_BUILTIN_DCD_PTM    |

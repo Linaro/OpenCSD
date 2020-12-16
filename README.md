@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 0.14.4_
+_Current Version 1.0.0_
 
 ### Current support:
 
@@ -224,6 +224,21 @@ Version and Modification Information
     - __Bugfix__: ETMv3: Fix missing comma in string list. (github issue #31)
     - __Bugfix__: makefile: tests: Fix build race problem (github issue #32)
     - __Bugfix__: tests: fix ignore tpiu command line options (github issue #28)
+
+- _Version 1.0.0_:
+    - __New Decode Protocol__: Support added for the ETE protocol, used by ARM PEs that implement the FEAT_ETE 
+                               feature. Supports new architectural features in this trace, including FEAT_TME. 
+    - __Update__: Output Elememts: New protocol defines two new output elements. 
+    - __Update__: Add support for WFIT / WFET instructions traced as P0 elements.
+    - __Update__: Architecture versioning. Arch v8 + PEs may add features in a flexible manner, and ARM also
+                  declares future features ahead of architecture versions to allow support to be added. 
+                  APIs requiring an architecture version can now use ARCH_AA64 to declare a version of v8.3 +
+                  additional features. This relaxes the strict versionnig rules that the decoder uses when
+                  looking for Opcodes as trace waypoints.
+    - __Update__: docs: Add linux 'man' file and installation.				  
+    - __Bugfix__: build: Fix clean install, and remove static lib build test from main makefile to 
+                  dev makefile only. (github issue #33)
+
 
 Licence Information
 ===================
