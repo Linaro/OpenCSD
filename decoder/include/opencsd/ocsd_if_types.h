@@ -338,8 +338,10 @@ typedef enum _ocsd_isa
 */
 typedef enum _ocsd_sec_level
 {
-    ocsd_sec_secure,   /**< Core is in secure state */
-    ocsd_sec_nonsecure /**< Core is in non-secure state */
+    ocsd_sec_secure,    /**< Core is in secure state */
+    ocsd_sec_nonsecure, /**< Core is in non-secure state */
+    ocsd_sec_root,      /**< PE FEAT_RME: Core is in root state. */
+    ocsd_sec_realm,     /**< PE FEAT_RME: Core is in realm state. */
 } ocsd_sec_level ;
 
 /** Exception level type

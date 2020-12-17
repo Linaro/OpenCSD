@@ -145,7 +145,7 @@ public:
     void setCondRF3(const uint16_t tokens);
     void setCondRF4(const uint8_t token);
 
-    void setContextInfo(const bool update, const uint8_t EL = 0, const uint8_t NS = 0, const uint8_t SF = 0);
+    void setContextInfo(const bool update, const uint8_t EL = 0, const uint8_t NS = 0, const uint8_t SF = 0, const uint8_t NSE = 0);
     void setContextVMID(const uint32_t VMID);
     void setContextCID(const uint32_t CID);
 
@@ -416,7 +416,7 @@ inline void EtmV4ITrcPacket::setCondRF4(const uint8_t token)
     cond_result.f2f4_token = token;
 }
 
-inline void EtmV4ITrcPacket::setContextInfo(const bool update, const uint8_t EL, const uint8_t NS, const uint8_t SF)
+inline void EtmV4ITrcPacket::setContextInfo(const bool update, const uint8_t EL, const uint8_t NS, const uint8_t SF, const uint8_t NSE)
 {
     pkt_valid.bits.context_valid = 1;
     if(update)
@@ -425,6 +425,7 @@ inline void EtmV4ITrcPacket::setContextInfo(const bool update, const uint8_t EL,
         context.EL = EL;
         context.NS = NS;
         context.SF = SF;
+        context.NSE = NSE;
     }
 }
 

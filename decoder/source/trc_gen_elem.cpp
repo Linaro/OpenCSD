@@ -171,7 +171,14 @@ void OcsdTraceElement::toString(std::string &str) const
             {
                 oss << "EL" << std::dec << (int)(context.exception_level);
             }
-            oss << (context.security_level == ocsd_sec_secure ? "S; " : "N; ") << (context.bits64 ? "64-bit; " : "32-bit; ");
+            switch (context.security_level) 
+            {
+            case ocsd_sec_secure: oss << "S; "; break;
+            case ocsd_sec_nonsecure: oss << "N; "; break;
+            case ocsd_sec_root: oss << "Root; "; break;
+            case ocsd_sec_realm: oss << "Realm; "; break;
+            }
+            oss  << (context.bits64 ? "64-bit; " : "32-bit; ");
             if(context.vmid_valid)
                 oss << "VMID=0x" << std::hex << context.vmid << "; ";
             if(context.ctxt_id_valid)

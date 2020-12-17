@@ -872,7 +872,7 @@ void TrcPktProcEtmV4I::extractAndSetContextInfo(const std::vector<uint8_t> &buff
     // on input, buffer index points at the info byte - always present
     uint8_t infoByte = m_currPacketData[st_idx];
     
-    m_curr_packet.setContextInfo(true, (infoByte & 0x3), (infoByte >> 5) & 0x1, (infoByte >> 4) & 0x1);    
+    m_curr_packet.setContextInfo(true, (infoByte & 0x3), (infoByte >> 5) & 0x1, (infoByte >> 4) & 0x1, (infoByte >> 3) & 0x1);    
 
     // see if there are VMID and CID bytes, and how many.
     int nVMID_bytes = ((infoByte & 0x40) == 0x40) ? (m_config.vmidSize()/8) : 0;

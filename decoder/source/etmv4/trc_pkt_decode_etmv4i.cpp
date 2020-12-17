@@ -1872,7 +1872,10 @@ void TrcPktDecodeEtmV4I::updateContext(TrcStackElemCtxt *pCtxtElem, OcsdTraceEle
     m_is_64bit = (ctxt.SF != 0);
     elem.context.bits64 = ctxt.SF;
     m_is_secure = (ctxt.NS == 0);
-    elem.context.security_level = ctxt.NS ? ocsd_sec_nonsecure : ocsd_sec_secure;
+    if (ctxt.NSE)
+        elem.context.security_level = ctxt.NS ? ocsd_sec_realm : ocsd_sec_root;
+    else
+        elem.context.security_level = ctxt.NS ? ocsd_sec_nonsecure : ocsd_sec_secure;
     elem.context.exception_level = (ocsd_ex_level)ctxt.EL;
     elem.context.el_valid = 1;
     if(ctxt.updated_c)

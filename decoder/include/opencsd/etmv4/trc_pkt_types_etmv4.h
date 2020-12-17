@@ -184,6 +184,7 @@ typedef struct _etmv4_context_t {
         uint32_t updated:1;     //!< updated this context packet (otherwise same as last time)
         uint32_t updated_c:1;   //!< updated CtxtID
         uint32_t updated_v:1;   //!< updated VMID
+        uint32_t NSE:1;         //!< PE FEAT_RME: root / realm indicator
     };
     uint32_t ctxtID;   //!< Current ctxtID
     uint32_t VMID;     //!< current VMID
