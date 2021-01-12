@@ -133,6 +133,7 @@ endif
 	$(INSTALL) --mode=755 $(BIN_TEST_TARGET_DIR)/trc_pkt_lister $(INSTALL_BIN_DIR)/ 
 
 install_man:
+	mkdir -p $(INSTALL_MAN_DIR)
 	$(INSTALL) --mode=644 $(OCSD_ROOT)/docs/man/trc_pkt_lister.1 $(INSTALL_MAN_DIR)/
 
 
