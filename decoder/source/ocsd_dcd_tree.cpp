@@ -511,7 +511,7 @@ DecodeTreeElement *DecodeTree::getNextElement(uint8_t &elemID)
     if(m_decode_elem_iter < 0x80)
     {
         // find a none zero entry or end of range
-        while((m_decode_elements[m_decode_elem_iter] == 0) && (m_decode_elem_iter < 0x80))
+        while((m_decode_elem_iter < 0x80) && (m_decode_elements[m_decode_elem_iter] == 0))
             m_decode_elem_iter++;
 
         // return entry unless end of range
