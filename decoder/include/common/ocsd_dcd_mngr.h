@@ -80,16 +80,16 @@ public:
 
     
 private:
-    ocsd_trace_protocol_t m_builtInProtocol;    //!< Protocol ID if built in type.
+    const ocsd_trace_protocol_t m_builtInProtocol;    //!< Protocol ID if built in type.
 };
 
 template <class P, class Pt, class Pc>
-DecoderMngrBase<P,Pt,Pc>::DecoderMngrBase(const std::string &decoderTypeName, ocsd_trace_protocol_t builtInProtocol)
+    DecoderMngrBase<P,Pt,Pc>::DecoderMngrBase(const std::string &decoderTypeName, ocsd_trace_protocol_t builtInProtocol) :
+        m_builtInProtocol(builtInProtocol)
 {
     OcsdLibDcdRegister *pDcdReg = OcsdLibDcdRegister::getDecoderRegister();
     if(pDcdReg)
         pDcdReg->registerDecoderTypeByName(decoderTypeName,this);
-    m_builtInProtocol = builtInProtocol;
 }
 
 template <class P, class Pt, class Pc>
