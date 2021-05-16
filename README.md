@@ -27,12 +27,12 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.0.0_
+_Current Version 1.1.0_
 
 ### Current support:
 
 - ETE   (v1.1) instruction trace - packet processing and packet decode.
-- ETMv4 (v4.5 [A/R profile] v4.4 [M profile]) instruction trace - packet processing and packet decode.
+- ETMv4 (v4.6 [A/R profile] v4.4 [M profile]) instruction trace - packet processing and packet decode.
 - PTM   (v1.1) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) data trace - packet processing.
@@ -239,6 +239,13 @@ Version and Modification Information
     - __Bugfix__: build: Fix clean install, and remove static lib build test from main makefile to 
                   dev makefile only. (github issue #33)
 
+- _Version 1.1.0_:
+    - __Update__: ETM v4.6 support.
+    - __Update__: C-API - add API functions to get last error and convert error code to string.
+    - __Bugfix__: ETMv4/ETE - fix loop problem in commit elements.
+    - __Bugfix__: ETMv4/ETE - make error handling consistent.
+    - __Bugfix__: Add Pull request #36 from github (Ross Burton)
+    - __Bugfix__: Add Pull request #37 from github (Ian Rogers)
 
 Licence Information
 ===================
