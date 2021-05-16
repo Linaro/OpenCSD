@@ -1024,17 +1024,19 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
             m_elem_res.P0_cancel = 0;
             break;
         }
-       
-        if (temp.size())
+    }
+
+    /* restore any saved elements that are unaffected by cancel. */
+    if (temp.size())
+    {
+        while (temp.size())
         {
-            while (temp.size())
-            {
-                pElem = temp.back();
-                m_P0_stack.push_front(pElem);
-                temp.pop_back(false);
-            }
+            pElem = temp.back();
+            m_P0_stack.push_front(pElem);
+            temp.pop_back(false);
         }
     }
+
     m_curr_spec_depth -= num_cancel_req - m_elem_res.P0_cancel;
     return err;
 }
