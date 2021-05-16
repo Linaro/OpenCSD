@@ -524,10 +524,11 @@ typedef struct _ocsd_file_mem_region {
     (common flags share bitfield with pkt processor common flags and create flags)
     @{*/
 
-#define OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS  0x00000100  /**< throw error on bad packets input (default is to unsync and wait) */
+#define OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS  0x00000100  /**< throw error on bad packets input (default is to warn) */
+#define OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS   0x00000200  /**< halt decoder on bad packets (default is to log error and continue by resetting decoder and wait for sync */
 
 /** mask to combine all common packet processor operational control flags */
-#define OCSD_OPFLG_PKTDEC_COMMON (OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
+#define OCSD_OPFLG_PKTDEC_COMMON (OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS | OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS)
 
 /** @}*/
 

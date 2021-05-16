@@ -101,7 +101,13 @@ protected:
     ocsd_err_t processTransElem(TrcStackElem *pElem);
 
     // process a bad packet
-    ocsd_err_t handleBadPacket(const char *reason);
+    ocsd_err_t handleBadPacket(const char *reason, ocsd_trc_index_t index = OCSD_BAD_TRC_INDEX);
+
+    // sequencing error on packet processing - optionally continue
+    ocsd_err_t handlePacketSeqErr(ocsd_err_t err, ocsd_trc_index_t index, const char *reason);
+
+    // common packet error routine
+    ocsd_err_t handlePacketErr(ocsd_err_t err, ocsd_err_severity_t sev, ocsd_trc_index_t index, const char *reason);
 
     ocsd_err_t addElemCC(TrcStackElemParam *pParamElem);
     ocsd_err_t addElemTS(TrcStackElemParam *pParamElem, bool withCC);

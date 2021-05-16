@@ -477,15 +477,15 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
         break;
 
     case ETM4_PKT_I_BAD_SEQUENCE:
-        err = handleBadPacket("Bad byte sequence in packet.");
+        err = handleBadPacket("Bad byte sequence in packet.", m_index_curr_pkt);
         break;
 
     case ETM4_PKT_I_BAD_TRACEMODE:
-        err = handleBadPacket("Invalid packet type for trace mode.");
+        err = handleBadPacket("Invalid packet type for trace mode.", m_index_curr_pkt);
         break;
 
     case ETM4_PKT_I_RESERVED:
-        err = handleBadPacket("Reserved packet header");
+        err = handleBadPacket("Reserved packet header", m_index_curr_pkt);
         break;
 
     // speculation 
@@ -568,7 +568,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
     /* ETE commit window - not supported in current ETE versions - blocked by packet processor */
     case ETE_PKT_I_COMMIT_WIN_MV:
         err = OCSD_ERR_UNSUPP_DECODE_PKT;
-        LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, "ETE Commit Window Move, unsupported packet type."));
+        err = handlePacketSeqErr(err, m_index_curr_pkt, "ETE Commit Window Move, unsupported packet type.");
         break;
         /* conditional instruction tracing */
     case ETM4_PKT_I_COND_FLUSH:
@@ -592,14 +592,16 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
         //resp = OCSD_RESP_FATAL_INVALID_DATA;
 #endif
         err = OCSD_ERR_UNSUPP_DECODE_PKT;
-        LogError(ocsdError(sev, err, "Data trace related, unsupported packet type."));
+        if (sev == OCSD_ERR_SEV_WARN)
+                        LogError(ocsdError(sev, err, "Data trace related, unsupported packet type."));
+        else 
+            err = handlePacketSeqErr(err, m_index_curr_pkt, "Data trace related, unsupported packet type.");
         }
         break;
 
     default:
         // any other packet - bad packet error
-        err = OCSD_ERR_BAD_DECODE_PKT;
-        LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Unknown packet type."));
+        err = handleBadPacket("Unknown packet type.", m_index_curr_pkt);
         break;
     }
 
@@ -845,9 +847,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
         }
         else
         {
-            // too few elements for commit operation - decode error.
-            err = OCSD_ERR_COMMIT_PKT_OVERRUN;
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_COMMIT_PKT_OVERRUN,err_idx,m_CSID,"Not enough elements to commit"));
+            // too few elements for commit operation - decode error.            
+            err = handlePacketSeqErr(OCSD_ERR_COMMIT_PKT_OVERRUN, err_idx, "Not enough elements to commit");
         }
     }
 
@@ -867,7 +868,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::returnStackPop()
         if (m_return_stack.overflow())
         {
             err = OCSD_ERR_RET_STACK_OVERFLOW;
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, "Trace Return Stack Overflow."));
+            err = handlePacketSeqErr(err, OCSD_BAD_TRC_INDEX, "Trace Return Stack Overflow.");
         }
         else
         {
@@ -1007,6 +1008,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
                         break;
                     }
                 }
+                if (m_P0_stack.size() == 0)
+                    P0StackDone = true;
             }
         }
         // may have some unseen elements
@@ -1020,7 +1023,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
         {
             // too few elements for commit operation - decode error.
             err = OCSD_ERR_COMMIT_PKT_OVERRUN;
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, m_index_curr_pkt, m_CSID, "Not enough elements to cancel"));
+            err = handlePacketSeqErr(err, m_index_curr_pkt, "Not enough elements to cancel");
             m_elem_res.P0_cancel = 0;
             break;
         }
@@ -1078,7 +1081,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::mispredictAtom()
     if (!bFoundAtom && !m_unseen_spec_elem)
     {
         err = OCSD_ERR_COMMIT_PKT_OVERRUN;
-        LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, m_index_curr_pkt, m_CSID, "Not found mispredict atom"));
+        err = handlePacketSeqErr(err, m_index_curr_pkt, "Not found mispredict atom");            
+        //LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, m_index_curr_pkt, m_CSID, "Not found mispredict atom"));
     }
     m_elem_res.mispredict = false;
     return err;
@@ -1268,7 +1272,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
         }
         else
         {
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,pElem->getRootIndex(),m_CSID,"Error processing atom packet."));  
+            err = handlePacketSeqErr(err, pElem->getRootIndex(), "Error processing atom packet.");
+            //LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,pElem->getRootIndex(),m_CSID,"Error processing atom packet."));  
             return err;
         }
     }
@@ -1374,9 +1379,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
 
         if (pElem->getP0Type() != P0_ADDR)
         {
-            // no following address element - indicate processing error.      
-            LogError(ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_BAD_PACKET_SEQ, excep_pkt_index, m_CSID, "Address missing in exception packet."));
-            return OCSD_ERR_BAD_PACKET_SEQ;
+            // no following address element - indicate processing error.
+            
+            err = handlePacketSeqErr(OCSD_ERR_BAD_PACKET_SEQ, m_index_curr_pkt, "Address missing in exception packet.");      
+            //LogError(ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_BAD_PACKET_SEQ, excep_pkt_index, m_CSID, "Address missing in exception packet."));
+            return err;
         }
         else
         {
@@ -1637,7 +1644,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
     uint32_t opcode, bytesReq = 4;
     ocsd_vaddr_t currAddr = m_instr_info.instr_addr;    // get the latest decoded address.
     instr_range_t out_range;
-    bool bSplitRangeOnN = getComponentOpMode() & ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS;
+    bool bSplitRangeOnN = getComponentOpMode() & ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS ? true : false;
 
     // check we can read instruction @ source address
     err = accessMemory(srcAddr.val, getCurrMemSpace(), &bytesReq, (uint8_t *)&opcode);
@@ -1870,26 +1877,41 @@ void TrcPktDecodeEtmV4I::updateContext(TrcStackElemCtxt *pCtxtElem, OcsdTraceEle
     m_need_ctxt = false;
 }
 
-ocsd_err_t TrcPktDecodeEtmV4I::handleBadPacket(const char *reason)
+ocsd_err_t TrcPktDecodeEtmV4I::handleBadPacket(const char *reason, ocsd_trc_index_t index /* = OCSD_BAD_TRC_INDEX */)
 {
-    ocsd_err_t err = OCSD_OK;
+    ocsd_err_severity_t sev = OCSD_ERR_SEV_WARN;
+    if (getComponentOpMode() & OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
+        sev = OCSD_ERR_SEV_ERROR;
 
-    if(getComponentOpMode() & OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
+    return handlePacketErr(OCSD_ERR_BAD_DECODE_PKT, sev, index, reason);
+}
+
+ocsd_err_t TrcPktDecodeEtmV4I::handlePacketSeqErr(ocsd_err_t err, ocsd_trc_index_t index, const char *reason)
+{
+    return handlePacketErr(err, OCSD_ERR_SEV_ERROR, index, reason);
+}
+
+ocsd_err_t TrcPktDecodeEtmV4I::handlePacketErr(ocsd_err_t err, ocsd_err_severity_t sev, ocsd_trc_index_t index, const char *reason)
+{
+    bool resetOnBadPackets = true;
+
+    if(getComponentOpMode() & OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS)
+        resetOnBadPackets = false;
+
+    LogError(ocsdError(sev, err, index, getCoreSightTraceID(), reason));
+
+    if (resetOnBadPackets)
     {
-        // error out - stop decoding
-        err = OCSD_ERR_BAD_DECODE_PKT;
-        LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,reason));
-    }
-    else
-    {
-        LogError(ocsdError(OCSD_ERR_SEV_WARN, OCSD_ERR_BAD_DECODE_PKT, reason));
         // switch to unsync - clear decode state
         resetDecoder();
         m_curr_state = NO_SYNC;
         m_unsync_eot_info = UNSYNC_BAD_PACKET;
+        err = OCSD_OK;
     }
     return err;
+
 }
+
 
 inline ocsd_mem_space_acc_t TrcPktDecodeEtmV4I::getCurrMemSpace()
 {
