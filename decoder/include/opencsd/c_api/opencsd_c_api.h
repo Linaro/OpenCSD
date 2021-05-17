@@ -373,6 +373,28 @@ OCSD_C_API ocsd_err_t ocsd_def_errlog_set_strprint_cb(const dcd_tree_handle_t ha
  */
 OCSD_C_API void ocsd_def_errlog_msgout(const char *msg);
 
+/*!
+ * Convert an error code into a string.
+ *
+ * @param err         : error code.
+ * @param buffer      : buffer for return string
+ * @param buffer_size : length of buffer.
+ */
+OCSD_C_API void ocsd_err_str(const ocsd_err_t err, char *buffer, const int buffer_size);
+
+/*!
+ * returns the last error logged by the system, with the related trace byte index, trace channel id,
+ * and any error message related string.
+ * If index or channel ID are not valid these will return OCSD_BAD_TRC_INDEX and OCSD_BAD_CS_SRC_ID.
+ *
+ * return value is the error code of the last logged error, OCSD_OK for no error available.
+ *
+ * @param index      : returns trace byte index relating to error, or OCSD_BAD_TRC_INDEX
+ * @param chan_id    : returns trace channel ID relating to error, or OCSD_BAD_CS_SRC_ID
+ * @param message    : buffer to copy the last error message.
+ * @param message_len: length of message buffer.
+ */
+OCSD_C_API ocsd_err_t ocsd_get_last_err(ocsd_trc_index_t *index, uint8_t *chan_id, char *message, const int message_len);
 
 /** @}*/
 

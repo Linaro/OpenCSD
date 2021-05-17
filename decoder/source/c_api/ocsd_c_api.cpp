@@ -470,6 +470,39 @@ OCSD_C_API ocsd_err_t ocsd_dt_set_pkt_protocol_printer(const dcd_tree_handle_t h
     return err;
 }
 
+OCSD_C_API void ocsd_err_str(const ocsd_err_t err, char *buffer, const int buffer_size)
+{
+    std::string err_str;
+    err_str = ocsdError::getErrorString(ocsdError(OCSD_ERR_SEV_ERROR, err));
+    strncpy(buffer, err_str.c_str(), buffer_size - 1);
+    buffer[buffer_size - 1] = 0;
+}
+
+OCSD_C_API ocsd_err_t ocsd_get_last_err(ocsd_trc_index_t *index, uint8_t *chan_id, char *message, const int message_len)
+{
+    ocsdError *p_err;
+    ocsd_err_t err = OCSD_OK;
+    std::string err_str;
+
+    p_err = DecodeTree::getDefaultErrorLogger()->GetLastError();
+    if (p_err) 
+    {
+        *index = p_err->getErrorIndex();
+        *chan_id = p_err->getErrorChanID();
+        err_str = p_err->getErrorString(ocsdError(p_err));
+        strncpy(message, err_str.c_str(), message_len - 1);
+        message[message_len - 1] = 0;
+        err = p_err->getErrorCode();
+    }
+    else
+    {
+        message[0] = 0;
+        *index = OCSD_BAD_TRC_INDEX;
+        *chan_id = OCSD_BAD_CS_SRC_ID;
+    }
+    return err;
+}
+
 /*******************************************************************************/
 /* C API local fns                                                             */
 /*******************************************************************************/

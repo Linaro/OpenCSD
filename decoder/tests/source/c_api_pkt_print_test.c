@@ -116,6 +116,9 @@ static int test_printstr = 0;
 /* test the library printer API */
 static int test_lib_printers = 0;
 
+/* test the last error / error code api */
+static int test_error_api = 0;
+
 /* Process command line options - choose the operation to use for the test. */
 static int process_cmd_line(int argc, char *argv[])
 {
@@ -124,52 +127,52 @@ static int process_cmd_line(int argc, char *argv[])
 
     while(idx < argc)
     {
-        if(strcmp(argv[idx],"-decode_only") == 0)
+        if (strcmp(argv[idx], "-decode_only") == 0)
         {
             op = TEST_PKT_DECODEONLY;
         }
-        else if(strcmp(argv[idx],"-decode") == 0)
+        else if (strcmp(argv[idx], "-decode") == 0)
         {
             op = TEST_PKT_DECODE;
         }
-        else if(strcmp(argv[idx],"-id") == 0)
+        else if (strcmp(argv[idx], "-id") == 0)
         {
             idx++;
-            if(idx < argc)
+            if (idx < argc)
             {
-                test_trc_id_override = (uint8_t)(strtoul(argv[idx],0,0));
-                printf("ID override = 0x%02X\n",test_trc_id_override);
+                test_trc_id_override = (uint8_t)(strtoul(argv[idx], 0, 0));
+                printf("ID override = 0x%02X\n", test_trc_id_override);
             }
         }
-        else if(strcmp(argv[idx],"-etmv3") == 0)
+        else if (strcmp(argv[idx], "-etmv3") == 0)
         {
-            test_protocol =  OCSD_PROTOCOL_ETMV3;
+            test_protocol = OCSD_PROTOCOL_ETMV3;
             selected_snapshot = tc2_snapshot;
             mem_dump_address = mem_dump_address_tc2;
         }
-        else if(strcmp(argv[idx],"-ptm") == 0)
+        else if (strcmp(argv[idx], "-ptm") == 0)
         {
-            test_protocol =  OCSD_PROTOCOL_PTM;
+            test_protocol = OCSD_PROTOCOL_PTM;
             selected_snapshot = tc2_snapshot;
             mem_dump_address = mem_dump_address_tc2;
         }
-        else if(strcmp(argv[idx],"-stm") == 0)
+        else if (strcmp(argv[idx], "-stm") == 0)
         {
             test_protocol = OCSD_PROTOCOL_STM;
             trace_data_filename = stmtrace_data_filename;
         }
-        else if(strcmp(argv[idx],"-test_cb") == 0)
+        else if (strcmp(argv[idx], "-test_cb") == 0)
         {
             using_mem_acc_cb = 1;
             use_region_file = 0;
         }
         else if (strcmp(argv[idx], "-test_cb_id") == 0)
-        { 
+        {
             using_mem_acc_cb = 1;
             use_region_file = 0;
             using_mem_acc_cb_id = 1;
         }
-        else if(strcmp(argv[idx],"-test_region_file") == 0)
+        else if (strcmp(argv[idx], "-test_region_file") == 0)
         {
             use_region_file = 1;
             using_mem_acc_cb = 0;
@@ -194,10 +197,10 @@ static int process_cmd_line(int argc, char *argv[])
         {
             test_lib_printers = 1;
         }
-        else if(strcmp(argv[idx],"-ss_path") == 0)
+        else if (strcmp(argv[idx], "-ss_path") == 0)
         {
             idx++;
-            if((idx >= argc) || (strlen(argv[idx]) == 0))
+            if ((idx >= argc) || (strlen(argv[idx]) == 0))
             {
                 printf("-ss_path: Missing path parameter or zero length\n");
                 return -1;
@@ -205,14 +208,18 @@ static int process_cmd_line(int argc, char *argv[])
             else
             {
                 len = strlen(argv[idx]);
-                if(len >  (MAX_TRACE_FILE_PATH_LEN - 32))
+                if (len > (MAX_TRACE_FILE_PATH_LEN - 32))
                 {
                     printf("-ss_path: path too long\n");
                     return -1;
                 }
                 usr_snapshot_path = argv[idx];
             }
-            
+
+        }
+        else if (strcmp(argv[idx], "-test_err_api") == 0)
+        {
+            test_error_api = 1;
         }
         else if(strcmp(argv[idx],"-help") == 0)
         {
@@ -955,6 +962,57 @@ int process_trace_data(FILE *pf)
     return (int)ret;
 }
 
+#define ERR_BUFFER_SIZE 256
+int test_err_api()
+{
+    dcd_tree_handle_t dcdtree_handle = C_API_INVALID_TREE_HANDLE;
+    ocsd_err_t ret = OCSD_OK, err_test;
+    ocsd_trc_index_t index = 0, err_index = 0;
+    uint8_t cs_id;
+    char err_buffer[ERR_BUFFER_SIZE];
+
+    /*  Create a decode tree for this source data.
+        source data is frame formatted, memory aligned from an ETR (no frame syncs) so create tree accordingly
+    */
+    dcdtree_handle = ocsd_create_dcd_tree(OCSD_TRC_SRC_SINGLE, OCSD_DFRMTR_FRAME_MEM_ALIGN);
+
+    if (dcdtree_handle != C_API_INVALID_TREE_HANDLE)
+    {
+
+        ret = create_decoder(dcdtree_handle);
+        if (ret == OCSD_OK)
+        {
+            /* attach the generic trace element output callback */
+            if (test_lib_printers)
+                ret = ocsd_dt_set_gen_elem_printer(dcdtree_handle);
+            else
+                ret = ocsd_dt_set_gen_elem_outfn(dcdtree_handle, gen_trace_elem_print, 0);
+        }
+
+
+        /* raw print and str print cb options tested in their init functions */
+        if (ret == OCSD_OK)
+            ret = test_printstr_cb(dcdtree_handle);
+
+        if (ret == OCSD_OK)
+            ret = attach_raw_printers(dcdtree_handle);
+
+        /* feed some duff data into a decoder to provoke an error! */
+        uint8_t trace_data[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                 0x00, 0x00, 0x00, 0x00, 0x80, 0x04, 0x60, 0x71 };
+
+        if (ret == OCSD_OK)
+            ret = process_data_block(dcdtree_handle, index, trace_data, sizeof(trace_data));
+        
+        ocsd_err_str(ret, err_buffer, ERR_BUFFER_SIZE);
+        printf("testing error API for code %d: %s\n", ret, err_buffer);
+        err_test = ocsd_get_last_err(&err_index, &cs_id, err_buffer, ERR_BUFFER_SIZE);
+        printf("get last error:\ncode = 0x%02x; trace index %ld; cs_id 0x%02x;\nstring: %s\n", err_test, err_index, cs_id, err_buffer);
+               
+    }
+    return ret;
+}
+
 int main(int argc, char *argv[])
 {
     FILE *trace_data;
@@ -1012,9 +1070,12 @@ int main(int argc, char *argv[])
         ocsd_def_errlog_msgout(message);
 
         /* process the trace data */
-        if(ret == 0)
-            ret = process_trace_data(trace_data);
-
+        if (ret == 0) {
+            if (test_error_api)
+                ret = test_err_api();
+            else
+                ret = process_trace_data(trace_data);
+        }
         /* close the data file */
         fclose(trace_data);
     }
