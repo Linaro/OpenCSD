@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.1.0_
+_Current Version 1.1.1_
 
 ### Current support:
 
@@ -246,6 +246,9 @@ Version and Modification Information
     - __Bugfix__: ETMv4/ETE - make error handling consistent.
     - __Bugfix__: Add Pull request #36 from github (Ross Burton)
     - __Bugfix__: Add Pull request #37 from github (Ian Rogers)
+
+- _Version 1.1.1_:
+    - __Bugfix__: Fix include and install for ETE decoder headers.
 
 Licence Information
 ===================
