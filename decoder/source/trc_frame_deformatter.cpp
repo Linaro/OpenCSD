@@ -437,7 +437,6 @@ int TraceFmtDcdImpl::checkForResetFSyncPatterns()
 
 	if (num_fsyncs)
 	{
-        printf("Frame deformatter: Found %d FSYNCS\n",num_fsyncs);
 		if ((num_fsyncs % 4) == 0)
         {
             // reset the upstream decoders            
