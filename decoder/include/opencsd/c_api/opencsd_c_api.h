@@ -210,10 +210,36 @@ OCSD_C_API ocsd_err_t ocsd_dt_attach_packet_callback(  const dcd_tree_handle_t h
                                                 const void *p_context);
 
 
-
-
+/*!
+ * Get the stats block for the channel indicated. 
+ * Caller must check p_stats_block->version to esure that the block
+ * is filled in a compatible manner.
+ * 
+ * @param handle : Handle to decode tree.
+ * @param CSID : Configured CoreSight trace ID for the decoder.
+ * @param p_stats_block: block pointer to set to reference the stats block.
+ * 
+ * @return ocsd_err_t  : Library error code -  OCSD_OK if valid block pointer returned, 
+ *                      OCSD_ERR_NOTINIT if decoder does not support stats counting.
+ */
+OCSD_C_API ocsd_err_t ocsd_dt_get_decode_stats( const dcd_tree_handle_t handle,
+                                                const unsigned char CSID,
+                                                ocsd_decode_stats_t **p_stats_block);
  
-    
+
+/*!
+ * Reset the stats block for the chosens decode channel. 
+ * stats block is reset independently of the decoder reset to allow counts across
+ * multiple decode runs.
+ *
+ * @param handle : Handle to decode tree.
+ * @param CSID : Configured CoreSight trace ID for the decoder.
+ *
+ * @return ocsd_err_t  : Library error code -  OCSD_OK if successful.
+ */
+OCSD_C_API ocsd_err_t ocsd_dt_reset_decode_stats( const dcd_tree_handle_t handle,
+                                                  const unsigned char CSID);
+
 /** @}*/
 /*---------------------- Memory Access for traced opcodes ----------------------------------------------------------------------------------*/
 /** @name Library Memory Accessor configuration on decode tree.

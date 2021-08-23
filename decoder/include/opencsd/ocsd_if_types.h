@@ -633,6 +633,29 @@ typedef struct _ocsd_swt_info {
 
 /** @}*/
 
+/** @name Decode statistics
+
+    Contains statistics for bytes decoded by the packet decoder, if statistics are supported.
+
+    Stats block instantiated in the base class - derived protocol specific decoder must initialise and
+    use as required.
+
+@{*/
+
+typedef struct _ocsd_decode_stats {
+    uint32_t version;           /**< library version number */
+    uint16_t revision;          /**< revision number - defines the structure version for the stats. */
+    uint64_t channel_total;     /**< total bytes processed for this channel */
+    uint64_t channel_unsynced;  /**< number of unsynced bytes processed on this channel */
+    uint32_t bad_header_errs;   /**< number of bad packet header errors */
+    uint32_t bad_sequence_errs; /**< number of bad packet sequence errors */
+} ocsd_decode_stats_t;
+
+#define OCSD_STATS_REVISION 0x1
+
+/** @}*/
+
+
 /** @}*/
 #endif // ARM_OCSD_IF_TYPES_H_INCLUDED
 

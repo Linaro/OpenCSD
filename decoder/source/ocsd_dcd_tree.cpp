@@ -486,6 +486,45 @@ ocsd_err_t DecodeTree::removeDecoder(const uint8_t CSID)
     return err;
 }
 
+ocsd_err_t DecodeTree::getDecoderStats(const uint8_t CSID, ocsd_decode_stats_t **p_stats_block)
+{
+    TrcPktProcI *pPktProc = getPktProcI(CSID);
+    if (!pPktProc)
+        return OCSD_ERR_INVALID_PARAM_VAL;
+    return pPktProc->getStatsBlock(p_stats_block);
+}
+
+ocsd_err_t DecodeTree::resetDecoderStats(const uint8_t CSID)
+{
+    TrcPktProcI *pPktProc = getPktProcI(CSID);
+    if (!pPktProc)
+        return OCSD_ERR_INVALID_PARAM_VAL;
+    pPktProc->resetStats();
+    return OCSD_OK;
+}
+
+TrcPktProcI *DecodeTree::getPktProcI(const uint8_t CSID)
+{
+    TrcPktProcI *pPktProc = 0;
+    TraceComponent *pComp, *pAssoc;
+    DecodeTreeElement *pElem = getDecoderElement(CSID);
+    
+    if (pElem) 
+    {
+        pComp = pElem->getDecoderHandle();
+        if (pComp)
+        {
+            /* if this is a full decoder then the associated component is the packet processor */
+            pAssoc = pComp->getAssocComponent();
+            if (pAssoc)
+                pPktProc = dynamic_cast<TrcPktProcI *>(pAssoc);
+            else
+                pPktProc = dynamic_cast<TrcPktProcI *>(pComp);
+        }
+    }
+    return pPktProc;
+}
+
 DecodeTreeElement * DecodeTree::getDecoderElement(const uint8_t CSID) const
 {
     DecodeTreeElement *ret_elem = 0;
