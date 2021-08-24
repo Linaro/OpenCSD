@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.1.1_
+_Current Version 1.2.0_
 
 ### Current support:
 
@@ -249,6 +249,14 @@ Version and Modification Information
 
 - _Version 1.1.1_:
     - __Bugfix__: Fix include and install for ETE decoder headers.
+
+- _Version 1.2.0_:
+    - __Update__: Add API for counting packet decode statistics, and Frame debmux statistics.
+    - __Update__: Update test scripts to allow additional command line options to be passed.
+    - __Bugfix__: Fix various build warnings.
+    - __Bugfix__: Remove unused variable (github issue #38 from Yi Kong)
+    - __Bugfix__: Remove noisy printf (James Clark)
+    - __Bugfix__: Fix documentation issues (github issues #39 & #40 from rbresalier)
 
 Licence Information
 ===================
