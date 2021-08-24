@@ -74,6 +74,7 @@ static bool dstream_format = false;
 static bool tpiu_format = false;
 static bool has_hsync = false;
 static bool src_addr_n = false;
+static bool stats = false;
 
 int main(int argc, char* argv[])
 {
@@ -195,6 +196,7 @@ void print_help()
     oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
     oss << "-test_waits <N>     Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder\n";
     oss << "-src_addr_n         ETE protocol: Split source address ranges on N atoms\n";
+    oss << "-stats              Output packet processing statistics (if available).\n";
     oss << "\nOutput:\n";
     oss << "   Setting any of these options cancels the default output to file & stdout,\n   using _only_ the options supplied.\n\n";
     oss << "-logstdout          Output to stdout -> console.\n";
@@ -396,6 +398,10 @@ bool process_cmd_line_opts(int argc, char* argv[])
             {
                 src_addr_n = true;
             }
+            else if (strcmp(argv[optIdx], "-stats") == 0)
+            {
+                stats = true;
+            }
             else if((strcmp(argv[optIdx], "-help") == 0) || (strcmp(argv[optIdx], "--help") == 0) || (strcmp(argv[optIdx], "-h") == 0))
             {
                 print_help();
@@ -533,6 +539,34 @@ void ConfigureFrameDeMux(DecodeTree *dcd_tree, RawFramePrinter **framePrinter)
             if (outRawUnpacked) configFlags |= OCSD_DFRMTR_UNPACKED_RAW_OUT;
             dcd_tree->addRawFramePrinter(framePrinter, configFlags);
         }
+    }
+}
+
+void PrintDecodeStats(DecodeTree *dcd_tree)
+{
+    uint8_t elemID;
+    std::ostringstream oss;
+    ocsd_decode_stats_t *pStats = 0;
+    ocsd_err_t err;
+
+    oss << "\nReading packet decoder statistics....\n\n";
+    logger.LogMsg(oss.str());
+
+    DecodeTreeElement *pElement = dcd_tree->getFirstElement(elemID);
+    while (pElement) 
+    {
+        oss.str("");
+        err = dcd_tree->getDecoderStats(elemID, &pStats);
+        if (!err && pStats)
+        {
+            oss << "Decode stats ID 0x" << std::hex << (uint32_t)elemID << "\n";
+            oss << "Total Bytes: " << std::dec << pStats->channel_total << "; Unsynced Bytes: " << std::dec << pStats->channel_unsynced << "\n";
+            oss << "Bad Header Errors: " << std::dec << pStats->bad_header_errs << "; Bad Sequence Errors: " << std::dec << pStats->bad_sequence_errs << "\n";
+        }
+        else
+            oss << "Decode stats unavailable on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+        logger.LogMsg(oss.str());
+        pElement = dcd_tree->getNextElement(elemID);
     }
 }
 
@@ -679,7 +713,8 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
                 std::ostringstream oss;
                 oss << "Trace Packet Lister : Trace buffer done, processed " << trace_index << " bytes.\n";
                 logger.LogMsg(oss.str());
-
+                if (stats)
+                    PrintDecodeStats(dcd_tree);
             }
             else
             {

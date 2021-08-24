@@ -119,6 +119,9 @@ static int test_lib_printers = 0;
 /* test the last error / error code api */
 static int test_error_api = 0;
 
+/* log statistics */
+static int stats = 0;
+
 /* Process command line options - choose the operation to use for the test. */
 static int process_cmd_line(int argc, char *argv[])
 {
@@ -184,6 +187,10 @@ static int process_cmd_line(int argc, char *argv[])
         else if (strcmp(argv[idx], "-raw") == 0)
         {
             frame_raw_unpacked = 1;
+        }
+        else if (strcmp(argv[idx], "-stats") == 0)
+        {
+            stats = 1;
         }
         else if (strcmp(argv[idx], "-raw_packed") == 0)
         {
@@ -648,6 +655,7 @@ static ocsd_err_t create_decoder_etmv4(dcd_tree_handle_t dcd_tree_h)
     {
         trace_config.reg_traceidr = (uint32_t)test_trc_id_override;
     }
+    test_trc_id_override = trace_config.reg_traceidr; /* remember what ID we actually used */
 
     trace_config.reg_idr0   = 0x28000EA1;
     trace_config.reg_idr1   = 0x4100F403;
@@ -683,6 +691,7 @@ static ocsd_err_t create_decoder_etmv3(dcd_tree_handle_t dcd_tree_h)
     {
         trace_config_etmv3.reg_trc_id = (uint32_t)test_trc_id_override;
     }
+    test_trc_id_override = trace_config_etmv3.reg_trc_id; /* remember what ID we actually used */
 
     /* create an ETMV3 decoder - no context needed as we have a single stream to a single handler. */
     return create_generic_decoder(dcd_tree_h,OCSD_BUILTIN_DCD_ETMV3,(void *)&trace_config_etmv3,0);
@@ -708,6 +717,7 @@ static ocsd_err_t create_decoder_ptm(dcd_tree_handle_t dcd_tree_h)
     {
         trace_config_ptm.reg_trc_id = (uint32_t)test_trc_id_override;
     }
+    test_trc_id_override = trace_config_ptm.reg_trc_id; /* remember what ID we actually used */
 
     /* create an PTM decoder - no context needed as we have a single stream to a single handler. */
     return create_generic_decoder(dcd_tree_h,OCSD_BUILTIN_DCD_PTM,(void *)&trace_config_ptm,0);
@@ -754,6 +764,7 @@ static ocsd_err_t create_decoder_extern(dcd_tree_handle_t dcd_tree_h)
     {
         trace_cfg_ext.cs_id = (uint32_t)test_trc_id_override;
     }
+    test_trc_id_override = trace_cfg_ext.cs_id;
 
     /* create an external decoder - no context needed as we have a single stream to a single handler. */
     return create_generic_decoder(dcd_tree_h, EXT_DCD_NAME, (void *)&trace_cfg_ext, 0);
@@ -881,6 +892,28 @@ ocsd_err_t process_data_block(dcd_tree_handle_t dcd_tree_h, int block_index, uin
     return ret;
 }
 
+void print_statistics(dcd_tree_handle_t dcdtree_handle)
+{
+    ocsd_decode_stats_t *p_stats = 0;
+    ocsd_err_t err;
+
+    sprintf(packet_str, "\nReading packet decoder statistics for ID:0x%02x...\n", test_trc_id_override);
+    ocsd_def_errlog_msgout(packet_str);
+
+    err = ocsd_dt_get_decode_stats(dcdtree_handle, test_trc_id_override, &p_stats);
+    if (!err && p_stats)
+    {
+        sprintf(packet_str, "Total Bytes %lld; Unsynced Bytes: %lld\nBad Header Errors: %d; Bad sequence errors: %d\n", p_stats->channel_total,
+            p_stats->channel_unsynced, p_stats->bad_header_errs, p_stats->bad_sequence_errs);
+        ocsd_dt_reset_decode_stats(dcdtree_handle, test_trc_id_override);
+    }
+    else
+    {
+        sprintf(packet_str, "Not available for this ID.\n");        
+    }
+    ocsd_def_errlog_msgout(packet_str);
+}
+
 int process_trace_data(FILE *pf)
 {
     ocsd_err_t ret = OCSD_OK;
@@ -943,7 +976,9 @@ int process_trace_data(FILE *pf)
         if(ret == OCSD_OK)
             ocsd_dt_process_data(dcdtree_handle, OCSD_OP_EOT, 0,0,NULL,NULL);
 
-
+        if (stats) {
+            print_statistics(dcdtree_handle);
+        }
         /* shut down the mem acc CB if in use. */
         if(using_mem_acc_cb)
         {
