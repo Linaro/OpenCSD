@@ -75,6 +75,7 @@ ocsd_err_t TrcPktProcEtmV4I::onProtocolConfig()
     BuildIPacketTable();    // packet table based on config
     m_curr_packet.setProtocolVersion(m_config.FullVersion());
     m_isInit = true;
+    statsInit();
     return OCSD_OK;
 }
 
@@ -156,6 +157,10 @@ ocsd_datapath_resp_t TrcPktProcEtmV4I::processData(  const ocsd_trc_index_t inde
                 (err.getErrorCode() == OCSD_ERR_INVALID_PCKT_HDR))
             {
                 // send invalid packets up the pipe to let the next stage decide what to do.
+                if (err.getErrorCode() == OCSD_ERR_INVALID_PCKT_HDR)
+                    statsAddBadHdrCount(1);
+                else
+                    statsAddBadSeqCount(1);
                 m_process_state = SEND_PKT; 
                 done = false;
             }
@@ -175,6 +180,7 @@ ocsd_datapath_resp_t TrcPktProcEtmV4I::processData(  const ocsd_trc_index_t inde
         }
     } while (!done);
 
+    statsAddTotalCount(m_trcIn.processed());
     *numBytesProcessed = m_trcIn.processed();
     return resp;
 }
@@ -245,8 +251,8 @@ ocsd_datapath_resp_t TrcPktProcEtmV4I::outputUnsyncedRawPacket()
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     
-
-   outputRawPacketToMonitor(m_packet_index,&m_curr_packet,m_dump_unsynced_bytes,&m_currPacketData[0]);
+    statsAddUnsyncCount(m_dump_unsynced_bytes);
+    outputRawPacketToMonitor(m_packet_index,&m_curr_packet,m_dump_unsynced_bytes,&m_currPacketData[0]);
         
     if(!m_sent_notsync_packet)
     {        
