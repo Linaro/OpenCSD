@@ -548,6 +548,8 @@ void PrintDecodeStats(DecodeTree *dcd_tree)
     std::ostringstream oss;
     ocsd_decode_stats_t *pStats = 0;
     ocsd_err_t err;
+    bool gotDemuxStats = false;
+    ocsd_demux_stats_t demux_stats;
 
     oss << "\nReading packet decoder statistics....\n\n";
     logger.LogMsg(oss.str());
@@ -562,11 +564,35 @@ void PrintDecodeStats(DecodeTree *dcd_tree)
             oss << "Decode stats ID 0x" << std::hex << (uint32_t)elemID << "\n";
             oss << "Total Bytes: " << std::dec << pStats->channel_total << "; Unsynced Bytes: " << std::dec << pStats->channel_unsynced << "\n";
             oss << "Bad Header Errors: " << std::dec << pStats->bad_header_errs << "; Bad Sequence Errors: " << std::dec << pStats->bad_sequence_errs << "\n";
+
+            // demux stats same for all IDs - grab them at the first opportunity..
+            if (!gotDemuxStats) {
+                memcpy(&demux_stats, &pStats->demux, sizeof(ocsd_demux_stats_t));
+                gotDemuxStats = true;
+            }
+        
         }
         else
             oss << "Decode stats unavailable on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
+
+
         logger.LogMsg(oss.str());
         pElement = dcd_tree->getNextElement(elemID);
+    }
+
+    // if we have copied over the stats and there is at least 1 frame byte (impossible for there to be 0 if demuxing)
+    if (gotDemuxStats && demux_stats.frame_bytes) {
+        uint64_t total = demux_stats.valid_id_bytes + demux_stats.no_id_bytes + demux_stats.unknown_id_bytes + 
+                         demux_stats.reserved_id_bytes + demux_stats.frame_bytes;
+        oss.str("");
+        oss << "\nFrame Demux Stats\n";
+        oss << "Trace data bytes sent to registered ID decoders: " << std::dec << demux_stats.valid_id_bytes << "\n";
+        oss << "Trace data bytes without registered ID decoders: " << std::dec << demux_stats.no_id_bytes << "\n";
+        oss << "Trace data bytes with unknown ID: " << std::dec << demux_stats.unknown_id_bytes << "\n";
+        oss << "Trace data bytes with reserved ID: " << std::dec << demux_stats.reserved_id_bytes << "\n";
+        oss << "Frame demux bytes, ID bytes and sync bytes: " << std::dec << demux_stats.frame_bytes << "\n";
+        oss << "Total bytes processed by frame demux: " << std::dec << total << "\n\n";
+        logger.LogMsg(oss.str());          
     }
 }
 
