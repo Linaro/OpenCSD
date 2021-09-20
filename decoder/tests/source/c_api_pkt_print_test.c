@@ -903,7 +903,7 @@ void print_statistics(dcd_tree_handle_t dcdtree_handle)
     err = ocsd_dt_get_decode_stats(dcdtree_handle, test_trc_id_override, &p_stats);
     if (!err && p_stats)
     {
-        sprintf(packet_str, "Total Bytes %lld; Unsynced Bytes: %lld\nBad Header Errors: %d; Bad sequence errors: %d\n", p_stats->channel_total,
+        sprintf(packet_str, "Total Bytes %ld; Unsynced Bytes: %ld\nBad Header Errors: %d; Bad sequence errors: %d\n", p_stats->channel_total,
             p_stats->channel_unsynced, p_stats->bad_header_errs, p_stats->bad_sequence_errs);
         ocsd_dt_reset_decode_stats(dcdtree_handle, test_trc_id_override);
     }
@@ -1042,7 +1042,7 @@ int test_err_api()
         ocsd_err_str(ret, err_buffer, ERR_BUFFER_SIZE);
         printf("testing error API for code %d: %s\n", ret, err_buffer);
         err_test = ocsd_get_last_err(&err_index, &cs_id, err_buffer, ERR_BUFFER_SIZE);
-        printf("get last error:\ncode = 0x%02x; trace index %ld; cs_id 0x%02x;\nstring: %s\n", err_test, err_index, cs_id, err_buffer);
+        printf("get last error:\ncode = 0x%02x; trace index %d; cs_id 0x%02x;\nstring: %s\n", err_test, err_index, cs_id, err_buffer);
                
     }
     return ret;
