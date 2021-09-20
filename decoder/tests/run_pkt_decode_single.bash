@@ -34,10 +34,10 @@
 #################################################################################
 # Usage options:-
 # * default: run test on binary + libs in ./bin/linux64/rel
-# run_pkt_decode_tests.bash <test>
+# run_pkt_decode_tests.bash <test> <options>
 #
 # * use installed opencsd libraries & program
-# run_pkt_decode_tests.bash use-installed <test>
+# run_pkt_decode_tests.bash use-installed <test> <options>
 #
 #
 
@@ -56,6 +56,7 @@ fi
 
 if [ "$1" != "" ]; then
     TEST=$1
+    shift
 fi
 
 echo "Running trc_pkt_lister on single snapshot ${TEST}"
@@ -70,7 +71,7 @@ else
 fi
 
 # === test the decode set ===
-${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/${TEST}" -decode -logfilename "${OUT_DIR}/${TEST}.ppl"
+${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/${TEST}" $@ -decode -logfilename "${OUT_DIR}/${TEST}.ppl"
 echo "Done : Return $?"
 
 

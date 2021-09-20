@@ -84,8 +84,11 @@ mkdir -p ${OUT_DIR}
 
 if [ "$1" == "use-installed" ]; then
     BIN_DIR=""
-elif [ "$1" != "" ]; then
-    BIN_DIR=$1
+    shift
+elif [ "$1" == "-bindir" ]; then
+    BIN_DIR=$2
+    shift
+    shift
 fi
 
 echo "Tests using BIN_DIR = ${BIN_DIR}"
@@ -99,13 +102,13 @@ fi
 for test_dir in "${test_dirs_decode[@]}"
 do
     echo "Testing $test_dir..."
-    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" -decode -logfilename "${OUT_DIR}/$test_dir.ppl"
+    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" $@ -decode -logfilename "${OUT_DIR}/$test_dir.ppl"
     echo "Done : Return $?"
 done
 
 for test_dir_n in "${test_dirs_decode_src_addr_opt[@]}"
 do
     echo "Testing with -src_addr_n  $test_dir_n..."
-    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_n" -decode -src_addr_n -logfilename "${OUT_DIR}/${test_dir_n}_src_addr_N.ppl"
+    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_n" $@ -decode -src_addr_n -logfilename "${OUT_DIR}/${test_dir_n}_src_addr_N.ppl"
     echo "Done : Return $?"
 done
