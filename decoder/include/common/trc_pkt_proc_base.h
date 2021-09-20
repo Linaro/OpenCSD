@@ -444,6 +444,9 @@ template<class P,class Pt, class Pc> void TrcPktProcBase<P, Pt, Pc>::resetStats(
     m_stats.channel_unsynced = 0;
     m_stats.bad_header_errs = 0;
     m_stats.bad_sequence_errs = 0;
+    m_stats.demux.frame_bytes = 0;
+    m_stats.demux.no_id_bytes = 0;
+    m_stats.demux.valid_id_bytes = 0;
 } 
 
 /** @}*/

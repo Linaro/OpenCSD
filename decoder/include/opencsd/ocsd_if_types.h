@@ -633,6 +633,25 @@ typedef struct _ocsd_swt_info {
 
 /** @}*/
 
+/** @name Demux Statistics 
+ 
+    Contains statistics for the CoreSight frame demultiplexor. 
+
+    Counts total bytes sent to decoders registered against a trace ID, bytes in the input stream that are
+    associated with a trace ID that has no registered decoder, and frame bytes that are not trace data, but
+    are used to decode the frames - ID bytes, sync bytes etc.
+@{*/
+
+typedef struct _ocsd_demux_stats {
+    uint64_t valid_id_bytes;  /**< number of bytes associated with an ID that has a registered decoder */
+    uint64_t no_id_bytes; /**< number of bytes associated with an ID that has no decoder */
+    uint64_t reserved_id_bytes; /**< number of bytes associated with reserved IDs */
+    uint64_t unknown_id_bytes; /**< bytes processed before ID seen in input frames */
+    uint64_t frame_bytes; /**< number of non-data bytes used for frame de-mux - ID bytes, sync etc */    
+} ocsd_demux_stats_t;
+
+/** @}*/
+
 /** @name Decode statistics
 
     Contains statistics for bytes decoded by the packet decoder, if statistics are supported.
@@ -640,15 +659,23 @@ typedef struct _ocsd_swt_info {
     Stats block instantiated in the base class - derived protocol specific decoder must initialise and
     use as required.
 
+    The single channel block contains the stats for the requested channel via the API call.
+
+    The global demux block contains the totals for all channels and non-data bytes used in CoreSight
+    frame demux. This block will show identical data for every requested channel via the API.
+
 @{*/
 
 typedef struct _ocsd_decode_stats {
     uint32_t version;           /**< library version number */
     uint16_t revision;          /**< revision number - defines the structure version for the stats. */
+   /* single channel block */
     uint64_t channel_total;     /**< total bytes processed for this channel */
     uint64_t channel_unsynced;  /**< number of unsynced bytes processed on this channel */
     uint32_t bad_header_errs;   /**< number of bad packet header errors */
     uint32_t bad_sequence_errs; /**< number of bad packet sequence errors */
+    
+    ocsd_demux_stats_t demux;   /**< global demux stats block */
 } ocsd_decode_stats_t;
 
 #define OCSD_STATS_REVISION 0x1

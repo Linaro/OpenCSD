@@ -75,6 +75,8 @@ private:
     ocsd_err_t DecodeConfigure(uint32_t flags);
     ocsd_err_t SetForcedSyncIndex(ocsd_trc_index_t index, bool bSet);
 
+    void SetDemuxStatsBlock(ocsd_demux_stats_t *pStatsBlock) { m_pStatsBlock = pStatsBlock; };
+
 private:
     ocsd_datapath_resp_t executeNoneDataOpAllIDs(ocsd_datapath_op_t op, const ocsd_trc_index_t index = 0);
     ocsd_datapath_resp_t processTraceData(const ocsd_trc_index_t index, 
@@ -117,8 +119,16 @@ private:
 
     friend class TraceFormatterFrameDecoder;
 
-    // attachment points
+    // stats updates
+    void addToIDStats(uint64_t val);
+    void addToNoIDStats(uint64_t val);
+    void addToFrameStats(uint64_t val);
+    void addToUnknownIDStats(uint64_t val);
+    void addToReservedIDStats(uint64_t val);
+    
+    bool isReservedID(uint8_t ID) { return ((ID == 0) || (ID >= 0x70)); };
 
+    // attachment points
     componentAttachPt<ITrcDataIn> m_IDStreams[128];
     componentAttachPt<ITrcRawFrameIn> m_RawTraceFrame;
 
@@ -159,6 +169,8 @@ private:
     bool m_b_output_unpacked_raw;
 
     bool m_raw_chan_enable[128];
+
+    ocsd_demux_stats_t *m_pStatsBlock;
 };
 
 

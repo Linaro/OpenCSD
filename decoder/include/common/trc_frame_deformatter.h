@@ -85,9 +85,13 @@ public:
     ocsd_datapath_resp_t Reset();    /* reset the decode to the start state, drop partial data - propogate to attached components */
     ocsd_datapath_resp_t Flush();    /* flush existing data if possible, retain state - propogate to attached components */
 
+    /* demux stats */
+    void SetDemuxStatsBlock(ocsd_demux_stats_t *pStatsBlock);
+
 private:
     TraceFmtDcdImpl *m_pDecoder;
     int m_instNum;
+   
 };
 
 /** @}*/

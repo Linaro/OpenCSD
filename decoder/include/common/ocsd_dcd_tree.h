@@ -441,6 +441,9 @@ private:
 
     /**! default instruction decoder */
     static TrcIDecode s_instruction_decoder;
+
+    /**! demux stats block */
+    ocsd_demux_stats_t m_demux_stats;
 };
 
 /** @}*/

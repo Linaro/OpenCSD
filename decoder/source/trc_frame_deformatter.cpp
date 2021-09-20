@@ -54,7 +54,8 @@ TraceFmtDcdImpl::TraceFmtDcdImpl() : TraceComponent(DEFORMATTER_NAME),
     m_use_force_sync(false),
     m_alignment(16), // assume frame aligned data as default.
     m_b_output_packed_raw(false),
-    m_b_output_unpacked_raw(false)
+    m_b_output_unpacked_raw(false),
+    m_pStatsBlock(0)
 
 {
     resetStateParams();
@@ -595,6 +596,9 @@ bool TraceFmtDcdImpl::extractFrame()
     // update index past the processed data   
     m_trc_curr_idx += total_processed;
 
+    // update any none trace data byte stats
+    addToFrameStats((uint64_t)(f_sync_bytes + h_sync_bytes));
+
     return cont_process;
 }
 
@@ -604,6 +608,7 @@ bool TraceFmtDcdImpl::unpackFrame()
     uint8_t frameFlagBit = 0x1;
     uint8_t newSrcID = OCSD_BAD_CS_SRC_ID;
     bool PrevIDandIDChange = false;
+    uint64_t noneDataBytes = 0;
 
     // init output processing
     m_out_data_idx = 0;   
@@ -650,6 +655,7 @@ bool TraceFmtDcdImpl::unpackFrame()
 
                 /// TBD - ID indexing in here.
             }
+            noneDataBytes++;
         }
         else
         // it's just data
@@ -671,6 +677,7 @@ bool TraceFmtDcdImpl::unpackFrame()
     {
         // no matter if change or not, no associated data in byte 15 anyway so just set.
         m_curr_src_ID = (m_ex_frm_data[14] >> 1) & 0x7f;
+        noneDataBytes++;
     }
     // it's data
     else
@@ -678,6 +685,9 @@ bool TraceFmtDcdImpl::unpackFrame()
         m_out_data[m_out_data_idx].data[m_out_data[m_out_data_idx].valid++] = m_ex_frm_data[14] | ((frameFlagBit & m_ex_frm_data[15]) ? 0x1 : 0x0); 
     }
     m_ex_frm_n_bytes = 0;   // mark frame as empty;
+
+    noneDataBytes++;    // byte 15 is always non-data.
+    addToFrameStats(noneDataBytes); // update the non data byte stats. 
     return true;
 }
 
@@ -716,6 +726,8 @@ bool TraceFmtDcdImpl::outputFrame()
                     m_out_data[m_out_processed].data + m_out_data[m_out_processed].used,
                     &bytes_used));               
                 
+                addToIDStats((uint64_t)bytes_used);
+
                 if(!dataPathCont())
                 {
                     cont_processing = false;
@@ -739,7 +751,12 @@ bool TraceFmtDcdImpl::outputFrame()
                         m_out_data[m_out_processed].valid,
                         m_out_data[m_out_processed].data,
                         m_out_data[m_out_processed].id);
-                }                
+                }  
+
+                if (isReservedID(m_out_data[m_out_processed].id))
+                    addToReservedIDStats((uint64_t)m_out_data[m_out_processed].valid);
+                else
+                    addToNoIDStats((uint64_t)m_out_data[m_out_processed].valid);
                 m_out_processed++; // skip past this data.
             }
         }
@@ -754,13 +771,44 @@ bool TraceFmtDcdImpl::outputFrame()
                     m_out_data[m_out_processed].valid,
                     m_out_data[m_out_processed].data,
                     m_out_data[m_out_processed].id);
-            }             
+            } 
+            addToUnknownIDStats((uint64_t)m_out_data[m_out_processed].valid);            
             m_out_processed++; // skip past this data.
         }
     }
     return cont_processing;
 }
+    
+void TraceFmtDcdImpl::addToIDStats(uint64_t val)
+{
+    if (m_pStatsBlock)
+        m_pStatsBlock->valid_id_bytes += val;
+}
 
+void TraceFmtDcdImpl::addToNoIDStats(uint64_t val)
+{
+    if (m_pStatsBlock)
+        m_pStatsBlock->no_id_bytes += val;
+}
+
+void TraceFmtDcdImpl::addToFrameStats(uint64_t val)
+{
+    if (m_pStatsBlock)
+        m_pStatsBlock->frame_bytes += val;
+}
+
+void TraceFmtDcdImpl::addToUnknownIDStats(uint64_t val)
+{
+    if (m_pStatsBlock)
+        m_pStatsBlock->unknown_id_bytes += val;
+}
+
+void TraceFmtDcdImpl::addToReservedIDStats(uint64_t val)
+{
+    if (m_pStatsBlock)
+        m_pStatsBlock->reserved_id_bytes += val;
+}
+ 
 /***************************************************************/
 /* interface */
 /***************************************************************/
@@ -865,5 +913,10 @@ ocsd_datapath_resp_t TraceFormatterFrameDecoder::Flush()
     return (m_pDecoder == 0) ? OCSD_RESP_FATAL_NOT_INIT : m_pDecoder->Flush();
 }
 
+void TraceFormatterFrameDecoder::SetDemuxStatsBlock(ocsd_demux_stats_t *pStatsBlock)
+{
+    if (m_pDecoder)
+        m_pDecoder->SetDemuxStatsBlock(pStatsBlock);
+}
 
 /* End of File trc_frame_deformatter.cpp */
