@@ -244,8 +244,9 @@ int inst_A64_is_direct_branch_link(uint32_t inst, uint8_t *is_link, struct decod
     int is_direct_branch = 1;
     if ((inst & 0x7c000000) == 0x34000000) {
         /* CB, TB */
-    } else if ((inst & 0xff000010) == 0x54000000) {
+    } else if ((inst & 0xff000000) == 0x54000000) {
         /* B<cond> */
+        /* BC<cond> 8.8 / 9.3 arch - bit 4 = 1'b1 */
     } else if ((inst & 0x7c000000) == 0x14000000) {
         /* B, BL imm */
         if (inst & 0x80000000) {
@@ -414,8 +415,9 @@ int inst_A64_branch_destination(uint64_t addr, uint32_t inst, uint64_t *pnpc)
 {
     uint64_t npc;
     int is_direct_branch = 1;
-    if ((inst & 0xff000010) == 0x54000000) {
+    if ((inst & 0xff000000) == 0x54000000) {
         /* B<cond> */
+        /* BC<cond> */
         npc = addr + ((int32_t)((inst & 0x00ffffe0) << 8) >> 11);
     } else if ((inst & 0x7c000000) == 0x14000000) {
         /* B, BL imm */
@@ -568,8 +570,9 @@ int inst_A64_is_conditional(uint32_t inst)
     if ((inst & 0x7c000000) == 0x34000000) {
         /* CB, TB */
         return 1;
-    } else if ((inst & 0xff000010) == 0x54000000) {
+    } else if ((inst & 0xff000000) == 0x54000000) {
         /* B.cond */
+        /* BC.cond */
         return 1;
     }
     return 0;
