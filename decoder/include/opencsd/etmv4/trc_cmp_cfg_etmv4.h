@@ -153,6 +153,7 @@ public:
     const bool enabledCCI() const;
     const bool enabledCID() const;
     const bool enabledVMID() const;
+    const bool enabledVMIDOpt() const;
 
     typedef enum {
         COND_TR_DIS,
@@ -434,6 +435,20 @@ inline const bool EtmV4Config::enabledCID() const
 inline const bool EtmV4Config::enabledVMID() const
 {
     return ((m_cfg.reg_configr & (0x1 << 7)) != 0);
+}
+
+inline const bool EtmV4Config::enabledVMIDOpt() const
+{
+    bool vmidOptVal = ((m_cfg.reg_configr & (0x1 << 15)) != 0);
+    /* TRIDR2.VMIDOPT[30:29] determine value used */
+    if (!vmidOpt()) { /* [29] = 1'b0 */
+        vmidOptVal = false; /* res0 */
+        if (FullVersion() >= 0x45) {
+            /* umless version > 4.5 in which case [30] determines res val */
+            vmidOptVal = ((m_cfg.reg_idr2 & (0x1 << 30)) != 0);
+        }
+    }
+    return vmidOptVal;
 }
 
 inline const EtmV4Config::CondITrace_t EtmV4Config::enabledCondITrace()
