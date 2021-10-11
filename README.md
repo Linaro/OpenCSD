@@ -27,11 +27,11 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.2.1_
+_Current Version 1.3.0_
 
 ### Current support:
 
-- ETE   (v1.1) instruction trace - packet processing and packet decode.
+- ETE   (v1.2) instruction trace - packet processing and packet decode.
 - ETMv4 (v4.6 [A/R profile] v4.4 [M profile]) instruction trace - packet processing and packet decode.
 - PTM   (v1.1) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) instruction trace - packet processing and packet decode.
@@ -263,6 +263,11 @@ Version and Modification Information
                  be delayed until after subsequent atoms have been processed leading to incorrect
                  memory decode access via the client callbacks.
                  Fixed to flush context elements immediately they are committed.
+
+- _Version 1.3.0_:
+    - __Admin__: Dev versions now have patch versions at least +100 from root public version
+    - __Update__: Add support for conditional branch (BC.cond) introduced for v8.8 / v9.3 architecture.
+    - __Update__: ETE: Add support for NSE bit - security state bit defining Root / Realm states in FEAT_RME.
 
 Licence Information
 ===================
