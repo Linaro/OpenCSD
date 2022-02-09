@@ -664,14 +664,18 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::resolveElements()
             if (m_elem_res.P0_commit)
                 err = commitElements();
 
-            if (!err && m_elem_res.P0_cancel)
-                err = cancelElements();
+            // allow for early flush on context element 
+            if (!m_elem_res.P0_commit) {
 
-            if (!err && m_elem_res.mispredict)
-                err = mispredictAtom();
-            
-            if (!err && m_elem_res.discard)
-                err = discardElements();
+                if (!err && m_elem_res.P0_cancel)
+                    err = cancelElements();
+
+                if (!err && m_elem_res.mispredict)
+                    err = mispredictAtom();
+
+                if (!err && m_elem_res.discard)
+                    err = discardElements();
+            }
 
             if (err != OCSD_OK)
                 resp = OCSD_RESP_FATAL_INVALID_DATA;
@@ -706,10 +710,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
     int num_commit_req = m_elem_res.P0_commit;
     ocsd_trc_index_t err_idx = 0;
     TrcStackElem *pElem = 0;    // stacked element pointer
+    bool contextFlush = false;
 
     err = m_out_elem.resetElemStack();
 
-    while(m_elem_res.P0_commit && !err)
+    while(m_elem_res.P0_commit && !err && !contextFlush)
     {
         if (m_P0_stack.size() > 0)
         {
@@ -751,8 +756,17 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                     if(ctxt.updated)
                     {                        
                         err = m_out_elem.addElem(pElem->getRootIndex());
-                        if (!err)
+                        if (!err) {
                             updateContext(pCtxtElem, outElem());
+
+                            // updated context - need to force this to be output to the client so correct memory 
+                            // context can be used.
+                            contextFlush = true;
+                            
+                            // invalidate memory accessor cacheing - force next memory access out to client to 
+                            // ensure that the correct memory context is in play when decoding subsequent atoms.
+                            invalidateMemAccCache();
+                        }
                     }
                 }
                 }
