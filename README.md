@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.2.0_
+_Current Version 1.2.1_
 
 ### Current support:
 
@@ -257,6 +257,12 @@ Version and Modification Information
     - __Bugfix__: Remove unused variable (github issue #38 from Yi Kong)
     - __Bugfix__: Remove noisy printf (James Clark)
     - __Bugfix__: Fix documentation issues (github issues #39 & #40 from rbresalier)
+
+- _Version 1.2.1_:
+   - __Bugfix__: ETM4x / ETE - output of context elements to client can in some circumstances
+                 be delayed until after subsequent atoms have been processed leading to incorrect
+                 memory decode access via the client callbacks.
+                 Fixed to flush context elements immediately they are committed.
 
 Licence Information
 ===================
