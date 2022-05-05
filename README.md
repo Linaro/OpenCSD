@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.3.0_
+_Current Version 1.3.1_
 
 ### Current support:
 
@@ -268,6 +268,11 @@ Version and Modification Information
     - __Admin__: Dev versions now have patch versions at least +100 from root public version
     - __Update__: Add support for conditional branch (BC.cond) introduced for v8.8 / v9.3 architecture.
     - __Update__: ETE: Add support for NSE bit - security state bit defining Root / Realm states in FEAT_RME.
+
+- _Version 1.3.1_:
+    - __Bugfix__: Add header file in snapshot parser - fix build for certain libc++ libs (github issue #43 from manojgupta)
+    - __Bugfix__: Fix typo in comment (github issue #42 from nothatDinger)
+
 
 Licence Information
 ===================
