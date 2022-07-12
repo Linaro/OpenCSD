@@ -179,6 +179,7 @@ private:
     void iPktQ(const uint8_t lastByte);
     void iAtom(const uint8_t lastByte);
     void iPktInvalidCfg(const uint8_t lastByte);  // packet invalid in current config.
+    void iPktITE(const uint8_t lastByte);
 
     unsigned extractContField(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint32_t &value, const unsigned byte_limit = 5);
     unsigned extractTSField64(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint64_t &value);

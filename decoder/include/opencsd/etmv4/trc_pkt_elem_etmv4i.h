@@ -160,6 +160,7 @@ public:
     void setEvent(const uint8_t event_val);
 
     void setQType(const bool has_count, const uint32_t count, const bool has_addr, const bool addr_match, const uint8_t type);
+    void setITE(const uint8_t el, const uint64_t value);
 
     // packet status interface - get packet info.
     const ocsd_etmv4_i_pkt_type getType() const { return type; };
@@ -199,6 +200,10 @@ public:
     // speculation
     const int getCommitElem() const { return commit_elements; };
     const int getCancelElem() const { return cancel_elements; };
+
+    // ITE
+    const uint8_t getITE_EL() const { return ite_pkt.el; };
+    const uint64_t getITE_value() const { return ite_pkt.value; };
 
     // packet type
     const bool isBadPacket() const;
@@ -537,6 +542,12 @@ inline void  EtmV4ITrcPacket::push_vaddr()
 inline void EtmV4ITrcPacket::pop_vaddr_idx(const uint8_t idx)
 {
     m_addr_stack.get_idx(idx, v_addr, v_addr_ISA);
+}
+
+inline void EtmV4ITrcPacket::setITE(const uint8_t el, const uint64_t value)
+{
+    ite_pkt.el = el;
+    ite_pkt.value = value;
 }
 
 /** @}*/

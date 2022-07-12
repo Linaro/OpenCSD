@@ -275,6 +275,14 @@ void EtmV4ITrcPacket::toString(std::string &str) const
             }
         }
         break;
+
+    case ETE_PKT_I_ITE:
+        {
+            std::ostringstream oss;
+            oss << "; EL" << std::dec << (int)ite_pkt.el << "; Payload=0x" << std::hex << ite_pkt.value;
+            str += oss.str();
+        }
+        break;
     }
 
 }   
@@ -360,12 +368,7 @@ const char *EtmV4ITrcPacket::packetTypeName(const ocsd_etmv4_i_pkt_type type, co
         pName = "I_EXCEPT_RTN";
         pDesc = "Exception Return.";
         break;
-
-    case ETE_PKT_I_COMMIT_WIN_MV:
-        pName = "I_COMMIT_WIN_MV";
-        pDesc = "Commit window move.";
-        break;
-
+    
     case ETE_PKT_I_TRANS_ST:
         pName = "I_TRANS_ST";
         pDesc = "Transaction Start.";
@@ -640,6 +643,11 @@ const char *EtmV4ITrcPacket::packetTypeName(const ocsd_etmv4_i_pkt_type type, co
     case ETE_PKT_I_TRANS_FAIL:
         pName = "I_TRANS_FAIL";
         pDesc = "Transaction Fail.";
+        break;
+
+    case ETE_PKT_I_ITE:
+        pName = "I_ITE";
+        pDesc = "Instrumentation";
         break;
 
     default:

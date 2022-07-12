@@ -150,6 +150,18 @@ TrcStackElemAddr *EtmV4P0Stack::createSrcAddrElem(const ocsd_etmv4_i_pkt_type ro
     return pElem;
 }
 
+TrcStackElemITE *EtmV4P0Stack::createITEElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const trace_sw_ite_t &ite)
+{
+    TrcStackElemITE *pElem = new (std::nothrow) TrcStackElemITE(root_pkt, root_index);
+    if (pElem)
+    {
+        pElem->setITE(ite);
+        push_front(pElem);
+    }
+    return pElem;
+}
+
+
 // iteration functions
 void EtmV4P0Stack::from_front_init()
 {

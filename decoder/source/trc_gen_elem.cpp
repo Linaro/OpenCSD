@@ -54,9 +54,10 @@ static const char *s_elem_descs[][2] =
     {"OCSD_GEN_TRC_ELEM_TIMESTAMP","Timestamp - preceding elements happeded before this time."},
     {"OCSD_GEN_TRC_ELEM_CYCLE_COUNT","Cycle count - cycles since last cycle count value - associated with a preceding instruction range."},
     {"OCSD_GEN_TRC_ELEM_EVENT","Event - numbered event or trigger"},
-    {"OCSD_GEN_TRC_ELEM_SWTRACE","Software trace packet - may contain data payload."},
+    {"OCSD_GEN_TRC_ELEM_SWTRACE","Software trace packet - may contain data payload. STM / ITM hardware trace with channel protocol."},
     {"OCSD_GEN_TRC_ELEM_SYNC_MARKER","Synchronisation marker - marks position in stream of an element that is output later."},
     {"OCSD_GEN_TRC_ELEM_MEMTRANS","Trace indication of transactional memory operations."},
+    {"OCSD_GEN_TRC_ELEM_INSTRUMENTATION", "PE instrumentation trace - PE generated SW trace, application dependent protocol."},
     {"OCSD_GEN_TRC_ELEM_CUSTOM","Fully custom packet type."}
 };
 
@@ -217,6 +218,10 @@ void OcsdTraceElement::toString(std::string &str) const
         case OCSD_GEN_TRC_ELEM_MEMTRANS:
             if (mem_trans <= OCSD_MEM_TRANS_FAIL)
                 oss << s_transaction_type[mem_trans];
+            break;
+
+        case OCSD_GEN_TRC_ELEM_INSTRUMENTATION:
+            oss << "EL" << std::dec << (int)sw_ite.el << "; 0x" << std::setfill('0') << std::setw(16) << std::hex << sw_ite.value;
             break;
 
         default: break;

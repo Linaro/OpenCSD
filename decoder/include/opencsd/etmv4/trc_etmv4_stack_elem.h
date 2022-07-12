@@ -65,7 +65,8 @@ typedef enum _p0_elem_t
     P0_TRANS_TRACE_INIT,
     P0_TRANS_START,
     P0_TRANS_COMMIT,
-    P0_TRANS_FAIL
+    P0_TRANS_FAIL,
+    P0_ITE,
 } p0_elem_t;
 
 
@@ -334,6 +335,30 @@ inline TrcStackElemMarker::TrcStackElemMarker(const ocsd_etmv4_i_pkt_type root_p
 {
 }
 
+/************************************************************/
+/* Instrumentation element
+ */
+
+class TrcStackElemITE : public TrcStackElem
+{
+protected:
+    TrcStackElemITE(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
+    virtual ~TrcStackElemITE() {};
+
+    friend class EtmV4P0Stack;
+
+public:
+    void setITE(const trace_sw_ite_t &ite) { m_ite = ite; };
+    const trace_sw_ite_t &getITE() { return m_ite; };
+
+private:
+    trace_sw_ite_t m_ite;
+};
+
+inline TrcStackElemITE::TrcStackElemITE(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index) :
+    TrcStackElem(P0_ITE, false, root_pkt, root_index)
+{
+}
 
 /************************************************************/
 /* P0 element stack that allows push of elements, and deletion of elements when done.
@@ -372,6 +397,7 @@ public:
     TrcStackQElem *createQElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const int count);
     TrcStackElemMarker *createMarkerElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const trace_marker_payload_t &marker);
     TrcStackElemAddr *createSrcAddrElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_addr_val_t &addr_val);
+    TrcStackElemITE *createITEElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const trace_sw_ite_t &ite);
 
 private:
     std::deque<TrcStackElem *> m_P0_stack;  //!< P0 decode element stack

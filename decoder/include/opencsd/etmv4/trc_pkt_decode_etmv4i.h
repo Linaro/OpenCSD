@@ -100,6 +100,9 @@ protected:
     // process a transaction element
     ocsd_err_t processTransElem(TrcStackElem *pElem);
 
+    // process an Instrumentation element
+    ocsd_err_t processITEElem(TrcStackElem *pElem);
+
     // process a bad packet
     ocsd_err_t handleBadPacket(const char *reason, ocsd_trc_index_t index = OCSD_BAD_TRC_INDEX);
 

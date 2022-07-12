@@ -60,9 +60,10 @@ typedef enum _ocsd_gen_trc_elem_t
     OCSD_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
     OCSD_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count - cycles since last cycle count value - associated with a preceding instruction range. */
     OCSD_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger or numbered event  */   
-    OCSD_GEN_TRC_ELEM_SWTRACE,         /*!< Software trace packet - may contain data payload. */
+    OCSD_GEN_TRC_ELEM_SWTRACE,         /*!< Software trace packet - may contain data payload. STM / ITM hardware trace with channel protocol */
     OCSD_GEN_TRC_ELEM_SYNC_MARKER,     /*!< Synchronisation marker - marks position in stream of an element that is output later. */
     OCSD_GEN_TRC_ELEM_MEMTRANS,        /*!< Trace indication of transactional memory operations. */
+    OCSD_GEN_TRC_ELEM_INSTRUMENTATION, /*!< PE instrumentation trace - PE generated SW trace, application dependent protocol. */
     OCSD_GEN_TRC_ELEM_CUSTOM,          /*!< Fully custom packet type - used by none-ARM architecture decoders */
 } ocsd_gen_trc_elem_t;
 
@@ -104,6 +105,11 @@ typedef enum _memtrans_t {
     OCSD_MEM_TRANS_FAIL,      /**< Transactional memory sequence failed - operations since start of transaction have been unwound. */  
 } trace_memtrans_t;
 
+typedef struct _sw_ite_t {
+    uint8_t el;             /**< exception level for PE sw instrumentation instruction */
+    uint64_t value;         /**< payload for PE sw instrumentation instruction */
+} trace_sw_ite_t;
+
 typedef struct _ocsd_generic_trace_elem {
     ocsd_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
     ocsd_isa           isa;          /**< instruction set for executed instructions */
@@ -142,6 +148,7 @@ typedef struct _ocsd_generic_trace_elem {
         unsync_info_t unsync_eot_info;      /**< additional information for unsync / end-of-trace packets. */
         trace_marker_payload_t sync_marker; /**< marker element - sync later element to position in stream */
         trace_memtrans_t mem_trans;         /**< memory transaction packet - transaction event */
+        trace_sw_ite_t sw_ite;              /**< PE sw instrumentation using FEAT_ITE */
     };
 
     const void *ptr_extended_data;        /**< pointer to extended data buffer (data trace, sw trace payload) / custom structure */
