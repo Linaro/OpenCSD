@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.3.1_
+_Current Version 1.3.2_
 
 ### Current support:
 
@@ -273,6 +273,8 @@ Version and Modification Information
     - __Bugfix__: Add header file in snapshot parser - fix build for certain libc++ libs (github issue #43 from manojgupta)
     - __Bugfix__: Fix typo in comment (github issue #42 from nothatDinger)
 
+- _Version 1.3.2_:
+    - __Bugfix__: ETM4x / ETE - 64 bit timestamp value - MS bit incorrectly masked to 1b0 during extraction from packet.
 
 Licence Information
 ===================
