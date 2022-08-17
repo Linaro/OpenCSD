@@ -68,6 +68,7 @@ declare -a test_dirs_decode=( "001-ack_test"
                               "tme_test"
                               "trace_file_cid_vmid"
                               "trace_file_vmid"
+                              "ts_bit64_set"
                               "ts_marker"
                             )
 
