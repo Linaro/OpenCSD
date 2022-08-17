@@ -522,8 +522,11 @@ void TrcPktProcEtmV4I::iPktTimestamp(const uint8_t lastByte)
     {        
         int idx = 1;
         uint64_t tsVal;
-        int ts_bytes = extractContField64(m_currPacketData, idx, tsVal);
-        int ts_bits = ts_bytes < 7 ? ts_bytes * 7 : 64;
+        int ts_bytes = extractTSField64(m_currPacketData, idx, tsVal);
+        int ts_bits;
+        
+        // if ts_bytes 8 or less, then cont bits on each byte, otherwise full 64 bit value for 9 bytes
+        ts_bits = ts_bytes < 9 ? ts_bytes * 7 : 64;
 
         if(!m_curr_packet.pkt_valid.bits.ts_valid && m_first_trace_info)
             ts_bits = 64;   // after trace info, missing bits are all 0.
@@ -1653,20 +1656,33 @@ void TrcPktProcEtmV4I::BuildIPacketTable()
     return idx;
 }
 
-unsigned TrcPktProcEtmV4I::extractContField64(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint64_t &value, const unsigned byte_limit /*= 9*/)
+unsigned TrcPktProcEtmV4I::extractTSField64(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint64_t &value)
 {
+    const unsigned max_byte_idx = 8;    /* the 9th byte, index 8, will use full 8 bits for value */
     unsigned idx = 0;
     bool lastByte = false;
     uint8_t byteVal;
+    uint8_t byteValMask = 0x7f;
+    
+    /* init value */
     value = 0;
-    while(!lastByte && (idx < byte_limit))   // max 9 bytes for 64 bit value;
+    while(!lastByte)   // max 9 bytes for 64 bit value;
     {
         if(buffer.size() > (st_idx + idx))
         {
             // each byte has seven bits + cont bit
             byteVal = buffer[(st_idx + idx)];
-            lastByte = (byteVal & 0x80) != 0x80;
-            value |= ((uint64_t)(byteVal & 0x7F)) << (idx * 7);
+
+            /* detect the final byte - which uses full 8 bits as value */
+            if (idx == max_byte_idx)
+            {
+                byteValMask = 0xFF;  /* last byte of 9, no cont bit */
+                lastByte = true;
+            }
+            else 
+                lastByte = (byteVal & 0x80) != 0x80;
+
+            value |= ((uint64_t)(byteVal & byteValMask)) << (idx * 7);
             idx++;
         }
         else
@@ -1674,6 +1690,7 @@ unsigned TrcPktProcEtmV4I::extractContField64(const std::vector<uint8_t> &buffer
             throwBadSequenceError("Invalid 64 bit continuation fields in packet");
         }
     }
+    // index is the count of bytes used here.
     return idx;
 }
 

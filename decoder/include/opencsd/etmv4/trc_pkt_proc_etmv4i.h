@@ -181,7 +181,7 @@ private:
     void iPktInvalidCfg(const uint8_t lastByte);  // packet invalid in current config.
 
     unsigned extractContField(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint32_t &value, const unsigned byte_limit = 5);
-    unsigned extractContField64(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint64_t &value, const unsigned byte_limit = 9);
+    unsigned extractTSField64(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint64_t &value);
     unsigned extractCondResult(const std::vector<uint8_t> &buffer, const unsigned st_idx, uint32_t& key, uint8_t &result);
     void extractAndSetContextInfo(const std::vector<uint8_t> &buffer, const int st_idx);
     int extract64BitLongAddr(const std::vector<uint8_t> &buffer, const int st_idx, const uint8_t IS, uint64_t &value);
