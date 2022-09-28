@@ -380,6 +380,9 @@
     <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_proc_etmv4i.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\lib_opencsd_interface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -510,6 +513,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\ete\trc_cmp_cfg_ete.cpp">
       <Filter>Source Files\ete</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\lib_opencsd_interface.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

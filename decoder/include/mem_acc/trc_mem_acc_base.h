@@ -147,7 +147,7 @@ public:
     const bool inMemSpace(const ocsd_mem_space_acc_t mem_space) const { return (bool)(((uint8_t)m_mem_space & (uint8_t)mem_space) != 0); }; 
     
     /* memory access info logging */
-    virtual void getMemAccString(std::string &accStr) const;
+    virtual void getMemAccString(std::string &accStr) const {};
 
 protected:
     ocsd_vaddr_t m_startAddress;   /**< accessible range start address */

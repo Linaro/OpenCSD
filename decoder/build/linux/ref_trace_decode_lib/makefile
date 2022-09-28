@@ -104,6 +104,7 @@ OBJECTS=$(BUILD_DIR)/ocsd_code_follower.o \
 		$(BUILD_DIR)/trc_gen_elem.o \
 		$(BUILD_DIR)/trc_printable_elem.o \
 		$(BUILD_DIR)/trc_ret_stack.o \
+		$(BUILD_DIR)/lib_opencsd_interface.o \
 		$(ETMV3OBJ) \
 		$(ETMV4OBJ) \
 		$(IDECOBJ) \

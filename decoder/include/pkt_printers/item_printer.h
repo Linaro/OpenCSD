@@ -70,8 +70,8 @@ inline ItemPrinter::~ItemPrinter()
 
 inline void ItemPrinter::itemPrintLine(const std::string &msg)
 {
-    if(m_pMsgLogger)
-        m_pMsgLogger->LogMsg(msg);
+    //if(m_pMsgLogger)
+    //    m_pMsgLogger->LogMsg(msg);
 }
 
 inline void ItemPrinter::setTestWaits(const int num_waits)

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32901.215
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opencsd_lib", "ref_trace_decode_lib.vcxproj", "{7F500891-CC76-405F-933F-F682BC39F923}"
 EndProject
@@ -76,7 +76,6 @@ Global
 		{533F929A-A73B-46B6-9D5F-FFCD62F734E3}.Release-dll|Win32.ActiveCfg = Release-dll|Win32
 		{533F929A-A73B-46B6-9D5F-FFCD62F734E3}.Release-dll|Win32.Build.0 = Release-dll|Win32
 		{533F929A-A73B-46B6-9D5F-FFCD62F734E3}.Release-dll|x64.ActiveCfg = Release-dll|x64
-		{533F929A-A73B-46B6-9D5F-FFCD62F734E3}.Release-dll|x64.Build.0 = Release-dll|x64
 		{DE1F395D-4F53-42FB-8AEF-993A4BF7E411}.Debug|Win32.ActiveCfg = Debug|Win32
 		{DE1F395D-4F53-42FB-8AEF-993A4BF7E411}.Debug|Win32.Build.0 = Debug|Win32
 		{DE1F395D-4F53-42FB-8AEF-993A4BF7E411}.Debug|x64.ActiveCfg = Debug|x64
@@ -116,7 +115,6 @@ Global
 		{3AC169DA-E156-4D16-95DF-73D7302A5606}.Release-dll|Win32.ActiveCfg = Release-dll|Win32
 		{3AC169DA-E156-4D16-95DF-73D7302A5606}.Release-dll|Win32.Build.0 = Release-dll|Win32
 		{3AC169DA-E156-4D16-95DF-73D7302A5606}.Release-dll|x64.ActiveCfg = Release-dll|x64
-		{3AC169DA-E156-4D16-95DF-73D7302A5606}.Release-dll|x64.Build.0 = Release-dll|x64
 		{46219A32-8178-41C1-B3B1-B5A6E547515F}.Debug|Win32.ActiveCfg = Debug|Win32
 		{46219A32-8178-41C1-B3B1-B5A6E547515F}.Debug|Win32.Build.0 = Debug|Win32
 		{46219A32-8178-41C1-B3B1-B5A6E547515F}.Debug|x64.ActiveCfg = Debug|x64
@@ -132,7 +130,6 @@ Global
 		{46219A32-8178-41C1-B3B1-B5A6E547515F}.Release-dll|Win32.ActiveCfg = Release|Win32
 		{46219A32-8178-41C1-B3B1-B5A6E547515F}.Release-dll|Win32.Build.0 = Release|Win32
 		{46219A32-8178-41C1-B3B1-B5A6E547515F}.Release-dll|x64.ActiveCfg = Release|x64
-		{46219A32-8178-41C1-B3B1-B5A6E547515F}.Release-dll|x64.Build.0 = Release|x64
 		{BC090130-2C53-4CF6-8AD4-37BF72B8D01A}.Debug|Win32.ActiveCfg = Debug|Win32
 		{BC090130-2C53-4CF6-8AD4-37BF72B8D01A}.Debug|Win32.Build.0 = Debug|Win32
 		{BC090130-2C53-4CF6-8AD4-37BF72B8D01A}.Debug|x64.ActiveCfg = Debug|x64
@@ -148,9 +145,11 @@ Global
 		{BC090130-2C53-4CF6-8AD4-37BF72B8D01A}.Release-dll|Win32.ActiveCfg = Release|Win32
 		{BC090130-2C53-4CF6-8AD4-37BF72B8D01A}.Release-dll|Win32.Build.0 = Release|Win32
 		{BC090130-2C53-4CF6-8AD4-37BF72B8D01A}.Release-dll|x64.ActiveCfg = Release|x64
-		{BC090130-2C53-4CF6-8AD4-37BF72B8D01A}.Release-dll|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1C72A1EA-79E9-4E59-ACFD-A4D1EC564DF5}
 	EndGlobalSection
 EndGlobal

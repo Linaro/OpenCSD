@@ -94,7 +94,7 @@ void TrcMemAccFactory::DestroyAccessor(TrcMemAccessorBase *pAccessor)
 
 
 /* memory access info logging */
-void TrcMemAccessorBase::getMemAccString(std::string &accStr) const
+/*void TrcMemAccessorBase::getMemAccString(std::string &accStr) const
 {
     std::ostringstream oss;
 
@@ -143,6 +143,6 @@ void TrcMemAccessorBase::getMemAccString(std::string &accStr) const
         break;
     }
     accStr = oss.str();
-}
+}*/
 
 /* End of File trc_mem_acc_base.cpp */
