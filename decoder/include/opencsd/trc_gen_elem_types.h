@@ -104,6 +104,11 @@ typedef enum _memtrans_t {
     OCSD_MEM_TRANS_FAIL,      /**< Transactional memory sequence failed - operations since start of transaction have been unwound. */  
 } trace_memtrans_t;
 
+typedef struct _traced_ins_address_t {
+    ocsd_vaddr_t *ptr_addresses;   /**< Array to store the traced instructions addresses */
+    uint32_t *ptr_opcodes;    /**< Array to store the opcodes of the traced instructions addresses */
+} traced_ins_address_t;
+
 typedef struct _ocsd_generic_trace_elem {
     ocsd_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
     ocsd_isa           isa;          /**< instruction set for executed instructions */
@@ -145,7 +150,7 @@ typedef struct _ocsd_generic_trace_elem {
     };
 
     const void *ptr_extended_data;        /**< pointer to extended data buffer (data trace, sw trace payload) / custom structure */
-
+    traced_ins_address_t traced_ins;      /**< structure to hold the traced instruction addresses and opcodes */
 } ocsd_generic_trace_elem;
 
 

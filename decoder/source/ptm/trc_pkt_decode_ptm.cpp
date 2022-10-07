@@ -31,7 +31,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
-
+#include <string.h>
 #include <sstream>
 #include "opencsd/ptm/trc_pkt_decode_ptm.h"
 
@@ -51,6 +51,16 @@ TrcPktDecodePtm::TrcPktDecodePtm(int instIDNum)
 
 TrcPktDecodePtm::~TrcPktDecodePtm()
 {
+    if (m_output_elem.traced_ins.ptr_addresses != NULL)
+    {
+        delete[] m_output_elem.traced_ins.ptr_addresses;
+        m_output_elem.traced_ins.ptr_addresses = NULL;
+    }
+    if (m_output_elem.traced_ins.ptr_opcodes != NULL)
+    {
+        delete[] m_output_elem.traced_ins.ptr_opcodes;
+        m_output_elem.traced_ins.ptr_opcodes = NULL;
+    }
 }
 
 /*********************** implementation packet decoding interface */
@@ -617,6 +627,8 @@ ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const waypoint_trace_
     uint32_t bytesReq;
     ocsd_err_t err = OCSD_OK;
     ocsd_vaddr_t curr_op_address;
+    std::vector<ocsd_vaddr_t> traced_ins_address;
+    std::vector<uint32_t> traced_ins_opcode;
 
     ocsd_mem_space_acc_t mem_space = (m_pe_context.security_level == ocsd_sec_secure) ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
 
@@ -636,6 +648,8 @@ ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const waypoint_trace_
         if(bytesReq == 4) // got data back
         {
             m_instr_info.opcode = opcode;
+            traced_ins_address.push_back(m_instr_info.instr_addr);
+            traced_ins_opcode.push_back(m_instr_info.opcode);
             err = instrDecode(&m_instr_info);
             if(err != OCSD_OK) break;
 
@@ -665,6 +679,18 @@ ocsd_err_t TrcPktDecodePtm::traceInstrToWP(bool &bWPFound, const waypoint_trace_
             m_nacc_addr = m_instr_info.instr_addr;
         }
     }
+    if (m_output_elem.traced_ins.ptr_addresses == NULL)
+    {
+        m_output_elem.traced_ins.ptr_addresses = new ocsd_vaddr_t[m_output_elem.num_instr_range + 1];
+        memset(m_output_elem.traced_ins.ptr_addresses, 0, m_output_elem.num_instr_range + 1);
+    }
+    if (m_output_elem.traced_ins.ptr_opcodes == NULL)
+    {
+        m_output_elem.traced_ins.ptr_opcodes = new uint32_t[m_output_elem.num_instr_range + 1];
+        memset(m_output_elem.traced_ins.ptr_opcodes, 0, m_output_elem.num_instr_range + 1);
+    }
+    std::copy(traced_ins_address.begin(), traced_ins_address.end(), m_output_elem.traced_ins.ptr_addresses);
+    std::copy(traced_ins_opcode.begin(), traced_ins_opcode.end(), m_output_elem.traced_ins.ptr_opcodes);
     return err;
 }
 

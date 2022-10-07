@@ -168,7 +168,8 @@ inline void OcsdTraceElement::init()
 
     last_i_type = OCSD_INSTR_OTHER;
     last_i_subtype = OCSD_S_INSTR_NONE;
-
+    traced_ins.ptr_addresses = NULL;
+    traced_ins.ptr_opcodes = NULL;
     clearPerPktData();
 }
 
@@ -177,6 +178,16 @@ inline void OcsdTraceElement::clearPerPktData()
     flag_bits = 0;          // bit-field with various flags.
     exception_number = 0;   // union with trace_on_reason / trace_event
     ptr_extended_data = 0;  // extended data pointer
+    if (traced_ins.ptr_addresses != NULL)
+    {
+        delete[] traced_ins.ptr_addresses;
+        traced_ins.ptr_addresses = NULL;
+    }
+    if (traced_ins.ptr_opcodes != NULL)
+    {
+        delete[] traced_ins.ptr_opcodes;
+        traced_ins.ptr_opcodes = NULL;
+    }
 }
 
 inline void OcsdTraceElement::setTraceOnReason(const trace_on_reason_t reason)

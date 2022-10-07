@@ -243,6 +243,9 @@ private:
 //** output element handling
     OcsdGenElemStack m_out_elem;  //!< output element stack.
     OcsdTraceElement &outElem() { return m_out_elem.getCurrElem(); };   //!< current  out element
+
+    std::vector<ocsd_vaddr_t> m_traced_ins_address;
+    std::vector<uint32_t> m_traced_ins_opcode;
 };
 
 #endif // ARM_TRC_PKT_DECODE_ETMV4I_H_INCLUDED

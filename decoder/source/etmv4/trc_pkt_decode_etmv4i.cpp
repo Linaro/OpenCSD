@@ -31,7 +31,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */ 
-
+#include <string.h>
 #include "opencsd/etmv4/trc_pkt_decode_etmv4i.h"
 
 #include "common/trc_gen_elem.h"
@@ -1325,7 +1325,20 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
             }
             break;
         }
+
         setElemTraceRange(outElem(), addr_range, (atom == ATOM_E), pElem->getRootIndex());
+        if (outElem().traced_ins.ptr_addresses == NULL)
+        {
+            outElem().traced_ins.ptr_addresses = new ocsd_vaddr_t[outElem().num_instr_range + 1];
+            memset(outElem().traced_ins.ptr_addresses, 0, outElem().num_instr_range + 1);
+        }
+        if (outElem().traced_ins.ptr_opcodes == NULL)
+        {
+            outElem().traced_ins.ptr_opcodes = new uint32_t[outElem().num_instr_range + 1];
+            memset(outElem().traced_ins.ptr_opcodes, 0, outElem().num_instr_range + 1);
+        }
+        std::copy(m_traced_ins_address.begin(), m_traced_ins_address.end(), outElem().traced_ins.ptr_addresses);
+        std::copy(m_traced_ins_opcode.begin(), m_traced_ins_opcode.end(), outElem().traced_ins.ptr_opcodes);
 
         if (ETE_ERET)
         {
@@ -1471,6 +1484,18 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
                 // waypoint address found - output range
                 setElemTraceRange(outElem(), addr_range, true, excep_pkt_index);
                 range_out = true;
+                if (outElem().traced_ins.ptr_addresses == NULL)
+                {
+                    outElem().traced_ins.ptr_addresses = new ocsd_vaddr_t[outElem().num_instr_range + 1];
+                    memset(outElem().traced_ins.ptr_addresses, 0, outElem().num_instr_range + 1);
+                }
+                if (outElem().traced_ins.ptr_opcodes == NULL)
+                {
+                    outElem().traced_ins.ptr_opcodes = new uint32_t[outElem().num_instr_range + 1];
+                    memset(outElem().traced_ins.ptr_opcodes, 0, outElem().num_instr_range + 1);
+                }
+                std::copy(m_traced_ins_address.begin(), m_traced_ins_address.end(), outElem().traced_ins.ptr_addresses);
+                std::copy(m_traced_ins_opcode.begin(), m_traced_ins_opcode.end(), outElem().traced_ins.ptr_opcodes);
             }
             else
             {
@@ -1819,7 +1844,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(instr_range_t &range, WP_res_t &WP
     uint32_t opcode;
     uint32_t bytesReq;
     ocsd_err_t err = OCSD_OK;
-
+    m_traced_ins_address.clear();
+    m_traced_ins_opcode.clear();
     range.st_addr = range.en_addr = m_instr_info.instr_addr;
     range.num_instr = 0;
 
@@ -1835,6 +1861,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(instr_range_t &range, WP_res_t &WP
         if(bytesReq == 4) // got data back
         {
             m_instr_info.opcode = opcode;
+            m_traced_ins_address.push_back(m_instr_info.instr_addr);
+            m_traced_ins_opcode.push_back(m_instr_info.opcode);
             err = instrDecode(&m_instr_info);
             if(err != OCSD_OK) break;
 

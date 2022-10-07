@@ -575,14 +575,26 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         }
     }
     break;
-    case OCSD_GEN_TRC_ELEM_INSTR_RANGE:
     case OCSD_GEN_TRC_ELEM_ADDR_NACC:
     {
-        uint64_t start_add = elem.st_addr;
-        uint64_t end_add = (elem.elem_type == OCSD_GEN_TRC_ELEM_ADDR_NACC) ? (elem.st_addr + 1) : elem.en_addr;
-        uint64_t ins_size = (elem.elem_type == OCSD_GEN_TRC_ELEM_ADDR_NACC) ? (elem.last_instr_sz + 1) : elem.last_instr_sz;
-        uint64_t n_instr = elem.num_instr_range;
-        for (uint64_t i = start_add; i < end_add; i += ins_size)
+        fprintf(m_fp_decode_out, "%u,%u,%u,", index_sop, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
+        if (m_update_cycle_cnt)
+        {
+            fprintf(m_fp_decode_out, "%u,", m_cycle_cnt);
+            m_update_cycle_cnt = false;
+        }
+        else
+        {
+            fprintf(m_fp_decode_out, "%u,", 0);
+        }
+        fprintf(m_fp_decode_out, "%llu,%x,%u,%u,0,%x:MNA\n", m_last_timestamp, elem.st_addr, elem.num_instr_range, elem.last_instr_sz, elem.st_addr);
+        m_rows_in_file++;
+        m_cycle_cnt = 0;
+    }
+    break;
+    case OCSD_GEN_TRC_ELEM_INSTR_RANGE:
+    {
+        for (uint64_t i = 0; i < elem.num_instr_range; i++)
         {
             fprintf(m_fp_decode_out, "%u,%u,%u,", index_sop, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
             if (m_update_cycle_cnt)
@@ -594,9 +606,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             {
                 fprintf(m_fp_decode_out, "%u,", 0);
             }
-
-            fprintf(m_fp_decode_out, "%llu,%x,%u,%u,", m_last_timestamp, start_add, elem.num_instr_range, elem.last_instr_sz);
-
+            fprintf(m_fp_decode_out, "%llu,%x,%u,%u,", m_last_timestamp, elem.st_addr, elem.num_instr_range, elem.last_instr_sz);
             if ((elem.context.exception_level > ocsd_EL_unknown) && (elem.context.el_valid) && m_out_ex_level)
             {
                 fprintf(m_fp_decode_out, "%s%d", "EL", (int) (elem.context.exception_level));
@@ -612,14 +622,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             {
                 fprintf(m_fp_decode_out, "%d,", 0);
             }
-
-            fprintf(m_fp_decode_out, "%x", i);
-
-            if (elem.elem_type == OCSD_GEN_TRC_ELEM_ADDR_NACC)
-            {
-                fprintf(m_fp_decode_out, "%s", ":MNA");
-            }
-            fprintf(m_fp_decode_out, "\n");
+            fprintf(m_fp_decode_out, "%x\n", elem.traced_ins.ptr_addresses[i]);
             m_rows_in_file++;
         }
         m_cycle_cnt = 0;
