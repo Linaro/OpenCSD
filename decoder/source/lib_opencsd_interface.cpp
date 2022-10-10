@@ -594,7 +594,13 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     break;
     case OCSD_GEN_TRC_ELEM_INSTR_RANGE:
     {
-        for (uint64_t i = 0; i < elem.num_instr_range; i++)
+        // Check if we have stored the entire instruction sequence in elem.traced_ins.ptr_addresses array
+        // If so, step through the array, else step through each address from start address in steps of last
+        // instruction size
+        uint32_t start_idx = elem.traced_ins.ptr_addresses ? 0 : elem.st_addr;
+        uint32_t end_idx = elem.traced_ins.ptr_addresses ? elem.num_instr_range : elem.en_addr;
+        uint32_t step = elem.traced_ins.ptr_addresses ? 1 : elem.last_instr_sz;
+        for (uint64_t i = start_idx; i < end_idx; i+=step)
         {
             fprintf(m_fp_decode_out, "%u,%u,%u,", index_sop, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
             if (m_update_cycle_cnt)
@@ -606,7 +612,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             {
                 fprintf(m_fp_decode_out, "%u,", 0);
             }
-            fprintf(m_fp_decode_out, "%llu,%x,%u,%u,", m_last_timestamp, elem.st_addr, elem.num_instr_range, elem.last_instr_sz);
+            fprintf(m_fp_decode_out, "%llu,%x,%x,%u,%u,", m_last_timestamp, elem.st_addr, elem.en_addr, elem.num_instr_range, elem.last_instr_sz);
             if ((elem.context.exception_level > ocsd_EL_unknown) && (elem.context.el_valid) && m_out_ex_level)
             {
                 fprintf(m_fp_decode_out, "%s%d", "EL", (int) (elem.context.exception_level));
@@ -622,7 +628,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             {
                 fprintf(m_fp_decode_out, "%d,", 0);
             }
-            fprintf(m_fp_decode_out, "%x\n", elem.traced_ins.ptr_addresses[i]);
+            fprintf(m_fp_decode_out, "%x\n", elem.traced_ins.ptr_addresses ? elem.traced_ins.ptr_addresses[i] : i);
             m_rows_in_file++;
         }
         m_cycle_cnt = 0;
