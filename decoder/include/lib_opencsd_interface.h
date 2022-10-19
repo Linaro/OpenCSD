@@ -65,6 +65,8 @@ typedef TyTraceDecodeError(*fpCreateMemAccMapper)();
 typedef TyTraceDecodeError(*fpAddMemoryAccessMapFromBin)(const ocsd_file_mem_region_t *, const ocsd_mem_space_acc_t, const uint32_t, const char *);
 // Function to update memory access map from bin file
 typedef TyTraceDecodeError(*fpUpdateMemoryAccessMapFromBin)(const ocsd_file_mem_region_t *, const ocsd_mem_space_acc_t, const uint32_t, const char *);
+// Function to add memory access map from buffer
+typedef TyTraceDecodeError(*fpAddMemoryAccessMapFromBuffer)(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t* p_mem_buffer, const uint32_t mem_length);
 // Function to add memory access callback
 typedef TyTraceDecodeError(*fpAddMemoryAccessCallback)(const ocsd_vaddr_t, const ocsd_vaddr_t, const ocsd_mem_space_acc_t, Fn_MemAcc_CB, const void *);
 // Function to decode the trace file
@@ -93,6 +95,8 @@ extern "C" {
     OPENCSDINTERFACE_API TyTraceDecodeError AddMemoryAccessMapFromBin(const ocsd_file_mem_region_t *region, const ocsd_mem_space_acc_t mem_space, const uint32_t num_regions, const char *path);
     // Function to update memory access map from bin file
     OPENCSDINTERFACE_API TyTraceDecodeError UpdateMemoryAccessMapFromBin(const ocsd_file_mem_region_t *region, const ocsd_mem_space_acc_t mem_space, const uint32_t num_regions, const char *path);
+    // Function to update memory access map from buffer
+    OPENCSDINTERFACE_API TyTraceDecodeError AddMemoryAccessMapFromBuffer(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t* p_mem_buffer, const uint32_t mem_length);
     // Function to add memory access callback
     OPENCSDINTERFACE_API TyTraceDecodeError AddMemoryAccessCallback(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context);
     // Function to decode the trace file

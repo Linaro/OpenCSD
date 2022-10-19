@@ -72,6 +72,8 @@ public:
     TyTraceDecodeError AddMemoryAccessMapFromBin(const ocsd_file_mem_region_t *region, const ocsd_mem_space_acc_t mem_space, const uint32_t num_regions, const char *path);
     // Function to update memory access map from bin file
     TyTraceDecodeError UpdateMemoryAccessMapFromBin(const ocsd_file_mem_region_t *region, const ocsd_mem_space_acc_t mem_space, const uint32_t num_regions, const char *path);
+    // Function to add memory access map from buffer file
+    TyTraceDecodeError AddMemoryAccessMapFromBuffer(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t* p_mem_buffer, const uint32_t mem_length);
     // Function to add memory access callback
     TyTraceDecodeError AddMemoryAccessCallback(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context);
     // Function to decode the trace file
@@ -317,6 +319,32 @@ TyTraceDecodeError OpenCSDInterface::UpdateMemoryAccessMapFromBin(const ocsd_fil
 {
     ocsd_err_t ret = OCSD_OK;
     ret = mp_tree->updateBinFileRegionMemAcc(region, num_regions, mem_space, path);
+    if (ret != OCSD_OK)
+    {
+        return TRACE_DECODER_MEM_ACC_MAP_ADD_ERR;
+    }
+
+    return TRACE_DECODER_OK;
+}
+
+/****************************************************************************
+     Function: AddMemoryAccessMapFromBuffer
+     Engineer: Arjun Suresh
+        Input: address - The address to map
+               mem_space - Specify if memory region can be accessed only under
+                           certain security/exception levels. By default always
+                           use OCSD_MEM_SPACE_ANY
+               p_mem_buffer - pointer to memory region buffer
+               mem_length - memory region buffer length
+       Output: None
+       return: TyTraceDecodeError
+  Description: Add memory access map to access opcodes from buffer
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+TyTraceDecodeError OpenCSDInterface::AddMemoryAccessMapFromBuffer(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t* p_mem_buffer, const uint32_t mem_length)
+{
+    ocsd_err_t ret = mp_tree->addBufferMemAcc(address, mem_space, p_mem_buffer, mem_length);
     if (ret != OCSD_OK)
     {
         return TRACE_DECODER_MEM_ACC_MAP_ADD_ERR;
@@ -608,6 +636,10 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                 fprintf(m_fp_decode_out, "%u,", m_cycle_cnt);
                 m_update_cycle_cnt = false;
             }
+            else if (elem.has_cc)
+            {
+                fprintf(m_fp_decode_out, "%u,", elem.cycle_count);
+            }
             else
             {
                 fprintf(m_fp_decode_out, "%u,", 0);
@@ -720,6 +752,12 @@ TyTraceDecodeError AddMemoryAccessMapFromBin(const ocsd_file_mem_region_t *regio
 TyTraceDecodeError UpdateMemoryAccessMapFromBin(const ocsd_file_mem_region_t *region, const ocsd_mem_space_acc_t mem_space, const uint32_t num_regions, const char *path)
 {
     return OpenCSDInterface::GetInstance().UpdateMemoryAccessMapFromBin(region, mem_space, num_regions, path);
+}
+
+// Exported Function to add memory access map from buffer file
+TyTraceDecodeError AddMemoryAccessMapFromBuffer(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t* p_mem_buffer, const uint32_t mem_length)
+{
+    return OpenCSDInterface::GetInstance().AddMemoryAccessMapFromBuffer(address, mem_space, p_mem_buffer, mem_length);
 }
 
 // Exported Function to add memory access callback
