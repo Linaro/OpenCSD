@@ -571,7 +571,7 @@ void TrcPktProcPtm::pktWPointUpdate()
             byteIdx = m_currPacketData.size() - 1;
             if(!m_gotAddrBytes)
             {
-                if(byteIdx < 4)
+                if(byteIdx <= 4)
                 {
                     // address bytes  1 - 4;
                     // ISA stays the same
