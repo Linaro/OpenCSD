@@ -154,10 +154,14 @@ private:
     int m_ex_frm_n_bytes;   // number of valid bytes in the current frame (extraction)
     ocsd_trc_index_t m_trc_curr_idx_sof; // trace source index at start of frame.
 
-    // channel output data - can never be more than a frame of data for a single ID.
-    out_chan_data m_out_data[7];  // can only be 8 ID changes in a frame, but last on has no associated data so 7 possible data blocks
+    /* channel output data - can never be more than a frame of data for a single ID.
+     * 8 possible ID changes per frame. Although the final one can have no associated data, a pathological
+     * case exists with 7 ID changes, all data associated with a previous frame, except for last 
+     * ID / data byte which is data. Not possible with normal hardware but guard against corrupt input.
+     */
+    out_chan_data m_out_data[8]; // output data for a given ID
     int m_out_data_idx;          // number of out_chan_data frames used.
-    int m_out_processed;          // number of complete out_chan_data frames output.
+    int m_out_processed;         // number of complete out_chan_data frames output.
     
     /* local copy of input buffer pointers*/
     const uint8_t *m_in_block_base;
