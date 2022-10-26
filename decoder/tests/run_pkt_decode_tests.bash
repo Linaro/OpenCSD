@@ -114,3 +114,12 @@ if [ "$1" != "use-installed" ]; then
     echo "moving result file."
     mv ./c_api_test.log ./${OUT_DIR}/c_api_test.ppl
 fi
+
+# === run the Frame decoder test - program not installed ===
+if [ "$1" != "use-installed" ]; then
+    echo "Running Frame demux test"
+    ${BIN_DIR}frame-demux-test > /dev/null
+    echo "Done : Return $?"
+    echo "moving result file."
+    mv ./frame_demux_test.ppl ./${OUT_DIR}/.
+fi

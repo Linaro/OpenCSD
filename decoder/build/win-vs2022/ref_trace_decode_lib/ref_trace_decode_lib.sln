@@ -27,6 +27,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trc_pkt_lister", "..\..\..\
 		{7F500891-CC76-405F-933F-F682BC39F923} = {7F500891-CC76-405F-933F-F682BC39F923}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "frame_demux_test", "..\..\..\tests\build\win-vs2022\frame_demux_test\frame_demux_test.vcxproj", "{98EE9884-A4EB-4C75-A911-DFEDF992754F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7F500891-CC76-405F-933F-F682BC39F923} = {7F500891-CC76-405F-933F-F682BC39F923}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -139,6 +144,18 @@ Global
 		{18ABC652-AB11-4993-9491-1A7FB7117339}.Release|x64.Build.0 = Release|x64
 		{18ABC652-AB11-4993-9491-1A7FB7117339}.Release-dll|Win32.ActiveCfg = Release|Win32
 		{18ABC652-AB11-4993-9491-1A7FB7117339}.Release-dll|x64.ActiveCfg = Release|x64
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Debug|Win32.Build.0 = Debug|Win32
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Debug|x64.ActiveCfg = Debug|x64
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Debug|x64.Build.0 = Debug|x64
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Debug-dll|Win32.ActiveCfg = Debug|Win32
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Debug-dll|x64.ActiveCfg = Debug|x64
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Release|Win32.ActiveCfg = Release|Win32
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Release|Win32.Build.0 = Release|Win32
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Release|x64.ActiveCfg = Release|x64
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Release|x64.Build.0 = Release|x64
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Release-dll|Win32.ActiveCfg = Release|Win32
+		{98EE9884-A4EB-4C75-A911-DFEDF992754F}.Release-dll|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
