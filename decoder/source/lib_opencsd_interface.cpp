@@ -636,7 +636,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                 fprintf(m_fp_decode_out, "%u,", m_cycle_cnt);
                 m_update_cycle_cnt = false;
             }
-            else if (elem.has_cc)
+            else if (elem.has_cc && i == start_idx)
             {
                 fprintf(m_fp_decode_out, "%u,", elem.cycle_count);
             }
