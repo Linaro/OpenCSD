@@ -120,6 +120,9 @@ protected:
     void pktBranchAddr();
     void pktReserved();
 
+    uint64_t bin_to_gray(uint64_t bin_value, uint32_t size);
+    uint64_t gray_to_bin(uint64_t gray_value, uint32_t size);
+
     // async finder
     typedef enum _async_result {
         ASYNC,      //!< pattern confirmed async 0x00 x 5, 0x80

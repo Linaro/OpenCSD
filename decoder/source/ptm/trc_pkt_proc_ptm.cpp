@@ -790,7 +790,30 @@ void TrcPktProcPtm::pktTimeStamp()
             extractCycleCount(ts_end_idx,cycleCount);
             m_curr_packet.SetCycleCount(cycleCount);
         }
-        m_curr_packet.UpdateTimestamp(tsVal,tsUpdateBits); 
+
+        if (!m_config->TSBinEnc())
+        {
+            // Timestamp is gray coded
+            uint32_t max_size_bits = m_config->TSPkt64() ? 64 : 48;
+            uint64_t gray_val = bin_to_gray(m_curr_packet.getTSVal(), max_size_bits);
+            //if (((tsUpdateBits == 64) && m_config->TSPkt64()) || ((tsUpdateBits == 48) && !m_config->TSPkt64()))
+            if (tsUpdateBits == 64)
+            {
+                gray_val = tsVal;
+            }
+            else
+            {
+                uint64_t mask = (0x1ULL << tsUpdateBits) - 1;
+                gray_val &= ~mask;
+                gray_val |= (tsVal & mask);
+            }
+            tsVal = gray_to_bin(gray_val, max_size_bits);
+            m_curr_packet.UpdateTimestamp(tsVal, tsUpdateBits);
+        }
+        else
+        {
+            m_curr_packet.UpdateTimestamp(tsVal, tsUpdateBits);
+        }
         m_process_state = SEND_PKT;
     }
 }
@@ -1144,6 +1167,35 @@ uint32_t TrcPktProcPtm::extractAddress(const int offset, uint8_t &total_bits)
         total_bits++;
     }
     return addr_val;
+}
+
+uint64_t TrcPktProcPtm::bin_to_gray(uint64_t bin_value, uint32_t size)
+{
+    uint64_t gray_value = 0;
+    gray_value = (1ull << (size-1)) & bin_value;
+    int i = size - 2;
+    for (; i >= 0; i--) {
+        uint64_t gray_arg_1 = ((1ull << (i + 1)) & bin_value) >> (i + 1);
+        uint64_t gray_arg_2 = ((1ull << i) & bin_value) >> i;
+        gray_value |= ((gray_arg_1 ^ gray_arg_2) << i);
+    }
+    return gray_value;
+}
+
+uint64_t TrcPktProcPtm::gray_to_bin(uint64_t gray_value, uint32_t size)
+{
+    uint64_t bin_value = 0;
+    uint64_t bin_bit = 0;
+    for (; bin_bit < size; bin_bit++) {
+        uint8_t bit_tmp = ((1ull << bin_bit) & gray_value) >> bin_bit;
+        uint8_t gray_bit = bin_bit + 1;
+        for (; gray_bit < size; gray_bit++)
+            bit_tmp ^= (((1ull << gray_bit) & gray_value) >> gray_bit);
+
+        bin_value |= ((uint64_t)bit_tmp << bin_bit);
+    }
+
+    return bin_value;
 }
 
 

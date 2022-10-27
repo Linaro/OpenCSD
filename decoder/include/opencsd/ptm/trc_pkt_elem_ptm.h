@@ -84,6 +84,7 @@ public:
     //  get packet info.
     const bool isBadPacket() const;
     const ocsd_ptm_pkt_type getType() const;
+    const uint64_t getTSVal() const;
 
     // isa
     const ocsd_isa getISA() const;
@@ -208,6 +209,11 @@ inline const bool PtmTrcPacket::isBadPacket() const
 inline const ocsd_ptm_pkt_type PtmTrcPacket::getType() const
 {
     return type;
+}
+
+inline const uint64_t PtmTrcPacket::getTSVal() const
+{
+    return timestamp;
 }
 
 inline const ocsd_isa PtmTrcPacket::getISA() const
