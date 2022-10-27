@@ -325,12 +325,18 @@ ocsd_err_t  TraceFmtDcdImpl::DecodeConfigure(uint32_t flags)
     }
     else
     {
+        // alightment is the multiple of bytes the buffer size must be.
         m_cfgFlags = flags;
+
+        // using memory aligned buffers, the formatter always outputs 16 byte frames so enforce
+        // this on the input
         m_alignment = 16;
-        if(flags & OCSD_DFRMTR_HAS_FSYNCS)
-            m_alignment = 4;
-        else if(flags & OCSD_DFRMTR_HAS_HSYNCS)
+        // if we have HSYNCS then always align to 2 byte buffers
+        if(flags & OCSD_DFRMTR_HAS_HSYNCS)
             m_alignment = 2;
+        // otherwise FSYNCS only can have 4 byte aligned buffers.
+        else if(flags & OCSD_DFRMTR_HAS_FSYNCS)
+            m_alignment = 4;
     }
     return err;
 }
@@ -866,19 +872,25 @@ componentAttachPt<ITraceErrorLog> *TraceFormatterFrameDecoder::getErrLogAttachPt
     return (m_pDecoder != 0) ? m_pDecoder->getErrorLogAttachPt() : 0;
 }
 
-/* configuration - set operational mode for incoming stream (has FSYNCS etc) */
-ocsd_err_t TraceFormatterFrameDecoder::Configure(uint32_t cfg_flags)
+ocsd_err_t TraceFormatterFrameDecoder::Init()
 {
-    if(!m_pDecoder) 
-    {  
-        if(m_instNum >= 0)
+    if (!m_pDecoder)
+    {
+        if (m_instNum >= 0)
             m_pDecoder = new (std::nothrow) TraceFmtDcdImpl(m_instNum);
         else
             m_pDecoder = new (std::nothrow) TraceFmtDcdImpl();
-        if(!m_pDecoder) return OCSD_ERR_MEM;
+        if (!m_pDecoder) return OCSD_ERR_MEM;
     }
-    m_pDecoder->DecodeConfigure(cfg_flags);
     return OCSD_OK;
+}
+
+/* configuration - set operational mode for incoming stream (has FSYNCS etc) */
+ocsd_err_t TraceFormatterFrameDecoder::Configure(uint32_t cfg_flags)
+{
+    if (!m_pDecoder)
+        return OCSD_ERR_NOT_INIT;
+    return m_pDecoder->DecodeConfigure(cfg_flags);
 }
 
 const uint32_t TraceFormatterFrameDecoder::getConfigFlags() const
