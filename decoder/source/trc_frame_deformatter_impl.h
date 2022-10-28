@@ -152,6 +152,8 @@ private:
     // incoming frame buffer 
     uint8_t m_ex_frm_data[OCSD_DFRMTR_FRAME_SIZE]; // buffer the current frame in case we have to stop part way through
     int m_ex_frm_n_bytes;   // number of valid bytes in the current frame (extraction)
+    bool m_b_fsync_start_eob;  // flag to indicate that the end of the last buffer was a pair of bytes
+                               // (0xffff) that could only validly be the start and FSYNC.
     ocsd_trc_index_t m_trc_curr_idx_sof; // trace source index at start of frame.
 
     /* channel output data - can never be more than a frame of data for a single ID.
