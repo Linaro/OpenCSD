@@ -422,20 +422,23 @@ void TraceFmtDcdImpl::outputUnsyncedBytes(uint32_t /*num_bytes*/)
     //**TBD:
 }
 
-int TraceFmtDcdImpl::checkForResetFSyncPatterns()
+ocsd_err_t TraceFmtDcdImpl::checkForResetFSyncPatterns(uint32_t &f_sync_bytes)
 {
 	const uint32_t FSYNC_PATTERN = 0x7FFFFFFF;    // LE host pattern for FSYNC	 
 	bool check_for_fsync = true;
 	int num_fsyncs = 0;
-	const uint8_t *dataPtr = m_in_block_base + m_in_block_processed;
+    uint32_t bytes_processed = m_in_block_processed;
+	const uint8_t *dataPtr = m_in_block_base + bytes_processed;
+    ocsd_err_t err = OCSD_OK;
 
-	while (check_for_fsync && (m_in_block_processed < m_in_block_size))
+	while (check_for_fsync && (bytes_processed < m_in_block_size))
 	{
 		// look for consecutive fsyncs as padding or for reset downstream - both cases will reset downstream....
 		if (*((uint32_t *)(dataPtr)) == FSYNC_PATTERN)
 		{
 			dataPtr += sizeof(uint32_t);
-			num_fsyncs++;		
+            num_fsyncs++;
+            bytes_processed += sizeof(uint32_t);
 		}
 		else
 			check_for_fsync = false;
@@ -455,10 +458,11 @@ int TraceFmtDcdImpl::checkForResetFSyncPatterns()
         }
 		else
 		{
-			// TBD: throw processing error, none frame size block of fsyncs
+            err = OCSD_ERR_DFMTR_BAD_FHSYNC;
 		}
 	}
-    return num_fsyncs * 4;
+    f_sync_bytes += num_fsyncs * 4;
+    return err;
 }
 
 
@@ -467,7 +471,7 @@ bool TraceFmtDcdImpl::extractFrame()
 	const uint32_t FSYNC_PATTERN = 0x7FFFFFFF;    // LE host pattern for FSYNC	 
 	const uint16_t HSYNC_PATTERN = 0x7FFF;        // LE host pattern for HSYNC
 	
-	
+    ocsd_err_t err;
 	bool cont_process = true;   // continue processing after extraction.
     uint32_t f_sync_bytes = 0; // skipped f sync bytes
     uint32_t h_sync_bytes = 0; // skipped h sync bytes
@@ -477,10 +481,11 @@ bool TraceFmtDcdImpl::extractFrame()
     if( m_cfgFlags & OCSD_DFRMTR_FRAME_MEM_ALIGN)
     {
 		// some linux drivers (e.g. for perf) will insert FSYNCS to pad or differentiate
-        // between blocks of aligned data, always in frame aligned complete 16 byte frames.       
+        // between blocks of aligned data, always in frame aligned complete 16 byte frames.
+        // we need to skip past these frames, resetting as we go.
         if (m_cfgFlags & OCSD_DFRMTR_RESET_ON_4X_FSYNC)
         {
-            f_sync_bytes = checkForResetFSyncPatterns();
+             err = checkForResetFSyncPatterns(f_sync_bytes);
 
             /* in this case the FSYNC pattern is output on both packed and unpacked cases */
             if (f_sync_bytes && (m_b_output_packed_raw || m_b_output_unpacked_raw))
@@ -492,6 +497,11 @@ bool TraceFmtDcdImpl::extractFrame()
                     m_in_block_base + m_in_block_processed,
                     0);
             }
+
+            // throw processing error, none frame size block of fsyncs
+            if (err)
+                throw ocsdError(OCSD_ERR_SEV_ERROR, err, m_trc_curr_idx, "Incorrect FSYNC frame reset pattern");
+
         }
 
         if((m_in_block_processed+f_sync_bytes) == m_in_block_size)

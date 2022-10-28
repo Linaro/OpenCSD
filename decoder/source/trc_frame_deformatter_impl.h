@@ -115,7 +115,7 @@ private:
     void setRawChanFilterAll(bool bEnable);
     const bool rawChanEnabled(const uint8_t id) const;
 
-	int checkForResetFSyncPatterns();
+	ocsd_err_t checkForResetFSyncPatterns(uint32_t &f_sync_bytes);
 
     friend class TraceFormatterFrameDecoder;
 
