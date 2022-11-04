@@ -7,82 +7,20 @@
 ******************************************************************************/
 #include "lib_opencsd_interface.h"
 
-// Class responsible for formatting the decoding trace data
-// This class is derived from ITrcGenElemIn defined in opencsd
-class TraceLogger : public ITrcGenElemIn
+/****************************************************************************
+     Function: CreateOpenCSDInterface
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: CreateOpenCSDInterface* - Pointer to interface class
+  Description: Constuctor to create interface class object
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+OpenCSDInterface* CreateOpenCSDInterface()
 {
-protected:
-private:
-    FILE *m_fp_decode_out;
-    const std::string m_log_file_path;
-    std::string m_curr_logfile_name;
-    uint32_t m_file_cnt;
-    uint32_t m_rows_in_file;
-    uint32_t m_cycle_cnt;
-    uint64_t m_last_timestamp;
-    const bool m_split_files;
-    const uint32_t m_max_rows_in_file;
-    bool m_update_cycle_cnt;
-    bool m_out_ex_level;
-public:
-    // Constructor
-    TraceLogger(const std::string log_file_path, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
-    // Destructor
-    ~TraceLogger();
-    // Overriden function to implement custom formatting
-    // This callback is called by the OpenCSD library after decoding a chunk of data
-    ocsd_datapath_resp_t TraceElemIn(const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const OcsdTraceElement &elem);
-    // Open log file for logging decoded trace output
-    void OpenLogFile();
-    // Close trace decoded ouput log file
-    void CloseLogFile();
-};
-
-// Singleton Class that provides the trace decoding functionality
-// This class will use the OpenCSD decoder library
-class OpenCSDInterface
-{
-protected:
-private:
-    DecodeTree *mp_tree;
-    TraceLogger *mp_logger;
-    // Private Constructor
-    OpenCSDInterface();
-    // Private Copy Constructor
-    OpenCSDInterface(OpenCSDInterface &) :mp_tree(NULL) {}
-public:
-    // Get Instance function to be used to return the static object
-    static OpenCSDInterface &GetInstance();
-    // Function to initialize the deocder tree
-    TyTraceDecodeError InitDecodeTree(const ocsd_dcd_tree_src_t src_type = OCSD_TRC_SRC_FRAME_FORMATTED,
-        const uint32_t formatter_cfg_flags = OCSD_DFRMTR_FRAME_MEM_ALIGN);
-    // Function to initialize the trace output logger
-    TyTraceDecodeError InitLogger(const char *log_file_path, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
-    // Function to create ETMv4 Decoder
-    TyTraceDecodeError CreateETMv4Decoder(const ocsd_etmv4_cfg config);
-    // Function to create ETMv3 Decoder
-    TyTraceDecodeError CreateETMv3Decoder(const ocsd_etmv3_cfg config);
-    // Function to create STM Decoder
-    TyTraceDecodeError CreateSTMDecoder(const ocsd_stm_cfg config);
-    // Function to create PTM Decoder
-    TyTraceDecodeError CreatePTMDecoder(const ocsd_ptm_cfg config);
-    // Function to create memory access mapper
-    TyTraceDecodeError CreateMemAccMapper();
-    // Function to add memory access map from bin file
-    TyTraceDecodeError AddMemoryAccessMapFromBin(const ocsd_file_mem_region_t *region, const ocsd_mem_space_acc_t mem_space, const uint32_t num_regions, const char *path);
-    // Function to update memory access map from bin file
-    TyTraceDecodeError UpdateMemoryAccessMapFromBin(const ocsd_file_mem_region_t *region, const ocsd_mem_space_acc_t mem_space, const uint32_t num_regions, const char *path);
-    // Function to add memory access map from buffer file
-    TyTraceDecodeError AddMemoryAccessMapFromBuffer(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t* p_mem_buffer, const uint32_t mem_length);
-    // Function to add memory access callback
-    TyTraceDecodeError AddMemoryAccessCallback(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context);
-    // Function to decode the trace file
-    TyTraceDecodeError DecodeTrace(const std::string &trace_in_file);
-    // Function to destroy the decoder tree
-    void DestroyDecodeTree();
-    // Destructor
-    ~OpenCSDInterface();
-};
+    return new OpenCSDInterface;
+}
 
 /****************************************************************************
      Function: OpenCSDInterface
@@ -98,22 +36,6 @@ OpenCSDInterface::OpenCSDInterface()
     : mp_tree(NULL),
     mp_logger(NULL)
 {
-}
-
-/****************************************************************************
-     Function: OpenCSDInterface
-     Engineer: Arjun Suresh
-        Input: None
-       Output: None
-       return: None
-  Description: Function to return the static reference to the class object
-  Date         Initials    Description
-30-Aug-2022    AS          Initial
-****************************************************************************/
-OpenCSDInterface &OpenCSDInterface::GetInstance()
-{
-    static OpenCSDInterface s_opencsd_trace_decoder_obj;
-    return s_opencsd_trace_decoder_obj;
 }
 
 /****************************************************************************
@@ -698,82 +620,4 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         OpenLogFile();
     }
     return resp;
-}
-
-// Exported Function to initialize the trace output logger
-TyTraceDecodeError InitDecodeTree(const ocsd_dcd_tree_src_t src_type, const uint32_t formatter_cfg_flags)
-{
-    return OpenCSDInterface::GetInstance().InitDecodeTree(src_type, formatter_cfg_flags);
-}
-
-// Exported Function to initialize the trace output logger
-TyTraceDecodeError InitLogger(const char *log_file_path, const bool split_files, const uint32_t max_rows_in_file)
-{
-    return OpenCSDInterface::GetInstance().InitLogger(log_file_path, split_files, max_rows_in_file);
-}
-
-// Exported Function to create ETMv4 Decoder
-TyTraceDecodeError CreateETMv4Decoder(const ocsd_etmv4_cfg config)
-{
-    return OpenCSDInterface::GetInstance().CreateETMv4Decoder(config);
-}
-
-// Exported Function to create ETMv3 Decoder
-TyTraceDecodeError CreateETMv3Decoder(const ocsd_etmv3_cfg config)
-{
-    return OpenCSDInterface::GetInstance().CreateETMv3Decoder(config);
-}
-
-// Exported Function to create STM Decoder
-TyTraceDecodeError CreateSTMDecoder(const ocsd_stm_cfg config)
-{
-    return OpenCSDInterface::GetInstance().CreateSTMDecoder(config);
-}
-
-// Exported Function to create PTM Decoder
-TyTraceDecodeError CreatePTMDecoder(const ocsd_ptm_cfg config)
-{
-    return OpenCSDInterface::GetInstance().CreatePTMDecoder(config);
-}
-
-// Exported Function to create Mem Access Mapper
-TyTraceDecodeError CreateMemAccMapper()
-{
-    return OpenCSDInterface::GetInstance().CreateMemAccMapper();
-}
-
-// Exported Function to add memory access map from bin file
-TyTraceDecodeError AddMemoryAccessMapFromBin(const ocsd_file_mem_region_t *region, const ocsd_mem_space_acc_t mem_space, const uint32_t num_regions, const char *path)
-{
-    return OpenCSDInterface::GetInstance().AddMemoryAccessMapFromBin(region, mem_space, num_regions, path);
-}
-
-// Exported Function to update memory access map from bin file
-TyTraceDecodeError UpdateMemoryAccessMapFromBin(const ocsd_file_mem_region_t *region, const ocsd_mem_space_acc_t mem_space, const uint32_t num_regions, const char *path)
-{
-    return OpenCSDInterface::GetInstance().UpdateMemoryAccessMapFromBin(region, mem_space, num_regions, path);
-}
-
-// Exported Function to add memory access map from buffer file
-TyTraceDecodeError AddMemoryAccessMapFromBuffer(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t* p_mem_buffer, const uint32_t mem_length)
-{
-    return OpenCSDInterface::GetInstance().AddMemoryAccessMapFromBuffer(address, mem_space, p_mem_buffer, mem_length);
-}
-
-// Exported Function to add memory access callback
-TyTraceDecodeError AddMemoryAccessCallback(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void *p_context)
-{
-    return OpenCSDInterface::GetInstance().AddMemoryAccessCallback(st_address, en_address, mem_space, p_cb_func, p_context);
-}
-
-// Exported Function to decode the trace file
-TyTraceDecodeError DecodeOpenCSDTrace(const std::string trace_in_file)
-{
-    return OpenCSDInterface::GetInstance().DecodeTrace(trace_in_file);
-}
-
-// Exported Function to destroy the trace decoder tree
-void DestroyDecodeTree()
-{
-    return OpenCSDInterface::GetInstance().DestroyDecodeTree();
 }
