@@ -73,6 +73,9 @@ public:
 
     componentAttachPt<ITraceErrorLog> *getErrLogAttachPt();
 
+    /* init decoder implementation object */
+    ocsd_err_t Init();
+
     /* configuration - set operational mode for incoming stream (has FSYNCS etc) */
     ocsd_err_t Configure(uint32_t cfg_flags);
     const uint32_t getConfigFlags() const;

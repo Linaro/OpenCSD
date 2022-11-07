@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.3.2_
+_Current Version 1.3.3_
 
 ### Current support:
 
@@ -275,6 +275,17 @@ Version and Modification Information
 
 - _Version 1.3.2_:
     - __Bugfix__: ETM4x / ETE - 64 bit timestamp value - MS bit incorrectly masked to 1b0 during extraction from packet.
+
+- _Version 1.3.3_:
+    - __Update__: Add build directory for VS2022 build.
+    - __Update__: Add test program for Coresight Frame Demux code
+    - __Bugfix__: PTM: Fix incorrect extraction of Waypoint Address packet (github issue #48)
+    - __Bugfix__: Frame Demux: Fix HSYNC, FSYNC and 4xFSYNC handling that was causing out-of-bounds reads
+                  on invalid data input. (issues #49, #50 and #51). Fixed error handling for incorrect 
+                  number of FSYNC packets in 4xFSYNC frame reset code that was not triggering an error
+                  and allowing fun with mis-aligned input data.
+    - __Bugfix__: Fix silent failure if incorrect config flags set when setting up frame demux modes.
+
 
 Licence Information
 ===================

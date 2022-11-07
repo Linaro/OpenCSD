@@ -903,8 +903,8 @@ void print_statistics(dcd_tree_handle_t dcdtree_handle)
     err = ocsd_dt_get_decode_stats(dcdtree_handle, test_trc_id_override, &p_stats);
     if (!err && p_stats)
     {
-        sprintf(packet_str, "Total Bytes %ld; Unsynced Bytes: %ld\nBad Header Errors: %d; Bad sequence errors: %d\n", p_stats->channel_total,
-            p_stats->channel_unsynced, p_stats->bad_header_errs, p_stats->bad_sequence_errs);
+        sprintf(packet_str, "Total Bytes %ld; Unsynced Bytes: %ld\nBad Header Errors: %d; Bad sequence errors: %d\n", (long)p_stats->channel_total,
+            (long)p_stats->channel_unsynced, p_stats->bad_header_errs, p_stats->bad_sequence_errs);
         ocsd_dt_reset_decode_stats(dcdtree_handle, test_trc_id_override);
     }
     else
