@@ -136,7 +136,7 @@ $(LIB_TARGET_DIR)/$(LIB_NAME).so.$(SO_MAJOR_VER): $(LIBS) | $(LIB_TARGET_DIR)
 	( cd $(LIB_TARGET_DIR);  ln -sf $(LIB_NAME).so.$(SO_VER) $(LIB_NAME).so.$(SO_MAJOR_VER) )
 
 $(LIB_TARGET_DIR)/$(LIB_NAME).so: $(LIB_TARGET_DIR)/$(LIB_NAME).so.$(SO_MAJOR_VER) | $(LIB_TARGET_DIR)
-	( cd $(LIB_TARGET_DIR);  ln -sf $(LIB_NAME).so.$(SO_MAJOR_VER) $(LIB_NAME).so )
+	( cp $(LIB_TARGET_DIR)/$(LIB_NAME).so.$(SO_VER) $(LIB_TARGET_DIR)/$(LIB_NAME).so)
 
 
 ##### build rules
