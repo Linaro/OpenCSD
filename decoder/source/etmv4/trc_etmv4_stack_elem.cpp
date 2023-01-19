@@ -172,6 +172,10 @@ void EtmV4P0Stack::erase_curr_from_front()
     erase_iter = m_iter;
     erase_iter--;
     m_P0_stack.erase(erase_iter);
+
+    // explicitly delete the item here as the caller can no longer reference it.
+    // fixes memory leak from github issue #52
+    delete *erase_iter;
 }
 
 
