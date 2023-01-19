@@ -27,11 +27,11 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.3.3_
+_Current Version 1.4.0_
 
 ### Current support:
 
-- ETE   (v1.2) instruction trace - packet processing and packet decode.
+- ETE   (v1.3) instruction trace - packet processing and packet decode.
 - ETMv4 (v4.6 [A/R profile] v4.4 [M profile]) instruction trace - packet processing and packet decode.
 - PTM   (v1.1) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) instruction trace - packet processing and packet decode.
@@ -285,6 +285,11 @@ Version and Modification Information
                   number of FSYNC packets in 4xFSYNC frame reset code that was not triggering an error
                   and allowing fun with mis-aligned input data.
     - __Bugfix__: Fix silent failure if incorrect config flags set when setting up frame demux modes.
+
+- _Version 1.4.0_:
+    - __Update__: ETE: Add support for Arch v9.4 FEAT_ITE. ETE v1p3, sw trace instrumentation.
+                  Adds in new generic output packet type: OCSD_GEN_TRC_ELEM_INSTRUMENTATION.
+    - __Bugfix__: Fix memory leak in mispredict handling (github issue #52 from yabinc)
 
 
 Licence Information
