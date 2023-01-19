@@ -46,6 +46,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-dll|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
