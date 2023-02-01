@@ -1250,6 +1250,23 @@ void TrcPktProcEtmV4I::iAtom(const uint8_t lastByte)
     m_process_state = SEND_PKT;
 }
 
+void TrcPktProcEtmV4I::iPktITE(const uint8_t /* lastByte */)
+{
+    uint64_t value;
+    int shift = 0;
+
+    /* packet is always 10 bytes, Header, EL info byte, 8 bytes payload */
+    if (m_currPacketData.size() == 10) {
+        value = 0;
+        for (int i = 2; i < 10; i++) {
+            value |= ((uint64_t)m_currPacketData[i]) << shift;
+            shift += 8;
+        }
+        m_curr_packet.setITE(m_currPacketData[1], value);
+        m_process_state = SEND_PKT;
+    }
+}
+
 // header byte processing is table driven.
 void TrcPktProcEtmV4I::BuildIPacketTable()   
 {
@@ -1306,7 +1323,8 @@ void TrcPktProcEtmV4I::BuildIPacketTable()
     else
         m_i_table[0x07].pptkFn = &TrcPktProcEtmV4I::iPktNoPayload;
 
-    // b00001010, b00001011 ETE TRANS packets 
+    // b00001010, b00001011 ETE TRANS packets
+    // b00001001 - ETE sw instrumentation packet
     if (m_config.MajVersion() >= 0x5)
     {
         m_i_table[0x0A].pkt_type = ETE_PKT_I_TRANS_ST;
@@ -1314,6 +1332,13 @@ void TrcPktProcEtmV4I::BuildIPacketTable()
 
         m_i_table[0x0B].pkt_type = ETE_PKT_I_TRANS_COMMIT;
         m_i_table[0x0B].pptkFn = &TrcPktProcEtmV4I::iPktNoPayload;
+
+        // FEAT_ITE - sw instrumentation packet
+        if (m_config.MinVersion() >= 0x3)
+        {
+            m_i_table[0x09].pkt_type = ETE_PKT_I_ITE;
+            m_i_table[0x09].pptkFn = &TrcPktProcEtmV4I::iPktITE;
+        }
     }
 
     // b0000 110x - cycle count f2

@@ -2,7 +2,7 @@
  * \file       trc_pkt_types_etmv4.h
  * \brief      OpenCSD : ETMv4 / ETE packet info
  * 
- * \copyright  Copyright (c) 2015,2019 ARM Limited. All Rights Reserved.
+ * \copyright  Copyright (c) 2015,2019,2022 ARM Limited. All Rights Reserved.
  */
 
 
@@ -73,7 +73,7 @@ typedef enum _ocsd_etmv4_i_pkt_type
         ETM4_PKT_I_EXCEPT_RTN =         0x07,   /*!< b00000111 (ETE invalid) */
 
         /* unused encoding              0x08         b00001000 */
-        ETE_PKT_I_COMMIT_WIN_MV =       0x09,   /*!  b00001001 (ETE only - unused in current versions) */
+        ETE_PKT_I_ITE =                 0x09,   /*!  b00001001 (ETE only) */
         ETE_PKT_I_TRANS_ST =            0x0A,   /*!  b00001010 (ETE only) */
         ETE_PKT_I_TRANS_COMMIT =        0x0B,   /*!  b00001011 (ETE only) */
 
@@ -273,6 +273,11 @@ typedef struct _ocsd_etmv4_i_pkt
             uint32_t q_type:4;
         };
     } Q_pkt;
+
+    struct {
+        uint8_t el;
+        uint64_t value;
+    } ite_pkt;
 
     //! valid bits for packet elements (addresses have their own valid bits).
     union {
