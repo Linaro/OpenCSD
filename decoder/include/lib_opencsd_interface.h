@@ -112,12 +112,15 @@ public:
     // Function to add memory access callback
     virtual TyTraceDecodeError AddMemoryAccessCallback(const ocsd_vaddr_t st_address, const ocsd_vaddr_t en_address, const ocsd_mem_space_acc_t mem_space, Fn_MemAcc_CB p_cb_func, const void* p_context);
     // Function to decode the trace file
-    virtual TyTraceDecodeError DecodeTrace(const std::string& trace_in_file);
+    virtual TyTraceDecodeError DecodeTrace(const char* trace_in_file);
     // Function to destroy the decoder tree
     virtual void DestroyDecodeTree();
     // Destructor
     virtual ~OpenCSDInterface();
 };
 
-typedef OpenCSDInterface*(*fpGetOpenCSDInterface)();
-extern "C" OPENCSDINTERFACE_API OpenCSDInterface* CreateOpenCSDInterface();
+// Function pointer to CreateOpenCSDInterface
+typedef OpenCSDInterface* (*fpGetOpenCSDInterface)();
+
+// Exported API to create and return OpenCSD Class object
+extern "C" OPENCSDINTERFACE_API OpenCSDInterface * CreateOpenCSDInterface();

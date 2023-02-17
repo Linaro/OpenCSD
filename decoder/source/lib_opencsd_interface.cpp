@@ -313,8 +313,12 @@ TyTraceDecodeError OpenCSDInterface::AddMemoryAccessCallback(const ocsd_vaddr_t 
   Date         Initials    Description
 30-Aug-2022    AS          Initial
 ****************************************************************************/
-TyTraceDecodeError OpenCSDInterface::DecodeTrace(const std::string &trace_in_file)
+TyTraceDecodeError OpenCSDInterface::DecodeTrace(const char* trace_in_file)
 {
+    if (trace_in_file == NULL)
+    {
+        TRACE_DECODER_CANNOT_OPEN_FILE;
+    }
     // need to push the data through the decode tree.
     std::ifstream in;
     in.open(trace_in_file, std::ifstream::in | std::ifstream::binary);
