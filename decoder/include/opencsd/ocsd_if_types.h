@@ -189,6 +189,7 @@ typedef enum _ocsd_datapath_op_t {
   */
 typedef enum _ocsd_datapath_resp_t {
     OCSD_RESP_CONT,                /**< Continue processing */
+    OCSD_RESP_REACHED_STOP_IDX,    /**< Stop decoding at this index */
     OCSD_RESP_WARN_CONT,           /**< Continue processing  : a component logged a warning. */
     OCSD_RESP_ERR_CONT,            /**< Continue processing  : a component logged an error.*/
     OCSD_RESP_WAIT,                /**< Pause processing */

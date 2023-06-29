@@ -51,7 +51,7 @@ static void log_cmd_line_opts(int argc, char* argv[]);
 
     // default path
 #ifdef WIN32
-static std::string ss_path = ".\\";
+static std::string ss_path = "..\\..\\..\\snapshots\\juno_r1_1";
 #else
 static std::string ss_path = "./";
 #endif
@@ -63,18 +63,18 @@ static std::vector<uint8_t> id_list;    // output specific IDs in source
 static ocsdMsgLogger logger;
 static int logOpts = ocsdMsgLogger::OUT_STDOUT | ocsdMsgLogger::OUT_FILE;
 static std::string logfileName = "trc_pkt_lister.ppl";
-static bool outRawPacked = false;
-static bool outRawUnpacked = false;
-static bool ss_verbose = false;
-static bool decode = false;
+static bool outRawPacked = true;
+static bool outRawUnpacked = true;
+static bool ss_verbose = true;
+static bool decode = true;
 static bool no_undecoded_packets = false;
-static bool pkt_mon = false;
+static bool pkt_mon = true;
 static int test_waits = 0;
 static bool dstream_format = false;
 static bool tpiu_format = false;
 static bool has_hsync = false;
 static bool src_addr_n = false;
-static bool stats = false;
+static bool stats = true;
 
 int main(int argc, char* argv[])
 {

@@ -5,7 +5,39 @@
   Date           Initials    Description
   30-Aug-2022    AS          Initial
 ******************************************************************************/
+#include <limits.h>
 #include "lib_opencsd_interface.h"
+#include "opencsd/c_api/ocsd_c_api_types.h"
+
+// Class for attaching packet monitor callback
+template<class TrcPkt>
+class PktMonCBObj : public IPktRawDataMon<TrcPkt>
+{
+public:
+    PktMonCBObj(FnDefPktDataMon pCBFunc, const void* p_context)
+    {
+        m_c_api_cb_fn = pCBFunc;
+        m_p_context = p_context;
+    };
+
+    virtual ~PktMonCBObj() {};
+
+    virtual void RawPacketDataMon(const ocsd_datapath_op_t op,
+        const ocsd_trc_index_t index_sop,
+        const TrcPkt* p_packet_in,
+        const uint32_t size,
+        const uint8_t* p_data)
+    {
+        const void* c_pkt_struct = 0;
+        if (op == OCSD_OP_DATA)
+            c_pkt_struct = p_packet_in->c_pkt(); // always output the c struct packet
+        m_c_api_cb_fn(m_p_context, op, index_sop, c_pkt_struct, size, p_data);
+    };
+
+private:
+    FnDefPktDataMon m_c_api_cb_fn;
+    const void* m_p_context;
+};
 
 /****************************************************************************
      Function: CreateOpenCSDInterface
@@ -52,12 +84,19 @@ OpenCSDInterface::OpenCSDInterface()
 ****************************************************************************/
 TyTraceDecodeError OpenCSDInterface::InitLogger(const char *log_file_path, const bool split_files, const uint32_t max_rows_in_file)
 {
+    if (mp_logger)
+    {
+        mp_logger->CloseLogFile();
+        delete mp_logger;
+        mp_logger = NULL;
+    }
     mp_logger = new TraceLogger(log_file_path, split_files, max_rows_in_file);
     if (!mp_logger)
     {
         return TRACE_DECODER_INIT_ERR;
     }
     mp_tree->setGenTraceElemOutI(mp_logger);
+    mp_logger->OpenLogFile();
     return TRACE_DECODER_OK;
 }
 
@@ -86,17 +125,18 @@ TyTraceDecodeError OpenCSDInterface::InitDecodeTree(const ocsd_dcd_tree_src_t sr
      Function: CreateETMv4Decoder
      Engineer: Arjun Suresh
         Input: config - ETMv4 Decoder configuration settings
+               create_flags - Config flags
        Output: None
        return: TyTraceDecodeError
   Description: Create the ETMv4 Decoder and attach it to decode tree
   Date         Initials    Description
 30-Aug-2022    AS          Initial
 ****************************************************************************/
-TyTraceDecodeError OpenCSDInterface::CreateETMv4Decoder(const ocsd_etmv4_cfg config)
+TyTraceDecodeError OpenCSDInterface::CreateETMv4Decoder(const ocsd_etmv4_cfg config, int32_t create_flags)
 {
     ocsd_err_t ret = OCSD_OK;
     EtmV4Config config_obj(&config);
-    ret = mp_tree->createDecoder(OCSD_BUILTIN_DCD_ETMV4I, OCSD_CREATE_FLG_FULL_DECODER, &config_obj);
+    ret = mp_tree->createDecoder(OCSD_BUILTIN_DCD_ETMV4I, create_flags, &config_obj);
     if (ret != OCSD_OK)
     {
         return TRACE_DECODER_CFG_ERR;
@@ -108,17 +148,18 @@ TyTraceDecodeError OpenCSDInterface::CreateETMv4Decoder(const ocsd_etmv4_cfg con
      Function: CreateETMv3Decoder
      Engineer: Arjun Suresh
         Input: config - ETMv3 Decoder configuration settings
+               create_flags - Config flags
        Output: None
        return: TyTraceDecodeError
   Description: Create the ETMv3 Decoder and attach it to decode tree
   Date         Initials    Description
 30-Aug-2022    AS          Initial
 ****************************************************************************/
-TyTraceDecodeError OpenCSDInterface::CreateETMv3Decoder(const ocsd_etmv3_cfg config)
+TyTraceDecodeError OpenCSDInterface::CreateETMv3Decoder(const ocsd_etmv3_cfg config, int32_t create_flags)
 {
     ocsd_err_t ret = OCSD_OK;
     EtmV3Config config_obj(&config);
-    ret = mp_tree->createDecoder(OCSD_BUILTIN_DCD_ETMV3, OCSD_CREATE_FLG_FULL_DECODER, &config_obj);
+    ret = mp_tree->createDecoder(OCSD_BUILTIN_DCD_ETMV3, create_flags, &config_obj);
     if (ret != OCSD_OK)
     {
         return TRACE_DECODER_CFG_ERR;
@@ -130,17 +171,18 @@ TyTraceDecodeError OpenCSDInterface::CreateETMv3Decoder(const ocsd_etmv3_cfg con
      Function: CreateSTMDecoder
      Engineer: Arjun Suresh
         Input: config - STM Decoder configuration settings
+               create_flags - Config flags
        Output: None
        return: TyTraceDecodeError
   Description: Create the STM Decoder and attach it to decode tree
   Date         Initials    Description
 30-Aug-2022    AS          Initial
 ****************************************************************************/
-TyTraceDecodeError OpenCSDInterface::CreateSTMDecoder(const ocsd_stm_cfg config)
+TyTraceDecodeError OpenCSDInterface::CreateSTMDecoder(const ocsd_stm_cfg config, int32_t create_flags)
 {
     ocsd_err_t ret = OCSD_OK;
     STMConfig config_obj(&config);
-    ret = mp_tree->createDecoder(OCSD_BUILTIN_DCD_STM, OCSD_CREATE_FLG_FULL_DECODER, &config_obj);
+    ret = mp_tree->createDecoder(OCSD_BUILTIN_DCD_STM, create_flags, &config_obj);
     if (ret != OCSD_OK)
     {
         return TRACE_DECODER_CFG_ERR;
@@ -152,17 +194,18 @@ TyTraceDecodeError OpenCSDInterface::CreateSTMDecoder(const ocsd_stm_cfg config)
      Function: CreatePTMDecoder
      Engineer: Arjun Suresh
         Input: config - PTM Decoder configuration settings
+               create_flags - Config flags
        Output: None
        return: TyTraceDecodeError
   Description: Create the PTM Decoder and attach it to decode tree
   Date         Initials    Description
 30-Aug-2022    AS          Initial
 ****************************************************************************/
-TyTraceDecodeError OpenCSDInterface::CreatePTMDecoder(const ocsd_ptm_cfg config)
+TyTraceDecodeError OpenCSDInterface::CreatePTMDecoder(const ocsd_ptm_cfg config, int32_t create_flags)
 {
     ocsd_err_t ret = OCSD_OK;
     PtmConfig config_obj(&config);
-    ret = mp_tree->createDecoder(OCSD_BUILTIN_DCD_PTM, OCSD_CREATE_FLG_FULL_DECODER, &config_obj);
+    ret = mp_tree->createDecoder(OCSD_BUILTIN_DCD_PTM, create_flags, &config_obj);
     if (ret != OCSD_OK)
     {
         return TRACE_DECODER_CFG_ERR;
@@ -304,6 +347,204 @@ TyTraceDecodeError OpenCSDInterface::AddMemoryAccessCallback(const ocsd_vaddr_t 
 }
 
 /****************************************************************************
+     Function: SetPacketMonitorSink
+     Engineer: Arjun Suresh
+        Input: CSID - Source ID
+               pDataInSink - Data sink pointer
+               config_flags - Decoder config flags
+       Output: None
+       return: TyTraceDecodeError
+  Description: Set the Packet Monitor Sink
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+TyTraceDecodeError OpenCSDInterface::SetPacketMonitorSink(const uint8_t CSID, ITrcTypedBase* pDataInSink, uint32_t config_flags)
+{
+    ocsd_err_t err = OCSD_OK;
+    DecodeTreeElement* p_elem = mp_tree->getDecoderElement(CSID);
+    if (p_elem == NULL)
+    {
+        return TRACE_DECODER_INVALID_HANDLE;
+    }
+
+    p_elem->getDecoderMngr()->attachPktMonitor(p_elem->getDecoderHandle(), pDataInSink);
+
+    TraceFormatterFrameDecoder* p_deformatter = mp_tree->getFrameDeformatter();
+    if (p_deformatter != NULL)
+    {
+        uint32_t deformmater_config_flags = p_deformatter->getConfigFlags();
+        deformmater_config_flags != config_flags;
+
+        p_deformatter->Configure(deformmater_config_flags);
+
+        RawFramePrinter* p_frame_printer = NULL;
+        err = mp_tree->addRawFramePrinter(&p_frame_printer, deformmater_config_flags);
+        if (err != OCSD_OK)
+        {
+            return TRACE_DECODER_ERR;
+        }
+    }
+    return TRACE_DECODER_OK;
+}
+
+/****************************************************************************
+     Function: SetPacketMonitorCallback
+     Engineer: Arjun Suresh
+        Input: CSID - Source ID
+               p_fn_callback_data - Callback function
+               p_context - Context
+       Output: None
+       return: TyTraceDecodeError
+  Description: Set the Packet Monitor Callback
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+TyTraceDecodeError OpenCSDInterface::SetPacketMonitorCallback(const uint8_t CSID, void* p_fn_callback_data, const void* p_context)
+{
+    ocsd_err_t err = OCSD_OK;
+    DecodeTreeElement* p_elem = mp_tree->getDecoderElement(CSID);
+    if (p_elem == NULL)
+    {
+        return TRACE_DECODER_INVALID_HANDLE;
+    }
+
+    // Pointer to a sink callback object
+    ITrcTypedBase* pDataInSink = NULL;
+    FnDefPktDataMon pPktInFn = (FnDefPktDataMon)p_fn_callback_data;
+    ocsd_trace_protocol_t protocol = p_elem->getProtocol();
+    switch (protocol)
+    {
+    case OCSD_PROTOCOL_ETMV4I:
+        pDataInSink = new (std::nothrow) PktMonCBObj<EtmV4ITrcPacket>(pPktInFn, p_context);
+        break;
+
+    case OCSD_PROTOCOL_ETMV3:
+        pDataInSink = new (std::nothrow) PktMonCBObj<EtmV3TrcPacket>(pPktInFn, p_context);
+        break;
+
+    case OCSD_PROTOCOL_PTM:
+        pDataInSink = new (std::nothrow) PktMonCBObj<PtmTrcPacket>(pPktInFn, p_context);
+        break;
+
+    case OCSD_PROTOCOL_STM:
+        pDataInSink = new (std::nothrow) PktMonCBObj<StmTrcPacket>(pPktInFn, p_context);
+        break;
+    }
+
+    p_elem->getDecoderMngr()->attachPktMonitor(p_elem->getDecoderHandle(), pDataInSink);
+
+    TraceFormatterFrameDecoder* p_deformatter = mp_tree->getFrameDeformatter();
+    if (p_deformatter != NULL)
+    {
+        uint32_t configFlags = p_deformatter->getConfigFlags();
+
+        configFlags |= OCSD_DFRMTR_PACKED_RAW_OUT;
+        configFlags |= OCSD_DFRMTR_UNPACKED_RAW_OUT;
+
+        p_deformatter->Configure(configFlags);
+
+        RawFramePrinter* p_frame_printer = NULL;
+        err = mp_tree->addRawFramePrinter(&p_frame_printer, configFlags);
+        if (err != OCSD_OK)
+        {
+            return TRACE_DECODER_ERR;
+        }
+    }
+    return TRACE_DECODER_OK;
+}
+
+
+/****************************************************************************
+     Function: SetEOT
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: TyTraceDecodeError
+  Description: Marks end of trace
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+TyTraceDecodeError OpenCSDInterface::SetEOT()
+{
+    ocsd_datapath_resp_t err = mp_tree->TraceDataIn(OCSD_OP_EOT, 0, 0, 0, 0);
+    if (mp_logger)
+        mp_logger->CloseLogFile();
+    return (OCSD_DATA_RESP_IS_FATAL(err)) ? TRACE_DECODER_DATA_PATH_FATAL_ERR : TRACE_DECODER_OK;
+}
+
+/****************************************************************************
+     Function: ResetDecoder
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: TyTraceDecodeError
+  Description: Resets decoder state
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+TyTraceDecodeError OpenCSDInterface::ResetDecoder()
+{
+    ocsd_datapath_resp_t err = mp_tree->TraceDataIn(OCSD_OP_RESET, 0, 0, 0, 0);
+    if (mp_logger)
+        mp_logger->CloseLogFile();
+    return (OCSD_DATA_RESP_IS_FATAL(err)) ? TRACE_DECODER_DATA_PATH_FATAL_ERR : TRACE_DECODER_OK;
+}
+
+/****************************************************************************
+     Function: DecodeTraceBuffer
+     Engineer: Arjun Suresh
+        Input: trace_buffer - buffer containing raw trace data
+               size - size of trace data buffer
+       Output: None
+       return: TyTraceDecodeError
+  Description: Function to decode trace data from buffer
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+TyTraceDecodeError OpenCSDInterface::DecodeTraceBuffer(uint8_t* trace_buffer, uint64_t size, uint64_t block_idx)
+{
+    if(trace_buffer == NULL)
+    {
+        TRACE_DECODER_CANNOT_OPEN_FILE;
+    }
+    ocsd_datapath_resp_t dataPathResp = OCSD_RESP_CONT;
+    uint64_t nBuffRead = size;                           // get count of data loaded.
+    uint32_t nBuffProcessed = 0;                        // amount processed in this buffer.
+    uint32_t nUsedThisTime = 0;
+    uint64_t trace_index = 0;
+
+    // process the current buffer load until buffer done, or fatal error occurs
+    while ((nBuffProcessed < nBuffRead) && !OCSD_DATA_RESP_IS_FATAL(dataPathResp))
+    {
+        if (OCSD_DATA_RESP_IS_CONT(dataPathResp))
+        {
+            dataPathResp = mp_tree->TraceDataIn(
+                OCSD_OP_DATA,
+                block_idx + trace_index,
+                (uint32_t)(nBuffRead - nBuffProcessed),
+                &(trace_buffer[0]) + nBuffProcessed,
+                &nUsedThisTime);
+
+            nBuffProcessed += nUsedThisTime;
+            trace_index += nUsedThisTime;
+            if (dataPathResp == OCSD_RESP_REACHED_STOP_IDX)
+            {
+                mp_tree->TraceDataIn(OCSD_OP_FLUSH, 0, 0, 0, 0);
+                return TRACE_DECODER_READ_STOP_IDX_OK;
+            }
+        }
+    }
+
+    // fatal error - no futher processing
+    if (OCSD_DATA_RESP_IS_FATAL(dataPathResp))
+    {
+        return TRACE_DECODER_DATA_PATH_FATAL_ERR;
+    }
+
+    return TRACE_DECODER_OK;
+}
+
+/****************************************************************************
      Function: DecodeTrace
      Engineer: Arjun Suresh
         Input: trace_in_file - Trace File captured from target
@@ -324,7 +565,6 @@ TyTraceDecodeError OpenCSDInterface::DecodeTrace(const char* trace_in_file)
     in.open(trace_in_file, std::ifstream::in | std::ifstream::binary);
     if (in.is_open())
     {
-        mp_logger->OpenLogFile();
         ocsd_datapath_resp_t dataPathResp = OCSD_RESP_CONT;
         static const int bufferSize = 1024;
         uint8_t trace_buffer[bufferSize];   // temporary buffer to load blocks of data from the file
@@ -361,7 +601,8 @@ TyTraceDecodeError OpenCSDInterface::DecodeTrace(const char* trace_in_file)
         if (OCSD_DATA_RESP_IS_FATAL(dataPathResp))
         {
             in.close();
-            mp_logger->CloseLogFile();
+            if (mp_logger)
+                mp_logger->CloseLogFile();
             return TRACE_DECODER_DATA_PATH_FATAL_ERR;
         }
         else
@@ -372,7 +613,8 @@ TyTraceDecodeError OpenCSDInterface::DecodeTrace(const char* trace_in_file)
 
         // close the input file.
         in.close();
-        mp_logger->CloseLogFile();
+        if (mp_logger)
+            mp_logger->CloseLogFile();
     }
     else
     {
@@ -381,6 +623,143 @@ TyTraceDecodeError OpenCSDInterface::DecodeTrace(const char* trace_in_file)
 
     return TRACE_DECODER_OK;
 }
+
+/****************************************************************************
+     Function: GetFirstValidIdx
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: None
+  Description: Returns first valid index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+uint64_t OpenCSDInterface::GetFirstValidIdx()
+{
+    return mp_logger->GetFirstValidIdx();
+}
+
+/****************************************************************************
+     Function: SetTraceStopIdx
+     Engineer: Arjun Suresh
+        Input: uint64_t - trace stop index
+       Output: None
+       return: None
+  Description: Sets the trace stop index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void OpenCSDInterface::SetTraceStopIdx(uint64_t index)
+{
+    return mp_logger->SetTraceStopIdx(index);
+}
+
+/****************************************************************************
+     Function: ResetFirstValidIdxFlag
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: None
+  Description: Resets first valid index found flag
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void OpenCSDInterface::ResetFirstValidIdxFlag()
+{
+    mp_logger->ResetFirstValidIdxFlag();
+}
+
+/****************************************************************************
+     Function: CloseLogFile
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: None
+  Description: Closes the current log file
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void OpenCSDInterface::CloseLogFile()
+{
+    ocsd_datapath_resp_t err = mp_tree->TraceDataIn(OCSD_OP_FLUSH, 0, 0, NULL, NULL);
+    if (mp_logger)
+        mp_logger->CloseLogFile();
+}
+
+/****************************************************************************
+     Function: ResetFirstValidIdx
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: None
+  Description: Resets first valid index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void OpenCSDInterface::ResetFirstValidIdx()
+{
+    mp_logger->ResetFirstValidIdx();
+}
+/****************************************************************************
+     Function: FirstValidIndexFound
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: bool - first valid index found flag
+  Description: Check if first valid index found
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+bool OpenCSDInterface::FirstValidIndexFound()
+{
+    return mp_logger->FirstValidIndexFound();
+}
+
+/****************************************************************************
+     Function: SetTraceStartIdx
+     Engineer: Arjun Suresh
+        Input: idx - trace start index
+       Output: None
+       return: None
+  Description: Sets trace start index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void OpenCSDInterface::SetTraceStartIdx(uint64_t index)
+{
+    mp_logger->SetTraceStartIdx(index);
+}
+
+/****************************************************************************
+     Function: GetLastValidIdx
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: uint64_t
+  Description: Returns last valid index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+uint64_t OpenCSDInterface::GetLastValidIdx()
+{
+    return mp_logger->GetLastValidIdx();
+}
+
+/****************************************************************************
+     Function: GetLastPEContextIdx
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: uint64_t
+  Description: Returns last sync index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+uint64_t OpenCSDInterface::GetLastPEContextIdx()
+{
+    return mp_logger->GetLastPEContextIdx();
+}
+
 /****************************************************************************
      Function: DestroyDecodeTree
      Engineer: Arjun Suresh
@@ -404,6 +783,7 @@ void OpenCSDInterface::DestroyDecodeTree()
         mp_logger = NULL;
     }
 }
+
 /****************************************************************************
      Function: ~OpenCSDInterface
      Engineer: Arjun Suresh
@@ -440,8 +820,139 @@ TraceLogger::TraceLogger(const std::string log_file_path, const bool split_files
     m_out_ex_level(true),
     m_cycle_cnt(0),
     m_last_timestamp(0),
-    m_update_cycle_cnt(false)
+    m_update_cycle_cnt(false),
+    m_first_valid_idx_found(false),
+    m_first_valid_trace_idx(0),
+    m_last_valid_trace_idx(ULLONG_MAX),
+    m_trace_stop_idx(ULLONG_MAX),
+    m_trace_start_idx(0),
+    m_trace_stop_at_idx_flag(false),
+    m_trace_start_from_idx_flag(false),
+    m_last_pe_context_idx(0)
 {
+
+}
+
+
+/****************************************************************************
+     Function: FirstValidIndexFound
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: bool - first valid index found flag
+  Description: Check if first valid index found
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+bool TraceLogger::FirstValidIndexFound()
+{
+    return m_first_valid_idx_found;
+}
+
+/****************************************************************************
+     Function: ResetFirstValidIdx
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: None
+  Description: Resets first valid index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void TraceLogger::ResetFirstValidIdx()
+{
+    m_first_valid_trace_idx = 0;
+    m_first_valid_idx_found = false;
+}
+
+/****************************************************************************
+     Function: SetTraceStopIdx
+     Engineer: Arjun Suresh
+        Input: uint64_t - trace stop index
+       Output: None
+       return: None
+  Description: Sets the trace stop index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void TraceLogger::SetTraceStopIdx(uint64_t index)
+{
+    m_trace_stop_idx = index;
+}
+
+/****************************************************************************
+     Function: ResetFirstValidIdxFlag
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: None
+  Description: Resets first valid index found flag
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void TraceLogger::ResetFirstValidIdxFlag()
+{
+    m_first_valid_idx_found = false;
+}
+
+/****************************************************************************
+     Function: GetLastValidIdx
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: uint64_t
+  Description: Returns last valid index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+uint64_t TraceLogger::GetLastValidIdx()
+{
+    return m_last_valid_trace_idx;
+}
+
+/****************************************************************************
+     Function: SetTraceStartIdx
+     Engineer: Arjun Suresh
+        Input: idx - trace start index
+       Output: None
+       return: None
+  Description: Sets trace start index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void TraceLogger::SetTraceStartIdx(uint64_t idx)
+{
+    m_trace_start_idx = idx;
+}
+
+/****************************************************************************
+     Function: GetFirstValidIdx
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: None
+  Description: Returns first valid index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+uint64_t TraceLogger::GetFirstValidIdx()
+{
+    return m_first_valid_trace_idx;
+}
+
+/****************************************************************************
+     Function: GetLastPEContextIdx
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: uint64_t
+  Description: Returns last sync index
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+uint64_t TraceLogger::GetLastPEContextIdx()
+{
+    return m_last_pe_context_idx;
 }
 
 /****************************************************************************
@@ -517,6 +1028,26 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     const OcsdTraceElement &elem)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    if(elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
+        m_last_valid_trace_idx = index_sop;
+    if (elem.elem_type == OCSD_GEN_TRC_ELEM_PE_CONTEXT)
+    {
+        m_last_pe_context_idx = index_sop;
+    }
+    if (m_first_valid_idx_found == false && elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
+    {
+        m_first_valid_trace_idx = index_sop;
+        m_first_valid_idx_found = true;
+    }
+    if (index_sop < m_trace_start_idx)
+    {
+        return OCSD_RESP_CONT;
+    }
+    if (index_sop > m_trace_stop_idx)
+    {
+        return OCSD_RESP_REACHED_STOP_IDX;
+    }
+
 
     switch (elem.elem_type)
     {
@@ -531,7 +1062,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     break;
     case OCSD_GEN_TRC_ELEM_ADDR_NACC:
     {
-        fprintf(m_fp_decode_out, "%u,%u,%u,", index_sop, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
+        fprintf(m_fp_decode_out, "%u,%u,%u,", 0, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
         if (m_update_cycle_cnt)
         {
             fprintf(m_fp_decode_out, "%u,", m_cycle_cnt);
@@ -556,10 +1087,10 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         uint32_t step = elem.traced_ins.ptr_addresses ? 1 : elem.last_instr_sz;
         for (uint64_t i = start_idx; i < end_idx; i+=step)
         {
-            fprintf(m_fp_decode_out, "%u,%u,%u,", index_sop, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
+            fprintf(m_fp_decode_out, "%u,%u,%u,", 0, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
             if (m_update_cycle_cnt)
             {
-                fprintf(m_fp_decode_out, "%u,", m_cycle_cnt);
+                fprintf(m_fp_decode_out, "%u,", 0);
                 m_update_cycle_cnt = false;
             }
             else if (elem.has_cc && i == start_idx)
@@ -570,7 +1101,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             {
                 fprintf(m_fp_decode_out, "%u,", 0);
             }
-            fprintf(m_fp_decode_out, "%llu,%x,%x,%u,%u,", m_last_timestamp, elem.st_addr, elem.en_addr, elem.num_instr_range, elem.last_instr_sz);
+            fprintf(m_fp_decode_out, "%llu,%x,%x,%u,%u,", 0, elem.st_addr, elem.en_addr, elem.num_instr_range, elem.last_instr_sz);
             if ((elem.context.exception_level > ocsd_EL_unknown) && (elem.context.el_valid) && m_out_ex_level)
             {
                 fprintf(m_fp_decode_out, "%s%d", "EL", (int) (elem.context.exception_level));
@@ -602,6 +1133,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     {
         if (elem.has_cc)
         {
+            fprintf(m_fp_decode_out, "CC = %u\n", elem.cycle_count);
             m_cycle_cnt = elem.cycle_count;
             m_update_cycle_cnt = true;
         }

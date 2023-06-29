@@ -78,13 +78,13 @@ static const char *usr_snapshot_path = 0;
 /* trace data and memory file dump names and values - taken from snapshot metadata */
 const char *trace_data_filename = "cstrace.bin";
 const char *stmtrace_data_filename = "cstraceitm.bin";
-const char *memory_dump_filename = "kernel_dump.bin";
+const char *memory_dump_filename = "stratix10-a53-sum.elf";
 ocsd_vaddr_t mem_dump_address=0xFFFFFFC000081000;
 const ocsd_vaddr_t mem_dump_address_tc2=0xC0008000;
 
 /* test variables - set by command line to feature test API */
 static int using_mem_acc_cb = 0;    /* test the memory access callback function */
-static int use_region_file = 0;     /* test multi region memory files */
+static int use_region_file = 1;     /* test multi region memory files */
 static int using_mem_acc_cb_id = 0; /* test the mem acc callback with trace ID parameter */
 
 /* buffer to handle a packet string */
@@ -99,7 +99,7 @@ typedef enum _test_op {
 } test_op_t;
 
 // Default test operations
-static test_op_t op = TEST_PKT_PRINT;   // default operation is to packet print
+static test_op_t op = TEST_PKT_DECODE;   // default operation is to packet print
 static ocsd_trace_protocol_t test_protocol = OCSD_PROTOCOL_ETMV4I; // ETMV4 protocl
 static uint8_t test_trc_id_override = 0x00; // no trace ID override.
 
@@ -109,8 +109,8 @@ static ocsd_extern_dcd_fact_t *p_ext_fact; /* external decoder factory */
 #define EXT_DCD_NAME "ext_echo"
 
 /* raw packet printing test */
-static int frame_raw_unpacked = 0;
-static int frame_raw_packed = 0;
+static int frame_raw_unpacked = 1;
+static int frame_raw_packed = 1;
 static int test_printstr = 0;
 
 /* test the library printer API */
@@ -399,17 +399,29 @@ static ocsd_err_t create_test_memory_acc(dcd_tree_handle_t handle)
             fclose(dump_file);
 
             /* populate the region list - split existing file into four regions */
-            for(i = 0; i < 4; i++)
-            {
-                if(i != 0)
-                    i0adjust = 0;
-                region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4) + i0adjust;
-                region_list[i].region_size = (mem_file_size/4) - i0adjust;
-                region_list[i].file_offset = (i * mem_file_size/4) +  i0adjust;
-            }
+            //for(i = 0; i < 4; i++)
+            //{
+            //    if(i != 0)
+            //        i0adjust = 0;
+            //    region_list[i].start_address = mem_dump_address + (i *  mem_file_size/4) + i0adjust;
+            //    region_list[i].region_size = (mem_file_size/4) - i0adjust;
+            //    region_list[i].file_offset = (i * mem_file_size/4) +  i0adjust;
+            //}
+            // Agilex
+            region_list[0].start_address = 0xFFE00300;
+            region_list[0].file_offset = 0x300;
+            region_list[0].region_size = 1800;
+            
+            region_list[1].start_address = 0xFFE00A08;
+            region_list[1].file_offset = 0xA08;
+            region_list[1].region_size = 52;
 
-            /* create a memory file accessor - full binary file */
-            ret = ocsd_dt_add_binfile_region_mem_acc(handle,&region_list[0],4,OCSD_MEM_SPACE_ANY,mem_file_path);
+            // Arria
+           // region_list[0].start_address = 0x00000000FFE00400;
+           // region_list[0].file_offset = 0x400;
+           // region_list[0].region_size = 0x78;
+
+            ret = ocsd_dt_add_binfile_region_mem_acc(handle,&region_list[0],2,OCSD_MEM_SPACE_ANY,mem_file_path);
         }
         else 
             ret  = OCSD_ERR_MEM_ACC_FILE_NOT_FOUND;
@@ -434,7 +446,16 @@ ocsd_datapath_resp_t packet_handler(void *context, const ocsd_datapath_op_t op, 
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     int offset = 0;
+    ocsd_etmv4_i_pkt* pkt_class = (ocsd_etmv4_i_pkt*)p_packet_in;
+    //FILE* fp = fopen(".//unformatted_packet_handler.bin", "ab");
+    //fwrite(p_packet_in, sizeof(uint8_t), size, fp);
+    //fclose(fp);
 
+   // ocsd_ptm_pkt* pkt_class = (ocsd_ptm_pkt*)p_packet_in;
+   // if (pkt_class->type == PTM_PKT_A_SYNC)
+   // {
+   //     printf("\n%d Soap:", index_sop);
+   // }
     switch(op)
     {
     case OCSD_OP_DATA:
@@ -516,6 +537,16 @@ void packet_monitor(    void *context,
 {
     int offset = 0;
 
+    FILE* fp = fopen("..\\..\\..\\snapshots\\rtc\\trc_encodedFile_session_id_0_ETFN.bin", "ab");
+    fwrite(p_data, sizeof(uint8_t), size, fp);
+    fclose(fp);
+    
+   // ocsd_ptm_pkt* pkt_class = (ocsd_ptm_pkt*)p_packet_in;
+   // if (pkt_class->type == PTM_PKT_A_SYNC)
+   // {
+   //     printf("\n%d Soap:", index_sop);
+   // }
+    
     switch(op)
     {
     default: break;
@@ -621,6 +652,7 @@ static ocsd_err_t create_generic_decoder(dcd_tree_handle_t handle, const char *p
                     ret = ocsd_dt_set_pkt_protocol_printer(handle, CSID, 1);
                 else
                     ret = ocsd_dt_attach_packet_callback(handle,CSID,OCSD_C_API_CB_PKT_MON,packet_monitor,p_context);
+                
             }
 
             /* attach a memory accessor */
@@ -709,10 +741,10 @@ static ocsd_err_t create_decoder_ptm(dcd_tree_handle_t dcd_tree_h)
 
     trace_config_ptm.arch_ver = ARCH_V7;
     trace_config_ptm.core_prof = profile_CortexA;
-    trace_config_ptm.reg_ccer  = 0x34C01AC2;
-    trace_config_ptm.reg_ctrl  = 0x10001000;
-    trace_config_ptm.reg_idr  = 0x411CF312;
-    trace_config_ptm.reg_trc_id  = 0x013;
+    trace_config_ptm.reg_ccer = 0x000008ea;
+    trace_config_ptm.reg_ctrl = 0x20001000;
+    trace_config_ptm.reg_idr = 0x411cf301;
+    trace_config_ptm.reg_trc_id = 0x010;
     if(test_trc_id_override != 0)
     {
         trace_config_ptm.reg_trc_id = (uint32_t)test_trc_id_override;
@@ -780,7 +812,7 @@ static ocsd_err_t attach_raw_printers(dcd_tree_handle_t dcd_tree_h)
         flags |= OCSD_DFRMTR_PACKED_RAW_OUT;
     if (flags)
     {
-        err = ocsd_dt_set_raw_frame_printer(dcd_tree_h, flags);
+        //err = ocsd_dt_set_raw_frame_printer(dcd_tree_h, flags);
     }
     return err;
 }
@@ -860,7 +892,7 @@ static ocsd_err_t create_decoder(dcd_tree_handle_t dcd_tree_h)
     return err;
 }
 
-#define INPUT_BLOCK_SIZE 1024
+#define INPUT_BLOCK_SIZE 16
 
 /* process buffer until done or error */
 ocsd_err_t process_data_block(dcd_tree_handle_t dcd_tree_h, int block_index, uint8_t *p_block, const int block_size)
@@ -926,8 +958,9 @@ int process_trace_data(FILE *pf)
     /*  Create a decode tree for this source data.
         source data is frame formatted, memory aligned from an ETR (no frame syncs) so create tree accordingly 
     */
-    dcdtree_handle = ocsd_create_dcd_tree(OCSD_TRC_SRC_FRAME_FORMATTED, OCSD_DFRMTR_FRAME_MEM_ALIGN);
-
+    //dcdtree_handle = ocsd_create_dcd_tree(OCSD_TRC_SRC_SINGLE, (~OCSD_DFRMTR_FRAME_MEM_ALIGN) & (OCSD_DFRMTR_HAS_FSYNCS | OCSD_DFRMTR_UNPACKED_RAW_OUT | OCSD_DFRMTR_PACKED_RAW_OUT));
+   // dcdtree_handle = ocsd_create_dcd_tree(OCSD_TRC_SRC_SINGLE, ( OCSD_DFRMTR_UNPACKED_RAW_OUT | OCSD_DFRMTR_PACKED_RAW_OUT));
+    dcdtree_handle = ocsd_create_dcd_tree(OCSD_TRC_SRC_FRAME_FORMATTED, OCSD_DFRMTR_FRAME_MEM_ALIGN |OCSD_DFRMTR_PACKED_RAW_OUT | OCSD_DFRMTR_UNPACKED_RAW_OUT);
     if(dcdtree_handle != C_API_INVALID_TREE_HANDLE)
     {
 
@@ -1009,7 +1042,7 @@ int test_err_api()
     /*  Create a decode tree for this source data.
         source data is frame formatted, memory aligned from an ETR (no frame syncs) so create tree accordingly
     */
-    dcdtree_handle = ocsd_create_dcd_tree(OCSD_TRC_SRC_SINGLE, OCSD_DFRMTR_FRAME_MEM_ALIGN);
+    dcdtree_handle = ocsd_create_dcd_tree(OCSD_TRC_SRC_FRAME_FORMATTED, OCSD_DFRMTR_FRAME_MEM_ALIGN);
 
     if (dcdtree_handle != C_API_INVALID_TREE_HANDLE)
     {
