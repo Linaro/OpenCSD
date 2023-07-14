@@ -821,6 +821,7 @@ TraceLogger::TraceLogger(const std::string log_file_path, const bool split_files
     m_cycle_cnt(0),
     m_last_timestamp(0),
     m_update_cycle_cnt(false),
+    m_update_timestamp(false),
     m_first_valid_idx_found(false),
     m_first_valid_trace_idx(0),
     m_last_valid_trace_idx(ULLONG_MAX),
@@ -1045,9 +1046,18 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     }
     if (index_sop > m_trace_stop_idx)
     {
+        if (m_update_timestamp == true)
+        {
+            m_update_timestamp = false;
+            fprintf(m_fp_decode_out, "%s%llu\n", "TS:", m_last_timestamp);
+        }
         return OCSD_RESP_REACHED_STOP_IDX;
     }
-
+    if (elem.elem_type != OCSD_GEN_TRC_ELEM_TIMESTAMP && m_update_timestamp == true)
+    {
+        m_update_timestamp = false;
+        fprintf(m_fp_decode_out, "%s%llu\n", "TS:", m_last_timestamp);
+    }
 
     switch (elem.elem_type)
     {
@@ -1142,7 +1152,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     case OCSD_GEN_TRC_ELEM_TIMESTAMP:
     {
         m_last_timestamp = elem.timestamp;
-        fprintf(m_fp_decode_out, "%s%llu\n", "TS:", m_last_timestamp);
+        m_update_timestamp = true;
         m_rows_in_file++;
     }
     break;

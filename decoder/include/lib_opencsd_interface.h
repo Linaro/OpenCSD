@@ -73,6 +73,7 @@ private:
     bool m_trace_start_from_idx_flag;
     uint64_t m_trace_start_idx;
     uint64_t m_trace_stop_idx;
+    bool m_update_timestamp;
 public:
     // Constructor
     TraceLogger(const std::string log_file_path, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
