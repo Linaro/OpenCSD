@@ -373,7 +373,7 @@ TyTraceDecodeError OpenCSDInterface::SetPacketMonitorSink(const uint8_t CSID, IT
     if (p_deformatter != NULL)
     {
         uint32_t deformmater_config_flags = p_deformatter->getConfigFlags();
-        deformmater_config_flags != config_flags;
+        deformmater_config_flags |= config_flags;
 
         p_deformatter->Configure(deformmater_config_flags);
 
