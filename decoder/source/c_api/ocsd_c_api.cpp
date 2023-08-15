@@ -256,8 +256,16 @@ OCSD_C_API ocsd_err_t ocsd_dt_set_gen_elem_outfn(const dcd_tree_handle_t handle,
 {
 
     GenTraceElemCBObj * pCBObj = new (std::nothrow)GenTraceElemCBObj(pFn, p_context);
+    ITrcGenElemIn* pCurrIF;
+
     if(pCBObj)
     {
+        /* delete any previous element we might have set */
+        pCurrIF = ((DecodeTree*)handle)->getGenTraceElemOutI();
+        if (pCurrIF)
+            delete static_cast<GenTraceElemCBObj*>(pCurrIF);
+
+        /* set the new one */
         ((DecodeTree *)handle)->setGenTraceElemOutI(pCBObj);
         return OCSD_OK;
     }

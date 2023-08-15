@@ -174,6 +174,8 @@ void DecodeTree::setGenTraceElemOutI(ITrcGenElemIn *i_gen_trace_elem)
         pElem->getDecoderMngr()->attachOutputSink(pElem->getDecoderHandle(),i_gen_trace_elem);
         pElem = getNextElement(elemID);
     }
+    /* set local copy of interface to return in getGenTraceElemOutI */
+    m_i_gen_elem_out = i_gen_trace_elem;
 }
 
 ocsd_err_t DecodeTree::createMemAccMapper(memacc_mapper_t type /* = MEMACC_MAP_GLOBAL*/ )
