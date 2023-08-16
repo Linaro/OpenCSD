@@ -181,13 +181,18 @@ TrcStackElem *EtmV4P0Stack::from_front_next()
 void EtmV4P0Stack::erase_curr_from_front()
 {
     std::deque<TrcStackElem *>::iterator erase_iter;
+    
     erase_iter = m_iter;
     erase_iter--;
-    m_P0_stack.erase(erase_iter);
+    TrcStackElem* pElem = *erase_iter;
+
+    // prevent overrun if we are erasing the last element
+    // - end() returned if no elements after the erased one.
+    m_iter = m_P0_stack.erase(erase_iter);
 
     // explicitly delete the item here as the caller can no longer reference it.
     // fixes memory leak from github issue #52
-    delete *erase_iter;
+    delete pElem;
 }
 
 
