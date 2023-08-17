@@ -49,46 +49,14 @@ public:
     // funtionality to test wait / flush mechanism
     void ackWait() { m_needWaitAck = false; };
     const bool needAckWait() const { return m_needWaitAck; };
+    void set_collect_stats() { m_collect_stats = true; };
+    void printStats();
 
 protected:
     bool m_needWaitAck;
+    bool m_collect_stats;  // collect stats on packets processed
+    int m_packet_counts[(int)OCSD_GEN_TRC_ELEM_CUSTOM + 1];
 };
-
-
-inline TrcGenericElementPrinter::TrcGenericElementPrinter() :
-    m_needWaitAck(false)
-{
-}
-
-inline ocsd_datapath_resp_t TrcGenericElementPrinter::TraceElemIn(const ocsd_trc_index_t index_sop,
-                                              const uint8_t trc_chan_id,
-                                              const OcsdTraceElement &elem)
-{
-    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
-    std::string elemStr;
-    std::ostringstream oss;
-    oss << "Idx:" << index_sop << "; ID:"<< std::hex << (uint32_t)trc_chan_id << "; ";
-    elem.toString(elemStr);
-    oss << elemStr << std::endl;
-    itemPrintLine(oss.str());
-
-    // funtionality to test wait / flush mechanism
-    if(m_needWaitAck)
-    {
-        oss.str("");
-        oss << "WARNING: Generic Element Printer; New element without previous _WAIT acknowledged\n";
-        itemPrintLine(oss.str());
-        m_needWaitAck = false;
-    }
-    
-    if(getTestWaits())
-    {
-        resp = OCSD_RESP_WAIT; // return _WAIT for the 1st N packets.
-        decTestWaits();
-        m_needWaitAck = true;
-    }
-    return resp; 
-}
 
 #endif // ARM_GEN_ELEM_PRINTER_H_INCLUDED
 

@@ -52,14 +52,21 @@ public:
     const int getTestWaits() const;
     void decTestWaits();
 
+    // mute printers when profiling
+    void setMute(bool mute);
+    const bool is_muted() const;
+
+
 protected:
     ocsdMsgLogger *m_pMsgLogger;    
     int m_test_waits;
+    bool m_mute;
 };
 
 inline ItemPrinter::ItemPrinter() :
    m_pMsgLogger(0),
-   m_test_waits(0)
+   m_test_waits(0),
+   m_mute(false)
 {
 }
 
@@ -87,6 +94,16 @@ inline const int ItemPrinter::getTestWaits() const
 inline void ItemPrinter::decTestWaits()
 {
     m_test_waits--;
+}
+
+inline void ItemPrinter::setMute(bool mute)
+{
+    m_mute = mute;
+}
+
+inline const bool ItemPrinter::is_muted() const
+{
+    return m_mute;
 }
 
 #endif // ARM_ITEM_PRINTER_H_INCLUDED

@@ -440,6 +440,7 @@
     <ClCompile Include="..\..\..\source\ocsd_lib_dcd_register.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_msg_logger.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_version.cpp" />
+    <ClCompile Include="..\..\..\source\pkt_printers\gen_elem_printer.cpp" />
     <ClCompile Include="..\..\..\source\pkt_printers\raw_frame_printer.cpp" />
     <ClCompile Include="..\..\..\source\pkt_printers\trc_print_fact.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp" />

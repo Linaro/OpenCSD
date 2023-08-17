@@ -97,6 +97,9 @@ template<class P> ocsd_datapath_resp_t PacketPrinter<P>::PacketDataIn( const ocs
 {
     std::string pktstr;
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+
+    if (is_muted())
+        return resp;
     
     // wait / flush test verification
     if(!m_bRawPrint && (m_last_resp == OCSD_RESP_WAIT))
@@ -152,6 +155,9 @@ template<class P> void PacketPrinter<P>::RawPacketDataMon( const ocsd_datapath_o
                                    const uint32_t size,
                                    const uint8_t *p_data)
 {
+    if (is_muted())
+        return;
+
     switch(op)
     {
     case OCSD_OP_DATA:

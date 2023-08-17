@@ -75,6 +75,7 @@ static bool tpiu_format = false;
 static bool has_hsync = false;
 static bool src_addr_n = false;
 static bool stats = false;
+static bool profile = false;
 
 int main(int argc, char* argv[])
 {
@@ -197,6 +198,7 @@ void print_help()
     oss << "-test_waits <N>     Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder\n";
     oss << "-src_addr_n         ETE protocol: Split source address ranges on N atoms\n";
     oss << "-stats              Output packet processing statistics (if available).\n";
+    oss << "-profile            Mute logging output while profiling library performance\n";
     oss << "\nOutput:\n";
     oss << "   Setting any of these options cancels the default output to file & stdout,\n   using _only_ the options supplied.\n\n";
     oss << "-logstdout          Output to stdout -> console.\n";
@@ -432,6 +434,10 @@ bool process_cmd_line_opts(int argc, char* argv[])
                 has_hsync = true;
                 tpiu_format = true;
             }
+            else if (strcmp(argv[optIdx], "-profile") == 0)
+            {
+                profile = true;
+            }
             else
             {
                 std::ostringstream errstr;
@@ -505,6 +511,8 @@ void AttachPacketPrinters( DecodeTree *dcd_tree)
             else
                 oss << "Trace Packet Lister : Failed to Protocol printer " << pElement->getDecoderTypeName() << " on Trace ID 0x" << std::hex << (uint32_t)elemID << "\n";
             logger.LogMsg(oss.str());
+            if (profile)
+                pPrinter->setMute(true);
 
         }
         pElement = dcd_tree->getNextElement(elemID);
@@ -613,6 +621,8 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
         AttachPacketPrinters(dcd_tree);
 
         ConfigureFrameDeMux(dcd_tree, &framePrinter);
+        if (profile && framePrinter)
+            framePrinter->setMute(true);
 
         // if decoding set the generic element printer to the output interface on the tree.
         if(decode)
@@ -623,6 +633,11 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
             oss << "Trace Packet Lister : Set trace element decode printer\n";
             logger.LogMsg(oss.str());
             genElemPrinter->setTestWaits(test_waits);
+            if (profile) 
+            {
+                genElemPrinter->setMute(true);
+                genElemPrinter->set_collect_stats();
+            }
         }
 
         if(decode)
@@ -741,6 +756,8 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
                 logger.LogMsg(oss.str());
                 if (stats)
                     PrintDecodeStats(dcd_tree);
+                if (profile)
+                    genElemPrinter->printStats();
             }
             else
             {

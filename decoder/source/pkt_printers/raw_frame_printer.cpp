@@ -47,6 +47,9 @@ ocsd_err_t RawFramePrinter::TraceRawFrameIn(  const ocsd_datapath_op_t op,
                                                 const uint8_t traceID)
 {
 
+    if (is_muted())
+        return OCSD_OK;
+
     if(op == OCSD_OP_DATA) // only interested in actual frame data.
     {
         std::string strData;

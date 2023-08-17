@@ -511,5 +511,8 @@
     <ClCompile Include="..\..\..\source\ete\trc_cmp_cfg_ete.cpp">
       <Filter>Source Files\ete</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\pkt_printers\gen_elem_printer.cpp">
+      <Filter>Source Files\pkt_printers</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
