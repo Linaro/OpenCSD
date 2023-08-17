@@ -79,3 +79,4 @@ decoder/docs/html/*
 *.iobj
 *.ipdb
 decoder/tests/results*
+*.recipe
