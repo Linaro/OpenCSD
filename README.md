@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.4.0_
+_Current Version 1.4.1_
 
 ### Current support:
 
@@ -290,6 +290,11 @@ Version and Modification Information
     - __Update__: ETE: Add support for Arch v9.4 FEAT_ITE. ETE v1p3, sw trace instrumentation.
                   Adds in new generic output packet type: OCSD_GEN_TRC_ELEM_INSTRUMENTATION.
     - __Bugfix__: Fix memory leak in mispredict handling (github issue #52 from yabinc)
+
+_Version 1.4.1_:
+    - __Update__: Test: Update test program trc_pkt_lister with option to have no logging output - final stats only.
+    - __Bugfix__: ETM4x: ETE: Fix memory leak / use after free (github issues #53, #58 from yabinc)
+    - __Bugfix__: C-API: Fix memory leak with output sink object. (github issue #55)
 
 
 Licence Information
