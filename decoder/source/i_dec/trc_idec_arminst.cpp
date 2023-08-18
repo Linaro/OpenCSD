@@ -324,6 +324,14 @@ int inst_A64_is_indirect_branch_link(uint32_t inst, uint8_t *is_link, struct dec
         } else if ((inst & 0xfffffbff) == 0xd65f0bff) {
             /* RETAA, RETAB */
             info->instr_sub_type = OCSD_S_INSTR_V8_RET;
+
+        } else if ((inst & 0xffc0001f) == 0x5500001f) {
+            /* RETA<k>SPPC label*/
+             info->instr_sub_type = OCSD_S_INSTR_V8_RET;
+        } else if (((inst & 0xfffffbe0) == 0xd65f0be0) && 
+                   ((inst & 0x1f) != 0x1f)) {
+            /* RETA<k>SPPC <register>*/
+             info->instr_sub_type = OCSD_S_INSTR_V8_RET;
         } else {
             is_indirect_branch = 0;
         }
