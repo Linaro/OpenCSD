@@ -681,7 +681,8 @@ void OpenCSDInterface::ResetFirstValidIdxFlag()
 ****************************************************************************/
 void OpenCSDInterface::CloseLogFile()
 {
-    ocsd_datapath_resp_t err = mp_tree->TraceDataIn(OCSD_OP_FLUSH, 0, 0, NULL, NULL);
+    // If FLUSH is called after data path error then decoder will crash
+    //ocsd_datapath_resp_t err = mp_tree->TraceDataIn(OCSD_OP_FLUSH, 0, 0, NULL, NULL);
     if (mp_logger)
         mp_logger->CloseLogFile();
 }
