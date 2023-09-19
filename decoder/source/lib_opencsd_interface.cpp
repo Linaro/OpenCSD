@@ -1093,10 +1093,10 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         // Check if we have stored the entire instruction sequence in elem.traced_ins.ptr_addresses array
         // If so, step through the array, else step through each address from start address in steps of last
         // instruction size
-        uint32_t start_idx = elem.traced_ins.ptr_addresses ? 0 : elem.st_addr;
-        uint32_t end_idx = elem.traced_ins.ptr_addresses ? elem.num_instr_range : elem.en_addr;
-        uint32_t step = elem.traced_ins.ptr_addresses ? 1 : elem.last_instr_sz;
-        for (uint64_t i = start_idx; i < end_idx; i+=step)
+        ocsd_vaddr_t start_idx = elem.traced_ins.ptr_addresses ? 0 : elem.st_addr;
+        ocsd_vaddr_t end_idx = elem.traced_ins.ptr_addresses ? elem.num_instr_range : elem.en_addr;
+        ocsd_vaddr_t step = elem.traced_ins.ptr_addresses ? 1 : elem.last_instr_sz;
+        for (ocsd_vaddr_t i = start_idx; i < end_idx; i+=step)
         {
             fprintf(m_fp_decode_out, "%u,%u,%u,", 0, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
             if (m_update_cycle_cnt)
