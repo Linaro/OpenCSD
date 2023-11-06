@@ -196,9 +196,17 @@ ocsd_err_t DecodeTree::createMemAccMapper(memacc_mapper_t type /* = MEMACC_MAP_G
     // set the access interface
     if(m_default_mapper)
     {
+        bool enableCaching;
+        int cachePageSize, cachePageNum;
+        
+
         m_created_mapper = true;
         setMemAccessI(m_default_mapper);
         m_default_mapper->setErrorLog(s_i_error_logger);
+        TrcMemAccCache::getenvMemaccCacheSizes(enableCaching, cachePageSize, cachePageNum);
+        if ((m_default_mapper->setCacheSizes(cachePageSize, cachePageNum) != OCSD_OK) ||
+            (m_default_mapper->enableCaching(enableCaching) != OCSD_OK))
+            destroyMemAccMapper();
     }
 
     return (m_default_mapper != 0) ? OCSD_OK : OCSD_ERR_MEM;
