@@ -426,14 +426,19 @@ typedef struct _ocsd_pe_context {
 /** memory space bitfield enum for available security states and exception levels used 
    when accessing memory. */
 typedef enum _ocsd_mem_space_acc_t {
-    OCSD_MEM_SPACE_EL1S = 0x1, /**<  S EL1/0 */
-    OCSD_MEM_SPACE_EL1N = 0x2, /**< NS EL1/0 */
-    OCSD_MEM_SPACE_EL2 =  0x4, /**< NS EL2   */
-    OCSD_MEM_SPACE_EL3 =  0x8, /**<  S EL3   */
-    OCSD_MEM_SPACE_EL2S = 0x10, /**< S EL2   */
-    OCSD_MEM_SPACE_S =    0x19, /**< Any  S  */
-    OCSD_MEM_SPACE_N =    0x6, /**< Any NS   */
-    OCSD_MEM_SPACE_ANY =  0x1F, /**< Any sec level / EL - live system use current EL + sec state */
+    OCSD_MEM_SPACE_NONE = 0x0,  /**< Mem space unknown / not yet set */
+    OCSD_MEM_SPACE_EL1S = 0x1,  /**< Secure EL1/0 */
+    OCSD_MEM_SPACE_EL1N = 0x2,  /**< Non Secure EL1/0 */
+    OCSD_MEM_SPACE_EL2 =  0x4,  /**< Non Secure EL2   */
+    OCSD_MEM_SPACE_EL3 =  0x8,  /**< Secure EL3   */
+    OCSD_MEM_SPACE_EL2S = 0x10, /**< Secure EL2   */
+    OCSD_MEM_SPACE_EL1R = 0x20, /**< Realm EL1/0 */
+    OCSD_MEM_SPACE_EL2R = 0x40, /**< Realm EL2 */
+    OCSD_MEM_SPACE_ROOT = 0x80, /**< Root */
+    OCSD_MEM_SPACE_S    = 0x19, /**< Any Secure  */
+    OCSD_MEM_SPACE_N    = 0x6,  /**< Any Non Secure   */
+    OCSD_MEM_SPACE_R    = 0x60, /**< Any Realm */    
+    OCSD_MEM_SPACE_ANY  = 0xFF, /**< Any sec level / EL - live system use current EL + sec state */
 } ocsd_mem_space_acc_t;
 
 /**

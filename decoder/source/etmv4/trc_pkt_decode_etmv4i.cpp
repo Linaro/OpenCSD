@@ -1995,7 +1995,6 @@ ocsd_err_t TrcPktDecodeEtmV4I::handlePacketErr(ocsd_err_t err, ocsd_err_severity
 
 }
 
-
 inline ocsd_mem_space_acc_t TrcPktDecodeEtmV4I::getCurrMemSpace()
 {
     static ocsd_mem_space_acc_t SMemSpace[] = {
@@ -2012,12 +2011,37 @@ inline ocsd_mem_space_acc_t TrcPktDecodeEtmV4I::getCurrMemSpace()
         OCSD_MEM_SPACE_EL3
     };
 
+    static ocsd_mem_space_acc_t RMemSpace[] = {
+        OCSD_MEM_SPACE_EL1R,
+        OCSD_MEM_SPACE_EL1R,
+        OCSD_MEM_SPACE_EL2R,
+        OCSD_MEM_SPACE_ROOT
+    };
+
     /* if no valid EL value - just use S/NS */
     if (!outElem().context.el_valid)
         return  m_is_secure ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N;
-    
+
     /* mem space according to EL + S/NS */
+    ocsd_mem_space_acc_t mem_space = OCSD_MEM_SPACE_NONE;
     int el = (int)(outElem().context.exception_level) & 0x3;
-    return m_is_secure ? SMemSpace[el] : NSMemSpace[el];
+    
+    switch (outElem().context.security_level)
+    {
+    case ocsd_sec_root:
+        mem_space = OCSD_MEM_SPACE_ROOT;
+        break;
+    case ocsd_sec_realm:
+        mem_space = RMemSpace[el];
+        break;
+    case ocsd_sec_nonsecure:
+        mem_space = NSMemSpace[el];
+        break;
+    case ocsd_sec_secure:
+        mem_space = SMemSpace[el];
+        break;
+    };
+    
+    return mem_space;
 }
 /* End of File trc_pkt_decode_etmv4i.cpp */

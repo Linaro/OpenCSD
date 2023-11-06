@@ -666,7 +666,11 @@ void EtmV4ITrcPacket::contextStr(std::string &ctxtStr) const
         std::ostringstream oss;
         if(context.updated)
         {           
-            oss << "Ctxt: " << (context.SF ? "AArch64," : "AArch32, ") << "EL" << context.EL << ", " << (context.NS ? "NS; " : "S; ");
+            oss << "Ctxt: " << (context.SF ? "AArch64," : "AArch32, ") << "EL" << context.EL << ", ";
+            if (context.NSE)
+                oss << (context.NS ? "Realm; " : "Root; ");
+            else
+                oss << (context.NS ? "NS; " : "S; ");
             if(context.updated_c)
             {
                 oss << "CID=0x" << std::hex << std::setfill('0') << std::setw(8) << context.ctxtID << "; ";
