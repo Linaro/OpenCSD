@@ -77,6 +77,10 @@ static bool src_addr_n = false;
 static bool stats = false;
 static bool profile = false;
 
+static bool macc_cache_disable = false;
+static uint32_t macc_cache_page_size = 0;
+static uint32_t macc_cache_page_num = 0;
+
 int main(int argc, char* argv[])
 {
     std::ostringstream moss;
@@ -199,6 +203,9 @@ void print_help()
     oss << "-src_addr_n         ETE protocol: Split source address ranges on N atoms\n";
     oss << "-stats              Output packet processing statistics (if available).\n";
     oss << "-profile            Mute logging output while profiling library performance\n";
+    oss << "-macc_cache_disable Switch off caching on memory accessor\n";
+    oss << "-macc_cache_p_size  Set size of caching pages\n";
+    oss << "-macc_cache_p_num   Set number of caching pages\n";
     oss << "\nOutput:\n";
     oss << "   Setting any of these options cancels the default output to file & stdout,\n   using _only_ the options supplied.\n\n";
     oss << "-logstdout          Output to stdout -> console.\n";
@@ -438,6 +445,24 @@ bool process_cmd_line_opts(int argc, char* argv[])
             {
                 profile = true;
             }
+            else if (strcmp(argv[optIdx], "-macc_cache_disable") == 0)
+            {
+                macc_cache_disable = true;
+            }
+            else if (strcmp(argv[optIdx], "-macc_cache_p_size") == 0)
+            {
+                options_to_process--;
+                optIdx++;
+                if (options_to_process)
+                    macc_cache_page_size  = (uint32_t)strtoul(argv[optIdx], 0, 0);
+            }
+            else if (strcmp(argv[optIdx], "-macc_cache_p_num") == 0)
+            {
+                options_to_process--;
+                optIdx++;
+                if (options_to_process)
+                    macc_cache_page_num = (uint32_t)strtoul(argv[optIdx], 0, 0);
+            }
             else
             {
                 std::ostringstream errstr;
@@ -637,6 +662,22 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
             {
                 genElemPrinter->setMute(true);
                 genElemPrinter->set_collect_stats();
+            }
+            if (macc_cache_disable || macc_cache_page_size || macc_cache_page_num)
+            {
+                TrcMemAccMapper* pMapper = dcd_tree->getMemAccMapper();
+
+                if (macc_cache_disable)
+                    pMapper->enableCaching(false);
+                else 
+                {
+                    // one value set - set the other to default
+                    if (!macc_cache_page_size)
+                        macc_cache_page_size = MEM_ACC_CACHE_DEFAULT_PAGE_SIZE;
+                    if (!macc_cache_page_num)
+                        macc_cache_page_num = MEM_ACC_CACHE_DEFAULT_MRU_SIZE;
+                    pMapper->setCacheSizes(macc_cache_page_size, macc_cache_page_num);
+                }
             }
         }
 
