@@ -94,16 +94,17 @@ void TrcMemAccFactory::DestroyAccessor(TrcMemAccessorBase *pAccessor)
 
 
 /* memory access info logging */
-void TrcMemAccessorBase::getMemAccString(std::string &accStr) const
+void TrcMemAccessorBase::getMemAccString(std::string& accStr) const
 {
     std::ostringstream oss;
+    std::string spaceStr;
 
-    switch(m_type)
+    switch (m_type)
     {
     case MEMACC_FILE:
         oss << "FileAcc; Range::0x";
         break;
-         
+
     case MEMACC_BUFPTR:
         oss << "BuffAcc; Range::0x";
         break;
@@ -112,37 +113,60 @@ void TrcMemAccessorBase::getMemAccString(std::string &accStr) const
         oss << "CB  Acc; Range::0x";
         break;
 
-    default: 
+    default:
         oss << "UnknAcc; Range::0x";
         break;
     }
     oss << std::hex << std::setw(2) << std::setfill('0') << m_startAddress << ":" << m_endAddress;
     oss << "; Mem Space::";
-    switch(m_mem_space)
+    getMemAccSpaceString(spaceStr, m_mem_space);
+    oss << spaceStr;
+
+    accStr = oss.str();
+}
+
+void TrcMemAccessorBase::getMemAccSpaceString(std::string &spaceStr, const ocsd_mem_space_acc_t mem_space)
+{
+    std::ostringstream oss;
+
+    switch(mem_space)
     {
     case OCSD_MEM_SPACE_EL1S: oss << "EL1S"; break;
     case OCSD_MEM_SPACE_EL1N: oss << "EL1N"; break;
-    case OCSD_MEM_SPACE_EL2: oss << "EL2"; break;
+    case OCSD_MEM_SPACE_EL2: oss << "EL2N"; break;
     case OCSD_MEM_SPACE_EL3: oss << "EL3"; break;
+    case OCSD_MEM_SPACE_EL2S: oss << "EL2S"; break; 
+    case OCSD_MEM_SPACE_EL1R: oss << "EL1R"; break;
+    case OCSD_MEM_SPACE_EL2R: oss << "EL2R"; break;
+    case OCSD_MEM_SPACE_ROOT: oss << "Root"; break;
     case OCSD_MEM_SPACE_S: oss << "Any S"; break;
     case OCSD_MEM_SPACE_N: oss << "Any NS"; break;
+    case OCSD_MEM_SPACE_R: oss << "Any R"; break;
     case OCSD_MEM_SPACE_ANY: oss << "Any"; break;
 
     default:
         {
-            uint8_t MSBits = (uint8_t)m_mem_space;
+            uint8_t MSBits = (uint8_t)mem_space;
             if(MSBits & (uint8_t)OCSD_MEM_SPACE_EL1S)
                 oss << "EL1S,";
             if(MSBits & (uint8_t)OCSD_MEM_SPACE_EL1N)
                 oss << "EL1N,";
             if(MSBits & (uint8_t)OCSD_MEM_SPACE_EL2)
-                oss << "EL2,";
+                oss << "EL2N,";
             if(MSBits & (uint8_t)OCSD_MEM_SPACE_EL3)
                 oss << "EL3,";
+            if (MSBits & (uint8_t)OCSD_MEM_SPACE_EL2S)
+                oss << "EL2S,";
+            if (MSBits & (uint8_t)OCSD_MEM_SPACE_EL1R)
+                oss << "EL1R,";
+            if (MSBits & (uint8_t)OCSD_MEM_SPACE_EL2R)
+                oss << "EL2R,";
+            if (MSBits & (uint8_t)OCSD_MEM_SPACE_ROOT)
+                oss << "Root,";
         }
         break;
     }
-    accStr = oss.str();
+    spaceStr = oss.str();
 }
 
 /* End of File trc_mem_acc_base.cpp */

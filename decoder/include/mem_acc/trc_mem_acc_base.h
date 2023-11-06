@@ -110,7 +110,7 @@ public:
     virtual const uint32_t bytesInRange(const ocsd_vaddr_t s_address, const uint32_t reqBytes) const;
     
     /*!
-     * test is supplied range accessor overlaps this range.
+     * test if supplied range accessor overlaps this range.
      *
      * @param *p_test_acc : Accessor to test for overlap.
      *
@@ -149,11 +149,13 @@ public:
     /* memory access info logging */
     virtual void getMemAccString(std::string &accStr) const;
 
+    static void getMemAccSpaceString(std::string& spaceStr, const ocsd_mem_space_acc_t mem_space);
+
 protected:
     ocsd_vaddr_t m_startAddress;   /**< accessible range start address */
     ocsd_vaddr_t m_endAddress;     /**< accessible range end address */
     const MemAccTypes m_type;       /**< memory accessor type */
-    ocsd_mem_space_acc_t m_mem_space;
+    ocsd_mem_space_acc_t m_mem_space; /**< Matching memory space of this acessor */
 };
 
 inline TrcMemAccessorBase::TrcMemAccessorBase(MemAccTypes accType, ocsd_vaddr_t startAddr, ocsd_vaddr_t endAddr) :
