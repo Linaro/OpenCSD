@@ -241,6 +241,20 @@ void TrcPktDecodeEtmV4I::initDecoder()
     m_CSID = 0;
     m_IASize64 = false;
 
+    // set debug range limit - look for debugging env var
+    char* env_var;
+    long env_val;
+
+    m_num_instr_range_limit = 0;
+    if ((env_var = getenv(OCSD_ENV_INSTR_RANGE_LIMIT)) != NULL)
+    {
+        env_val = strtol(env_var, NULL, 0);
+        /* if valid number set limit */
+        if (env_val > 0)
+            m_num_instr_range_limit = env_val;
+
+    }
+
     // elements associated with data trace
 #ifdef DATA_TRACE_SUPPORTED
     m_p0_key_max = 0;
@@ -1898,6 +1912,15 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(instr_range_t &range, WP_res_t &WP
         {
             // not enough memory accessible.
             WPRes = WP_NACC;
+        }
+
+        if (m_num_instr_range_limit)
+        {
+            if (range.num_instr > m_num_instr_range_limit)
+            {
+                err = OCSD_ERR_I_RANGE_LIMIT_OVERRUN;
+                LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, "Decode Instruction Range Limit Overrun"));
+            }
         }
     }
     // update the range decoded address in the output packet.

@@ -134,6 +134,7 @@ typedef enum _ocsd_err_t {
     OCSD_ERR_DCD_INTERFACE_UNUSED,      /**< 43 Attempt to connect or use and interface not supported by this decoder. */
     /* additional errors */
     OCSD_ERR_INVALID_OPCODE,            /**< 44 Opcode found while decoding program memory is illegal */
+    OCSD_ERR_I_RANGE_LIMIT_OVERRUN,     /**< 45 An optional limit on consecutive instructions in range during decode has been exceeded. */
     /* end marker*/
     OCSD_ERR_LAST
 } ocsd_err_t;

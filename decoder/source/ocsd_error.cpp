@@ -91,10 +91,12 @@ static const char *s_errorCodeDescs[][2] = {
     {"OCSD_ERR_DCDREG_NAME_REPEAT","Attempted to register a decoder with the same name as another one."},
     {"OCSD_ERR_DCDREG_NAME_UNKNOWN","Attempted to find a decoder with a name that is not known in the library."},
     {"OCSD_ERR_DCDREG_TYPE_UNKNOWN","Attempted to find a decoder with a type that is not known in the library."},
+    {"OCSD_ERR_DCDREG_TOOMANY","Attempted to register too many custom decoders"},
     /* decoder config */
     {"OCSD_ERR_DCD_INTERFACE_UNUSED","Attempt to connect or use and interface not supported by this decoder."},
     /* additional errors */
     {"OCSD_ERR_INVALID_OPCODE","Illegal Opode found while decoding program memory."},
+    {"OCSD_ERR_I_RANGE_LIMIT_OVERRUN","An optional limit on consecutive instructions in range during decode has been exceeded."},
     /* end marker*/
     {"OCSD_ERR_LAST", "No error - error code end marker"}
 };
