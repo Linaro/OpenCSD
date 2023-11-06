@@ -36,6 +36,22 @@
 #include "i_dec/trc_i_decode.h"
 #include "i_dec/trc_idec_arminst.h"
 
+#include <cstdlib>
+
+TrcIDecode::TrcIDecode() :
+    aa64_err_bad_opcode(false)
+{
+}
+
+void TrcIDecode::envSetAA64_errOnBadOpcode()
+{
+    char* env_var = NULL;
+    
+    if ((env_var = getenv(OCSD_ENV_ERR_ON_AA64_BAD_OPCODE)) != NULL)
+        setAA64_errOnBadOpcode(true);
+}
+
+
 ocsd_err_t TrcIDecode::DecodeInstruction(ocsd_instr_info *instr_info)
 {
     ocsd_err_t err = OCSD_OK;
@@ -133,6 +149,10 @@ ocsd_err_t TrcIDecode::DecodeA64(ocsd_instr_info *instr_info, struct decode_info
     instr_info->next_isa = instr_info->isa; // assume same ISA 
     instr_info->is_link = 0;
     
+    // check for invalid opcode - top 16 bits cannot be 0x0000.
+    if (aa64_err_bad_opcode && !(instr_info->opcode & 0xFFFF0000))
+        return OCSD_ERR_INVALID_OPCODE;
+
     if(inst_A64_is_indirect_branch_link(instr_info->opcode, &instr_info->is_link, info))
     {
         instr_info->type = OCSD_INSTR_BR_INDIRECT;

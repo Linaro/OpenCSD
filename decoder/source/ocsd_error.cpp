@@ -93,6 +93,8 @@ static const char *s_errorCodeDescs[][2] = {
     {"OCSD_ERR_DCDREG_TYPE_UNKNOWN","Attempted to find a decoder with a type that is not known in the library."},
     /* decoder config */
     {"OCSD_ERR_DCD_INTERFACE_UNUSED","Attempt to connect or use and interface not supported by this decoder."},
+    /* additional errors */
+    {"OCSD_ERR_INVALID_OPCODE","Illegal Opode found while decoding program memory."},
     /* end marker*/
     {"OCSD_ERR_LAST", "No error - error code end marker"}
 };

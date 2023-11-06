@@ -51,13 +51,14 @@ DecodeTree *DecodeTree::CreateDecodeTree(const ocsd_dcd_tree_src_t src_type, uin
         if(dcd_tree->initialise(src_type, formatterCfgFlags))
         {
             s_trace_dcd_trees.push_back(dcd_tree);
+            s_instruction_decoder.envSetAA64_errOnBadOpcode();
         }
         else 
         {
             delete dcd_tree;
             dcd_tree = 0;
         }
-    }
+    }    
     return dcd_tree;
 }
 
