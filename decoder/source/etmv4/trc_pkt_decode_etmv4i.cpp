@@ -1389,6 +1389,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
 }
 
 // Exception processor
+#define M_CLASS_TAIL_ADDR 0xFFFFFFFE
+
 ocsd_err_t TrcPktDecodeEtmV4I::processException()
 {
     ocsd_err_t err;
@@ -1401,6 +1403,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
     ocsd_trc_index_t excep_pkt_index;
     WP_res_t WPRes = WP_NOT_FOUND;
     bool ETE_resetPkt = false;
+    bool bMTailChain = false;
 
     // grab the exception element off the stack
     pExceptElem = dynamic_cast<TrcStackElemExcept *>(m_P0_stack.back());  // get the exception element
@@ -1472,8 +1475,12 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
 
     if (!ETE_resetPkt)
     {
+        /* check for M class tail chain / deferred exceptions */        
+        if (m_config->coreProfile() == profile_CortexM)
+            bMTailChain = (excep_ret_addr == M_CLASS_TAIL_ADDR);
+
         // if the preferred return address is not the end of the last output range...
-        if (m_instr_info.instr_addr != excep_ret_addr)
+        if ((m_instr_info.instr_addr < excep_ret_addr) && !bMTailChain)
         {
             bool range_out = false;
             instr_range_t addr_range;
@@ -1541,7 +1548,13 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
 
     // add end address as preferred return address to end addr in element
     outElem().en_addr = excep_ret_addr;
+    
     outElem().excep_ret_addr = 1;
+    if (bMTailChain) 
+    {
+        outElem().excep_ret_addr = 0;
+        outElem().excep_M_tail_chain = 1;
+    }
     outElem().excep_ret_addr_br_tgt = branch_target;
     outElem().exception_number = pExceptElem->getExcepNum();
 
