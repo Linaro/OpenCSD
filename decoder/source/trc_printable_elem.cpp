@@ -35,15 +35,7 @@
 #include "common/trc_printable_elem.h"
 #include <cassert>
 #include <cstring>
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
- /** VS2010 does not support inttypes - remove when VS2010 support is dropped */
-#define __PRI64_PREFIX "ll"
-#define PRIX64 __PRI64_PREFIX "X"
-#define PRIu64 __PRI64_PREFIX "u"
-#define PRIu32 "u"
-#else
 #include <cinttypes>
-#endif
 
 void trcPrintableElem::getValStr(std::string &valStr, const int valTotalBitSize, const int valValidBits, const uint64_t value, const bool asHex /* = true*/, const int updateBits /* = 0*/)
 {
