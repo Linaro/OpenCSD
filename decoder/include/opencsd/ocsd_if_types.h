@@ -77,61 +77,61 @@ typedef uint32_t ocsd_trc_index_t;   /**< Trace source index type - 32 bit size 
 typedef enum _ocsd_err_t {
 
     /* general return errors */
-    OCSD_OK = 0,                   /**< No Error. */
-    OCSD_ERR_FAIL,                 /**< General systemic failure. */
-    OCSD_ERR_MEM,                  /**< Internal memory allocation error. */
-    OCSD_ERR_NOT_INIT,             /**< Component not initialised or initialisation failure. */
-    OCSD_ERR_INVALID_ID,           /**< Invalid CoreSight Trace Source ID.  */
-    OCSD_ERR_BAD_HANDLE,           /**< Invalid handle passed to component. */
-    OCSD_ERR_INVALID_PARAM_VAL,    /**< Invalid value parameter passed to component. */
-    OCSD_ERR_INVALID_PARAM_TYPE,   /**< Type mismatch on abstract interface */
-    OCSD_ERR_FILE_ERROR,           /**< File access error */
-    OCSD_ERR_NO_PROTOCOL,          /**< Trace protocol unsupported */
+    OCSD_OK = 0,                   /**< 0 No Error. */
+    OCSD_ERR_FAIL,                 /**< 1 General systemic failure. */
+    OCSD_ERR_MEM,                  /**< 2 Internal memory allocation error. */
+    OCSD_ERR_NOT_INIT,             /**< 3 Component not initialised or initialisation failure. */
+    OCSD_ERR_INVALID_ID,           /**< 4 Invalid CoreSight Trace Source ID.  */
+    OCSD_ERR_BAD_HANDLE,           /**< 5 Invalid handle passed to component. */
+    OCSD_ERR_INVALID_PARAM_VAL,    /**< 6 Invalid value parameter passed to component. */
+    OCSD_ERR_INVALID_PARAM_TYPE,   /**< 7 Type mismatch on abstract interface */
+    OCSD_ERR_FILE_ERROR,           /**< 8 File access error */
+    OCSD_ERR_NO_PROTOCOL,          /**< 9 Trace protocol unsupported */
     /* attachment point errors */
-    OCSD_ERR_ATTACH_TOO_MANY,      /**< Cannot attach - attach device limit reached. */
-    OCSD_ERR_ATTACH_INVALID_PARAM, /**< Cannot attach - invalid parameter. */
-    OCSD_ERR_ATTACH_COMP_NOT_FOUND,/**< Cannot detach - component not found. */
+    OCSD_ERR_ATTACH_TOO_MANY,      /**< 10 Cannot attach - attach device limit reached. */
+    OCSD_ERR_ATTACH_INVALID_PARAM, /**< 11 Cannot attach - invalid parameter. */
+    OCSD_ERR_ATTACH_COMP_NOT_FOUND,/**< 12 Cannot detach - component not found. */
     /* source reader errors */
-    OCSD_ERR_RDR_FILE_NOT_FOUND,   /**< source reader - file not found. */
-    OCSD_ERR_RDR_INVALID_INIT,     /**< source reader - invalid initialisation parameter. */
-    OCSD_ERR_RDR_NO_DECODER,       /**< source reader - not trace decoder set. */
+    OCSD_ERR_RDR_FILE_NOT_FOUND,   /**< 13 source reader - file not found. */
+    OCSD_ERR_RDR_INVALID_INIT,     /**< 14 source reader - invalid initialisation parameter. */
+    OCSD_ERR_RDR_NO_DECODER,       /**< 15 source reader - not trace decoder set. */
     /* data path errors */
-    OCSD_ERR_DATA_DECODE_FATAL,    /**< A decoder in the data path has returned a fatal error. */
+    OCSD_ERR_DATA_DECODE_FATAL,    /**< 16 A decoder in the data path has returned a fatal error. */
     /* frame deformatter errors */
-    OCSD_ERR_DFMTR_NOTCONTTRACE,    /**< Trace input to deformatter none-continuous */
-    OCSD_ERR_DFMTR_BAD_FHSYNC,      /**< Bad frame or half frame sync in trace deformatter */
+    OCSD_ERR_DFMTR_NOTCONTTRACE,    /**< 17 Trace input to deformatter none-continuous */
+    OCSD_ERR_DFMTR_BAD_FHSYNC,      /**< 18 Bad frame or half frame sync in trace deformatter */
     /* packet processor errors - protocol issues etc */
-    OCSD_ERR_BAD_PACKET_SEQ,        /**< Bad packet sequence */
-    OCSD_ERR_INVALID_PCKT_HDR,      /**< Invalid packet header */
-    OCSD_ERR_PKT_INTERP_FAIL,       /**< Interpreter failed - cannot recover - bad data or sequence */
+    OCSD_ERR_BAD_PACKET_SEQ,        /**< 19 Bad packet sequence */
+    OCSD_ERR_INVALID_PCKT_HDR,      /**< 20 Invalid packet header */
+    OCSD_ERR_PKT_INTERP_FAIL,       /**< 21 Interpreter failed - cannot recover - bad data or sequence */
     /* packet decoder errors */
-    OCSD_ERR_UNSUPPORTED_ISA,          /**< ISA not supported in decoder. */
-    OCSD_ERR_HW_CFG_UNSUPP,            /**< Programmed trace configuration not supported by decoder.*/
-    OCSD_ERR_UNSUPP_DECODE_PKT,        /**< Packet not supported in decoder */
-    OCSD_ERR_BAD_DECODE_PKT,           /**< reserved or unknown packet in decoder. */
-    OCSD_ERR_COMMIT_PKT_OVERRUN,       /**< overrun in commit packet stack - tried to commit more than available */
-    OCSD_ERR_MEM_NACC,                 /**< unable to access required memory address */
-    OCSD_ERR_RET_STACK_OVERFLOW,       /**< internal return stack overflow checks failed - popped more than we pushed. */
+    OCSD_ERR_UNSUPPORTED_ISA,          /**< 22 ISA not supported in decoder. */
+    OCSD_ERR_HW_CFG_UNSUPP,            /**< 23 Programmed trace configuration not supported by decoder.*/
+    OCSD_ERR_UNSUPP_DECODE_PKT,        /**< 24 Packet not supported in decoder */
+    OCSD_ERR_BAD_DECODE_PKT,           /**< 25 reserved or unknown packet in decoder. */
+    OCSD_ERR_COMMIT_PKT_OVERRUN,       /**< 26 overrun in commit packet stack - tried to commit more than available */
+    OCSD_ERR_MEM_NACC,                 /**< 27 unable to access required memory address */
+    OCSD_ERR_RET_STACK_OVERFLOW,       /**< 28 internal return stack overflow checks failed - popped more than we pushed. */
     /* decode tree errors */
-    OCSD_ERR_DCDT_NO_FORMATTER,         /**< No formatter in use - operation not valid. */
+    OCSD_ERR_DCDT_NO_FORMATTER,         /**< 29 No formatter in use - operation not valid. */
     /* target memory access errors */
-    OCSD_ERR_MEM_ACC_OVERLAP,           /**< Attempted to set an overlapping range in memory access map */
-    OCSD_ERR_MEM_ACC_FILE_NOT_FOUND,    /**< Memory access file could not be opened */
-    OCSD_ERR_MEM_ACC_FILE_DIFF_RANGE,   /**< Attempt to re-use the same memory access file for a different address range */
-    OCSD_ERR_MEM_ACC_RANGE_INVALID,     /**< Address range in accessor set to invalid values */
-    OCSD_ERR_MEM_ACC_BAD_LEN,           /**< Memory accessor returned a bad read length value (larger than requested */
+    OCSD_ERR_MEM_ACC_OVERLAP,           /**< 30 Attempted to set an overlapping range in memory access map */
+    OCSD_ERR_MEM_ACC_FILE_NOT_FOUND,    /**< 31 Memory access file could not be opened */
+    OCSD_ERR_MEM_ACC_FILE_DIFF_RANGE,   /**< 32 Attempt to re-use the same memory access file for a different address range */
+    OCSD_ERR_MEM_ACC_RANGE_INVALID,     /**< 33 Address range in accessor set to invalid values */
+    OCSD_ERR_MEM_ACC_BAD_LEN,           /**< 34 Memory accessor returned a bad read length value (larger than requested */
     /* test errors - errors generated only by the test code, not the library */
-    OCSD_ERR_TEST_SNAPSHOT_PARSE,       /**< test snapshot file parse error */
-    OCSD_ERR_TEST_SNAPSHOT_PARSE_INFO,  /**< test snapshot file parse information */
-    OCSD_ERR_TEST_SNAPSHOT_READ,        /**< test snapshot reader error */
-    OCSD_ERR_TEST_SS_TO_DECODER,        /**< test snapshot to decode tree conversion error */
+    OCSD_ERR_TEST_SNAPSHOT_PARSE,       /**< 35 test snapshot file parse error */
+    OCSD_ERR_TEST_SNAPSHOT_PARSE_INFO,  /**< 36 test snapshot file parse information */
+    OCSD_ERR_TEST_SNAPSHOT_READ,        /**< 37 test snapshot reader error */
+    OCSD_ERR_TEST_SS_TO_DECODER,        /**< 38 test snapshot to decode tree conversion error */
     /* decoder registration */
-    OCSD_ERR_DCDREG_NAME_REPEAT,        /**< attempted to register a decoder with the same name as another one */
-    OCSD_ERR_DCDREG_NAME_UNKNOWN,       /**< attempted to find a decoder with a name that is not known in the library */
-    OCSD_ERR_DCDREG_TYPE_UNKNOWN,       /**< attempted to find a decoder with a type that is not known in the library */
-    OCSD_ERR_DCDREG_TOOMANY,            /**< attempted to register too many custom decoders */
+    OCSD_ERR_DCDREG_NAME_REPEAT,        /**< 39 attempted to register a decoder with the same name as another one */
+    OCSD_ERR_DCDREG_NAME_UNKNOWN,       /**< 40 attempted to find a decoder with a name that is not known in the library */
+    OCSD_ERR_DCDREG_TYPE_UNKNOWN,       /**< 41 attempted to find a decoder with a type that is not known in the library */
+    OCSD_ERR_DCDREG_TOOMANY,            /**< 42 attempted to register too many custom decoders */
     /* decoder config */
-    OCSD_ERR_DCD_INTERFACE_UNUSED,      /**< Attempt to connect or use and interface not supported by this decoder. */
+    OCSD_ERR_DCD_INTERFACE_UNUSED,      /**< 43 Attempt to connect or use and interface not supported by this decoder. */
     /* end marker*/
     OCSD_ERR_LAST
 } ocsd_err_t;
