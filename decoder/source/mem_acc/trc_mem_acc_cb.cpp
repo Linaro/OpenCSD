@@ -18,6 +18,19 @@ TrcMemAccCB::TrcMemAccCB(const ocsd_vaddr_t s_address,
     setMemSpace(mem_space);    
 }
 
+TrcMemAccCB::TrcMemAccCB() :
+    TrcMemAccessorBase(MEMACC_CB_IF),
+    m_p_CBclass(0),
+    m_p_CBfn(0),
+    m_p_cbfn_context(0)
+{};
+
+void TrcMemAccCB::initAccessor(const ocsd_vaddr_t s_address, const ocsd_vaddr_t e_address, const ocsd_mem_space_acc_t mem_space)
+{
+    setRange(s_address, e_address);
+    setMemSpace(mem_space);
+}
+
 /** Memory access override - allow decoder to read bytes from the buffer. */
 const uint32_t TrcMemAccCB::readBytes(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t memSpace, const uint8_t trcID, const uint32_t reqBytes, uint8_t *byteBuffer)
 {

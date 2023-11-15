@@ -45,6 +45,10 @@ public:
                 const ocsd_vaddr_t e_address, 
                 const ocsd_mem_space_acc_t mem_space);
                 
+    // default constructor
+    TrcMemAccCB();
+
+    void initAccessor(const ocsd_vaddr_t s_address, const ocsd_vaddr_t e_address, const ocsd_mem_space_acc_t mem_space);
 
     virtual ~TrcMemAccCB() {};
     

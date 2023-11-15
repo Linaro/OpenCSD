@@ -103,7 +103,7 @@ protected:
 
 
 // address spaces common to all sources using this mapper.
-// trace id unused.
+// trace id unused when differentiating accessors - may be used by underlying read operations.
 class TrcMemAccMapGlobalSpace : public TrcMemAccMapper
 {
 public:

@@ -61,6 +61,23 @@ public:
      */
     TrcMemAccBufPtr(const ocsd_vaddr_t s_address, const uint8_t *p_buffer, const uint32_t size);
 
+    /*!
+     *  Default constructor - init later
+     * 
+     */
+    TrcMemAccBufPtr();
+
+    /*
+     *uses the start address as the start of rangeand calculates the end address
+     * according to the buffer size
+     *
+     * @param s_address : Start address in memory map represented by the data in the buffer.
+     * @param* p_buffer : pointer to a buffer of binary data.
+     * @param size : size of the buffer.
+     */
+    void initAccessor(const ocsd_vaddr_t s_address, const uint8_t* p_buffer, const uint32_t size);
+
+
     virtual ~TrcMemAccBufPtr() {};  /**< default destructor */
 
     /** Memory access override - allow decoder to read bytes from the buffer. */

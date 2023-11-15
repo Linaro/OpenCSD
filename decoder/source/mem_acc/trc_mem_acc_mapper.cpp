@@ -129,18 +129,12 @@ void TrcMemAccMapper::InvalidateMemAccCache(const uint8_t /* cs_trace_id */)
 
 void TrcMemAccMapper::RemoveAllAccessors()
 {
-    TrcMemAccessorBase *pAcc = 0;
-    pAcc = getFirstAccessor();
-    while(pAcc != 0)
-    {
-        TrcMemAccFactory::DestroyAccessor(pAcc);
-        pAcc = getNextAccessor();
-        if (m_cache.enabled())
-            m_cache.invalidateAll();
-    }
     clearAccessorList();
-    if (m_cache.enabled())
+    if (m_cache.enabled()) 
+    {
+        m_cache.invalidateAll();
         m_cache.logAndClearCounts();
+    }
 }
 
 ocsd_err_t TrcMemAccMapper::RemoveAccessorByAddress(const ocsd_vaddr_t st_address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id /* = 0 */)
@@ -151,12 +145,13 @@ ocsd_err_t TrcMemAccMapper::RemoveAccessorByAddress(const ocsd_vaddr_t st_addres
         err = RemoveAccessor(m_acc_curr);
         m_acc_curr = 0;
         if (m_cache.enabled())
+        {
             m_cache.invalidateAll();
+            m_cache.logAndClearCounts();
+        }
     }
     else
-        err = OCSD_ERR_INVALID_PARAM_VAL;
-    if (m_cache.enabled())
-        m_cache.logAndClearCounts();
+        err = OCSD_ERR_INVALID_PARAM_VAL;        
     return err;
 }
 
@@ -267,6 +262,7 @@ TrcMemAccessorBase *TrcMemAccMapGlobalSpace::getNextAccessor()
 void TrcMemAccMapGlobalSpace::clearAccessorList()
 {
     m_acc_global.clear();
+    m_acc_curr = 0;
 }
 
 ocsd_err_t TrcMemAccMapGlobalSpace::RemoveAccessor(const TrcMemAccessorBase *p_accessor)
@@ -278,9 +274,15 @@ ocsd_err_t TrcMemAccMapGlobalSpace::RemoveAccessor(const TrcMemAccessorBase *p_a
         if(p_acc == p_accessor)
         {
             m_acc_global.erase(m_acc_it);
-            TrcMemAccFactory::DestroyAccessor(p_acc);
             p_acc = 0;
             bFound = true;
+            if (m_cache.enabled())
+            {
+                m_cache.invalidateAll();
+                m_cache.logAndClearCounts();
+            }
+            if (m_acc_curr == p_accessor)
+                m_acc_curr = 0;
         }
         else
             p_acc = getNextAccessor();

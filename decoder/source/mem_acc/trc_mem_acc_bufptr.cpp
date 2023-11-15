@@ -41,9 +41,24 @@ TrcMemAccBufPtr::TrcMemAccBufPtr(const ocsd_vaddr_t s_address, const uint8_t *p_
 {
 }
 
+TrcMemAccBufPtr::TrcMemAccBufPtr() :
+    TrcMemAccessorBase(MEMACC_BUFPTR), m_p_buffer(0)
+{
+}
+
+void TrcMemAccBufPtr::initAccessor(const ocsd_vaddr_t s_address, const uint8_t* p_buffer, const uint32_t size)
+{
+    m_p_buffer = p_buffer;
+    setRange(s_address, s_address + size - 1);
+}
+
 const uint32_t TrcMemAccBufPtr::readBytes(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t trcID, const uint32_t reqBytes, uint8_t *byteBuffer)
 {
-    // mapper wlll filter memory spaces.
+    // no buffer - nothing to read.
+    if (!m_p_buffer)
+        return 0;
+
+    // mapper will filter memory spaces.
     uint32_t bytesRead = bytesInRange(address,reqBytes); // check bytes available
     if(bytesRead)
         memcpy(byteBuffer,m_p_buffer+address-m_startAddress,bytesRead);
