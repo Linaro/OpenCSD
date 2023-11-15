@@ -175,6 +175,7 @@ tests: libs
 	cd $(OCSD_ROOT)/tests/build/linux/mem_buffer_eg && $(MAKE)
 	cd $(OCSD_ROOT)/tests/build/linux/frame_demux_test && $(MAKE)
 	cd $(OCSD_ROOT)/tests/build/linux/perr && $(MAKE)
+	cd $(OCSD_ROOT)/tests/build/linux/mem_acc_test && $(MAKE)
 
 #
 # build docs
