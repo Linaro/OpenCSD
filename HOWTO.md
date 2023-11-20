@@ -538,7 +538,7 @@ interesting results.
     linaro@t430:~/linaro/coresight/sept20$ export EXEC_PATH=/home/linaro/coresight/perf-opencsd-master/tools/perf/
     linaro@t430:~/linaro/coresight/sept20$ export SCRIPT_PATH=$EXEC_PATH/scripts/python/
     linaro@t430:~/linaro/coresight/sept20$ export XTOOL_PATH=/your/aarch64/toolchain/path/bin/
-    linaro@t430:~/linaro/coresight/sept20$ ../perf-opencsd-master/tools/perf/perf --exec-path=${EXEC_PATH} script --script=python:${SCRIPT_PATH}/cs-trace-disasm.py -- -d ${XTOOL_PATH}/aarch64-linux-gnu-objdump
+    linaro@t430:~/linaro/coresight/sept20$ ../perf-opencsd-master/tools/perf/perf --exec-path=${EXEC_PATH} script --script=python:${SCRIPT_PATH}/arm-cs-trace-disasm.py -- -d ${XTOOL_PATH}/aarch64-linux-gnu-objdump
 
               7f89f24d80:   910003e0        mov     x0, sp
               7f89f24d84:   94000d53        bl      7f89f282d0 <free@plt+0x3790>
@@ -583,7 +583,7 @@ an above but for traces but for kernel traces, the command line becomes:
     linaro@t430:~/linaro/coresight/sept20$ export XTOOL_PATH=/your/aarch64/toolchain/path/bin/
     linaro@t430:~/linaro/coresight/sept20$ ../perf-opencsd-master/tools/perf/perf --exec-path=${EXEC_PATH} script	\
 							--vmlinux=./vmlinux					\
-							--script=python:${SCRIPT_PATH}/cs-trace-disasm.py --	\
+							--script=python:${SCRIPT_PATH}/arm-cs-trace-disasm.py --	\
 							-d ${XTOOLS_PATH}/aarch64-linux-gnu-objdump		\
 							-k ./vmlinux
     ...
