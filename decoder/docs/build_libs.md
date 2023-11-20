@@ -18,7 +18,7 @@ Building the Library
 --------------------
 
 The library and test programs are built from the library `./build/<platform>` directory, where
-<platform> is either 'linux' or 'win-vs2015' / 'win-vs2022'
+<platform> is either 'linux' or 'win-vs2022'
 
 See [`./docs/test_progs.md`](@ref test_progs) for further information on use of the test 
 programs.
@@ -171,4 +171,49 @@ To link against the C-API static library, include the library name in the depend
 the header file. Also link against the main C++ library.
 
 To link against the main C++ library include the library name in the dependency list.
+
+
+Library Performance Options
+---------------------------
+
+The library caches parts of the memory images requested during the decode process, to improve performance by reducing the number of requests to the memory accessor (memacc) objects or callbacks.
+
+The default settings can be adjusted at runtime either by programmable API, or using environment variables.
+
+Cache parameters can be set in terms of page size and number of pages.
+Caching can also be disabled.
+
+Page size can vary between 64 bytes and 16384 bytes.
+Number of pages can vary between 4 and 256.
+
+Default values are set at 16 pages of 2048 bytes.
+
+### Environment variables to control caching ###
+
+- `OPENCSD_MEMACC_CACHE_PAGE_SIZE` : Page size in bytes.
+- `OPENCSD_MEMACC_CACHE_PAGE_NUM`  : number of pages.
+- `OPENCSD_MEMACC_CACHE_OFF`       : disable memacc caching.
+
+
+Library Debug Options
+---------------------
+
+### ETMv4 / ETE instruction run limit ###
+
+The ETMv4 / ETE decoder has an optional run length limit for the amount of instructions in a range permitted before an error code will be returned.
+
+This option allows debug of potential runaway decode if incorrect memory image imformation is provided to the debuger.
+
+Option controlled by environment variable `OPENCSD_INSTR_RANGE_LIMIT`. Set value to number of instructions as the limit. 
+
+### AA64 Invalid opcode detection ###
+
+The instruction decode part of the library can be set to detect invalid aarch64 opcodes and throw an error.
+
+In the aarch64 opcodes define any opcode with the top 16 bits as 0x0000 as an invalid opcode range - which is the range detected by the library.
+Any other opcodes that are undefined or invalid that are not in this range will not be detected.
+
+This also allows the potential to detect runaway decode where incorrect memory information is supplied which contains data sections initilised with 0x00000000.
+
+Option is controlled by environment variable `OPENCSD_ERR_ON_AA64_BAD_OPCODE`. If this is set then the invalid opcodes will be detected.
 

@@ -293,16 +293,34 @@ contain instruction opcodes that may be executed during the operation of the tra
 the decoder to follow the path of the traced program by interpreting the information contained within the trace that 
 defines which program branches are taken and the target addresses of those branches.
 
+Memory images are associated with a memory space. This is a combination of exception level and security state. The images can
+be associated with a specific memory space, or a larger, more generic memory space. For example a memory image can be associated
+with all secure states (@ref OCSD_MEM_SPACE_S) or just the EL2 secure state (@ref OCSD_MEM_SPACE_EL2S).
+
 The library defined memory image accessor objects, which can be simple memory buffers, files containing the binary
 code image, or a callback that allows the client to handle memory accesses directly. When files are used, the 
  object may contain a set of base addresses and lengths, with offsets into the file - allowing the decoder 
  to directly access multiple code segments in executable image files.
 
-Memory image objects are collated by a memory mapper. This interfaces to the decoder through the ITargetMemAccess interface,
+Memory image accessor objects are collated by a memory mapper. This interfaces to the decoder through the ITargetMemAccess interface,
 and selects the correct image object for the address requested by the decoder. The memory mapper will also validate image 
-objects as they are added to the decoder, and will not permit overlapping images. 
+objects as they are added to the decoder. 
 
 ![Memory Mapper and Memory Images](memacc_objs.jpg)
+
+The mapper will not permit overlapping images in a given memory space - or between a specific and more generic memory space. 
+
+For example, an image registered with address 0x00000000, size 0x8000, memory space @ref OCSD_MEM_SPACE_EL2S, ( `mem[0x0000000, 0x8000, OCSD_MEM_SPACE_EL2S]`), 
+will not overlap with `mem[0x0000000, 0x8000, OCSD_MEM_SPACE_EL2N]`, which has an overlapping address range but distinct memory space, 
+but will overlap with `mem[0x00001000, 0x4000, OCSD_MEM_SPACE_S]`, which has both an overlappring memory range and the same memory space, as the any secure
+space OCSD_MEM_SPACE_S matches the specific EL2 secure space OCSD_MEM_SPACE_EL2S.
+
+When the decoder needs to access memory, it will call the mapper with an address, size and a specific memory space. The mapper will
+then attempt to match by address and memory space to fulfil the request. If the decoder asks for `mem[0x800000, 0x4, OCSD_MEM_SPACE_EL1N]`,
+this will match with an image object which inclues the address, in memory space OCSD_MEM_SPACE_EL1N, OCSD_MEM_SPACE_N or OCSD_MEM_SPACE_ANY.
+The prevention of overlapped memory spaces means that there will only be a single match available.
+
+__Adding and Using Memory Images__
 
 The client can add memory images to the decoder via API calls to the decode tree. These methods add memory image accessors of various
 types to be managed by a memory access mapper:-
@@ -322,11 +340,6 @@ types to be managed by a memory access mapper:-
 
 The `createMemAccMapper()` function must be called to create the mapper, before the `add...MemAcc()` calls are used.
 
-It is further possible to differentiate between memory image access objects by the memory space for which they are valid. If it is known that a certain code image 
-is present in secure EL3, then an image can be associated with the @ref ocsd_mem_space_acc_t type value @ref OCSD_MEM_SPACE_EL3, which will allow another image to be 
-present at the same address but a different exception level.  However, for the majority of systems, such detailed knowledge of the code is not available, or 
-overlaps across memory spaces do not occur. In these cases, and for general use (including Linux trace decode),  @ref OCSD_MEM_SPACE_ANY should be used.
-
 The C-API contains a similar set of calls to set up memory access objects:-
 
 ~~~{.c}
@@ -337,6 +350,22 @@ The C-API contains a similar set of calls to set up memory access objects:-
 ~~~
 
 Note that the C-API will automatically create a default mapper when the first memory access object is added.
+
+The global mapper currently available in the library assumes that any images loaded apply to all cores in the system, 
+throughout the decode session. There is currently no mapper in the library that will distinguish memory accessors by both memory space and cpu.
+
+Therefore the choice of memory image accessor added will depend on the client. 
+
+For a session where the images are static throughout the session, apply to all the cores in a system, the client can add file or buffer type memory accessor can 
+be used. This is the model used by the library test program `trc_pkt_lister`.
+
+Where the memory images can change over time, and/or differ according to the processor executing the code, then a callback memory accessor is 
+generally used by the client. The `perf` tool used in the Linux kernel uses a callback memory accessor when decoding trace. The tool has
+a database of loaded programs on a per cpu basis over the time of trace recording. `perf` uses the callback accessor with the address and size 
+set to the entire system memory area, with a memory space set to @ref OCSD_MEM_SPACE_ANY. This allows the decoder to callback into the `perf`
+client which will then determine the correct program image according to information collected and the cpu and progress through the trace session,
+and return the correct block of memory to the decode library.
+
 
 ### Adding the output callbacks ###
 

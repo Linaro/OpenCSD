@@ -313,6 +313,8 @@
     <None Include="..\..\..\docs\build_libs.md" />
     <None Include="..\..\..\docs\external_custom.md" />
     <None Include="..\..\..\docs\man\trc_pkt_lister.1" />
+    <None Include="..\..\..\docs\prog_guide\prog_guide_generic_pkts.md" />
+    <None Include="..\..\..\docs\prog_guide\prog_guide_main.md" />
     <None Include="..\..\..\docs\test_progs.md" />
   </ItemGroup>
   <ItemGroup>
