@@ -89,6 +89,7 @@ private:
     void LogError(const std::string &msg);
     void LogError(const ocsdError &err);
 
+    ocsd_mem_space_acc_t getMemSpaceFromString(const std::string& memspace);
     void processDumpfiles(std::vector<Parser::DumpDef> &dumps);
 
 

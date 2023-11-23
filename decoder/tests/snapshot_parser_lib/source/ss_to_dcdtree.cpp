@@ -555,10 +555,61 @@ bool CreateDcdTreeFromSnapShot::getCoreProfile(const std::string &coreName, ocsd
     return profileOK;
 }
 
+typedef struct mem_space_keys {
+    const char* key_name;
+    ocsd_mem_space_acc_t memspace;
+} mem_space_keys_t;
+
+static mem_space_keys_t space_map[] = {
+    /* single spaces */
+    { "EL1S", OCSD_MEM_SPACE_EL1S },
+    { "EL1N", OCSD_MEM_SPACE_EL1N },
+    { "EL1R", OCSD_MEM_SPACE_EL1R },
+    { "EL2S", OCSD_MEM_SPACE_EL2S },
+    { "EL2" , OCSD_MEM_SPACE_EL2 }, /* old EL2 NS name - prior to EL2S existing */
+    { "EL2N", OCSD_MEM_SPACE_EL2 },
+    { "EL2R", OCSD_MEM_SPACE_EL2R },
+    { "EL3" , OCSD_MEM_SPACE_EL3  },
+    { "ROOT", OCSD_MEM_SPACE_ROOT },
+    /* multiple memory spaces */
+    { "S"   , OCSD_MEM_SPACE_S},
+    { "N"   , OCSD_MEM_SPACE_N},
+    { "R"   , OCSD_MEM_SPACE_R},
+    { "ANY" , OCSD_MEM_SPACE_ANY},
+    /* older names - from spec but not expected to be used in future. */
+    { "H"   , OCSD_MEM_SPACE_EL2 }, /* hypervisor - EL2 NS */
+    { "P"   , OCSD_MEM_SPACE_EL1N }, /* privileged - EL1 NS */
+    { "NP"   , OCSD_MEM_SPACE_EL1N }, /* non secure privileged - EL1 NS */
+    { "SP"   , OCSD_MEM_SPACE_EL1S }, /* secure privileged - EL1 S */
+    /* table terminator */
+    { "", OCSD_MEM_SPACE_NONE},
+};
+
+/* get mem space from input string */
+ocsd_mem_space_acc_t CreateDcdTreeFromSnapShot::getMemSpaceFromString(const std::string& memspace)
+{
+    
+    
+    ocsd_mem_space_acc_t mem_space = OCSD_MEM_SPACE_ANY;
+    if (memspace.length() > 0) {
+        int i = 0;
+
+        while (space_map[i].memspace != OCSD_MEM_SPACE_NONE) {
+            if (space_map[i].key_name == memspace) {
+                mem_space = space_map[i].memspace;
+                break;
+            }
+            i++;
+        }
+    }
+    return mem_space;
+}
+
 void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &dumps)
 {
     std::string dumpFilePathName;
     std::vector<Parser::DumpDef>::const_iterator it;
+    ocsd_mem_space_acc_t mem_space;
 
     it = dumps.begin();
     while(it != dumps.end())
@@ -570,13 +621,14 @@ void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &d
         region.start_address = it->address;
         region.file_offset = it->offset;
         region.region_size = it->length;
+        mem_space = getMemSpaceFromString(it->space);
 
         // ensure we respect optional length and offset parameter and
         // allow multiple dump entries with same file name to define regions
         if (!TrcMemAccessorFile::isExistingFileAccessor(dumpFilePathName))
-            err = m_pDecodeTree->addBinFileRegionMemAcc(&region, 1, OCSD_MEM_SPACE_ANY, dumpFilePathName);
+            err = m_pDecodeTree->addBinFileRegionMemAcc(&region, 1, mem_space, dumpFilePathName);
         else
-            err = m_pDecodeTree->updateBinFileRegionMemAcc(&region, 1, OCSD_MEM_SPACE_ANY, dumpFilePathName);
+            err = m_pDecodeTree->updateBinFileRegionMemAcc(&region, 1, mem_space, dumpFilePathName);
         if(err != OCSD_OK)
         {                            
             std::ostringstream oss;
