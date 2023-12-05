@@ -142,6 +142,8 @@ void TrcPktDecodeStm::resetDecoder()
     m_payload_odd_nibble = false;
     m_output_elem.init();
     m_swt_packet_info.swt_flag_bits = 0;	// zero out everything
+    m_swt_packet_info.swt_master_id = 0;
+    m_swt_packet_info.swt_channel_id = 0;
     initPayloadBuffer();
 }
 
@@ -174,7 +176,11 @@ ocsd_datapath_resp_t TrcPktDecodeStm::decodePacket(bool &bPktDone)
         resetDecoder();
         break;
 
-    case STM_PKT_VERSION:    /**< Version packet  - not relevant to generic (versionless) o/p */
+    case STM_PKT_VERSION:    /**< Version packet - no output but forces current IDs to 0 */
+        m_swt_packet_info.swt_master_id = m_curr_packet_in->getMaster();
+        m_swt_packet_info.swt_channel_id = m_curr_packet_in->getChannel();
+        break;
+        
     case STM_PKT_ASYNC:      /**< Alignment synchronisation packet */
     case STM_PKT_INCOMPLETE_EOT:     /**< Incomplete packet flushed at end of trace. */
         // no action required.
@@ -216,7 +222,7 @@ ocsd_datapath_resp_t TrcPktDecodeStm::decodePacket(bool &bPktDone)
         m_swt_packet_info.swt_id_valid = 1;
         break;
 
-    case STM_PKT_C8:         /**< Set lower 8 bits of current channel - packet proc hadnles this */
+    case STM_PKT_C8:         /**< Set lower 8 bits of current channel - packet proc handles this */
     case STM_PKT_C16:        /**< Set current channel */
         m_swt_packet_info.swt_channel_id = m_curr_packet_in->getChannel(); 
         break;
