@@ -97,9 +97,29 @@ do
     echo "Done : Return $?"
 done
 
+# === test for debugging issues ===
+# juno_r1_1 has fake data that triggers range limit and bad opcode if operating
+echo "Test with run limit on..."
+export OPENCSD_INSTR_RANGE_LIMIT=100
+env | grep OPENCSD
+${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/juno_r1_1" $@ -decode -logfilename "${OUT_DIR}/juno_r1_1_rangelimit.ppl"
+unset OPENCSD_INSTR_RANGE_LIMIT
+echo "Done : Return $?"
+env | grep OPENCSD
+
+echo "Test with bad opcode detect on..."
+export OPENCSD_ERR_ON_AA64_BAD_OPCODE=1
+env | grep OPENCSD
+${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/juno_r1_1" $@ -decode -logfilename "${OUT_DIR}/juno_r1_1_badopcode.ppl"
+unset OPENCSD_ERR_ON_AA64_BAD_OPCODE
+echo "Done : Return $?"
+env | grep OPENCSD
+
+
 # === test a packet only example ===
 echo "Testing init-short-addr..."
 ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/init-short-addr" $@ -pkt_mon -logfilename "${OUT_DIR}/init-short-addr.ppl"
+echo "Done : Return $?"
 
 # === test the TPIU deformatter ===
 echo "Testing a55-test-tpiu..."
