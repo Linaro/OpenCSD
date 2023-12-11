@@ -57,7 +57,7 @@ CFLAGS += $(MFLAG)
 LDFLAGS += $(MFLAG)
 
 ifdef GCCDIR
-GCCVER:= $(shell $(CROSS_COMPILE)gcc -dumpversion | cut -c 1-3)
+GCCVER:= $(shell $(CROSS_COMPILE)gcc -dumpversion | sed 's/\([0-9]*\.[0-9]*\).*/\1/')
 PLAT_DIR=builddir/linux$(BIT_VARIANT)/GCC_$(GCCVER)
 else
 PLAT_DIR=linux$(BIT_VARIANT)/$(BUILD_VARIANT)
