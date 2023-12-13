@@ -631,6 +631,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV3::processPHdr()
                         else
                             pElem->updateType(OCSD_GEN_TRC_ELEM_ADDR_NACC);
                         pElem->setAddrStart(m_code_follower.getNaccAddr());
+                        pElem->setExceptionNum((uint32_t)m_code_follower.getMemSpaceAccess());
                         setNeedAddr(true);
                         m_code_follower.clearNacc(); // we have generated some code for the nacc.
                     }

@@ -33,6 +33,7 @@
  */ 
 
 #include "common/trc_gen_elem.h"
+#include "mem_acc/trc_mem_acc_base.h"
 
 #include <string>
 #include <sstream>
@@ -125,6 +126,8 @@ void OcsdTraceElement::toString(std::string &str) const
     std::ostringstream oss;
     int num_str = sizeof(s_elem_descs) / sizeof(s_elem_descs[0]);
     int typeIdx = (int)this->elem_type;
+    std::string strEx;
+
     if(typeIdx < num_str)
     {
         oss << s_elem_descs[typeIdx][0] << "(";
@@ -145,7 +148,9 @@ void OcsdTraceElement::toString(std::string &str) const
             break;
 
         case OCSD_GEN_TRC_ELEM_ADDR_NACC:
-            oss << " 0x" << std::hex << st_addr << " ";
+            // exception number overridden to give mem space associated with NACC result.
+            TrcMemAccessorBase::getMemAccSpaceString(strEx, (ocsd_mem_space_acc_t)exception_number);
+            oss << " 0x" << std::hex << st_addr << "; Memspace [0x" << exception_number << ":" << strEx << "] ";
             break;
 
         case OCSD_GEN_TRC_ELEM_I_RANGE_NOPATH:

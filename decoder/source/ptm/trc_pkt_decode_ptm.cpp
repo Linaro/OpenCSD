@@ -497,6 +497,8 @@ ocsd_datapath_resp_t TrcPktDecodePtm::processAtom()
     {
         m_output_elem.setType(OCSD_GEN_TRC_ELEM_ADDR_NACC);
         m_output_elem.st_addr = m_nacc_addr;
+        // exception number used to NACC mem space.
+        m_output_elem.exception_number = (uint32_t)((m_pe_context.security_level == ocsd_sec_secure) ? OCSD_MEM_SPACE_S : OCSD_MEM_SPACE_N);
         resp = outputTraceElementIdx(m_index_curr_pkt,m_output_elem);
         m_mem_nacc_pending = false;
     }

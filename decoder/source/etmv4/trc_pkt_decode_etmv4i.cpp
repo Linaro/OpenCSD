@@ -1397,6 +1397,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
         {
             outElem().setType(OCSD_GEN_TRC_ELEM_ADDR_NACC);
             outElem().st_addr = m_instr_info.instr_addr;
+            outElem().exception_number = (uint32_t)getCurrMemSpace();
         }
     }
     return err;
@@ -1550,6 +1551,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
 
             outElem().setType(OCSD_GEN_TRC_ELEM_ADDR_NACC);
             outElem().st_addr = m_instr_info.instr_addr;
+            outElem().exception_number = (uint32_t)getCurrMemSpace();
 
             // used the element - need another for the final exception packet.
             if ((err = m_out_elem.addElem(excep_pkt_index)))
@@ -1730,6 +1732,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
         // can't access - no bytes returned - output nacc.
         err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_ADDR_NACC);
         outElem().setAddrStart(srcAddr.val);
+        outElem().exception_number = (uint32_t)getCurrMemSpace();
         return err;
     }
 
@@ -1830,6 +1833,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
                     if (err)
                         return err;
                     outElem().setAddrStart(srcAddr.val);
+                    outElem().exception_number = (uint32_t)getCurrMemSpace();
 
                     // force range to the one instruction
                     out_range.num_instr = 1;

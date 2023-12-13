@@ -101,6 +101,7 @@ public:
     const bool isNacc() const;                  //!< true if Memory Not Accessible (nacc) error occurred 
     void clearNacc();                           //!< clear the nacc error flag
     const ocsd_vaddr_t getNaccAddr() const;     //!< get the nacc error address.
+    const ocsd_mem_space_acc_t getMemSpaceAccess() const; //!< get the memory space used for access.
 
 private:
     bool initFollowerState();       //!< clear all the o/p data and flags, check init valid.
@@ -139,6 +140,11 @@ inline void OcsdCodeFollower::setArchProfile(const ocsd_arch_profile_t profile)
 inline void OcsdCodeFollower::setMemSpaceAccess(const ocsd_mem_space_acc_t mem_acc_rule)
 {
     m_mem_acc_rule = mem_acc_rule;
+}
+
+inline const ocsd_mem_space_acc_t OcsdCodeFollower::getMemSpaceAccess() const
+{
+    return m_mem_acc_rule;
 }
 
 inline void  OcsdCodeFollower::setMemSpaceCSID(const uint8_t csid)
