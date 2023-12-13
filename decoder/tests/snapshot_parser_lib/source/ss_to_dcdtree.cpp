@@ -64,6 +64,19 @@ void CreateDcdTreeFromSnapShot::initialise(SnapShotReader *pReader, ITraceErrorL
     }
 }
 
+std::string CreateDcdTreeFromSnapShot::getBufferFileNameFromBuffName(const std::string& buff_name)
+{
+    Parser::TraceBufferSourceTree tree;
+    std::string buffFileName = "";
+
+    if (m_pReader->getTraceBufferSourceTree(buff_name, tree))
+    {
+        buffFileName = m_pReader->getSnapShotDir() + tree.buffer_info.dataFileName;
+    }
+    return buffFileName;
+}
+
+
 bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, bool bPacketProcOnly, uint32_t add_create_flags)
 {    
     m_add_create_flags = add_create_flags;

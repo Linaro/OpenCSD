@@ -56,6 +56,7 @@ public:
     void destroyDecodeTree();
     DecodeTree *getDecodeTree() const { return m_pDecodeTree; };
     const char *getBufferFileName() const { return m_BufferFileName.c_str(); };
+    std::string getBufferFileNameFromBuffName(const std::string& buff_name);
 
     // TBD: add in filters for ID list, first ID found.
 

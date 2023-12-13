@@ -154,6 +154,8 @@ __Command Line Options__
 
 - `-id <n>`          : Set an ID to list (may be used multiple times) - default if no id set is for all IDs to be printed.
 - `-src_name <name>` : List packets from a given snapshot source name - e.g ETB_0. (defaults to first source found).
+- `-multi_session`   : Decode all buffers listed in snapshot under `buffers` key in `trace.ini`. Uses config of first 
+                       buffer to decode all. Ignored if `-src_name` is used.
 - `-dstream_format`  : Input is DSTREAM framed.
 - `-tpiu`            : Input data is from a TPIU source that has TPIU FSYNC packets present.
 - `-tpiu_hsync`      : Input data is from a TPIU source that has both TPIU FSYNC and HSYNC packets present.
