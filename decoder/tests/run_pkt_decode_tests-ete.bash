@@ -60,11 +60,14 @@ declare -a test_dirs_decode=( "001-ack_test"
                               "ete_spec_1"
                               "ete_spec_2"
                               "ete_spec_3"
+                              "ete_wfet"
                               "event_test"
                               "infrastructure"
                               "q_elem"
+                              "rme_test"
                               "s_9001"
                               "src_addr"
+                              "ss_ib_el1ns"
                               "tme_simple"
                               "tme_tcancel"
                               "tme_test"
@@ -74,13 +77,19 @@ declare -a test_dirs_decode=( "001-ack_test"
                               "ts_marker"
                             )
 
-
 # directories for tests using I_SRC_ADDR_range option
 declare -a test_dirs_decode_src_addr_opt=( "002-ack_test_scr"
                               "ete_ip"
                               "src_addr"
                               )
 
+# directories with multi session snapshots
+declare -a test_dirs_decode_multi_sess=( "ss_ib_el1ns"
+                                         "ete-ite-instr"
+                                         "q_elem"
+                                         "rme_test"
+                                         "s_9001"
+                                        )                                            
 
 echo "Running trc_pkt_lister on snapshot directories."
 
@@ -114,5 +123,12 @@ for test_dir_n in "${test_dirs_decode_src_addr_opt[@]}"
 do
     echo "Testing with -src_addr_n  $test_dir_n..."
     ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_n" $@ -decode -src_addr_n -logfilename "${OUT_DIR}/${test_dir_n}_src_addr_N.ppl"
+    echo "Done : Return $?"
+done
+
+for test_dir_ms in "${test_dirs_decode_multi_sess[@]}"
+do
+    echo "Testing with -multi_session  $test_dir_ms..."
+    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_ms" $@ -decode -multi_session -logfilename "${OUT_DIR}/${test_dir_ms}_multi_sess.ppl"
     echo "Done : Return $?"
 done
