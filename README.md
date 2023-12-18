@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.4.2_
+_Current Version 1.5.1_
 
 ### Current support:
 
@@ -311,6 +311,11 @@ _Version 1.4.2_:
     - __Bugfix__: STM: - fix master and channel ID initialisation (github issue #61 from MommeSherif)
     - __Bugfix__: Test: update README.md and perf-test-script.base for new paths (github issue #60 from yuxy-c)
     - __Bugfix__: build: Fix GCC version dir handling for versions of GCC > 9.
+
+
+ _Version_ 1.5.1_:
+    - __Update__: ETE: Add support for Arch 9.5 FEAT_PAUTH_LR. Add new instructions to disassembler to 
+                  recognise RETA<k>SPPC variants as indirect branches. Adds new test snapshots.
 
 
 Licence Information
