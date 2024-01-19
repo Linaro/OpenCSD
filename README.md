@@ -291,29 +291,32 @@ Version and Modification Information
                   Adds in new generic output packet type: OCSD_GEN_TRC_ELEM_INSTRUMENTATION.
     - __Bugfix__: Fix memory leak in mispredict handling (github issue #52 from yabinc)
 
-_Version 1.4.1_:
+- _Version 1.4.1_:
     - __Update__: Test: Update test program trc_pkt_lister with option to have no logging output - final stats only.
     - __Bugfix__: ETM4x: ETE: Fix memory leak / use after free (github issues #53, #58 from yabinc)
     - __Bugfix__: C-API: Fix memory leak with output sink object. (github issue #55)
 
-_Version 1.4.2_:
+- _Version 1.4.2_:
     - __Update__: Decoder memory access - add debug features and cacheing to improve performance of decode.
                   Caching controllable by API or environment variables.
     - __Update__: Decode debug options to control potential runaway debug when incorrect memory images input
                   to decoder.
-                   a) aarch64 instruction check for invalid instruction opcode. (any opcode with 0x0000 as top
+                  
+                   - aarch64 instruction check for invalid instruction opcode. (any opcode with 0x0000 as top
                       16 bits).
-                   b) optional instruction range maximum run limit. Set by environment variable.
+                      
+                   - optional instruction range maximum run limit. Set by environment variable.
+                   
     - __Update__: Remove VS2015 support.
     - __Bugfix__: Memory spaces: ensure that decoder memory requests are correctly labelled with Realm and
                   root characteristics when appropriate.
     - __Bugfix__: M class tail chained interrupts now correctly handled.    
     - __Bugfix__: STM: - fix master and channel ID initialisation (github issue #61 from MommeSherif)
-    - __Bugfix__: Test: update README.md and perf-test-script.base for new paths (github issue #60 from yuxy-c)
+    - __Bugfix__: Test: update HOWTO.md and perf-test-script.base for new paths (github issue #60 from yuxy-c)
     - __Bugfix__: build: Fix GCC version dir handling for versions of GCC > 9.
 
 
- _Version_ 1.5.1_:
+- _Version 1.5.1_:
     - __Update__: ETE: Add support for Arch 9.5 FEAT_PAUTH_LR. Add new instructions to disassembler to 
                   recognise RETA<k>SPPC variants as indirect branches. Adds new test snapshots.
 
