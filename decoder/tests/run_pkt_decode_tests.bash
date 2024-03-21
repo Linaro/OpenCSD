@@ -66,6 +66,8 @@ declare -a test_dirs_decode=( "juno-ret-stck"
                               "TC2"
                               "Snowball"
                               "test-file-mem-offsets"
+                              "itm_only_raw"
+                              "itm_only_csformat"                              
                             )
 
 
@@ -160,5 +162,12 @@ if [ "$1" != "use-installed" ]; then
     # === run the itm decoder test program ===
     echo "Running ITM decoder test"
     ${BIN_DIR}itm-decode-test -logfilename  "${OUT_DIR}/itm-decode-test.ppl" 
+    echo "Done : Return $?"
+fi
+
+# === run the itm decoder test program ===
+if [ "$1" != "use-installed" ]; then
+    echo "Running ITM decoder test"
+    ${BIN_DIR}itm-decode-test -decode -logfilename  "${OUT_DIR}/itm-decode-test.ppl" 
     echo "Done : Return $?"
 fi
