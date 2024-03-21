@@ -74,6 +74,7 @@ private:
     bool createSTDecoder(Parser::Parsed *devSrc);
     // protocol specific decoders
     bool createSTMDecoder(Parser::Parsed *devSrc);
+    bool createITMDecoder(Parser::Parsed* devSrc);
 
     typedef struct _regs_to_access {
         const char *pszName;
