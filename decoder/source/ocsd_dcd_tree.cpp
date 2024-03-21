@@ -798,6 +798,16 @@ ocsd_err_t DecodeTree::addPacketPrinter(uint8_t CSID, bool bMonitor, ItemPrinter
             }
             break;
 
+            case OCSD_PROTOCOL_ITM:
+            {
+                PacketPrinter<ItmTrcPacket>* pTPrinter = dynamic_cast<PacketPrinter<ItmTrcPacket> *>(pPrinter);
+                if (bMonitor)
+                    err = pElement->getDecoderMngr()->attachPktMonitor(pElement->getDecoderHandle(), (IPktRawDataMon<ItmTrcPacket> *)pTPrinter);
+                else
+                    err = pElement->getDecoderMngr()->attachPktSink(pElement->getDecoderHandle(), (IPktDataIn<ItmTrcPacket> *)pTPrinter);
+            }
+            break;
+
             default:
                 err = OCSD_ERR_NO_PROTOCOL;
                 break;

@@ -40,6 +40,7 @@
 #include "opencsd/ptm/trc_dcd_mngr_ptm.h"
 #include "opencsd/stm/trc_dcd_mngr_stm.h"
 #include "opencsd/ete/trc_dcd_mngr_ete.h"
+#include "opencsd/itm/trc_dcd_mngr_itm.h"
 
 // create array of built-in decoders to register with library 
 static built_in_decoder_info_t sBuiltInArray[] = {
@@ -47,7 +48,8 @@ static built_in_decoder_info_t sBuiltInArray[] = {
     CREATE_BUILTIN_ENTRY(DecoderMngrEtmV3, OCSD_BUILTIN_DCD_ETMV3),
     CREATE_BUILTIN_ENTRY(DecoderMngrPtm, OCSD_BUILTIN_DCD_PTM),
     CREATE_BUILTIN_ENTRY(DecoderMngrStm, OCSD_BUILTIN_DCD_STM),
-    CREATE_BUILTIN_ENTRY(DecoderMngrETE, OCSD_BUILTIN_DCD_ETE)
+    CREATE_BUILTIN_ENTRY(DecoderMngrETE, OCSD_BUILTIN_DCD_ETE),
+    CREATE_BUILTIN_ENTRY(DecoderMngrItm, OCSD_BUILTIN_DCD_ITM),
     //{ 0, 0, 0}
 };
 

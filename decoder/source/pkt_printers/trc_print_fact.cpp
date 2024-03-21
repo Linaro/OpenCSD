@@ -69,6 +69,9 @@ ItemPrinter *PktPrinterFact::createProtocolPrinter(std::vector<ItemPrinter *> &p
     case OCSD_PROTOCOL_STM:
         pPrinter = new (std::nothrow) PacketPrinter<StmTrcPacket>(CSID);
         break;
+    case OCSD_PROTOCOL_ITM:
+        pPrinter = new (std::nothrow) PacketPrinter<ItmTrcPacket>(CSID);
+        break;
     default:
         break;
     }

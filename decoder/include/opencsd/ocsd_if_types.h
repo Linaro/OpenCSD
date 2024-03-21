@@ -566,7 +566,7 @@ typedef struct _ocsd_file_mem_region {
 #define OCSD_BUILTIN_DCD_ETMV4D     "ETMV4D"    /**< ETMv4 data decoder */
 #define OCSD_BUILTIN_DCD_PTM        "PTM"       /**< PTM decoder */
 #define OCSD_BUILTIN_DCD_ETE        "ETE"       /**< ETE decoder */
-#define OCSD_BUILDIN_DCD_ITM        "ITM"       /**< ITM decoder */
+#define OCSD_BUILTIN_DCD_ITM        "ITM"       /**< ITM decoder */
 
 /*! Trace Protocol Builtin Types + extern
  */
