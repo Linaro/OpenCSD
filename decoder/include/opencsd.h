@@ -64,6 +64,7 @@
 #include "opencsd/ptm/ptm_decoder.h"
 #include "opencsd/stm/stm_decoder.h"
 #include "opencsd/ete/ete_decoder.h"
+#include "opencsd/itm/itm_decoder.h"
 
 /** C++ library object types */
 #include "common/ocsd_error_logger.h"
