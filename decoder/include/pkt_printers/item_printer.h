@@ -56,17 +56,21 @@ public:
     void setMute(bool mute);
     const bool is_muted() const;
 
-
+    // mute ID printing for testing 
+    void muteIDPrint(bool mute) { m_mute_id_print = mute; };
+    const bool id_print_muted() const { return m_mute_id_print;  }
 protected:
     ocsdMsgLogger *m_pMsgLogger;    
     int m_test_waits;
     bool m_mute;
+    bool m_mute_id_print;
 };
 
 inline ItemPrinter::ItemPrinter() :
    m_pMsgLogger(0),
    m_test_waits(0),
-   m_mute(false)
+   m_mute(false),
+   m_mute_id_print(false)
 {
 }
 
