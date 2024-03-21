@@ -340,6 +340,7 @@ OCSD_C_API ocsd_err_t ocsd_pkt_str(const ocsd_trace_protocol_t pkt_protocol, con
     switch(pkt_protocol)
     {
     case OCSD_PROTOCOL_ETMV4I:
+    case OCSD_PROTOCOL_ETE:
         trcPrintElemToString<EtmV4ITrcPacket,ocsd_etmv4_i_pkt>(p_pkt, pktStr);
         break;
 
@@ -353,6 +354,10 @@ OCSD_C_API ocsd_err_t ocsd_pkt_str(const ocsd_trace_protocol_t pkt_protocol, con
 
     case OCSD_PROTOCOL_PTM:
         trcPrintElemToString<PtmTrcPacket,ocsd_ptm_pkt>(p_pkt, pktStr);
+        break;
+
+    case OCSD_PROTOCOL_ITM:
+        trcPrintElemToString<ItmTrcPacket, ocsd_itm_pkt>(p_pkt, pktStr);
         break;
 
     default:
@@ -538,6 +543,7 @@ static ocsd_err_t ocsd_create_pkt_sink_cb(ocsd_trace_protocol_t protocol,  FnDef
     switch(protocol)
     {
     case OCSD_PROTOCOL_ETMV4I:
+    case OCSD_PROTOCOL_ETE:
         *ppCBObj = new (std::nothrow) PktCBObj<EtmV4ITrcPacket>(pPktInFn,p_context); 
         break;
 
@@ -551,6 +557,10 @@ static ocsd_err_t ocsd_create_pkt_sink_cb(ocsd_trace_protocol_t protocol,  FnDef
 
     case OCSD_PROTOCOL_STM:
         *ppCBObj = new (std::nothrow) PktCBObj<StmTrcPacket>(pPktInFn,p_context); 
+        break;
+
+    case OCSD_PROTOCOL_ITM:
+        *ppCBObj = new (std::nothrow) PktCBObj<ItmTrcPacket>(pPktInFn, p_context);
         break;
 
     default:
@@ -577,6 +587,7 @@ static ocsd_err_t ocsd_create_pkt_mon_cb(ocsd_trace_protocol_t protocol, FnDefPk
     switch(protocol)
     {
     case OCSD_PROTOCOL_ETMV4I:
+    case OCSD_PROTOCOL_ETE:
         *ppCBObj = new (std::nothrow) PktMonCBObj<EtmV4ITrcPacket>(pPktInFn,p_context); 
         break;
 
@@ -590,6 +601,10 @@ static ocsd_err_t ocsd_create_pkt_mon_cb(ocsd_trace_protocol_t protocol, FnDefPk
 
     case OCSD_PROTOCOL_STM:
         *ppCBObj = new (std::nothrow) PktMonCBObj<StmTrcPacket>(pPktInFn,p_context); 
+        break;
+
+    case OCSD_PROTOCOL_ITM:
+        *ppCBObj = new (std::nothrow) PktMonCBObj<ItmTrcPacket>(pPktInFn, p_context);
         break;
 
     default:
