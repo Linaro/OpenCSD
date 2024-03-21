@@ -60,7 +60,8 @@ ocsd_datapath_resp_t TrcGenericElementPrinter::TraceElemIn(const ocsd_trc_index_
 
     std::string elemStr;
     std::ostringstream oss;
-    oss << "Idx:" << index_sop << "; ID:" << std::hex << (uint32_t)trc_chan_id << "; ";
+    if (!id_print_muted())
+        oss << "Idx:" << index_sop << "; ID:" << std::hex << (uint32_t)trc_chan_id << "; ";
     elem.toString(elemStr);
     oss << elemStr << std::endl;
     itemPrintLine(oss.str());
