@@ -60,8 +60,7 @@ public:
                                    const P *pkt,
                                    const uint32_t size,
                                    const uint8_t *p_data);
-
-
+    
 private:
     void printIdx_ID(const ocsd_trc_index_t index_sop);
 
@@ -187,7 +186,8 @@ template<class P> void PacketPrinter<P>::RawPacketDataMon( const ocsd_datapath_o
 
 template<class P> void PacketPrinter<P>::printIdx_ID(const ocsd_trc_index_t index_sop)
 {
-    m_oss << "Idx:" << std::dec << index_sop << "; ID:"<< std::hex << (uint32_t)m_trcID;
+    if (!id_print_muted())
+        m_oss << "Idx:" << std::dec << index_sop << "; ID:"<< std::hex << (uint32_t)m_trcID;
 }
 
 #endif // ARM_PKT_PRINTER_T_H_INCLUDED
