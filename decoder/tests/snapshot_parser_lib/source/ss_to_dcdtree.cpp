@@ -449,6 +449,10 @@ bool CreateDcdTreeFromSnapShot::createSTDecoder(Parser::Parsed *devSrc)
     {
         bCreatedDecoder = createSTMDecoder(devSrc);
     }
+    else if (devTypeName == ITMProtocol)
+    {
+        bCreatedDecoder = createITMDecoder(devSrc);
+    }
 
     return bCreatedDecoder;
 }
@@ -478,6 +482,36 @@ bool CreateDcdTreeFromSnapShot::createSTMDecoder(Parser::Parsed *devSrc)
             createdDecoder = true;
         else
             LogError(ocsdError(OCSD_ERR_SEV_ERROR,err,"Snapshot processor : failed to create STM decoder on decode tree."));
+    }
+
+    return createdDecoder;
+}
+
+bool CreateDcdTreeFromSnapShot::createITMDecoder(Parser::Parsed* devSrc)
+{
+    bool createdDecoder = false;
+    bool configOK = true;
+
+    // generate the config data from the device data.
+
+    ocsd_itm_cfg config;
+
+    regs_to_access_t regs_to_access[] = {
+        { ITMRegTCR, true, &config.reg_tcr, 0 }
+    };
+
+    configOK = getRegisters(devSrc->regDefs, sizeof(regs_to_access) / sizeof(regs_to_access_t), regs_to_access);
+    if (configOK)
+    {
+        ocsd_err_t err = OCSD_OK;
+        ITMConfig configObj(&config);
+
+        err = m_pDecodeTree->createDecoder(OCSD_BUILTIN_DCD_ITM, m_bPacketProcOnly ? OCSD_CREATE_FLG_PACKET_PROC : OCSD_CREATE_FLG_FULL_DECODER, &configObj);
+
+        if (err == OCSD_OK)
+            createdDecoder = true;
+        else
+            LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, "Snapshot processor : failed to create ITM decoder on decode tree."));
     }
 
     return createdDecoder;
