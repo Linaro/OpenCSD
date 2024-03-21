@@ -969,10 +969,10 @@ uint64_t TrcPktProcStm::bin_to_gray(uint64_t bin_value)
 uint64_t TrcPktProcStm::gray_to_bin(uint64_t gray_value)
 {
 	uint64_t bin_value = 0;
-	int bin_bit = 0;
+	uint64_t bin_bit = 0;
 	for (; bin_bit < 64; bin_bit++) {
-		uint8_t bit_tmp = ((1ull << bin_bit) & gray_value) >> bin_bit;
-		uint8_t gray_bit = bin_bit + 1;
+		uint64_t bit_tmp = ((1ull << bin_bit) & gray_value) >> bin_bit;
+		uint64_t gray_bit = bin_bit + 1;
 		for (; gray_bit < 64; gray_bit++)
 			bit_tmp ^= (((1ull << gray_bit) & gray_value) >> gray_bit);
 
