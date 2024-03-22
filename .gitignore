@@ -69,3 +69,7 @@ decoder/tests/results*
 *.recipe
 decoder/tests/ds-snapshots
 *.FileListAbsolute.txt
+decoder/tests/build/win-vs2022/c_api_pkt_print_test/Release/*
+decoder/tests/build/win-vs2022/itm_decode_test/x64/Release/*
+decoder/tests/build/win-vs2022/mem-acc-test/x64/Release/*
+decoder/tests/build/win-vs2022/perr/x64/Release/*
