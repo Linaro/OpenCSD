@@ -70,6 +70,12 @@
     <Filter Include="Source Files\ete">
       <UniqueIdentifier>{8cfdb19c-28fc-4e79-b8d5-4e54907b1f82}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\itm">
+      <UniqueIdentifier>{ad97b1ac-658c-49bd-b493-17086813c52c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\itm">
+      <UniqueIdentifier>{d7a96e42-6f7b-41b7-8df8-c603fd2e6650}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\LICENSE">
@@ -386,6 +392,30 @@
     <ClInclude Include="..\..\..\include\opencsd\etmv4\trc_pkt_proc_etmv4i.h">
       <Filter>Header Files\etmv4</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_pkt_types_itm.h">
+      <Filter>Header Files\itm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_pkt_proc_itm.h">
+      <Filter>Header Files\itm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_cmp_cfg_itm.h">
+      <Filter>Header Files\itm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_pkt_elem_itm.h">
+      <Filter>Header Files\itm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_pkt_decode_itm.h">
+      <Filter>Header Files\itm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\itm\itm_decoder.h">
+      <Filter>Header Files\itm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_dcd_mngr_itm.h">
+      <Filter>Header Files\itm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\common\cs_frame_mux_data.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\trc_component.cpp">
@@ -519,6 +549,18 @@
     </ClCompile>
     <ClCompile Include="..\..\..\source\pkt_printers\gen_elem_printer.cpp">
       <Filter>Source Files\pkt_printers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\itm\trc_pkt_elem_itm.cpp">
+      <Filter>Source Files\itm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\itm\trc_pkt_proc_itm.cpp">
+      <Filter>Source Files\itm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\itm\trc_pkt_decode_itm.cpp">
+      <Filter>Source Files\itm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\cs_frame_mux_data.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
