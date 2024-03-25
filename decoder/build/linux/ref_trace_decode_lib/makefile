@@ -46,7 +46,9 @@ VPATH=	$(OCSD_SOURCE) \
 		$(OCSD_SOURCE)/i_dec \
 		$(OCSD_SOURCE)/mem_acc \
 		$(OCSD_SOURCE)/stm \
-		$(OCSD_SOURCE)/pkt_printers
+		$(OCSD_SOURCE)/pkt_printers \
+		$(OCSD_SOURCE)/itm
+
 
 
 CXX_INCLUDES= \
@@ -85,6 +87,11 @@ STMOBJ=		$(BUILD_DIR)/trc_pkt_elem_stm.o \
 			$(BUILD_DIR)/trc_pkt_proc_stm.o \
 			$(BUILD_DIR)/trc_pkt_decode_stm.o
 
+ITMOBJ=		$(BUILD_DIR)/trc_pkt_elem_itm.o \
+			$(BUILD_DIR)/trc_pkt_proc_itm.o \
+			$(BUILD_DIR)/trc_pkt_decode_itm.o
+
+
 PKTPRNTOBJ=	$(BUILD_DIR)/raw_frame_printer.o \
 			$(BUILD_DIR)/trc_print_fact.o \
 			$(BUILD_DIR)/gen_elem_printer.o
@@ -105,11 +112,13 @@ OBJECTS=$(BUILD_DIR)/ocsd_code_follower.o \
 		$(BUILD_DIR)/trc_gen_elem.o \
 		$(BUILD_DIR)/trc_printable_elem.o \
 		$(BUILD_DIR)/trc_ret_stack.o \
+		$(BUILD_DIR)/cs_frame_mux_data.o \
 		$(ETMV3OBJ) \
 		$(ETMV4OBJ) \
 		$(IDECOBJ) \
 		$(MEMACCOBJ) \
 		$(STMOBJ) \
+		$(ITMOBJ) \
 		$(PTMOBJ) \
 		$(PKTPRNTOBJ)
 
