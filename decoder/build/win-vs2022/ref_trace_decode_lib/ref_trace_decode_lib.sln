@@ -42,6 +42,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mem-acc-test", "..\..\..\te
 		{7F500891-CC76-405F-933F-F682BC39F923} = {7F500891-CC76-405F-933F-F682BC39F923}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "itm_decode_test", "..\..\..\tests\build\win-vs2022\itm_decode_test\itm_decode_test.vcxproj", "{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7F500891-CC76-405F-933F-F682BC39F923} = {7F500891-CC76-405F-933F-F682BC39F923}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -198,6 +203,22 @@ Global
 		{FF4F9135-DD70-4698-9B8F-0451CEA3CA44}.Release-dll|Win32.Build.0 = Release|Win32
 		{FF4F9135-DD70-4698-9B8F-0451CEA3CA44}.Release-dll|x64.ActiveCfg = Release|x64
 		{FF4F9135-DD70-4698-9B8F-0451CEA3CA44}.Release-dll|x64.Build.0 = Release|x64
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Debug|Win32.Build.0 = Debug|Win32
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Debug|x64.ActiveCfg = Debug|x64
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Debug|x64.Build.0 = Debug|x64
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Debug-dll|Win32.ActiveCfg = Debug|Win32
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Debug-dll|Win32.Build.0 = Debug|Win32
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Debug-dll|x64.ActiveCfg = Debug|x64
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Debug-dll|x64.Build.0 = Debug|x64
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Release|Win32.ActiveCfg = Release|Win32
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Release|Win32.Build.0 = Release|Win32
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Release|x64.ActiveCfg = Release|x64
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Release|x64.Build.0 = Release|x64
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Release-dll|Win32.ActiveCfg = Release|Win32
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Release-dll|Win32.Build.0 = Release|Win32
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Release-dll|x64.ActiveCfg = Release|x64
+		{7DFD0C3C-32B5-4CCD-82B3-B535752B1A3A}.Release-dll|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
