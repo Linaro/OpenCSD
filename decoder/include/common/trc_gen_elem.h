@@ -78,10 +78,12 @@ public:
     void setAddrStart(const ocsd_vaddr_t st_addr) { this->st_addr = st_addr; };
     void setLastInstrCond(const int is_cond) { this->last_instr_cond = is_cond; };
 
-    void setSWTInfo(const ocsd_swt_info_t swt_info) { sw_trace_info = swt_info; };
+    void setSWTInfo(const ocsd_swt_info_t swt_info) { sw_trace_info = swt_info; };    
     void setExtendedDataPtr(const void *data_ptr);
 
     void setITEInfo(const trace_sw_ite_t sw_instrumentation) { sw_ite = sw_instrumentation; };
+
+    void setSWT_ITMInfo(const swt_itm_info itm_info);
 
     void setSyncMarker(const trace_marker_payload_t &marker);
 
@@ -102,6 +104,7 @@ public:
 
 private:
     void printSWInfoPkt(std::ostringstream &oss) const;
+    void printSWInfoPktItm(std::ostringstream& oss) const;
     void clearPerPktData(); //!< clear flags that indicate validity / have values on a per packet basis
 
 };
@@ -221,6 +224,11 @@ inline void OcsdTraceElement::copyPersistentData(const OcsdTraceElement &src)
 {
     isa = src.isa;
     context = src.context;
+}
+
+inline void OcsdTraceElement::setSWT_ITMInfo(const swt_itm_info itm_info)
+{
+    swt_itm = itm_info;
 }
 
 /** @}*/
