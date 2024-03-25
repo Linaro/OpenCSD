@@ -320,6 +320,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\include\common\comp_attach_notifier_i.h" />
     <ClInclude Include="..\..\..\include\common\comp_attach_pt_t.h" />
+    <ClInclude Include="..\..\..\include\common\cs_frame_mux_data.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_code_follower.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_dcd_mngr.h" />
     <ClInclude Include="..\..\..\include\common\ocsd_dcd_mngr_i.h" />
@@ -385,6 +386,13 @@
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_cb_if.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_file.h" />
     <ClInclude Include="..\..\..\include\mem_acc\trc_mem_acc_mapper.h" />
+    <ClInclude Include="..\..\..\include\opencsd\itm\itm_decoder.h" />
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_cmp_cfg_itm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_dcd_mngr_itm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_pkt_decode_itm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_pkt_elem_itm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_pkt_proc_itm.h" />
+    <ClInclude Include="..\..\..\include\opencsd\itm\trc_pkt_types_itm.h" />
     <ClInclude Include="..\..\..\include\opencsd\ocsd_if_types.h" />
     <ClInclude Include="..\..\..\include\opencsd.h" />
     <ClInclude Include="..\..\..\include\opencsd\ocsd_if_version.h" />
@@ -414,6 +422,7 @@
     <ClInclude Include="..\..\..\source\trc_frame_deformatter_impl.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\source\cs_frame_mux_data.cpp" />
     <ClCompile Include="..\..\..\source\ete\trc_cmp_cfg_ete.cpp" />
     <ClCompile Include="..\..\..\source\etmv3\trc_cmp_cfg_etmv3.cpp" />
     <ClCompile Include="..\..\..\source\etmv3\trc_pkt_decode_etmv3.cpp" />
@@ -425,6 +434,9 @@
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_decode_etmv4i.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_elem_etmv4i.cpp" />
     <ClCompile Include="..\..\..\source\etmv4\trc_pkt_proc_etmv4i.cpp" />
+    <ClCompile Include="..\..\..\source\itm\trc_pkt_decode_itm.cpp" />
+    <ClCompile Include="..\..\..\source\itm\trc_pkt_elem_itm.cpp" />
+    <ClCompile Include="..\..\..\source\itm\trc_pkt_proc_itm.cpp" />
     <ClCompile Include="..\..\..\source\i_dec\trc_idec_arminst.cpp" />
     <ClCompile Include="..\..\..\source\i_dec\trc_i_decode.cpp" />
     <ClCompile Include="..\..\..\source\mem_acc\trc_mem_acc_base.cpp" />
