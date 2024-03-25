@@ -55,10 +55,11 @@ static const char *s_elem_descs[][2] =
     {"OCSD_GEN_TRC_ELEM_TIMESTAMP","Timestamp - preceding elements happeded before this time."},
     {"OCSD_GEN_TRC_ELEM_CYCLE_COUNT","Cycle count - cycles since last cycle count value - associated with a preceding instruction range."},
     {"OCSD_GEN_TRC_ELEM_EVENT","Event - numbered event or trigger"},
-    {"OCSD_GEN_TRC_ELEM_SWTRACE","Software trace packet - may contain data payload. STM / ITM hardware trace with channel protocol."},
+    {"OCSD_GEN_TRC_ELEM_SWTRACE","Software trace packet - may contain data payload. STM hardware trace with channel protocol."},
     {"OCSD_GEN_TRC_ELEM_SYNC_MARKER","Synchronisation marker - marks position in stream of an element that is output later."},
     {"OCSD_GEN_TRC_ELEM_MEMTRANS","Trace indication of transactional memory operations."},
     {"OCSD_GEN_TRC_ELEM_INSTRUMENTATION", "PE instrumentation trace - PE generated SW trace, application dependent protocol."},
+    {"OCSD_GEN_TRC_ELEM_ITMTRACE", "Software trace packet - ITM hardware trace protocol."},
     {"OCSD_GEN_TRC_ELEM_CUSTOM","Fully custom packet type."}
 };
 
@@ -204,6 +205,10 @@ void OcsdTraceElement::toString(std::string &str) const
             printSWInfoPkt(oss);
             break;
 
+        case OCSD_GEN_TRC_ELEM_ITMTRACE:
+            printSWInfoPktItm(oss);
+            break;
+
         case OCSD_GEN_TRC_ELEM_EVENT:
             if(trace_event.ev_type == EVENT_TRIGGER)
                 oss << " Trigger; ";
@@ -308,6 +313,51 @@ void OcsdTraceElement::printSWInfoPkt(std::ostringstream & oss) const
     else
     {
         oss << "{Global Error.}";
+    }
+}
+
+void OcsdTraceElement::printSWInfoPktItm(std::ostringstream& oss) const
+{
+    const char* ts_local_desc = 0;    
+
+    if (swt_itm.overflow)
+        oss << "ITM_OVERFLOW; ";
+
+    switch (swt_itm.pkt_type) 
+    {
+    case SWIT_PAYLOAD:
+        oss << "ITM_SWIT (ch: 0x" << std::hex << (uint16_t)swt_itm.payload_src_id << "; Data: 0x" << std::hex << std::setfill('0') << std::setw(swt_itm.payload_size * 2) << swt_itm.value << ") ";
+        break;
+
+    case DWT_PAYLOAD:
+        oss << "ITM_DWT (desc: 0x" << std::hex << (uint16_t)swt_itm.payload_src_id << "; Data: 0x" << std::setfill('0') << std::hex << std::setw(swt_itm.payload_size * 2) << swt_itm.value << ") ";
+        break;
+
+    case TS_GLOBAL:
+        oss << "ITM_TS_GLOBAL ( TS: 0x" << std::setfill('0') << std::hex << std::setw(16) << timestamp << ") ";
+        break;
+
+    case TS_SYNC:
+        ts_local_desc = "TS Sync";
+        break;
+
+    case TS_DELAY:
+        ts_local_desc = "TS Delay";
+        break;
+
+    case TS_PKT_DELAY:
+        ts_local_desc = "Packet Delay";
+        break;
+
+    case TS_PKT_TS_DELAY:
+        ts_local_desc = "TS and Packet Delay";
+        break;
+    }
+
+    if (ts_local_desc)
+    {
+        oss << "ITM_TS_LOCAL ( TS delta: 0x" << std::hex << std::setw(8) << std::setfill('0') << swt_itm.value << ", { " << ts_local_desc << "}; ";
+        oss << "TS cumulative: 0x" << std::setw(16) << timestamp << ") ";        
     }
 }
 
