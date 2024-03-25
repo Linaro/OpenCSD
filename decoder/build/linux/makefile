@@ -176,6 +176,8 @@ tests: libs
 	cd $(OCSD_ROOT)/tests/build/linux/frame_demux_test && $(MAKE)
 	cd $(OCSD_ROOT)/tests/build/linux/perr && $(MAKE)
 	cd $(OCSD_ROOT)/tests/build/linux/mem_acc_test && $(MAKE)
+	cd $(OCSD_ROOT)/tests/build/linux/itm_decode_test && $(MAKE)
+
 
 #
 # build docs
@@ -204,6 +206,7 @@ clean_tests:
 	cd $(OCSD_ROOT)/tests/build/linux/frame_demux_test && $(MAKE) clean
 	cd $(OCSD_ROOT)/tests/build/linux/perr && $(MAKE) clean
 	cd $(OCSD_ROOT)/tests/build/linux/mem_acc_test && $(MAKE) clean
+	cd $(OCSD_ROOT)/tests/build/linux/itm_decode_test && $(MAKE) clean
 	-rmdir $(OCSD_TESTS)/lib
 
 clean_docs:
