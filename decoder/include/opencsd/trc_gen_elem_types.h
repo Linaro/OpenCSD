@@ -60,10 +60,11 @@ typedef enum _ocsd_gen_trc_elem_t
     OCSD_GEN_TRC_ELEM_TIMESTAMP,       /*!< Timestamp - preceding elements happeded before this time. */
     OCSD_GEN_TRC_ELEM_CYCLE_COUNT,     /*!< Cycle count - cycles since last cycle count value - associated with a preceding instruction range. */
     OCSD_GEN_TRC_ELEM_EVENT,           /*!< Event - trigger or numbered event  */   
-    OCSD_GEN_TRC_ELEM_SWTRACE,         /*!< Software trace packet - may contain data payload. STM / ITM hardware trace with channel protocol */
+    OCSD_GEN_TRC_ELEM_SWTRACE,         /*!< Software trace packet - may contain data payload. STM hardware trace with channel protocol */
     OCSD_GEN_TRC_ELEM_SYNC_MARKER,     /*!< Synchronisation marker - marks position in stream of an element that is output later. */
     OCSD_GEN_TRC_ELEM_MEMTRANS,        /*!< Trace indication of transactional memory operations. */
     OCSD_GEN_TRC_ELEM_INSTRUMENTATION, /*!< PE instrumentation trace - PE generated SW trace, application dependent protocol. */
+    OCSD_GEN_TRC_ELEM_ITMTRACE,        /*!< Software trace packet - ITM hardware trace protocol. */
     OCSD_GEN_TRC_ELEM_CUSTOM,          /*!< Fully custom packet type - used by none-ARM architecture decoders */
 } ocsd_gen_trc_elem_t;
 
@@ -110,13 +111,31 @@ typedef struct _sw_ite_t {
     uint64_t value;         /**< payload for PE sw instrumentation instruction */
 } trace_sw_ite_t;
 
+typedef enum _swt_itm_type {
+    SWIT_PAYLOAD,       /**< SWIT payload - software generated data */
+    DWT_PAYLOAD,        /**< DWT payload - M class DWT generated data */
+    TS_SYNC,            /**< Local TS Synchronous with previous SWIT payload */
+    TS_DELAY,           /**< Local TS Delayed from previous SWIT payload */
+    TS_PKT_DELAY,       /**< Local TS with previous SWIT payload delayed */
+    TS_PKT_TS_DELAY,    /**< Local TS with both TS and previous SWIT payload delayed */
+    TS_GLOBAL,          /**< Global Timestamp */
+} swt_itm_type;
+
+typedef struct _swt_itm_info {
+    swt_itm_type pkt_type;      /**< type of output packet - TS or payload */
+    uint8_t payload_src_id;     /**< Channel number for SWIT, Discriminator ID for DWT */
+    uint8_t payload_size;       /**< payload size in bytes (1-4) */
+    uint32_t value;             /**< payload value or local TS delta value */
+    uint8_t overflow;           /**< ITM overflow before this packet */
+} swt_itm_info;
+
 typedef struct _ocsd_generic_trace_elem {
     ocsd_gen_trc_elem_t elem_type;   /**< Element type - remaining data interpreted according to this value */
     ocsd_isa           isa;          /**< instruction set for executed instructions */
     ocsd_vaddr_t       st_addr;      /**< start address for instruction execution range / inaccessible code address / data address */
     ocsd_vaddr_t       en_addr;        /**< end address (exclusive) for instruction execution range. */
     ocsd_pe_context    context;        /**< PE Context */
-    uint64_t           timestamp;      /**< timestamp value for TS element type */
+    uint64_t           timestamp;      /**< timestamp value for TS element type, or timestamp for types with associated TS */
     uint32_t           cycle_count;    /**< cycle count for explicit cycle count element, or count for element with associated cycle count */
     ocsd_instr_type    last_i_type;    /**< Last instruction type if instruction execution range */
     ocsd_instr_subtype last_i_subtype; /**< sub type for last instruction in range */
@@ -131,7 +150,7 @@ typedef struct _ocsd_generic_trace_elem {
             uint32_t excep_ret_addr:1;      /**< 1 if en_addr is the preferred exception return address on exception packet type */
             uint32_t excep_data_marker:1;   /**< 1 if the exception entry packet is a data push marker only, with no address information (used typically in v7M trace for marking data pushed onto stack) */
             uint32_t extended_data:1;       /**< 1 if the packet extended data pointer is valid. Allows packet extensions for custom decoders, or additional data payloads for data trace.  */
-            uint32_t has_ts:1;              /**< 1 if the packet has an associated timestamp - e.g. SW/STM trace TS+Payload as a single packet */
+            uint32_t has_ts:1;              /**< 1 if the packet has an associated timestamp - e.g. SW/STM trace TS+Payload as a single packet, ITM - accumulated delta TS */
             uint32_t last_instr_cond:1;     /**< 1 if the last instruction was conditional */
             uint32_t excep_ret_addr_br_tgt:1; /**< 1 if exception return address (en_addr) is also the target of a taken branch addr from the previous range. */
             uint32_t excep_M_tail_chain:1;    /**< 1 if the exception is an M class exception with no pref ret address - tail chained or similar */
@@ -144,12 +163,13 @@ typedef struct _ocsd_generic_trace_elem {
         uint32_t exception_number;          /**< exception number for exception type packets */
         trace_event_t  trace_event;         /**< Trace event - trigger etc      */
         trace_on_reason_t trace_on_reason;  /**< reason for the trace on packet */
-        ocsd_swt_info_t sw_trace_info;      /**< software trace packet info    */
+        ocsd_swt_info_t sw_trace_info;      /**< HW software trace packet info */
 		uint32_t num_instr_range;	        /**< number of instructions covered by range packet (for T32 this cannot be calculated from en-st/i_size) */
         unsync_info_t unsync_eot_info;      /**< additional information for unsync / end-of-trace packets. */
         trace_marker_payload_t sync_marker; /**< marker element - sync later element to position in stream */
         trace_memtrans_t mem_trans;         /**< memory transaction packet - transaction event */
         trace_sw_ite_t sw_ite;              /**< PE sw instrumentation using FEAT_ITE */
+        swt_itm_info swt_itm;               /**< HW SWT packet using ITM protocol */
     };
 
     const void *ptr_extended_data;        /**< pointer to extended data buffer (data trace, sw trace payload) / custom structure */
