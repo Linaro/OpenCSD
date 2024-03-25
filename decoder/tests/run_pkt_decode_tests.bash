@@ -146,6 +146,7 @@ if [ "$1" != "use-installed" ]; then
     echo "moving result file."
     mv ./frame_demux_test.ppl ./${OUT_DIR}/.
 
+    # === run the memory accessor tests ===
     echo "Running memacc tests"
     echo "Using memory buffer"
     ${BIN_DIR}mem-buffer-eg   -logfile  -ss_path  ./snapshots  -noprint
@@ -155,5 +156,9 @@ if [ "$1" != "use-installed" ]; then
     echo "Done : Return $?"
     echo "moving result files."
     mv ./mem_buff_demo*.ppl ./${OUT_DIR}/.
-    
+
+    # === run the itm decoder test program ===
+    echo "Running ITM decoder test"
+    ${BIN_DIR}itm-decode-test -logfilename  "${OUT_DIR}/itm-decode-test.ppl" 
+    echo "Done : Return $?"
 fi
