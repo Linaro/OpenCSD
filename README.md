@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.5.1_
+_Current Version 1.5.2_
 
 ### Current support:
 
@@ -320,6 +320,11 @@ Version and Modification Information
     - __Update__: ETE: Add support for Arch 9.5 FEAT_PAUTH_LR. Add new instructions to disassembler to 
                   recognise RETA<k>SPPC variants as indirect branches. Adds new test snapshots.
 
+- _Version 1.5.2_:
+    - __Update__: docs: Update documentation for test programs.
+    - __Update__: docs: Update trc_pkt_lister man file.
+    - __Bugfix__: build: fix warnings building library.
+    - __Bugfix__: tests: Fix typo in trc_pkt_lister help output.
 
 Licence Information
 ===================
