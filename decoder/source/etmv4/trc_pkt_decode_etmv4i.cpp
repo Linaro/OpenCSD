@@ -1920,7 +1920,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(instr_range_t &range, WP_res_t &WP
 
         if (m_num_instr_range_limit)
         {
-            if (range.num_instr > m_num_instr_range_limit)
+            if (range.num_instr > (uint32_t)m_num_instr_range_limit)
             {
                 err = OCSD_ERR_I_RANGE_LIMIT_OVERRUN;
                 LogError(ocsdError(OCSD_ERR_SEV_ERROR, err, "Decode Instruction Range Limit Overrun"));
