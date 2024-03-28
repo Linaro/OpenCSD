@@ -6,19 +6,44 @@ Test Programs    {#test_progs}
 The Programs
 ------------
 
-There are currently two test programs built alongside the library.
+There are currently a number test programs built alongside the library.
 
-1. `trc_pkt_lister` :  This test the C++ library by taking a trace "snapshot" directory as an input 
-and decodes all or a chosen set of trace sources from within the trace data buffers in the library. Command
-line parameters allow the test program to be controlled. 
+__Principle Test Programs__
 
-2. `c_api_pkt_print_test` : This program tests the "C" API functions, using hardcoded tests 
-based on the same "snapshots" used for the C++ library. Limited user control for this program. 
-This can also run tests using the external test decoder to validate the external decoder API. 
+- `trc_pkt_lister`:
+
+This tests the C++ library by taking a trace "snapshot" directory as an input and decodes all
+or a chosen set of trace sources from within the trace data buffers in the library. Command
+line parameters allow the test program to be controlled.
+
+Users may also run this program on their own trace snapshots to investigate or validate trace from their platforms.
+
+The program may be installed alongside the library onto linux systems, using `make install` from the library build
+directories. This will be installed alongside a `man` file containing relevant user options.
+
+- `c_api_pkt_print_test`:
+
+This program tests the "C" API functions, using hardcoded tests based on the same "snapshots" used
+for the C++ library. Limited user control for this program.
+
+This can also run tests using the external test decoder library to validate the external decoder API. 
 See [external_custom.md](@ref custom_decoders) for details.
 
-These programs are both built at the same time as the library for the same set of platforms.
+__Development Utilities__
+
+These are small utilities, primarily used during the development and test of the decoder library.
+
+- `mem-acc-test`           : tests the memory accessor interfaces.
+- `mem-buffer-eg`          : example using a memory buffer input to the library.
+- `frame-demux-test`       : tests the library CoreSight Frame demux object.
+- `ocsd-perr`              : quickly list the library error codes and descriptions.
+
+__Build and Install__
+
+All the test programs are built at the same time as the library for the same set of platforms.
 See [build_libs.md](@ref build_lib) for build details.
+
+Only `trc_pkt_lister` will be installed alongside the library.
 
 
 Trace "Snapshot" directory.
@@ -134,14 +159,15 @@ This format can be used for all Arm v9 architecture cores.
 The `trc_pkt_lister` program.
 -----------------------------
 
-This will take a snapshot directory as an input, and list and/or decode all the trace packets for a 
-single source, for any currently supported protocol.
+This will take a snapshot directory as an input, and lists and/or
+decodes all the trace packets from a given trace sink, for any source in
+that sink where the protocol is supported.
 
 The output will be a list of discrete packets, generic output packets and any error messages
 to file and/or screen as selected by the input command line options.
 
 By default the program will list packets only (no decode), for the first discovered trace sink
-(ETB, ETF, ETR) in the snapshot directory, with all streams output.
+(ETB, ETF, ETR) in the snapshot directory, with all source streams output.
 
 __Command Line Options__
 
@@ -165,12 +191,7 @@ __Command Line Options__
                        range into multiple ranges of N atoms.
 - `-o_raw_packed`    : Output raw packed trace frames.
 - `-o_raw_unpacked`  : Output raw unpacked trace data per ID.
-- `-test_waits <N>`  : Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder.
 - `-stats`           : Output packet processing statistics (if available).
-- `-profile          : Mute logging output while profiling library performance.
-- `-macc_cache_disable` : Switch off caching on memory accessor.
-- `-macc_cache_p_size`  : Set size of caching pages.
-- `-macc_cache_p_num`   : Set number of caching pages.
 
 *Output options*
 
@@ -181,6 +202,15 @@ the options set.
 - `-logfile`            : output to file using the default log file name.
 - `-logfilename <name>` : change the name of the output log file.
 
+*Library Development options*
+
+Options that are only useful if developing or testing the OpenCSD library.
+
+- `-test_waits <N>`  : Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder.
+- `-profile`         : Mute logging output while profiling library performance.
+- `-macc_cache_disable` : Switch off caching on memory accessor.
+- `-macc_cache_p_size`  : Set size of caching pages.
+- `-macc_cache_p_num`   : Set number of caching pages.
 
 __Test output examples__
 
@@ -215,7 +245,7 @@ Idx:17988; ID:10;	P_HDR : Atom P-header.; W; Cycles=1
 Idx:17989; ID:10;	P_HDR : Atom P-header.; WEE; Cycles=1
 ~~~~~~~~~~~~~~~~
 
-*Juno - ETB_1 selected for STM packet output, raw packet output*
+*Juno - ETB_1 selected which contains STM source output, raw packet output*
 
 Command line:-
 `trc_pkt_lister -ss_dir ..\..\..\snapshots\juno_r1_1 -o_raw_unpacked -src_name ETB_1`
