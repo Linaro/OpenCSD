@@ -1,29 +1,19 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH TRC_PKT_LISTER 1 "2018-03-28" 
+.TH TRC_PKT_LISTER 1 "2024-03-28" 
 
 .SH NAME
-trc_pkt_lister \- decodes captured CoreSight\*R trace
+.PP
+trc_pkt_lister - decodes captured CoreSight\*R trace from a trace snapshot directory.
 .SH SYNOPSIS
 .RI trc_pkt_lister
-[ \-ss_dir \fI<dir>\fP ]
-[ -ss_verbose ]
-[ \-id \fI<n>\fP ]
-[ \-src_name \fI<name>\fP ]
-[ \-decode ]
-[ \-decode_only ]
-[ \-src_addr_n ]
-[ \-o_raw_packed ]
-[ \-o_raw_unpacked ]
-[ \-logstdout ]
-[ \-logstderr ]
-[ \-logfile ]
-[ \-logfilename \fI<name>\fP ]
+.RB [ --help ]
+.RI [OPTIONS...]
 .br
 .SH DESCRIPTION
 .B trc_pkt_lister
 is a tool that takes a snapshot directory as an input, and lists and/or
-decodes all the trace packets for a single source, for any currently
-supported protocol.
+decodes all the trace packets from a given trace sink, for any source in
+that sink where the protocol is supported.
 .PP
 The output will be a list of discrete packets, generic output packets
 and any error messages to file and/or screen as selected by the input
@@ -31,74 +21,100 @@ command line options.
 .PP
 By default the program will list packets only (no decode), for the
 first discovered trace sink (ETB, ETF, ETR) in the snapshot directory,
-with all streams output.
+with all source streams output.
 .SH OPTIONS
 .SS Snapshot selection
-The program defaults to \./ if no \-ss_dir option is given
+The program defaults to ./. if no
+.B -ss_dir
+option is given
 .TP
-.B \-ss\_dir <dir>
+.B -ss_dir <dir>
 Set the directory path to a trace snapshot.
 .TP
-\fB\fC\-ss\_verbose\fR
+.B -ss_verbose
 Verbose output when reading the snapshot.
 .SS Decode options
 .TP
-.B \-id <n>
-Set an ID to list (may be used multiple times) \- default if no id set is for all IDs to be printed.
+.B -id <n>
+Set a trace ID to list (may be used multiple times). Default if no id set is for all IDs to be printed.
 .TP
-.B \-src\_name <name>
+.B -src_name <name>
 List packets from a given snapshot source name (defaults to first source found).
 .TP
-.B \-decode
-Full decode of the packets from the trace snapshot (default is to list undecoded packets only.
+.B -multi_session
+Decode all buffers listed in snapshot under
+.B buffers
+key in
+.B trace.ini.
+.br
+Uses config of first buffer to decode all. Ignored if
+.B -src_name
+is used.
 .TP
-.B \-decode_only
+.B -dstream_format
+Input is DSTREAM framed.
+.TP
+.B -tpiu
+Input data is from a TPIU source that has TPIU FSYNC packets present.
+.TP
+.B -tpiu_hsync
+Input data is from a TPIU source that has both TPIU FSYNC and HSYNC packets present.
+.TP
+.B -decode
+Full decode of the packets from the trace snapshot (default is to list undecoded packets only).
+.TP
+.B -decode_only
 Does not list the undecoded packets, just the trace decode.
 .TP
-.B \-src\_addr\_n
+.B -src_addr_n
 In ETE protocol, indicate skipped N atoms in source address packet ranges by breaking the decode 
 range into multiple ranges on N atoms.
 .TP
-.B \-o\_raw\_packed
+.B -o_raw_packed
 Output raw packed trace frames.
 .TP
-.B \-o\_raw\_unpacked
-Output raw unpacked trace data per ID.
+.B -o_raw_unpacked
+Output raw unpacked trace data per ID.-
+.TP
+.B -stats
+Output packet processing statistics (if available).
 .SS Output options
 Default is to output to file and stdout. Setting any option overrides and limits to only
 the options set.
 .TP
-.B \-logstdout
+.B -logstdout
 output to stdout.
 .TP
-.B \-logstderr
+.B -logstderr
 output to stderr.
 .TP
-.B \-logfile
+.B -logfile
 output to file using the default log file name.
 .TP
-.B \-logfilename <name>
+.B -logfilename <name>
 change the name of the output log file.
 .SH FILES
 .B Trace Snapshot directory.
 .PP
-The \fR./tests/snapshots\fP directory contains a number of trace
-snapshots used for testing the library.  Trace snapshots are dumps of
-captured binary trace data, CoreSight component configurations and
-memory dumps to allow trace decode.
+The
+.B ./tests/snapshots
+directory contains a number of trace snapshots used for testing the library.
+Trace snapshots are dumps of captured binary trace data, CoreSight component
+configurations and memory dumps to allow trace decode.
 .PP
 Snapshots are generated on ARM targets and can then be analysed
 offline. The snapshot format is available in a separate document.
-.SH EXAMPLE
+.SH EXAMPLES
 Example command lines with short output excerpts.
 .PP
-.BI TC2 " ETMv3 packet processor output, raw packet output."
-.br
-Command line:
-.br
-.RI "trc\_pkt\_lister -ss\_dir ../../snapshots/TC2 -o_raw_unpacked"
+.B TC2 :
+ETMv3 packet processor output, raw packet output.
 .PP
-Output:
+.B Command line:
+.br
+trc_pkt_lister -ss_dir ../../snapshots/TC2 -o_raw_unpacked
+.PP
+.B Output:
 .br
 Frame Data; Index  17958; ID_DATA[0x11]; 16 04 c0 86 42 97 e1 c4 
 .br
@@ -113,15 +129,52 @@ Idx:17962; ID:11;	TIMESTAMP : Timestamp Value.; TS=0x82f9d13097 (562536984727)
 .br
 Idx:17974; ID:11;	P_HDR : Atom P-header.; WW; Cycles=2
 .PP
-.BI Juno " ETB\_1 selected for STM packet output, raw packet output"
-.br
-Command line:
-.br
-.RI "trc\_pkt\_lister -ss\_dir ../../snapshots/juno_r1_1 -o\_raw\_unpacked -src\_name ETB\_1"
+.B Juno :
+ETB_1 selected which contains STM source output, plus raw packet output
 .PP
-.BI Juno " ETMv4 full trace decode + packet monitor, source trace ID 0x10 only."
+.B Command line:
+trc_pkt_lister -ss_dir ../../snapshots/juno_r1_1 -o_raw_unpacked -src_name ETB_1
+.PP
+.B Output
+Trace Packet Lister : STM Protocol on Trace ID 0x20
 .br
+Frame Data; Index      0; ID_DATA[0x20]; ff ff ff ff ff ff ff ff ff ff 0f 0f 30 41 
+.br
+Idx:0; ID:20;	ASYNC:Alignment synchronisation packet.
+.br
+Idx:11; ID:20;	VERSION:Version packet.; Ver=3
+.br
+Frame Data; Index     16; ID_DATA[0x20]; f1 1a 00 00 00 30 10 af 01 00 00 10 03 f2 1a 
+.br
+Idx:13; ID:20;	M8:Set current master.; Master=0x41
+.br
+Idx:17; ID:20;	D32M:32 bit data; with marker.; Data=0x10000000
+.br
+Idx:22; ID:20;	C8:Set current channel.; Chan=0x0001
+.PP
+.B Juno : 
+ETMv4 full trace decode + packet monitor, source trace ID 0x10 only.
+.PP
 Command line:
 .br
-.RI "trc\_pkt\_lister -ss\_dir ../../snapshots/juno\_r1\_1 -decode -id 0x10"
-
+trc_pkt_lister -ss_dir ../../snapshots/juno_r1_1 -decode -id 0x10
+.PP
+.B Output
+.br
+Idx:17204; ID:10; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+.br
+Idx:17218; ID:10; [0x01 0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0
+.br
+Idx:17221; ID:10; [0x9d 0x00 0x35 0x09 0x00 0xc0 0xff 0xff 0xff ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0xFFFFFFC000096A00; 
+.br
+Idx:17230; ID:10; [0x04 ];	I_TRACE_ON : Trace On.
+.br
+Idx:17232; ID:10; [0x85 0x00 0x35 0x09 0x00 0xc0 0xff 0xff 0xff 0xf1 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0xFFFFFFC000096A00; Ctxt: AArch64,EL1, NS; CID=0x00000000; VMID=0x0000;
+.br
+Idx:17248; ID:10; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+.br
+Idx:17230; ID:10; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+.br
+Idx:17232; ID:10; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; VMID=0x0; CTXTID=0x0; )
+.br
+Idx:17248; ID:10; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0xffffffc000096a00:[0xffffffc000096a10] num_i(4) last_sz(4) (ISA=A64) E ISB )
