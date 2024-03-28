@@ -198,14 +198,15 @@ void print_help()
     oss << "-dstream_format     Input is DSTREAM framed.\n";
     oss << "-tpiu               Input from TPIU - sync by FSYNC.\n";
     oss << "-tpiu_hsync         Input from TPIU - sync by FSYNC and HSYNC.\n";
-    oss << "-decode             Full decode of the packets from the trace snapshot (default is to list undecoded packets only\n";
+    oss << "-decode             Full decode of the packets from the trace snapshot (default is to list undecoded packets only)\n";
     oss << "-decode_only        Does not list the undecoded packets, just the trace decode.\n";
     oss << "-o_raw_packed       Output raw packed trace frames\n";
     oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
-    oss << "-test_waits <N>     Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder\n";
     oss << "-src_addr_n         ETE protocol: Split source address ranges on N atoms\n";
     oss << "-stats              Output packet processing statistics (if available).\n";
+    oss << "\nDevelopment:\nOptions used during develop and test of the library\n\n";
     oss << "-profile            Mute logging output while profiling library performance\n";
+    oss << "-test_waits <N>     Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder\n";
     oss << "-macc_cache_disable Switch off caching on memory accessor\n";
     oss << "-macc_cache_p_size  Set size of caching pages\n";
     oss << "-macc_cache_p_num   Set number of caching pages\n";
