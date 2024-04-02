@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.6.1_
+_Current Version 1.7.1_
 
 ### Current support:
 
@@ -359,6 +359,11 @@ Version and Modification Information
     - __Bugfix__: etmv4: ete: Spec trace: Fix handling of periodic TINFO packets (github issue #75)
     - __Bugfix__: etmv4: ete: Spec trace: Commit elements in cycle count packets no processed (github issue #74)
     - __Update__: Thumb2: Update handling of IT blocks in thumb trace to mark subsequent instructions as Conditional (github issue #72)
+
+- _Version 1.7.1_:
+    - __Update__: ITM: Add in new ITM decoder to the library.
+                  Adds in tests and support in snapshot read and trc_pkt_lister.
+    - __Bugfix__: Fix compile warning on init list order. (github #77, #80)
 
 Licence Information
 ===================
