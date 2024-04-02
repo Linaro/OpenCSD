@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.5.3_
+_Current Version 1.5.103 (dev)_ 
 
 ### Current support:
 
@@ -332,6 +332,11 @@ Version and Modification Information
     - __Bugfix__: etm4x: fix packet print typo.
     - __Bugfix__: docs: Minor fixes to docs and man file.
     - __Bugfix__: build: minor fix for clang compatibility.
+
+- _Version 1.5.103 (dev)_:
+    - __Version__: Development version.
+    - __Update__: ITM: Add in new ITM decoder to the library.
+                  Adds in tests and support in snapshot read and trc_pkt_lister.
 
 
 Licence Information
