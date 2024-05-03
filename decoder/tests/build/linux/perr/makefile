@@ -56,7 +56,7 @@ test_app: $(BIN_TEST_TARGET_DIR)/$(PROG)
 
  $(BIN_TEST_TARGET_DIR)/$(PROG): $(OBJECTS) | build_dir
 			mkdir -p  $(BIN_TEST_TARGET_DIR)
-			$(LINKER) $(LDFLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
+			$(LINKER) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(BIN_TEST_TARGET_DIR)/$(PROG)
 
 build_dir:
 	mkdir -p $(BUILD_DIR)

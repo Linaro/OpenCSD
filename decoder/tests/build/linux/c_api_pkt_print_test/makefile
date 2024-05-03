@@ -58,7 +58,7 @@ test_app: 	$(BIN_TEST_TARGET_DIR)/$(PROG)
 
  $(BIN_TEST_TARGET_DIR)/$(PROG): $(OBJECTS) | build_dir
 			mkdir -p  $(BIN_TEST_TARGET_DIR)
-			$(LINKER) $(LDFLAGS) $(OBJECTS) -Wl,--start-group $(LIBS) -Wl,--end-group -o $(BIN_TEST_TARGET_DIR)/$(PROG)
+			$(LINKER) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(BIN_TEST_TARGET_DIR)/$(PROG)
 			cp $(LIB_TARGET_DIR)/*.so .
 
 build_dir:
