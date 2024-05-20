@@ -118,7 +118,7 @@ e.g. `./lib/win64/rel` will contain the windows 64 bit release libraries.
 The solution contains four configurations:-
 - *Debug* : builds debug versions of static C++ main library and C-API libraries, test programs linked to the static library.
 - *Debug-dll* : builds debug versions of static main library and C-API DLL. C-API statically linked to the main library. 
-C-API test built as `simple_pkt_print_c_api-dl.exe` and linked against the DLL version of the C-API library.
+C-API test built as `c_api_pkt_print_test_dll.exe` and linked against the DLL version of the C-API library.
 - *Release* : builds release static library versions, test programs linked to static libraries.
 - *Release-dll* : builds release C-API DLL, static main library.
 
@@ -126,9 +126,10 @@ _Note_: Currently there is no Windows DLL version of the main C++ library. This 
 the project is nearer completion with further decode protocols, and the classes requiring export are established..
 
 Libraries built are:-
-- `libcstraced.lib` : static main C++ decoder library.
-- `cstraced_c_api.dll` : C-API DLL library. Statically linked against `libcstraced.lib` at .DLL build time.
-- `libcstraced_c_api.lib` : C-API static library. 
+- `libopencsd.lib` : static main C++ decoder library.
+- `libopencsd_c_api.lib` : C-API static library. 
+- `libopencsd_c_api.dll` : C-API DLL library. Statically linked against `libcstraced.lib` at .DLL build time. Built using the release-dll or debug-dll solution configurations.
+
 
 There is also a project file to build an auxiliary library used `trc_pkt_lister` for test purposes only.
 This is the `snapshot_parser_lib.lib` library, delivered to the `./tests/lib/win<bitsize>/<dgb\rel>` directories.
