@@ -91,7 +91,7 @@ private:
     void LogError(const ocsdError &err);
 
     ocsd_mem_space_acc_t getMemSpaceFromString(const std::string& memspace);
-    void processDumpfiles(std::vector<Parser::DumpDef> &dumps);
+    ocsd_err_t processDumpfiles(std::vector<Parser::DumpDef> &dumps);
 
 
     uint32_t m_add_create_flags;

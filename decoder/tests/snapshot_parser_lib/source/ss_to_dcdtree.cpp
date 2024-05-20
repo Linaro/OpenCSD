@@ -78,7 +78,9 @@ std::string CreateDcdTreeFromSnapShot::getBufferFileNameFromBuffName(const std::
 
 
 bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, bool bPacketProcOnly, uint32_t add_create_flags)
-{    
+{   
+    ocsd_err_t err = OCSD_OK;
+
     m_add_create_flags = add_create_flags;
     if(m_bInit)
     {
@@ -142,7 +144,7 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
                                 numDecodersCreated++;
                                 if(!bPacketProcOnly &&(core_dev->dumpDefs.size() > 0))
                                 {
-                                    processDumpfiles(core_dev->dumpDefs);
+                                    err = processDumpfiles(core_dev->dumpDefs);
                                 }
                             }
                             else
@@ -190,7 +192,7 @@ bool CreateDcdTreeFromSnapShot::createDecodeTree(const std::string &SourceName, 
                     it++;
             }
 
-            if(numDecodersCreated == 0)
+            if((numDecodersCreated == 0) || (err != OCSD_OK))
             {
                 // nothing useful found 
                 destroyDecodeTree();
@@ -618,11 +620,12 @@ ocsd_mem_space_acc_t CreateDcdTreeFromSnapShot::getMemSpaceFromString(const std:
     return mem_space;
 }
 
-void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &dumps)
+ocsd_err_t CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &dumps)
 {
     std::string dumpFilePathName;
     std::vector<Parser::DumpDef>::const_iterator it;
     ocsd_mem_space_acc_t mem_space;
+    ocsd_err_t err = OCSD_OK;
 
     it = dumps.begin();
     while(it != dumps.end())
@@ -650,6 +653,7 @@ void CreateDcdTreeFromSnapShot::processDumpfiles(std::vector<Parser::DumpDef> &d
         }
         it++;
     }
+    return err;
 }
 
 /* End of File ss_to_dcdtree.cpp */
