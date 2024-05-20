@@ -84,7 +84,9 @@ ocsd_err_t TrcMemAccCache::createCaches()
         m_hit_rl_max[j] = 0;
     }
 #endif
-
+    std::ostringstream oss;
+    oss << "MemAcc Caches: Num Pages=" << m_mru_num_pages << "; Page size=" << m_mru_page_size << ";\n";
+    logMsg(oss.str());
     return OCSD_OK;
 }
 
