@@ -40,6 +40,8 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <chrono>
+#include <ctime>
 
 #include "opencsd.h"              // the library
 #include "trace_snapshots.h"    // the snapshot reading test library
@@ -644,9 +646,11 @@ bool ProcessInputFile(DecodeTree *dcd_tree, std::string &in_filename,
                       TrcGenericElementPrinter* genElemPrinter, ocsdDefaultErrorLogger& err_logger)
 {
     bool bOK = true;
-
+    std::chrono::time_point<std::chrono::steady_clock> start, end;   // measure decode time
+    
     // need to push the data through the decode tree.
     std::ifstream in;
+
     in.open(in_filename, std::ifstream::in | std::ifstream::binary);
     if (in.is_open())
     {
@@ -654,6 +658,8 @@ bool ProcessInputFile(DecodeTree *dcd_tree, std::string &in_filename,
         static const int bufferSize = 1024;
         uint8_t trace_buffer[bufferSize];   // temporary buffer to load blocks of data from the file
         uint32_t trace_index = 0;           // index into the overall trace buffer (file).
+
+        start = std::chrono::steady_clock::now();
 
         // process the file, a buffer load at a time
         while (!in.eof() && !OCSD_DATA_RESP_IS_FATAL(dataPathResp))
@@ -745,7 +751,10 @@ bool ProcessInputFile(DecodeTree *dcd_tree, std::string &in_filename,
         in.close();
 
         std::ostringstream oss;
-        oss << "Trace Packet Lister : Trace buffer done, processed " << trace_index << " bytes.\n";
+        end = std::chrono::steady_clock::now();
+        std::chrono::duration<double> sec_elapsed{end -start};
+
+        oss << "Trace Packet Lister : Trace buffer done, processed " << trace_index << " bytes in " << std::setprecision(8) << sec_elapsed.count() << " seconds.\n";
         logger.LogMsg(oss.str());
         if (stats)
             PrintDecodeStats(dcd_tree);
