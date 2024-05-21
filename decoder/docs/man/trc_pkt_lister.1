@@ -116,6 +116,7 @@ trc_pkt_lister -ss_dir ../../snapshots/TC2 -o_raw_unpacked
 .PP
 .B Output:
 .br
+.nf
 Frame Data; Index  17958; ID_DATA[0x11]; 16 04 c0 86 42 97 e1 c4 
 .br
 Idx:17945; ID:11;	I_SYNC : Instruction Packet synchronisation.; (Periodic); Addr=0xc00
@@ -131,11 +132,14 @@ Idx:17974; ID:11;	P_HDR : Atom P-header.; WW; Cycles=2
 .PP
 .B Juno :
 ETB_1 selected which contains STM source output, plus raw packet output
+.fi
 .PP
 .B Command line:
 trc_pkt_lister -ss_dir ../../snapshots/juno_r1_1 -o_raw_unpacked -src_name ETB_1
 .PP
 .B Output
+.br
+.nf
 Trace Packet Lister : STM Protocol on Trace ID 0x20
 .br
 Frame Data; Index      0; ID_DATA[0x20]; ff ff ff ff ff ff ff ff ff ff 0f 0f 30 41 
@@ -151,6 +155,7 @@ Idx:13; ID:20;	M8:Set current master.; Master=0x41
 Idx:17; ID:20;	D32M:32 bit data; with marker.; Data=0x10000000
 .br
 Idx:22; ID:20;	C8:Set current channel.; Chan=0x0001
+.fi
 .PP
 .B Juno : 
 ETMv4 full trace decode + packet monitor, source trace ID 0x10 only.
@@ -161,6 +166,7 @@ trc_pkt_lister -ss_dir ../../snapshots/juno_r1_1 -decode -id 0x10
 .PP
 .B Output
 .br
+.nf
 Idx:17204; ID:10; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
 .br
 Idx:17218; ID:10; [0x01 0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0
@@ -178,3 +184,4 @@ Idx:17230; ID:10; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
 Idx:17232; ID:10; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; VMID=0x0; CTXTID=0x0; )
 .br
 Idx:17248; ID:10; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0xffffffc000096a00:[0xffffffc000096a10] num_i(4) last_sz(4) (ISA=A64) E ISB )
+.fi
