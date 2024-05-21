@@ -497,7 +497,7 @@ const char *EtmV4ITrcPacket::packetTypeName(const ocsd_etmv4_i_pkt_type type, co
 
     case ETM4_PKT_I_ADDR_CTXT_L_32IS1:
         pName = "I_ADDR_CTXT_L_32IS1";
-        pDesc = "Address & Context, Long, 32 bit, IS0.";
+        pDesc = "Address & Context, Long, 32 bit, IS1.";
         break;
 
     case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
