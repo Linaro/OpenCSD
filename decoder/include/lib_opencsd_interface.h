@@ -177,6 +177,10 @@ public:
 
 // Function pointer to CreateOpenCSDInterface
 typedef OpenCSDInterface* (*fpGetOpenCSDInterface)();
+// Function pointer to DeleteOpenCSDInterface
+typedef void (*fpDeleteOpenCSDInterface)(OpenCSDInterface**);
 
 // Exported API to create and return OpenCSD Class object
 extern "C" OPENCSDINTERFACE_API OpenCSDInterface * CreateOpenCSDInterface();
+// Exported API to delete OpenCSD class object
+extern "C" OPENCSDINTERFACE_API void DeleteOpenCSDInterface(OpenCSDInterface**);

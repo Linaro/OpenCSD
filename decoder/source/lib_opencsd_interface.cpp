@@ -55,6 +55,25 @@ OpenCSDInterface* CreateOpenCSDInterface()
 }
 
 /****************************************************************************
+     Function: DeleteOpenCSDInterface
+     Engineer: Arjun Suresh
+        Input: p_obj - Pointer to the interface class object
+       Output: None
+       return: None
+  Description: Function to delete interface class object
+  Date         Initials    Description
+30-Aug-2022    AS          Initial
+****************************************************************************/
+void DeleteOpenCSDInterface(OpenCSDInterface** p_obj)
+{
+    if (*p_obj)
+    {
+        delete *p_obj;
+        *p_obj = NULL;
+    }
+}
+
+/****************************************************************************
      Function: OpenCSDInterface
      Engineer: Arjun Suresh
         Input: None
