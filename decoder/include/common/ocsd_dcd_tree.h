@@ -290,6 +290,14 @@ public:
 
     void logMappedRanges();     //!< Log the mapped memory ranges to the default message logger.
 
+    /*! Memory accessor cacheing
+     * 
+     *  Memory accessor uses caching to reduce the number of calls / callbacks for memory images
+     *  This allows controlling / disabling of cacheing mechanisms.
+     *  Error returned if cache limits exceeded (4096 byte page, 256 pages)
+     */
+    ocsd_err_t setMemAccCacheing(const bool enable, const uint16_t page_size, const int nr_pages);
+
 /** @}*/
 
 /** @name Memory Accessors

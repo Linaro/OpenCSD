@@ -235,6 +235,25 @@ void DecodeTree::logMappedRanges()
         m_default_mapper->logMappedRanges();
 }
 
+ocsd_err_t DecodeTree::setMemAccCacheing(const bool enable, const uint16_t page_size, const int nr_pages)
+{
+    ocsd_err_t err = OCSD_OK;
+
+    if (!m_default_mapper)
+        return OCSD_ERR_NOT_INIT;
+
+    if (enable)
+    {
+        // set cache sizes - error if params out of limits
+        err = m_default_mapper->setCacheSizes(page_size, nr_pages, true);
+        if (err == OCSD_OK)
+            err = m_default_mapper->enableCaching(true);
+    }
+    else
+        err = m_default_mapper->enableCaching(false);
+    return err;
+}
+
 /* Memory accessor creation - all on default mem accessor using the 0 CSID for global core space. */
 ocsd_err_t DecodeTree::addBufferMemAcc(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t *p_mem_buffer, const uint32_t mem_length)
 {

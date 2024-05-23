@@ -462,6 +462,21 @@ OCSD_C_API void ocsd_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle)
     }
 }
 
+OCSD_C_API ocsd_err_t ocsd_dt_set_mem_acc_cacheing(const dcd_tree_handle_t handle, const int enable, const uint16_t page_size, const int nr_pages)
+{
+    ocsd_err_t err = OCSD_OK;
+
+    if (handle != C_API_INVALID_TREE_HANDLE)
+    {
+        DecodeTree* pDT = static_cast<DecodeTree*>(handle);
+        err = pDT->setMemAccCacheing(enable == 0 ? false : true, page_size, nr_pages);
+    }
+    else
+        err = OCSD_ERR_INVALID_PARAM_VAL;
+
+    return err;
+}
+
 OCSD_C_API void ocsd_gen_elem_init(ocsd_generic_trace_elem *p_pkt, const ocsd_gen_trc_elem_t elem_type)
 {
     p_pkt->elem_type = elem_type;

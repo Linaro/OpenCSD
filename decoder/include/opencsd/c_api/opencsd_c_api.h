@@ -347,6 +347,20 @@ OCSD_C_API ocsd_err_t ocsd_dt_remove_mem_acc(const dcd_tree_handle_t handle, con
  */
 OCSD_C_API void ocsd_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
 
+/*
+ * Set cacheing for memory accessors - reduce access / callbacks to read memory images.
+ * 
+ * System defaults to caching enabled.
+ * 
+ * @param handle    : Handle to decode tree.
+ * @param enable    : 0 to disable caching.
+ * @param page_size : Page size in bytes.
+ * @param nr_pages  : Number of pages to use.
+ * 
+ * @return ocsd_err_t  : Library error code -  OCSD_OK if successful.
+ */
+OCSD_C_API ocsd_err_t ocsd_dt_set_mem_acc_cacheing(const dcd_tree_handle_t handle, const int enable, const uint16_t page_size, const int nr_pages);
+
 /** @}*/  
 
 /** @name Library Default Error Log Object API
