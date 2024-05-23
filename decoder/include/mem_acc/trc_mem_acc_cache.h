@@ -83,7 +83,8 @@ public:
 
     /* cache enabling and usage */
     ocsd_err_t enableCaching(bool bEnable);
-    ocsd_err_t setCacheSizes(const uint16_t page_size, const int nr_pages);
+    // optionally error if outside limits - otherwise set to max / min automatically
+    ocsd_err_t setCacheSizes(const uint16_t page_size, const int nr_pages, const bool err_on_limit = false);
 
     const bool enabled() const { return m_bCacheEnabled; };
     const bool enabled_for_size(const uint32_t reqSize) const
@@ -109,7 +110,7 @@ private:
     bool blockInCache(const ocsd_vaddr_t address, const uint32_t reqBytes, const uint8_t trcID); // run through each page to look for data.
     bool blockInPage(const ocsd_vaddr_t address, const uint32_t reqBytes, const uint8_t trcID);    
 
-    void logMsg(const std::string &szMsg);
+    void logMsg(const std::string &szMsg, ocsd_err_t err = OCSD_OK);
     int findNewPage();
     void incSequence(); // increment sequence on current block
 

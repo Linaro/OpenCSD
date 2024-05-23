@@ -87,8 +87,9 @@ public:
     // control memory access caching at runtime
     ocsd_err_t enableCaching(bool bEnable);
 
-    // set cache page size and number of pages (max 16k size, 256 pages)
-    ocsd_err_t setCacheSizes(uint16_t page_size, int num_pages);
+    // set cache page size and number of pages (max 16k size, 256 pages) - 
+    // optionally error if outside limits - otherwise set to max / min automatically
+    ocsd_err_t setCacheSizes(uint16_t page_size, int num_pages, const bool err_on_limit = false);
 
 protected:
     virtual bool findAccessor(const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint8_t cs_trace_id) = 0;     // set m_acc_curr if found valid range, leave unchanged if not.

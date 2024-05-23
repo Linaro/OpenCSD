@@ -72,9 +72,9 @@ ocsd_err_t TrcMemAccMapper::enableCaching(bool bEnable)
 }
 
 // set cache page size and number of pages (max 4096 size, 256 pages)
-ocsd_err_t TrcMemAccMapper::setCacheSizes(uint16_t page_size, int num_pages)
+ocsd_err_t TrcMemAccMapper::setCacheSizes(uint16_t page_size, int num_pages, const bool err_on_limit /*= false*/)
 {
-    return m_cache.setCacheSizes(page_size, num_pages);
+    return m_cache.setCacheSizes(page_size, num_pages, err_on_limit);
 }
 
 // memory access interface

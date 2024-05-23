@@ -38,6 +38,7 @@
 #include "mem_acc/trc_mem_acc_cache.h"
 #include "mem_acc/trc_mem_acc_base.h"
 #include "interfaces/trc_error_log_i.h"
+#include "common/ocsd_error.h"
 
 #ifdef LOG_CACHE_STATS
 #define INC_HITS_RL(idx) m_hits++; m_hit_rl[m_mru_idx]++;
@@ -60,6 +61,7 @@
 
 // uncomment to log cache ops
 // #define LOG_CACHE_OPS
+// #define LOG_CACHE_CREATION
 
 ocsd_err_t TrcMemAccCache::createCaches()
 {
@@ -84,9 +86,11 @@ ocsd_err_t TrcMemAccCache::createCaches()
         m_hit_rl_max[j] = 0;
     }
 #endif
+#ifdef LOG_CACHE_CREATION
     std::ostringstream oss;
     oss << "MemAcc Caches: Num Pages=" << m_mru_num_pages << "; Page size=" << m_mru_page_size << ";\n";
     logMsg(oss.str());
+#endif
     return OCSD_OK;
 }
 
@@ -161,32 +165,76 @@ ocsd_err_t TrcMemAccCache::enableCaching(bool bEnable)
     ocsd_err_t err = OCSD_OK;
 
     if (bEnable)
-        err = createCaches();
+    {
+        // don't create caches if they are done already.
+        if (!m_mru)
+            err = createCaches();
+    }
     else
         destroyCaches();
     m_bCacheEnabled = bEnable;
 
+#ifdef LOG_CACHE_CREATION
+    std::ostringstream oss;
+    oss << "MemAcc Caches: " << (bEnable ? "Enabled" : "Disabled") << ";\n";
+    logMsg(oss.str());
+#endif
+
     return err;
 }
 
-ocsd_err_t TrcMemAccCache::setCacheSizes(const uint16_t page_size, const int nr_pages)
+ocsd_err_t TrcMemAccCache::setCacheSizes(const uint16_t page_size, const int nr_pages, const bool err_on_limit /*= false*/)
 {
+    // do't re-create what we already have.
+    if (m_mru &&
+        (m_mru_num_pages == nr_pages) &&
+        (m_mru_page_size == page_size))
+        return OCSD_OK;
+
     /* remove any caches with the existing sizes */
     destroyCaches();
 
     /* set page size within Max/Min range */
     if (page_size > MEM_ACC_CACHE_PAGE_SIZE_MAX)
+    {
+        if (err_on_limit)
+        {
+            logMsg("MemAcc Caching: page size too large", OCSD_ERR_INVALID_PARAM_VAL);
+            return OCSD_ERR_INVALID_PARAM_VAL;
+        }
         m_mru_page_size = MEM_ACC_CACHE_PAGE_SIZE_MAX;
+    }
     else if (page_size < MEM_ACC_CACHE_PAGE_SIZE_MIN)
+    {
+        if (err_on_limit)
+        {
+            logMsg("MemAcc Caching: page size too small", OCSD_ERR_INVALID_PARAM_VAL);
+            return OCSD_ERR_INVALID_PARAM_VAL;
+        }
         m_mru_page_size = MEM_ACC_CACHE_PAGE_SIZE_MIN;
+    }
     else
         m_mru_page_size = page_size;
 
     /* set num pages within max/min range */
     if (nr_pages > MEM_ACC_CACHE_MRU_SIZE_MAX)
+    {
+        if (err_on_limit)
+        {
+            logMsg("MemAcc Caching: number of pages too large", OCSD_ERR_INVALID_PARAM_VAL);
+            return OCSD_ERR_INVALID_PARAM_VAL;
+        }
         m_mru_num_pages = MEM_ACC_CACHE_MRU_SIZE_MAX;
+    }
     else if (nr_pages < MEM_ACC_CACHE_MRU_SIZE_MIN)
+    {
+        if (err_on_limit)
+        {
+            logMsg("MemAcc Caching: number of pages too small", OCSD_ERR_INVALID_PARAM_VAL);
+            return OCSD_ERR_INVALID_PARAM_VAL;
+        }
         m_mru_num_pages = MEM_ACC_CACHE_MRU_SIZE_MIN;
+    }
     else
         m_mru_num_pages = nr_pages;
 
@@ -374,10 +422,18 @@ void TrcMemAccCache::invalidateByTraceID(int8_t trcID)
     }
 }
 
-void TrcMemAccCache::logMsg(const std::string &szMsg)
+void TrcMemAccCache::logMsg(const std::string &szMsg, ocsd_err_t err /*= OCSD_OK */ )
 {
     if (m_err_log)
-        m_err_log->LogMessage(ITraceErrorLog::HANDLE_GEN_INFO, OCSD_ERR_SEV_INFO, szMsg);
+    {
+        if (err == OCSD_OK)
+            m_err_log->LogMessage(ITraceErrorLog::HANDLE_GEN_INFO, OCSD_ERR_SEV_INFO, szMsg);
+        else
+        {
+            ocsdError ocsd_err( OCSD_ERR_SEV_ERROR, err, szMsg);
+            m_err_log->LogError(ITraceErrorLog::HANDLE_GEN_INFO, &ocsd_err);
+        }
+    }
 }
 
 void TrcMemAccCache::setErrorLog(ITraceErrorLog *log)
