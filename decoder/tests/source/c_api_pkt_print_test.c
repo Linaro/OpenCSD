@@ -933,6 +933,9 @@ int process_trace_data(FILE *pf)
 
         ret = create_decoder(dcdtree_handle);
         ocsd_tl_log_mapped_mem_ranges(dcdtree_handle);
+        // check the mem acc caching api - if we are decoding.
+        if (op > TEST_PKT_PRINT)
+            ocsd_dt_set_mem_acc_cacheing(dcdtree_handle, 1, 1024, 8);
 
         if (ret == OCSD_OK)
         {

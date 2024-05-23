@@ -810,10 +810,8 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
             }
             if (macc_cache_disable || macc_cache_page_size || macc_cache_page_num)
             {
-                TrcMemAccMapper* pMapper = dcd_tree->getMemAccMapper();
-
                 if (macc_cache_disable)
-                    pMapper->enableCaching(false);
+                    dcd_tree->setMemAccCacheing(false, 0, 0);
                 else 
                 {
                     // one value set - set the other to default
@@ -821,7 +819,7 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
                         macc_cache_page_size = MEM_ACC_CACHE_DEFAULT_PAGE_SIZE;
                     if (!macc_cache_page_num)
                         macc_cache_page_num = MEM_ACC_CACHE_DEFAULT_MRU_SIZE;
-                    pMapper->setCacheSizes(macc_cache_page_size, macc_cache_page_num);
+                    dcd_tree->setMemAccCacheing(true, macc_cache_page_size, macc_cache_page_num);
                 }
             }
         }
