@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.5.2_
+_Current Version 1.5.3_
 
 ### Current support:
 
@@ -325,6 +325,14 @@ Version and Modification Information
     - __Update__: docs: Update trc_pkt_lister man file.
     - __Bugfix__: build: fix warnings building library.
     - __Bugfix__: tests: Fix typo in trc_pkt_lister help output.
+
+- _Version 1.5.3_:
+    - __Update__: tests: Add timing information to trc_pkt_lister program.
+    - __Update__: memacc: Add external interface to set memacc cache parameters. Update test programs.
+    - __Bugfix__: etm4x: fix packet print typo.
+    - __Bugfix__: docs: Minor fixes to docs and man file.
+    - __Bugfix__: build: minor fix for clang compatibility.
+
 
 Licence Information
 ===================
