@@ -54,22 +54,9 @@ ipch/
 # ignore bin test directory
 bin/
 *.log
-ref_trace_decoder/build/win/rctdl_c_api_lib/Release/*
-ref_trace_decoder/build/win/rctdl_c_api_lib/x64/Release/*
-ref_trace_decoder/build/win/ref_trace_decode_lib/Release/*
-ref_trace_decoder/build/win/ref_trace_decode_lib/x64/Release/*
-ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/Release/*
-ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/x64/Release/*
 *.lastbuildstate
 *.manifest
 *.cache
-ref_trace_decoder/docs/html/*
-ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/Debug-dll/*
-ref_trace_decoder/tests/build/win/simple_pkt_print_c_api/x64/Debug-dll/*
-ref_trace_decoder/tests/build/win/trc_pkt_lister/Debug-dll/*
-ref_trace_decoder/tests/build/win/trc_pkt_lister/Release-dll/*
-ref_trace_decoder/tests/build/win/trc_pkt_lister/x64/Debug-dll/*
-ref_trace_decoder/tests/build/win/trc_pkt_lister/x64/Release-dll/*
 *.bak
 *.orig
 decoder/docs/html/*
@@ -80,3 +67,5 @@ decoder/docs/html/*
 *.ipdb
 decoder/tests/results*
 *.recipe
+decoder/tests/ds-snapshots
+*.FileListAbsolute.txt
