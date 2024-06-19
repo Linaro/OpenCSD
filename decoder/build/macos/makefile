@@ -27,17 +27,15 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 #################################################################################
-# OpenCSD - main Linux makefile for libraries and tests
+# OpenCSD - main MacOS makefile for libraries and tests
 #
 # command line options
 # DEBUG=1 	    create a debug build
 #
 
-# GCC flags
-export PLATFORM_CFLAGS := -Wlogical-op
-export PLATFORM_CXXFLAGS := -Wlogical-op
-export PLATFORM_LDFLAGS := -Wl,-z,defs
+# Clang flags
+export PLATFORM_LDFLAGS := -Wl,-undefined,error
 
-export SONAME_FLAG := -soname
+export SONAME_FLAG := -install_name
 
 include ../unix_common/makefile.common

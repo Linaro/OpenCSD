@@ -68,9 +68,9 @@ export INSTALL_INCLUDE_DIR=$(DESTDIR)$(PREFIX)/include/
 INSTALL_MAN_DIR=$(DESTDIR)$(PREFIX)/share/man/man1
 
 # compile flags
-CFLAGS += $(CPPFLAGS) -c -Wall -DLINUX -Wno-switch -Wlogical-op -fPIC
-CXXFLAGS += $(CPPFLAGS) -c -Wall -DLINUX -Wno-switch -Wlogical-op -fPIC -std=c++11
-LDFLAGS += -Wl,-z,defs
+CFLAGS += $(CPPFLAGS) -c -Wall -Wno-switch -fPIC $(PLATFORM_CFLAGS)
+CXXFLAGS += $(CPPFLAGS) -c -Wall -Wno-switch -fPIC -std=c++11 $(PLATFORM_CXXFLAGS)
+LDFLAGS += $(PLATFORM_LDFLAGS)
 ARFLAGS ?= rcs
 
 # debug variant
