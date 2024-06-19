@@ -63,7 +63,7 @@ build_dir:
 
 .PHONY: copy_libs
 copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG)
-	cp $(LIB_TARGET_DIR)/*.so* $(BIN_TEST_TARGET_DIR)/.
+	cp $(LIB_TARGET_DIR)/*.$(SHARED_LIB_SUFFIX)* $(BIN_TEST_TARGET_DIR)/.
 
 
 
@@ -82,7 +82,7 @@ $(BUILD_DIR)/%.o : %.cpp | build_dir
 clean :
 	-rm $(BIN_TEST_TARGET_DIR)/$(PROG) $(OBJECTS)
 	-rm $(DEPS)
-	-rm $(BIN_TEST_TARGET_DIR)/*.so*
+	-rm $(BIN_TEST_TARGET_DIR)/*.$(SHARED_LIB_SUFFIX)*
 	-rmdir $(BUILD_DIR)
 
 # end of file makefile

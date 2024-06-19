@@ -75,7 +75,7 @@ ifdef TEST_STATIC_LINKING
 copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG_S) 
 endif
 copy_libs: $(BIN_TEST_TARGET_DIR)/$(PROG)
-	cp $(LIB_TARGET_DIR)/*.so* $(BIN_TEST_TARGET_DIR)/.
+	cp $(LIB_TARGET_DIR)/*.$(SHARED_LIB_SUFFIX)* $(BIN_TEST_TARGET_DIR)/.
 
 
 
@@ -97,7 +97,7 @@ ifdef TEST_STATIC_LINKING
 	-rm $(BIN_TEST_TARGET_DIR)/$(PROG_S)
 endif
 	-rm $(DEPS)
-	-rm $(BIN_TEST_TARGET_DIR)/*.so*
+	-rm $(BIN_TEST_TARGET_DIR)/*.$(SHARED_LIB_SUFFIX)*
 	-rmdir $(BUILD_DIR)
 
 # end of file makefile

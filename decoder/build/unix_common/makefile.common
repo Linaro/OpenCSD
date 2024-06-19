@@ -116,12 +116,12 @@ DEF_SO_PERM ?= 644
 
 install: libs tests
 	mkdir -p $(INSTALL_LIB_DIR) $(INSTALL_INCLUDE_DIR) $(INSTALL_BIN_DIR)
-	cp -d $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so $(INSTALL_LIB_DIR)/
-	cp -d $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so.$(SO_MAJOR_VER) $(INSTALL_LIB_DIR)/
-	$(INSTALL) --mode=$(DEF_SO_PERM) $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so.$(SO_VER) $(INSTALL_LIB_DIR)/
-	cp -d $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so $(INSTALL_LIB_DIR)/
-	cp -d $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so.$(SO_MAJOR_VER) $(INSTALL_LIB_DIR)/
-	$(INSTALL) --mode=$(DEF_SO_PERM) $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so.$(SO_VER) $(INSTALL_LIB_DIR)/
+	cp -d $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).$(SHARED_LIB_SUFFIX) $(INSTALL_LIB_DIR)/
+	cp -d $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).$(SHARED_LIB_SUFFIX).$(SO_MAJOR_VER) $(INSTALL_LIB_DIR)/
+	$(INSTALL) --mode=$(DEF_SO_PERM) $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).$(SHARED_LIB_SUFFIX).$(SO_VER) $(INSTALL_LIB_DIR)/
+	cp -d $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).$(SHARED_LIB_SUFFIX) $(INSTALL_LIB_DIR)/
+	cp -d $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).$(SHARED_LIB_SUFFIX).$(SO_MAJOR_VER) $(INSTALL_LIB_DIR)/
+	$(INSTALL) --mode=$(DEF_SO_PERM) $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).$(SHARED_LIB_SUFFIX).$(SO_VER) $(INSTALL_LIB_DIR)/
 ifndef DISABLE_STATIC
 	$(INSTALL) --mode=644 $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a $(INSTALL_LIB_DIR)/
 	$(INSTALL) --mode=644 $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a $(INSTALL_LIB_DIR)/
@@ -137,12 +137,12 @@ install_man:
 ################################
 # build  OpenCSD trace decode library
 #
-$(LIB_BASE_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so
+$(LIB_BASE_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).$(SHARED_LIB_SUFFIX)
 
-$(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).so: $(LIB_BASE_NAME)_all
+$(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).$(SHARED_LIB_SUFFIX): $(LIB_BASE_NAME)_all
 $(LIB_TARGET_DIR)/lib$(LIB_BASE_NAME).a: $(LIB_BASE_NAME)_all
 
-# single command builds both .a and .so targets in sub-makefile
+# single command builds both .a and .$(SHARED_LIB_SUFFIX) targets in sub-makefile
 $(LIB_BASE_NAME)_all:
 	mkdir -p $(LIB_TARGET_DIR)
 	cd $(OCSD_ROOT)/build/unix_common/ref_trace_decode_lib && $(MAKE)
@@ -150,12 +150,12 @@ $(LIB_BASE_NAME)_all:
 ################################
 # build OpenCSD trace decode C API library 
 #
-$(LIB_CAPI_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so
+$(LIB_CAPI_NAME)_lib: $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).$(SHARED_LIB_SUFFIX)
 
-$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).so: $(LIB_CAPI_NAME)_all
+$(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).$(SHARED_LIB_SUFFIX): $(LIB_CAPI_NAME)_all
 $(LIB_TARGET_DIR)/lib$(LIB_CAPI_NAME).a:  $(LIB_CAPI_NAME)_all
 
-# single command builds both .a and .so targets in sub-makefile
+# single command builds both .a and .$(SHARED_LIB_SUFFIX) targets in sub-makefile
 $(LIB_CAPI_NAME)_all:  $(LIB_BASE_NAME)_lib
 	mkdir -p $(LIB_TARGET_DIR)
 	cd $(OCSD_ROOT)/build/unix_common/rctdl_c_api_lib && $(MAKE)
