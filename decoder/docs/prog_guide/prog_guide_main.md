@@ -298,6 +298,9 @@ An incorrect program image can result in N atoms (not take branch) associated wi
 									    (note: restricted to direct branches as some ETM ip incorrectly traces branches to next instruction as N rather then E).
 - `OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK` : Check for N atoms on any unconditional branches. Use for known correct IP.
 - `OCSD_OPFLG_CHK_RANGE_CONTINUE`     : Check the start address of the range after a not taken branch is contiguous from the previous range.
+- `OCSD_OPFLG_N_UNCOND_NO_THUMB`      : Suppress N unconditional checks for Thumb code. This prevents false positives in IT blocks which mark subsequent instrutions
+                                        conditional. The decoder does attempt to track whne in IT block and mark instructions as conditional, but it has no 
+										way of detecting when a return from exception drops into the middle of an IT block.
 
 Each of these options will result in a decoder reset and resync - there will be an output of `OCSD_GEN_TRC_ELEM_NO_SYNC` with a reason of `UNSYNC_BAD_IMAGE`.
 

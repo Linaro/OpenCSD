@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.5.6_
+_Current Version 1.6.1_
 
 ### Current support:
 
@@ -349,6 +349,16 @@ Version and Modification Information
     - __Bugfix__: build: Fix issue with 'make -f <path to makefile>' no longer working for linux/macos build since 1.5.5.
     - __Update__: build: later versions of clang require additional includes to compile correctly.
     - __Update__: docs: Update autofdo docs to reflect latest requirements. Other minor docs updates.
+
+- _Version 1.6.0_:
+    - __Update__: ete: add FEAT_CMPBR instructions for decode (Arch v9.6)
+
+- _Version 1.6.1_:
+    - __Bugfix__: docs: Fix name of funciton referenced in API document. (github pr #71 kesyog)
+    - __Bugfix__: etmv4: ete: Spec trace: Fix handling of uncommitted P0 on initial sync (github issue #76)
+    - __Bugfix__: etmv4: ete: Spec trace: Fix handling of periodic TINFO packets (github issue #75)
+    - __Bugfix__: etmv4: ete: Spec trace: Commit elements in cycle count packets no processed (github issue #74)
+    - __Update__: Thumb2: Update handling of IT blocks in thumb trace to mark subsequent instructions as Conditional (github issue #72)
 
 Licence Information
 ===================
