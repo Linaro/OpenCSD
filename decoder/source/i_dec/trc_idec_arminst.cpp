@@ -239,6 +239,50 @@ int inst_A64_is_direct_branch(uint32_t inst, struct decode_info *info)
     return inst_A64_is_direct_branch_link(inst, &link, info);
 }
 
+int inst_A64_is_cmp_br(const uint32_t inst)
+{
+    const uint32_t opcode = inst & 0xFF000000;
+    const uint32_t desc = inst & 0x0000C000;
+
+    /* v9.6 - Compare and Branch extensions.
+     * 
+     * Bits         31|30.........24|--|15.14| 13    -   5 | 
+     * 
+     * CBB <cc>      0 1 1 1 0 1 0 0 -   1  0  imm9 - label
+     * CB <cc> imm  SF 1 1 1 0 1 0 1 -   x  0 
+     * CB <cc> reg  SF 1 1 1 0 1 0 0 -   0  0 
+     * CBH <cc>      0 1 1 1 0 1 0 0 -   1  1
+     */
+    
+    /* 0x74, desc 0b00, 0b10, 0x11; - CBB, CB reg (SF=0), CBH */
+    if ((opcode == 0x74000000) && (desc != 0x4000))
+        return 1;
+
+    /* 0xF4, desc 0b00; - CB <cc> reg SF=1 */
+    if ((opcode == 0xF4000000) && (desc == 0x0))
+        return 1;
+
+    /* 0x75, 0xF5, SF=x; - CB <cc> imm */
+    if (((opcode == 0xF5000000) || (opcode == 0x75000000)) && (!(desc & 0x4000)))
+        return 1;
+
+    return 0;
+}
+
+uint64_t inst_A64_cmp_br_destination(const uint32_t inst, const uint64_t addr64)
+{
+    uint64_t addrUpdate;
+    uint32_t tmp;
+
+    // label imm9 - 13:5
+    tmp = (inst & 0x00003fe0);
+    tmp <<= 18;
+    tmp >>= 21;
+    addrUpdate = addr64 + ((int32_t)((inst & 0x00003fe0) << 18) >> 21);
+
+    return addrUpdate;
+}
+
 int inst_A64_is_direct_branch_link(uint32_t inst, uint8_t *is_link, struct decode_info *info)
 {
     int is_direct_branch = 1;
@@ -253,6 +297,8 @@ int inst_A64_is_direct_branch_link(uint32_t inst, uint8_t *is_link, struct decod
             *is_link = 1;
             info->instr_sub_type = OCSD_S_INSTR_BR_LINK;
         }
+    } else if (inst_A64_is_cmp_br(inst)) {
+        /* CB <cc>, CBB <cc>, CBH <cc> */
     } else {
         is_direct_branch = 0;
     }
@@ -436,6 +482,8 @@ int inst_A64_branch_destination(uint64_t addr, uint32_t inst, uint64_t *pnpc)
     } else if ((inst & 0x7e000000) == 0x36000000) {
         /* TB */
         npc = addr + ((int32_t)((inst & 0x0007ffe0) << 13) >> 16);
+    } else if (inst_A64_is_cmp_br(inst)) {
+        npc = inst_A64_cmp_br_destination(inst, addr);
     } else {
         is_direct_branch = 0;
     }
