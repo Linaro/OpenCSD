@@ -28,7 +28,7 @@
 # 
 #################################################################################
 
-## Set up some addtional parameters for development environment builds. ##
+## Set up some additional parameters for development environment builds. ##
 
 ## define arch/build sub-dirs for non installed dev builds
 ifndef ARCH
