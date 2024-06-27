@@ -42,6 +42,15 @@ block identification and trace decode.
 #include <stddef.h>  /* for NULL */
 #include <assert.h>
 
+// uncomment below for debug messages.
+// #define DEBUG_FEAT_CMP_BR
+
+#ifdef DEBUG_FEAT_CMP_BR
+#include <sstream>
+#include <iomanip>
+#endif
+
+
 int inst_ARM_is_direct_branch(uint32_t inst)
 {
     int is_direct_branch = 1;
@@ -239,6 +248,18 @@ int inst_A64_is_direct_branch(uint32_t inst, struct decode_info *info)
     return inst_A64_is_direct_branch_link(inst, &link, info);
 }
 
+#ifdef DEBUG_FEAT_CMP_BR
+void dbg_pr_opcode(const uint32_t inst)
+{
+    std::ostringstream oss;
+    oss << std::setfill('0') << std::setw(8) << std::hex;
+    oss << "IDecode: cmpbr opcode: 0x" << inst << "\n";
+    std::string msg;
+    msg = oss.str();
+    dbg_log_msg(msg.c_str());
+}
+#endif
+
 int inst_A64_is_cmp_br(const uint32_t inst)
 {
     const uint32_t opcode = inst & 0xFF000000;
@@ -255,16 +276,31 @@ int inst_A64_is_cmp_br(const uint32_t inst)
      */
     
     /* 0x74, desc 0b00, 0b10, 0x11; - CBB, CB reg (SF=0), CBH */
-    if ((opcode == 0x74000000) && (desc != 0x4000))
+     if ((opcode == 0x74000000) && (desc != 0x4000))
+    {
+#ifdef DEBUG_FEAT_CMP_BR
+        dbg_pr_opcode(inst);
+#endif
         return 1;
+    }
 
     /* 0xF4, desc 0b00; - CB <cc> reg SF=1 */
     if ((opcode == 0xF4000000) && (desc == 0x0))
+    {
+#ifdef DEBUG_FEAT_CMP_BR
+        dbg_pr_opcode(inst);
+#endif
         return 1;
+    }
 
     /* 0x75, 0xF5, SF=x; - CB <cc> imm */
     if (((opcode == 0xF5000000) || (opcode == 0x75000000)) && (!(desc & 0x4000)))
+    {
+#ifdef DEBUG_FEAT_CMP_BR
+        dbg_pr_opcode(inst);
+#endif
         return 1;
+    }
 
     return 0;
 }
@@ -272,13 +308,24 @@ int inst_A64_is_cmp_br(const uint32_t inst)
 uint64_t inst_A64_cmp_br_destination(const uint32_t inst, const uint64_t addr64)
 {
     uint64_t addrUpdate;
-    uint32_t tmp;
 
-    // label imm9 - 13:5
-    tmp = (inst & 0x00003fe0);
+    // label imm9 - 13:5  
+    addrUpdate = addr64 + ((int32_t)((inst & 0x00003fe0) << 18) >> 21);
+
+#ifdef DEBUG_FEAT_CMP_BR
+    uint32_t tmp = (inst & 0x00003fe0);
+    int offset;
+    std::ostringstream oss;
     tmp <<= 18;
     tmp >>= 21;
-    addrUpdate = addr64 + ((int32_t)((inst & 0x00003fe0) << 18) >> 21);
+    offset = (int)(tmp >> 2);
+    oss << std::setfill('0') << std::setw(8) << std::hex;
+    oss << "IDecode: cmpbr dest calc: in addr 0x" << addr64 << "; offset addr 0x" << tmp << "; out addr 0x" << addrUpdate;
+    oss << "; imm9 offset val=" << std::dec << offset << "\n";
+    std::string msg;
+    msg = oss.str();
+    dbg_log_msg(msg.c_str());
+#endif
 
     return addrUpdate;
 }
