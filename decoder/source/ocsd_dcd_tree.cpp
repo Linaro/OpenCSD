@@ -86,6 +86,9 @@ void DecodeTree::setAlternateErrorLogger(ITraceErrorLog *p_error_logger)
         s_i_error_logger = p_error_logger;
     else
         s_i_error_logger = &s_error_logger;
+
+    // set debug error logger on the decoder.
+    TrcIDecode::setErrLogger(getCurrentErrorLogI());
 }
 
 /***************************************************************/
@@ -672,6 +675,10 @@ bool DecodeTree::initialise(const ocsd_dcd_tree_src_t type, uint32_t formatterCf
         else 
             return false;
     }
+
+    // set debug error logger on the decoder.
+    TrcIDecode::setErrLogger(getCurrentErrorLogI());
+
     return true;
 }
 

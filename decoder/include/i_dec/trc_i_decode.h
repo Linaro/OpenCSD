@@ -35,10 +35,12 @@
 #define ARM_TRC_I_DECODE_H_INCLUDED
 
 #include "interfaces/trc_instr_decode_i.h"
+#include "interfaces/trc_error_log_i.h"
 #include "opencsd/ocsd_if_types.h"
 
 /** Throw error if AA64 opcode top 2 bytes == 0x0000. This range is invalid in AA64 */
 #define OCSD_ENV_ERR_ON_AA64_BAD_OPCODE "OPENCSD_ERR_ON_AA64_BAD_OPCODE"
+
 
 class TrcIDecode : public IInstrDecode
 {
@@ -52,12 +54,17 @@ public:
     void setAA64_errOnBadOpcode(bool bSet);
     void envSetAA64_errOnBadOpcode();
 
+    static void dbgLogMsg(const char* msg);
+    static void setErrLogger(ITraceErrorLog* err_log) { p_i_errlog = err_log; };
+
 private:
     ocsd_err_t DecodeA32(ocsd_instr_info *instr_info, struct decode_info *info);
     ocsd_err_t DecodeA64(ocsd_instr_info *instr_info, struct decode_info *info);
     ocsd_err_t DecodeT32(ocsd_instr_info *instr_info, struct decode_info *info);
 
     bool aa64_err_bad_opcode;   //< error if aa64 opcode is in invalid range (top 2 bytes = 0x0000).
+
+    static ITraceErrorLog* p_i_errlog;
 };
 
 inline void TrcIDecode::setAA64_errOnBadOpcode(bool bSet)

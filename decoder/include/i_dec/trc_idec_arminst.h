@@ -135,6 +135,9 @@ int inst_ARM_is_UDF(uint32_t inst);
 int inst_Thumb_is_UDF(uint32_t inst);
 int inst_A64_is_UDF(uint32_t inst);
 
+/* allow debug logging from the instruction decoder */
+void dbg_log_msg(const char* msg);
+
 #endif // ARM_TRC_IDEC_ARMINST_H_INCLUDED
 
 /* End of File trc_idec_arminst.h */

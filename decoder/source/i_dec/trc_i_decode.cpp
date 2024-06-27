@@ -38,6 +38,8 @@
 
 #include <cstdlib>
 
+ITraceErrorLog* TrcIDecode::p_i_errlog = 0;
+
 TrcIDecode::TrcIDecode() :
     aa64_err_bad_opcode(false)
 {
@@ -251,6 +253,17 @@ ocsd_err_t TrcIDecode::DecodeT32(ocsd_instr_info *instr_info, struct decode_info
     instr_info->thumb_it_conditions = inst_Thumb_is_IT(instr_info->opcode);
 
     return OCSD_OK;
+}
+
+void TrcIDecode::dbgLogMsg(const char* msg)
+{
+    if (p_i_errlog)
+        p_i_errlog->LogMessage(ITraceErrorLog::HANDLE_GEN_INFO, OCSD_ERR_SEV_INFO, msg);
+}
+
+void dbg_log_msg(const char* msg)
+{
+    TrcIDecode::dbgLogMsg(msg);
 }
 
 /* End of File trc_i_decode.cpp */
