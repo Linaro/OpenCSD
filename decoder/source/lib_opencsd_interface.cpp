@@ -1176,6 +1176,119 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         m_rows_in_file++;
     }
     break;
+    case OCSD_GEN_TRC_ELEM_SWTRACE:
+    {
+        fprintf(m_fp_decode_out, "%u,SWT",((trc_chan_id & 0x0F) >> 1));
+        if (!elem.sw_trace_info.swt_global_err)
+        {
+            if (elem.sw_trace_info.swt_id_valid)
+            {
+                fprintf(m_fp_decode_out, ",%x,%x", elem.sw_trace_info.swt_master_id, elem.sw_trace_info.swt_channel_id);
+            }
+            else
+            {
+                fprintf(m_fp_decode_out, ",INV,INV");
+            }
+
+            if (elem.sw_trace_info.swt_marker_packet)
+                fprintf(m_fp_decode_out, ",MKR");
+            if (elem.sw_trace_info.swt_trigger_event)
+                fprintf(m_fp_decode_out, ",TRIG");
+            if (elem.sw_trace_info.swt_has_timestamp)
+                fprintf(m_fp_decode_out, ",TS=%llu", elem.timestamp);
+            if (elem.sw_trace_info.swt_frequency)
+                fprintf(m_fp_decode_out, ",FREQ");
+            if (elem.sw_trace_info.swt_master_err)
+                fprintf(m_fp_decode_out, ",MASTERERR");
+
+            if (elem.sw_trace_info.swt_payload_pkt_bitsize > 0)
+            {
+                if (elem.sw_trace_info.swt_payload_pkt_bitsize == 4)
+                {
+                    // Iterate through the no of packets in the payload
+                    for (uint32_t i = 0; i < elem.sw_trace_info.swt_payload_num_packets; i++)
+                    {
+                        // Cast to byte array
+                        uint8_t *p_data_array = ((uint8_t*)elem.ptr_extended_data);
+                        // Print the upper nibble of the current element only if the total
+                        // packet count is even. Eg : if packet count is 2, then we need to
+                        // print the upper and lower nibble of the first element of p_data_array.
+                        // If packet count is 3, then we need to print the upper and lower nibble
+                        // of the first element and the lower nibble of the second element.
+                        if (i % 2 == 0) 
+                        {
+                            uint8_t upper_nibble = ((p_data_array[i / 2] & 0xF0) >> 4);
+                            fprintf(m_fp_decode_out, ",%x", upper_nibble);
+                        }
+                        else 
+                        {
+                            uint8_t lower_nibble = (p_data_array[i / 2] & 0x0F);
+                            fprintf(m_fp_decode_out, ",%x", lower_nibble);
+                        }
+                    }
+                }
+                else
+                {
+                    switch (elem.sw_trace_info.swt_payload_pkt_bitsize)
+                    {
+                    case 8:
+                    {
+                        // Iterate through the no of packets in the payload
+                        for (uint32_t i = 0; i < elem.sw_trace_info.swt_payload_num_packets; i++)
+                        {
+                            // Cast to 8-bit array
+                            uint8_t* p_data_array = ((uint8_t*)elem.ptr_extended_data);
+                            fprintf(m_fp_decode_out, ",%x", p_data_array[i]);
+                        }
+                    }
+                    break;
+                    case 16:
+                    {
+                        // Iterate through the no of packets in the payload
+                        for (uint32_t i = 0; i < elem.sw_trace_info.swt_payload_num_packets; i++)
+                        {
+                            // Cast to 8-bit array
+                            uint16_t* p_data_array = ((uint16_t*)elem.ptr_extended_data);
+                            fprintf(m_fp_decode_out, ",%x", p_data_array[i]);
+                        }
+                    }
+                    break;
+                    case 32:
+                    {
+                        // Iterate through the no of packets in the payload
+                        for (uint32_t i = 0; i < elem.sw_trace_info.swt_payload_num_packets; i++)
+                        {
+                            // Cast to 8-bit array
+                            uint32_t* p_data_array = ((uint32_t*)elem.ptr_extended_data);
+                            fprintf(m_fp_decode_out, ",%x", p_data_array[i]);
+                        }
+                    }
+                    break;
+                    case 64:
+                    {
+                        // Iterate through the no of packets in the payload
+                        for (uint32_t i = 0; i < elem.sw_trace_info.swt_payload_num_packets; i++)
+                        {
+                            // Cast to 8-bit array
+                            uint64_t* p_data_array = ((uint64_t*)elem.ptr_extended_data);
+                            fprintf(m_fp_decode_out, ",%llx", p_data_array[i]);
+                        }
+                    }
+                    break;
+                    default:
+                    break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            fprintf(m_fp_decode_out, "GLOBALERR,INV,INV,INV,INV");
+        }
+        fprintf(m_fp_decode_out, "\n");
+        m_rows_in_file++;
+    }
+    break;
     }
 
     if (m_rows_in_file >= m_max_rows_in_file && m_split_files)
