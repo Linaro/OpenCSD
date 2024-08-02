@@ -9,6 +9,7 @@
 #include "opencsd.h"
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 
 // The following ifdef block is the standard way of creating macros which make exporting
 // from a DLL simpler. All files within this DLL are compiled with the OPENCSDINTERFACE_EXPORTS
@@ -48,6 +49,12 @@ typedef enum
     TRACE_DECODER_ERR
 } TyTraceDecodeError;
 
+typedef struct
+{
+    std::string stm_data;
+    bool is_str_data;
+}TSTMString;
+
 // Class responsible for formatting the decoding trace data
 // This class is derived from ITrcGenElemIn defined in opencsd
 class TraceLogger : public ITrcGenElemIn
@@ -74,6 +81,10 @@ private:
     uint64_t m_trace_start_idx;
     uint64_t m_trace_stop_idx;
     bool m_update_timestamp;
+    using CHANNEL_MAP = std::unordered_map<uint16_t, TSTMString>;
+    using MASTER_MAP = std::unordered_map<uint16_t, CHANNEL_MAP>;
+    using STM_TRACE_DATA_MAP = std::unordered_map<uint8_t, MASTER_MAP>;
+    STM_TRACE_DATA_MAP m_stm_trace_data;
 public:
     // Constructor
     TraceLogger(const std::string log_file_path, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
