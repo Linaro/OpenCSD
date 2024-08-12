@@ -107,7 +107,7 @@ unset OPENCSD_INSTR_RANGE_LIMIT
 echo "Done : Return $?"
 env | grep OPENCSD
 
-echo "Test with bad opcode detect on..."
+echo "Test with bad opcode detect on using env var..."
 export OPENCSD_ERR_ON_AA64_BAD_OPCODE=1
 env | grep OPENCSD
 ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/juno_r1_1" $@ -decode -logfilename "${OUT_DIR}/juno_r1_1_badopcode.ppl"
@@ -115,6 +115,9 @@ unset OPENCSD_ERR_ON_AA64_BAD_OPCODE
 echo "Done : Return $?"
 env | grep OPENCSD
 
+echo "Test with bad opcode detect on using flag..."
+${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/juno_r1_1" $@ -decode -aa64_opcode_chk -logfilename "${OUT_DIR}/juno_r1_1_badopcode_flag.ppl"
+echo "Done : Return $?"
 
 # === test a packet only example ===
 echo "Testing init-short-addr..."

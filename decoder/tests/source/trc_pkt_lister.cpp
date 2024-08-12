@@ -75,10 +75,11 @@ static int test_waits = 0;
 static bool dstream_format = false;
 static bool tpiu_format = false;
 static bool has_hsync = false;
-static bool src_addr_n = false;
 static bool stats = false;
 static bool profile = false;
 static bool multi_session = false;  // decode all buffers in snapshot as same config.
+
+static uint32_t add_create_flags = 0;
 
 static bool macc_cache_disable = false;
 static uint32_t macc_cache_page_size = 0;
@@ -206,6 +207,12 @@ void print_help()
     oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
     oss << "-src_addr_n         ETE protocol: Split source address ranges on N atoms\n";
     oss << "-stats              Output packet processing statistics (if available).\n";
+    oss << "\nConsistency checks\n\n";
+    oss << "-aa64_opcode_chk    Check for correct AA64 opcodes (MSW != 0x0000)\n";
+    oss << "-direct_br_cond     Check for incorrect N atom on direct unconditional branches\n";
+    oss << "-strict_br_cond     Strict conditional checks - look for incorrect N atom on all unconditional branches.\n";
+    oss << "-range_cont         Range continuity checks - check next range after N atom is continuous.\n";
+    oss << "-halt_err           Halt on bad packet error (default attempts to resync).\n";
     oss << "\nDevelopment:\nOptions used during develop and test of the library\n\n";
     oss << "-profile            Mute logging output while profiling library performance\n";
     oss << "-test_waits <N>     Force wait from packet printer for N packets - test the wait/flush mechanisms for the decoder\n";
@@ -418,7 +425,7 @@ bool process_cmd_line_opts(int argc, char* argv[])
             }
             else if (strcmp(argv[optIdx], "-src_addr_n") == 0)
             {
-                src_addr_n = true;
+                add_create_flags |= ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS;
             }
             else if (strcmp(argv[optIdx], "-stats") == 0)
             {
@@ -457,6 +464,26 @@ bool process_cmd_line_opts(int argc, char* argv[])
             else if (strcmp(argv[optIdx], "-profile") == 0)
             {
                 profile = true;
+            }
+            else if (strcmp(argv[optIdx], "-direct_br_cond") == 0)
+            {
+                add_create_flags |= OCSD_OPFLG_N_UNCOND_DIR_BR_CHK;
+            }
+            else if (strcmp(argv[optIdx], "-strict_br_cond") == 0)
+            {
+                add_create_flags |= OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK;
+            }
+            else if (strcmp(argv[optIdx], "-range_cont") == 0)
+            {
+                add_create_flags |= OCSD_OPFLG_CHK_RANGE_CONTINUE;
+            }
+            else if (strcmp(argv[optIdx], "-halt_err") == 0)
+            {
+                add_create_flags |= OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS;
+            }
+            else if (strcmp(argv[optIdx], "-aa64_opcode_chk") == 0)
+            {
+                add_create_flags |= ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK;
             }
             else if (strcmp(argv[optIdx], "-macc_cache_disable") == 0)
             {
@@ -777,10 +804,11 @@ bool ProcessInputFile(DecodeTree *dcd_tree, std::string &in_filename,
 void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader, const std::string &trace_buffer_name)
 {
     CreateDcdTreeFromSnapShot tree_creator;
+    uint32_t createFlags = add_create_flags;
 
     tree_creator.initialise(&reader, &err_logger);
 
-    if(tree_creator.createDecodeTree(trace_buffer_name, (decode == false), src_addr_n ? ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS : 0))
+    if(tree_creator.createDecodeTree(trace_buffer_name, (decode == false), createFlags))
     {
         DecodeTree *dcd_tree = tree_creator.getDecodeTree();
         dcd_tree->setAlternateErrorLogger(&err_logger);

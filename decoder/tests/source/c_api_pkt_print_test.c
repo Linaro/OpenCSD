@@ -122,6 +122,12 @@ static int test_error_api = 0;
 /* log statistics */
 static int stats = 0;
 
+/* decoder creation flags */
+static int add_create_flags = 0;
+
+/* output file name */
+const char* logfile_name = "c_api_test.log";
+
 /* Process command line options - choose the operation to use for the test. */
 static int process_cmd_line(int argc, char *argv[])
 {
@@ -228,6 +234,32 @@ static int process_cmd_line(int argc, char *argv[])
         {
             test_error_api = 1;
         }
+        else if (strcmp(argv[idx], "-direct_br_cond") == 0)
+        {
+            add_create_flags |= OCSD_OPFLG_N_UNCOND_DIR_BR_CHK;
+        }
+        else if (strcmp(argv[idx], "-strict_br_cond") == 0)
+        {
+            add_create_flags |= OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK;
+        }
+        else if (strcmp(argv[idx], "-range_cont") == 0)
+        {
+            add_create_flags |= OCSD_OPFLG_CHK_RANGE_CONTINUE;
+        }
+        else if (strcmp(argv[idx], "-logfilename") == 0)
+        {
+            idx++;
+            if ((idx >= argc) || (strlen(argv[idx]) == 0))
+            {
+                printf("-logfilename: Missing filename parameter or zero length\n");
+                return -1;
+            }
+            logfile_name = argv[idx];
+        }
+        else if (strcmp(argv[idx], "-halt_err") == 0)
+        {
+            add_create_flags |= OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS;
+        }
         else if(strcmp(argv[idx],"-help") == 0)
         {
             return -1;
@@ -248,6 +280,9 @@ static void print_cmd_line_help()
     printf("-test_printstr | -test_libprint : ttest lib printstr callback | test lib based packet printers\n");
     printf("-test_region_file | -test_cb | -test_cb_id : mem accessor - test multi region file API | test callback API [with trcid] (default single memory file)\n\n");
     printf("-ss_path <path> : path from cwd to /snapshots/ directory. Test prog will append required test subdir\n");
+    printf("-direct_br_cond | -strict_br_cond | -range_cont : Decoder checks for inconsistent program images.\n");
+    printf("-logfilename <name> : output to logfile <name>\n");
+    printf("-halt_err : halt on error packets (default is to attempt to resync / recover)\n");
 }
 
 /************************************************************************/
@@ -608,7 +643,7 @@ static ocsd_err_t create_generic_decoder(dcd_tree_handle_t handle, const char *p
         /* Full decode - need decoder, and memory dump */
 
         /* create the packet decoder and packet processor pair from the supplied name */
-        ret = ocsd_dt_create_decoder(handle,p_name,OCSD_CREATE_FLG_FULL_DECODER,p_cfg,&CSID);
+        ret = ocsd_dt_create_decoder(handle,p_name, add_create_flags | OCSD_CREATE_FLG_FULL_DECODER, p_cfg, &CSID);
         if(ret == OCSD_OK)
         {
             if((op != TEST_PKT_DECODEONLY) && (ret == OCSD_OK))
@@ -1085,7 +1120,7 @@ int main(int argc, char *argv[])
         
         /* set up the output - to file and stdout, set custom logfile name */
         if(ret == 0)
-            ret = ocsd_def_errlog_config_output(C_API_MSGLOGOUT_FLG_FILE | C_API_MSGLOGOUT_FLG_STDOUT, "c_api_test.log");
+            ret = ocsd_def_errlog_config_output(C_API_MSGLOGOUT_FLG_FILE | C_API_MSGLOGOUT_FLG_STDOUT, logfile_name);
 
         /* print sign-on message in log */
         sprintf(message, "C-API packet print test\nLibrary Version %s\n\n",ocsd_get_version_str());
