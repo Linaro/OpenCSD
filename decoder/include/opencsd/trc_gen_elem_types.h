@@ -86,6 +86,7 @@ typedef enum _unsync_info_t {
     UNSYNC_OVERFLOW,        /**< overflow packet - need to re-sync / end of trace after overflow. */
     UNSYNC_DISCARD,         /**< specl trace discard - need to re-sync. */
     UNSYNC_BAD_PACKET,      /**< bad packet at input - resync to restart. */
+    UNSYNC_BAD_IMAGE,       /**< bad program image - resync to restart. */
     UNSYNC_EOT,             /**< end of trace - no additional info */
 } unsync_info_t;
 

@@ -135,6 +135,7 @@ typedef enum _ocsd_err_t {
     /* additional errors */
     OCSD_ERR_INVALID_OPCODE,            /**< 44 Opcode found while decoding program memory is illegal */
     OCSD_ERR_I_RANGE_LIMIT_OVERRUN,     /**< 45 An optional limit on consecutive instructions in range during decode has been exceeded. */
+    OCSD_ERR_BAD_DECODE_IMAGE,          /**< 46 Inconsistencies detected between trace and decode image (e.g. not taken unconditional instructions) */
     /* end marker*/
     OCSD_ERR_LAST
 } ocsd_err_t;
@@ -526,11 +527,19 @@ typedef struct _ocsd_file_mem_region {
     (common flags share bitfield with pkt processor common flags and create flags)
     @{*/
 
-#define OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS  0x00000100  /**< throw error on bad packets input (default is to warn) */
-#define OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS   0x00000200  /**< halt decoder on bad packets (default is to log error and continue by resetting decoder and wait for sync */
+#define OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS    0x00000100  /**< throw error on bad packets input (default is to warn) */
+#define OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS     0x00000200  /**< halt decoder on bad packets (default is to log error and continue by resetting decoder and wait for sync */
+
+#define OCSD_OPFLG_N_UNCOND_DIR_BR_CHK      0x00000400  /**< Throw error on N atom unconditional direct branches if target address is not next instruction */
+#define OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK   0x00000800  /**< Throw error on all N atom unconditional branches */
+#define OCSD_OPFLG_CHK_RANGE_CONTINUE       0x00001000  /**< Check consecutive range consistency - detect possible bad program image inputs from client */
 
 /** mask to combine all common packet processor operational control flags */
-#define OCSD_OPFLG_PKTDEC_COMMON (OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS | OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS)
+#define OCSD_OPFLG_PKTDEC_COMMON (OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS | \
+                                 OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS   | \
+                                 OCSD_OPFLG_N_UNCOND_DIR_BR_CHK    | \
+                                 OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK | \
+                                 OCSD_OPFLG_CHK_RANGE_CONTINUE )
 
 /** @}*/
 

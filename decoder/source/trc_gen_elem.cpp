@@ -108,6 +108,7 @@ static const char *s_unsync_reason[] = {
     "overflow",             // UNSYNC_OVERFLOW - overflow packet - need to re-sync
     "discard",              // UNSYNC_DISCARD - specl trace discard - need to re-sync
     "bad-packet",           // UNSYNC_BAD_PACKET - bad packet at input - resync to restart.
+    "bad-program-image",    // UNSYNC_BAD_IMAGE - bad program image - resync to restart. */
     "end-of-trace",         // UNSYNC_EOT - end of trace info.
 };
 static const char *s_transaction_type[] = {

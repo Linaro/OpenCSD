@@ -97,6 +97,7 @@ static const char *s_errorCodeDescs[][2] = {
     /* additional errors */
     {"OCSD_ERR_INVALID_OPCODE","Illegal Opode found while decoding program memory."},
     {"OCSD_ERR_I_RANGE_LIMIT_OVERRUN","An optional limit on consecutive instructions in range during decode has been exceeded."},
+    {"OCSD_ERR_BAD_DECODE_IMAGE","Mismatch between trace packets and decode image."},
     /* end marker*/
     {"OCSD_ERR_LAST", "No error - error code end marker"}
 };
