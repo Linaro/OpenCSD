@@ -39,8 +39,9 @@
 
 #define DCD_NAME "DCD_ETMV4"
 
-static const uint32_t ETMV4_SUPPORTED_DECODE_OP_FLAGS = OCSD_OPFLG_PKTDEC_COMMON |
-                        ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS;
+static const uint32_t ETMV4_SUPPORTED_DECODE_OP_FLAGS =
+    OCSD_OPFLG_PKTDEC_COMMON |  /* common op flags */
+    ETE_ETM4_OPFLG_MASK;        /* ete - etm4 op flags */
 
 TrcPktDecodeEtmV4I::TrcPktDecodeEtmV4I()
     : TrcPktDecodeBase(DCD_NAME)
@@ -118,13 +119,18 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
             err = decodePacket();
             if (err)
             {
-#ifdef OCSD_WARN_UNSUPPORTED
-                if (err == OCSD_ERR_UNSUPP_DECODE_PKT)
-                    resp = OCSD_RESP_WARN_CONT;
+                // may want to continue through bad packets
+                if ((err == OCSD_ERR_BAD_DECODE_PKT) || (err == OCSD_ERR_UNSUPP_DECODE_PKT))
+                {
+                    if (getComponentOpMode() & OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS)
+                        resp = OCSD_RESP_FATAL_INVALID_DATA;
+                    else if (getComponentOpMode() & OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
+                        resp = OCSD_RESP_ERR_CONT;
+                    else
+                        resp = OCSD_RESP_WARN_CONT;
+                }
                 else
-#else
-                resp = OCSD_RESP_FATAL_INVALID_DATA;
-#endif
+                    resp = OCSD_RESP_FATAL_INVALID_DATA;
 
                 bPktDone = true;
             }
@@ -227,6 +233,12 @@ ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
         err = OCSD_ERR_HW_CFG_UNSUPP;
         LogError(ocsdError(OCSD_ERR_SEV_ERROR,OCSD_ERR_HW_CFG_UNSUPP,"ETMv4 instruction decode : Trace on conditional non-branch elements not supported."));
     }
+
+    // set consistency check flags 
+    m_direct_br_chk = (bool)(getComponentOpMode() & OCSD_OPFLG_N_UNCOND_DIR_BR_CHK);
+    m_strict_br_chk = (bool)(getComponentOpMode() & OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK);
+    m_range_cont_chk = (bool)(getComponentOpMode() & OCSD_OPFLG_CHK_RANGE_CONTINUE);
+    
     return err;
 }
 
@@ -285,6 +297,7 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_last_IS = 0;
     clearElemRes();
     m_ete_first_ts_marker = false;
+    nextRangeCheckClear();
 
     // elements associated with data trace
 #ifdef DATA_TRACE_SUPPORTED
@@ -604,20 +617,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
     case ETM4_PKT_I_NUM_DS_MKR:
     case ETM4_PKT_I_UNNUM_DS_MKR:
         // all currently unsupported
-        {
-        ocsd_err_severity_t sev = OCSD_ERR_SEV_ERROR;
-#ifdef OCSD_WARN_UNSUPPORTED
-        sev = OCSD_ERR_SEV_WARN;
-        //resp = OCSD_RESP_WARN_CONT;
-#else
-        //resp = OCSD_RESP_FATAL_INVALID_DATA;
-#endif
-        err = OCSD_ERR_UNSUPP_DECODE_PKT;
-        if (sev == OCSD_ERR_SEV_WARN)
-                        LogError(ocsdError(sev, err, "Data trace related, unsupported packet type."));
-        else 
-            err = handlePacketSeqErr(err, m_index_curr_pkt, "Data trace related, unsupported packet type.");
-        }
+        err = handlePacketSeqErr(OCSD_ERR_UNSUPP_DECODE_PKT, m_index_curr_pkt, "Data trace related, unsupported packet type.");
         break;
 
     default:
@@ -698,8 +698,13 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::resolveElements()
                     err = discardElements();
             }
 
-            if (err != OCSD_OK)
-                resp = OCSD_RESP_FATAL_INVALID_DATA;
+            if (err != OCSD_OK) {
+                // has the error reset the decoder?
+                if (m_curr_state == NO_SYNC)
+                    resp = OCSD_RESP_ERR_CONT;
+                else
+                    resp = OCSD_RESP_FATAL_INVALID_DATA;
+            }
         }
         
         // break out on error or wait request.
@@ -746,6 +751,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
             {
                 // indicates a trace restart - beginning of trace or discontinuiuty
             case P0_TRC_ON:
+                nextRangeCheckClear();
                 err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_TRACE_ON);
                 if (!err)
                 {
@@ -814,17 +820,20 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                     {
                         ocsd_atm_val atom = pAtomElem->commitOldest();
 
-                        // check if prev atom left us an indirect address target on the return stack
+                        // check if prev atom was indirect branch - may need address from return stack
                         if ((err = returnStackPop()) != OCSD_OK)
                             break;
 
                         // if address and context do instruction trace follower.
                         // otherwise skip atom and reduce committed elements
+                        // allow for insufficient program image.
                         if (!m_need_ctxt && !m_need_addr)
                         {
-                            err = processAtom(atom);
+                            if ((err = processAtom(atom)) != OCSD_OK)
+                                break;
                         }
-                        m_elem_res.P0_commit--; // mark committed 
+                        if (m_elem_res.P0_commit)
+                            m_elem_res.P0_commit--; // mark committed 
                     }
                     if (!pAtomElem->isEmpty())
                         bPopElem = false;   // don't remove if still atoms to process.
@@ -837,11 +846,13 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 if ((err = returnStackPop()) != OCSD_OK)
                     break;
 
+                nextRangeCheckClear();
                 err = processException();  // output trace + exception elements.
                 m_elem_res.P0_commit--;
                 break;
 
             case P0_EXCEP_RET:
+                nextRangeCheckClear();
                 err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_EXCEPTION_RET);
                 if (!err)
                 {
@@ -858,11 +869,13 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 break;
 
             case P0_SRC_ADDR:
+                nextRangeCheckClear();
                 err = processSourceAddress();
                 m_elem_res.P0_commit--;
                 break;
 
             case P0_Q:
+                nextRangeCheckClear();
                 err = processQElement();
                 m_elem_res.P0_commit--;
 				break;
@@ -873,6 +886,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
             case P0_TRANS_COMMIT:
             case P0_TRANS_FAIL:
             case P0_TRANS_TRACE_INIT:
+                nextRangeCheckClear();
                 err = processTransElem(pElem);
                 break;
 
@@ -1352,6 +1366,20 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
                     m_return_stack.push(nextAddr, m_instr_info.isa);
 
             }
+            else if (m_direct_br_chk || m_strict_br_chk)  // consistency checks on N atoms?
+            {
+                // N atom - but direct branch instruction not conditional - bad input image?
+                if (!m_instr_info.is_conditional)
+                {
+                    // Some ETM IP incorrectly trace a taken branch to next instruction as N
+                    // look for branch where it is not next instruction if direct branch checks only
+                    if (((m_instr_info.branch_addr != nextAddr) && m_direct_br_chk) || m_strict_br_chk)
+                    {
+                        err = handleBadImageError(pElem->getRootIndex(), "Bad program image - N Atom on unconditional direct BR.\n");
+                        return err;
+                    }
+                }
+            }
             break;
 
         case OCSD_INSTR_BR_INDIRECT:
@@ -1360,16 +1388,44 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
                 m_need_addr = true; // indirect branch taken - need new address.
                 if (m_instr_info.is_link)
                     m_return_stack.push(nextAddr,m_instr_info.isa);
-                m_return_stack.set_pop_pending();  // need to know next packet before we know what is to happen
+
+                // mark last atom as BR indirect - if no address next need addr from return stack.
+                m_return_stack.set_pop_pending();  
 
                 /* ETE does not have ERET trace packets - however to maintain the illusion if we see an ERET
                    output a gen elem ERET packet */
                 if (isETEConfig() && (m_instr_info.sub_type == OCSD_S_INSTR_V8_ERET))
                     ETE_ERET = true;
             }
+            else if (m_strict_br_chk) // consistency checks on N atoms?
+            {
+                // N atom - check if conditional - only in strict check mode.
+                if (!m_instr_info.is_conditional)
+                {
+                    err = handleBadImageError(pElem->getRootIndex(), "Bad program image - N Atom on unconditional indirect BR.\n");
+                    return err;
+                }
+            }
             break;
         }
         setElemTraceRange(outElem(), addr_range, (atom == ATOM_E), pElem->getRootIndex());
+
+        // check for discontinuity in address ranges where incorrect memory images supplied to decoder.
+        if (m_range_cont_chk)
+        {
+            // do the previous range chack.
+            if (!nextRangeCheckOK(addr_range.st_addr))
+            {
+                err = handleBadImageError(pElem->getRootIndex(), "Discontinuous ranges - Inconsistent program image for decode\n");
+                return err;
+            }
+
+            if (atom == ATOM_N)
+                // branch not taken - expect next range to be continuous
+                nextRangeCheckSet(nextAddr);
+            else
+                nextRangeCheckClear();  // branch taken - not continuous
+        }
 
         if (ETE_ERET)
         {
@@ -1382,6 +1438,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
     {
         // no waypoint - likely inaccessible memory range.
         m_need_addr = true; // need an address update 
+        nextRangeCheckClear();
 
         if(addr_range.st_addr != addr_range.en_addr)
         {
@@ -1970,15 +2027,20 @@ ocsd_err_t TrcPktDecodeEtmV4I::handleBadPacket(const char *reason, ocsd_trc_inde
     if (getComponentOpMode() & OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS)
         sev = OCSD_ERR_SEV_ERROR;
 
-    return handlePacketErr(OCSD_ERR_BAD_DECODE_PKT, sev, index, reason);
+    return handlePacketErr(OCSD_ERR_BAD_DECODE_PKT, sev, index, reason, UNSYNC_BAD_PACKET);
 }
 
 ocsd_err_t TrcPktDecodeEtmV4I::handlePacketSeqErr(ocsd_err_t err, ocsd_trc_index_t index, const char *reason)
 {
-    return handlePacketErr(err, OCSD_ERR_SEV_ERROR, index, reason);
+    return handlePacketErr(err, OCSD_ERR_SEV_ERROR, index, reason, UNSYNC_BAD_PACKET);
 }
 
-ocsd_err_t TrcPktDecodeEtmV4I::handlePacketErr(ocsd_err_t err, ocsd_err_severity_t sev, ocsd_trc_index_t index, const char *reason)
+ocsd_err_t TrcPktDecodeEtmV4I::handleBadImageError(ocsd_trc_index_t index, const char* reason)
+{
+    return handlePacketErr(OCSD_ERR_BAD_DECODE_IMAGE, OCSD_ERR_SEV_ERROR, index, reason, UNSYNC_BAD_IMAGE);
+}
+
+ocsd_err_t TrcPktDecodeEtmV4I::handlePacketErr(ocsd_err_t err, ocsd_err_severity_t sev, ocsd_trc_index_t index, const char *reason, const unsync_info_t unsync_reason)
 {
     bool resetOnBadPackets = true;
 
@@ -1992,8 +2054,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::handlePacketErr(ocsd_err_t err, ocsd_err_severity
         // switch to unsync - clear decode state
         resetDecoder();
         m_curr_state = NO_SYNC;
-        m_unsync_eot_info = UNSYNC_BAD_PACKET;
-        err = OCSD_OK;
+        m_unsync_eot_info = unsync_reason;
+        //err = OCSD_OK;
     }
     return err;
 

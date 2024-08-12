@@ -444,6 +444,10 @@ ocsd_err_t DecodeTree::createDecoder(const std::string &decoderName, const int c
         crtFlags |= OCSD_CREATE_FLG_INST_ID;
     }
 
+    // check for the aa64 check.
+    if (createFlags & ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK)
+        s_instruction_decoder.setAA64_errOnBadOpcode(true);
+
     // create the decode element to attach to the channel.
     if((err = createDecodeElement(CSID)) != OCSD_OK)
         return err;

@@ -387,7 +387,10 @@ typedef struct _ocsd_etmv4_cfg
 
 #define ETE_ARCH_VERSION 0x5
 
-#define ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS 0x00010000 /**< Split source address output ranges for N-atoms */
+#define ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS    0x00010000 /**< Split source address output ranges for N-atoms */
+#define ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK   0x00020000 /**< check for invalid AA64 opcodes. (MSW == 0x0000) */
+
+#define ETE_ETM4_OPFLG_MASK (ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS | ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK)
 
 /** @}*/
 /** @}*/

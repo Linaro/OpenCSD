@@ -111,8 +111,11 @@ protected:
     // sequencing error on packet processing - optionally continue
     ocsd_err_t handlePacketSeqErr(ocsd_err_t err, ocsd_trc_index_t index, const char *reason);
 
+    // inconsistent image for decode - optionally reset and continue
+    ocsd_err_t handleBadImageError(ocsd_trc_index_t index, const char* reason);
+
     // common packet error routine
-    ocsd_err_t handlePacketErr(ocsd_err_t err, ocsd_err_severity_t sev, ocsd_trc_index_t index, const char *reason);
+    ocsd_err_t handlePacketErr(ocsd_err_t err, ocsd_err_severity_t sev, ocsd_trc_index_t index, const char *reason, const unsync_info_t unsync_reason);
 
     ocsd_err_t addElemCC(TrcStackElemParam *pParamElem);
     ocsd_err_t addElemTS(TrcStackElemParam *pParamElem, bool withCC);
@@ -250,6 +253,34 @@ private:
     bool m_prev_overflow;
 
     TrcAddrReturnStack m_return_stack;  //!< the address return stack.
+
+    // range address check to look for possible incorrect input code memory images.
+    struct {
+        ocsd_vaddr_t next_st_addr;  // expected address for next range
+        bool valid;
+    } m_next_range_check;
+
+    void nextRangeCheckClear() {
+        m_next_range_check.valid = false;
+    };
+
+    void nextRangeCheckSet(const ocsd_vaddr_t addr) {
+        m_next_range_check.valid = true;
+        m_next_range_check.next_st_addr = addr;
+    };
+
+    bool nextRangeCheckOK(const ocsd_vaddr_t addr) {
+        if (m_next_range_check.valid) {
+            return (bool)(m_next_range_check.next_st_addr == addr);
+        }
+        // no check info - just return OK
+        return true;
+    };
+
+    // consistency check flags
+    bool m_direct_br_chk;
+    bool m_strict_br_chk;
+    bool m_range_cont_chk;
 
 //** output element handling
     OcsdGenElemStack m_out_elem;  //!< output element stack.
