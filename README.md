@@ -333,6 +333,13 @@ Version and Modification Information
     - __Bugfix__: docs: Minor fixes to docs and man file.
     - __Bugfix__: build: minor fix for clang compatibility.
 
+- _Version 1.5.4_:
+    - __Update__: Add operation flags to allow clients to enable additional checking modes.
+                  Checks for inconsistencies in program image and incoming trace. Adds operational flags:
+                    - `OCSD_OPFLG_N_UNCOND_DIR_BR_CHK` - check for N atom on unconditional direct branches.
+                    - `OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK` - check for N atom on all unconditional branches.
+                    - `OCSD_OPFLG_CHK_RANGE_CONTINUE` - Inconsistent range continuity on not taken branches.
+    - __Update__: Add operational flag `ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK` to enable aa64 opcode checks. 
 
 Licence Information
 ===================

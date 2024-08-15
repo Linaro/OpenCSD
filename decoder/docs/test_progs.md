@@ -193,6 +193,14 @@ __Command Line Options__
 - `-o_raw_unpacked`  : Output raw unpacked trace data per ID.
 - `-stats`           : Output packet processing statistics (if available).
 
+*Consistency Checks*
+
+- `-aa64_opcode_chk` : Check for correct AA64 opcodes (MSW != 0x0000)
+- `-direct_br_cond`  : Check for N atoms on unconditional direct branches.
+- `-strict_br_cond`  : Check for N atoms on all unconditional branches.
+- `-range_cont`      : Check for address consistency between ranges after none taken branches.
+- `-halt_err`        : Halt on packet/image errors - default is to reset and attempt to recover.
+
 *Output options*
 
 Default is to output to file and stdout. Setting any option overrides and limits to only

@@ -286,6 +286,27 @@ The different trace source types have different configuration structures, classe
 | __PTM__   | @ref ocsd_ptm_cfg   | PtmConfig   | @ref OCSD_BUILTIN_DCD_PTM    |
 | __STM__   | @ref ocsd_stm_cfg   | STMConfig   | @ref OCSD_BUILTIN_DCD_STM    |
 
+There are a number of additional flags that can be set on `decoderCreateFlags` when creating a decoder.
+
+Key ones are:-
+- `OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS`   : Halt decoder on bad packets. Default behaviour is to try to re-sync and recover.
+
+There are consistency checks to attempt to spot mismatches between the supplied program image from the client and the trace data.
+An incorrect program image can result in N atoms (not take branch) associated with unconditional branches which should always be taken.
+
+- `OCSD_OPFLG_N_UNCOND_DIR_BR_CHK`    : This flag will throw an error when a N atom is associated with an unconditional direct branch.
+									    (note: restricted to direct branches as some ETM ip incorrectly traces branches to next instruction as N rather then E).
+- `OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK` : Check for N atoms on any unconditional branches. Use for known correct IP.
+- `OCSD_OPFLG_CHK_RANGE_CONTINUE`     : Check the start address of the range after a not taken branch is contiguous from the previous range.
+
+Each of these options will result in a decoder reset and resync - there will be an output of `OCSD_GEN_TRC_ELEM_NO_SYNC` with a reason of `UNSYNC_BAD_IMAGE`.
+
+Additional flag  `ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK` is for ETMv4 / ETE decode that adds in checks on AA64 opcodes for validity.
+
+The check ensures that the top 16 bits are not 0x0000 - which is not possible in a legal opcode.
+This can catch errors were incorrect program images can potentially cause decode to enter uninitialised data areas.
+
+
 ### Adding in Memory Images ###
 
 Memory images are needed when a full trace decode is required. Memory images consist of a base address and length, and 

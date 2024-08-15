@@ -78,6 +78,22 @@ Output raw unpacked trace data per ID.-
 .TP
 .B -stats
 Output packet processing statistics (if available).
+.SS Consistency checks
+.TP
+.B -aa64_opcode_chk
+Check for correct AA64 opcodes (MSW != 0x0000)
+.TP
+.B -direct_br_cond
+Check for incorrect N atom on direct unconditional branches
+.TP
+.B -strict_br_cond
+Strict conditional checks - look for incorrect N atom on all unconditional branches.
+.TP
+.B -range_cont
+ Range continuity checks - check next range after N atom is continuous.
+.TP
+.B -halt_err
+Halt on bad packet error (default attempts to resync).
 .SS Output options
 Default is to output to file and stdout. Setting any option overrides and limits to only
 the options set.

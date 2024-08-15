@@ -124,9 +124,11 @@ certain types and fields will differ slightly across protocols. These difference
 reference.
 
 ### OCSD_GEN_TRC_ELEM_NO_SYNC ###
-__packet fields valid__: None
+__packet fields valid__: `unsync_eot_info`
 
 Element output before the decoder has synchronised with the input stream, or synchronisation is lost.
+The `unsync_eot_info` will give reason for lack of synchronisation.
+
 
 ### OCSD_GEN_TRC_ELEM_INSTR_RANGE ###
 __packet fields valid__: `isa, st_addr, en_addr, last_i_type, last_i_subtype, last_instr_exec, last_instr_sz, num_instr_range, last_instr_cond`
@@ -177,7 +179,7 @@ Decoder saw invalid packet for protocol being processed. Likely incorrect protoc
 trace data.
   
 ### OCSD_GEN_TRC_ELEM_TRACE_ON ###
-__packet fields valid__: trace_on_reason
+__packet fields valid__: `trace_on_reason`
 
 __packet fields optional__: `has_cc -> cycle_count,`
 
@@ -195,7 +197,7 @@ __packet fields valid__: None
 Marker for end of trace data. Sent once for each CoreSight ID channel.
 
 ### OCSD_GEN_TRC_ELEM_PE_CONTEXT ###
-__packet fields valid__: context
+__packet fields valid__: `context`
 
 __packet fields optional__: `has_cc -> cycle_count,`
 
