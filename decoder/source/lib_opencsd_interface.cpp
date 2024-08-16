@@ -407,6 +407,22 @@ TyTraceDecodeError OpenCSDInterface::SetPacketMonitorSink(const uint8_t CSID, IT
 }
 
 /****************************************************************************
+     Function: SetSTMChannelInfo
+     Engineer: Arjun Suresh
+        Input: text_channels - vector contains the text channels
+       Output: None
+       return: Nones
+  Description: Set the STM Channel Info
+  Date         Initials    Description
+8-Aug-2022     AS          Initial
+****************************************************************************/
+void OpenCSDInterface::SetSTMChannelInfo(std::vector<uint32_t>& text_channels)
+{
+    if (mp_logger)
+        mp_logger->SetSTMChannelInfo(text_channels);
+}
+
+/****************************************************************************
      Function: SetPacketMonitorCallback
      Engineer: Arjun Suresh
         Input: CSID - Source ID
@@ -871,6 +887,21 @@ bool TraceLogger::FirstValidIndexFound()
 }
 
 /****************************************************************************
+     Function: SetSTMChannelInfo
+     Engineer: Arjun Suresh
+        Input: text_channels - vector contains the text channels
+       Output: None
+       return: Nones
+  Description: Set the STM Channel Info
+  Date         Initials    Description
+8-Aug-2022     AS          Initial
+****************************************************************************/
+void TraceLogger::SetSTMChannelInfo(std::vector<uint32_t>& text_channels)
+{
+    m_text_channels = text_channels;
+}
+
+/****************************************************************************
      Function: ResetFirstValidIdx
      Engineer: Arjun Suresh
         Input: None
@@ -1191,11 +1222,20 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     break;
     case OCSD_GEN_TRC_ELEM_SWTRACE:
     {
-        uint8_t trc_id = ((trc_chan_id & 0x0F) >> 1);
+        uint8_t trc_id = trc_chan_id;
         uint16_t master_id = 0;
         uint16_t channel_id = 0;
+        bool is_str_data = false;
 
-        if (!elem.sw_trace_info.swt_global_err)
+        if (elem.sw_trace_info.swt_global_err)
+        {
+            fprintf(m_fp_decode_out, "%u,SWT,%u,%u,GLOBALERR,0\n", trc_id, elem.sw_trace_info.swt_master_id, elem.sw_trace_info.swt_channel_id);
+        }
+        else if (elem.sw_trace_info.swt_master_err)
+        {
+            fprintf(m_fp_decode_out, "%u,SWT,%u,%u,MASTERERR,0\n", trc_id, elem.sw_trace_info.swt_master_id, elem.sw_trace_info.swt_channel_id);
+        }
+        else
         {
             if (elem.sw_trace_info.swt_id_valid)
             {
@@ -1203,55 +1243,23 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                 channel_id = elem.sw_trace_info.swt_channel_id;
             }
 
-            // If the packet is a marker packet, this mean it is the start of an ascii string
-            if (elem.sw_trace_info.swt_marker_packet && (!elem.sw_trace_info.swt_frequency) && (!elem.sw_trace_info.swt_trigger_event) && (!elem.sw_trace_info.swt_has_timestamp) && (!elem.sw_trace_info.swt_master_err))
-            {
-                m_stm_trace_data[trc_id][master_id][channel_id].stm_data.clear();
-                m_stm_trace_data[trc_id][master_id][channel_id].is_str_data = true;
-            }
-
             std::string pkt_type;
-            std::string seperator;
+            pkt_type += ((elem.sw_trace_info.swt_marker_packet) ? "[MKR]" : "");
+            pkt_type += ((elem.sw_trace_info.swt_has_timestamp) ? ("[TS=" + std::to_string(elem.timestamp) + "]") : "");
+            pkt_type += ((elem.sw_trace_info.swt_trigger_event) ? "[TRIG]" : "");
+            pkt_type += ((elem.sw_trace_info.swt_frequency) ? "[FREQ]" : "");
 
-            if (!m_stm_trace_data[trc_id][master_id][channel_id].is_str_data)
+            // If the channel is part of the text channel vector, then the data part of a string
+            if (count(m_text_channels.begin(), m_text_channels.end(), channel_id) > 0)
             {
-                fprintf(m_fp_decode_out, "%u,SWT,%u,%u,", trc_id, master_id, channel_id);
-
-                if (elem.sw_trace_info.swt_marker_packet)
-                {
-                    pkt_type += seperator + "MKR";
-                    seperator = "-";
-                }
-                if (elem.sw_trace_info.swt_trigger_event)
-                {
-                    pkt_type += seperator + "TRIG";
-                    seperator = "-";
-                }
-                if (elem.sw_trace_info.swt_has_timestamp)
-                {
-                    pkt_type += seperator + "TS=" + std::to_string(elem.timestamp);
-                    seperator = "-";
-                }
-                if (elem.sw_trace_info.swt_frequency)
-                {
-                    pkt_type += seperator + "FREQ";
-                    seperator = "-";
-                }
-                if (elem.sw_trace_info.swt_master_err)
-                {
-                    fprintf(m_fp_decode_out, ",MASTERERR");
-                    pkt_type += seperator + "MASTERERR";
-                }
-
-                fprintf(m_fp_decode_out, "%s,", pkt_type.c_str());
+                is_str_data = true;
             }
+            pkt_type += ((is_str_data) ? "[TEXT]" : "[BIN]");
+
+            fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,", trc_id, master_id, channel_id, pkt_type.c_str());
 
             if (elem.sw_trace_info.swt_payload_pkt_bitsize > 0)
             {
-                if (pkt_type.empty() && !m_stm_trace_data[trc_id][master_id][channel_id].is_str_data)
-                {
-                    fprintf(m_fp_decode_out, "DATA,");
-                }
                 switch (elem.sw_trace_info.swt_payload_pkt_bitsize)
                 {
                     case 4:
@@ -1277,20 +1285,44 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                                 fprintf(m_fp_decode_out, "%x ", lower_nibble);
                             }
                         }
+                        fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     case 8:
                     {
+                        bool add_new_line = false;
                         // Iterate through the no of packets in the payload
                         for (uint32_t i = 0; i < elem.sw_trace_info.swt_payload_num_packets; i++)
                         {
                             // Cast to 8-bit array
                             uint8_t* p_data_array = ((uint8_t*)elem.ptr_extended_data);
-                            if(m_stm_trace_data[trc_id][master_id][channel_id].is_str_data)
-                                m_stm_trace_data[trc_id][master_id][channel_id].stm_data += p_data_array[i];
-                            else
+                            if (!is_str_data)
+                            {
                                 fprintf(m_fp_decode_out, "%x ", p_data_array[i]);
+                                add_new_line = true;
+                            }
+                            else
+                            {
+                                if (pkt_type == "[MKR]")
+                                {
+                                    if (m_stm_trace_data[trc_id][master_id][channel_id].stm_data.empty())
+                                    {
+                                        fprintf(m_fp_decode_out, "%c ", (char*)p_data_array[i]);
+                                        add_new_line = true;
+                                    }
+                                    else
+                                    {
+                                        m_stm_trace_data[trc_id][master_id][channel_id].stm_data += p_data_array[i];
+                                    }
+                                }
+                                else
+                                {
+                                    m_stm_trace_data[trc_id][master_id][channel_id].stm_data += p_data_array[i];
+                                }
+                            }
                         }
+                        if(add_new_line)
+                            fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     case 16:
@@ -1302,6 +1334,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                             uint16_t* p_data_array = ((uint16_t*)elem.ptr_extended_data);
                             fprintf(m_fp_decode_out, "%x ", p_data_array[i]);
                         }
+                        fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     case 32:
@@ -1313,6 +1346,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                             uint32_t* p_data_array = ((uint32_t*)elem.ptr_extended_data);
                             fprintf(m_fp_decode_out, "%x ", p_data_array[i]);
                         }
+                        fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     case 64:
@@ -1324,34 +1358,27 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                             uint64_t* p_data_array = ((uint64_t*)elem.ptr_extended_data);
                             fprintf(m_fp_decode_out, "%llx ", p_data_array[i]);
                         }
+                        fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     default:
                     break;
                 }
-
-                if(!m_stm_trace_data[trc_id][master_id][channel_id].is_str_data)
-                    fprintf(m_fp_decode_out, "\n");
             }
             else
             {
-                if(!m_stm_trace_data[trc_id][master_id][channel_id].is_str_data)
-                    fprintf(m_fp_decode_out, "NONE\n");
+                fprintf(m_fp_decode_out, "NONE\n");
             }
 
             if (elem.sw_trace_info.swt_marker_packet && elem.sw_trace_info.swt_has_timestamp)
             {
                 if ((!m_stm_trace_data[trc_id][master_id][channel_id].stm_data.empty()))
                 {
-                    fprintf(m_fp_decode_out, "%u,SWT,%u,%u,TEXT,%s\n", trc_id, master_id, channel_id, m_stm_trace_data[trc_id][master_id][channel_id].stm_data.c_str());
+                    fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, "[TEXT]", m_stm_trace_data[trc_id][master_id][channel_id].stm_data.c_str());
                     m_stm_trace_data[trc_id][master_id][channel_id].stm_data.clear();
+                    fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,NONE\n", trc_id, master_id, channel_id, pkt_type.c_str());
                 }
-                m_stm_trace_data[trc_id][master_id][channel_id].is_str_data = false;
             }
-        }
-        else
-        {
-            fprintf(m_fp_decode_out, "%u,SWT,%u,%u,GLOBALERR,INV\n", trc_id, master_id, channel_id);
         }
 
         m_rows_in_file++;

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
+#include <vector>
 
 // The following ifdef block is the standard way of creating macros which make exporting
 // from a DLL simpler. All files within this DLL are compiled with the OPENCSDINTERFACE_EXPORTS
@@ -52,7 +53,6 @@ typedef enum
 typedef struct
 {
     std::string stm_data;
-    bool is_str_data;
 }TSTMString;
 
 // Class responsible for formatting the decoding trace data
@@ -85,6 +85,7 @@ private:
     using MASTER_MAP = std::unordered_map<uint16_t, CHANNEL_MAP>;
     using STM_TRACE_DATA_MAP = std::unordered_map<uint8_t, MASTER_MAP>;
     STM_TRACE_DATA_MAP m_stm_trace_data;
+    std::vector<uint32_t> m_text_channels;
 public:
     // Constructor
     TraceLogger(const std::string log_file_path, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
@@ -113,6 +114,8 @@ public:
     uint64_t GetLastPEContextIdx();
     // Check if first valid index is found
     bool FirstValidIndexFound();
+    // Sets the STM channels used for text data
+    void SetSTMChannelInfo(std::vector<uint32_t>& text_channels);
 };
 
 // Class that provides the trace decoding functionality
@@ -158,6 +161,8 @@ public:
     virtual TyTraceDecodeError SetPacketMonitorCallback(const uint8_t CSID, void* p_fn_callback_data, const void* p_context);
     // Set the packet monitor sink
     virtual TyTraceDecodeError SetPacketMonitorSink(const uint8_t CSID, ITrcTypedBase* pDataInSink, uint32_t config_flags);
+    // Sets the STM channels used for text data
+    virtual void SetSTMChannelInfo(std::vector<uint32_t> &text_channels);
     // Mark the end of trace
     virtual TyTraceDecodeError SetEOT();
     // Reset the decode state
