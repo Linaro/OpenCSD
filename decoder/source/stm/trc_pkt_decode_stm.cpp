@@ -175,6 +175,11 @@ ocsd_datapath_resp_t TrcPktDecodeStm::decodePacket(bool &bPktDone)
         break;
 
     case STM_PKT_VERSION:    /**< Version packet  - not relevant to generic (versionless) o/p */
+        m_swt_packet_info.swt_master_id = 0;    // default 0
+        m_swt_packet_info.swt_channel_id = 0;   // default 0
+        m_swt_packet_info.swt_global_err = 1;
+        break;
+
     case STM_PKT_ASYNC:      /**< Alignment synchronisation packet */
     case STM_PKT_INCOMPLETE_EOT:     /**< Incomplete packet flushed at end of trace. */
         // no action required.
