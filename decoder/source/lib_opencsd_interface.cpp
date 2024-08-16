@@ -1253,11 +1253,14 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             if (count(m_text_channels.begin(), m_text_channels.end(), channel_id) > 0)
             {
                 is_str_data = true;
+                pkt_type += "[TEXT]";
             }
-            pkt_type += ((is_str_data) ? "[TEXT]" : "[BIN]");
-
-            fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,", trc_id, master_id, channel_id, pkt_type.c_str());
-
+            else
+            {
+                pkt_type += "[DATA]";
+                fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,", trc_id, master_id, channel_id, pkt_type.c_str());
+            }
+            
             if (elem.sw_trace_info.swt_payload_pkt_bitsize > 0)
             {
                 switch (elem.sw_trace_info.swt_payload_pkt_bitsize)
@@ -1303,11 +1306,11 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                             }
                             else
                             {
-                                if (pkt_type == "[MKR]")
+                                if (pkt_type == "[MKR][TEXT]")
                                 {
                                     if (m_stm_trace_data[trc_id][master_id][channel_id].stm_data.empty())
                                     {
-                                        fprintf(m_fp_decode_out, "%c ", (char*)p_data_array[i]);
+                                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%c", trc_id, master_id, channel_id, pkt_type.c_str(), (char)p_data_array[i]);
                                         add_new_line = true;
                                     }
                                     else
@@ -1367,7 +1370,8 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             }
             else
             {
-                fprintf(m_fp_decode_out, "NONE\n");
+                if(!is_str_data)
+                    fprintf(m_fp_decode_out, "NONE\n");
             }
 
             if (elem.sw_trace_info.swt_marker_packet && elem.sw_trace_info.swt_has_timestamp)
