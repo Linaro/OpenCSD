@@ -1371,7 +1371,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             else
             {
                 if(!is_str_data)
-                    fprintf(m_fp_decode_out, "NONE\n");
+                    fprintf(m_fp_decode_out, "\n");
             }
 
             if (elem.sw_trace_info.swt_marker_packet && elem.sw_trace_info.swt_has_timestamp && is_str_data)
@@ -1381,7 +1381,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                     fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, "[TEXT]", m_stm_trace_data[trc_id][master_id][channel_id].stm_data.c_str());
                     m_stm_trace_data[trc_id][master_id][channel_id].stm_data.clear();
                 }
-                fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,NONE\n", trc_id, master_id, channel_id, pkt_type.c_str());
+                fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,\n", trc_id, master_id, channel_id, pkt_type.c_str());
             }
         }
 
