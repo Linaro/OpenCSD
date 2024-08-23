@@ -6,6 +6,7 @@
   30-Aug-2022    AS          Initial
 ******************************************************************************/
 #include <limits.h>
+#include <algorithm>
 #include "lib_opencsd_interface.h"
 #include "opencsd/c_api/ocsd_c_api_types.h"
 
