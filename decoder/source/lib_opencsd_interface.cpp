@@ -7,6 +7,7 @@
 ******************************************************************************/
 #include <limits.h>
 #include <algorithm>
+#include <sstream>
 #include "lib_opencsd_interface.h"
 #include "opencsd/c_api/ocsd_c_api_types.h"
 
@@ -1227,6 +1228,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         uint16_t master_id = 0;
         uint16_t channel_id = 0;
         bool is_str_data = false;
+        bool flag_packet_printed = false;
 
         if (elem.sw_trace_info.swt_global_err)
         {
@@ -1258,10 +1260,12 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             }
             else
             {
-                pkt_type += "[DATA]";
-                fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,", trc_id, master_id, channel_id, pkt_type.c_str());
+                pkt_type += "[DATA]"; 
             }
-            
+
+            std::stringstream payload;
+            payload.clear();
+
             if (elem.sw_trace_info.swt_payload_pkt_bitsize > 0)
             {
                 switch (elem.sw_trace_info.swt_payload_pkt_bitsize)
@@ -1281,15 +1285,14 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                             if (i % 2 == 0)
                             {
                                 uint8_t upper_nibble = ((p_data_array[i / 2] & 0xF0) >> 4);
-                                fprintf(m_fp_decode_out, "0x%X ", upper_nibble);
+                                payload << std::hex << "0x" << upper_nibble << " ";
                             }
                             else
                             {
                                 uint8_t lower_nibble = (p_data_array[i / 2] & 0x0F);
-                                fprintf(m_fp_decode_out, "0x%X ", lower_nibble);
+                                payload << std::hex << "0x" << lower_nibble << " ";
                             }
                         }
-                        fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     case 8:
@@ -1302,22 +1305,18 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                             uint8_t* p_data_array = ((uint8_t*)elem.ptr_extended_data);
                             if (!is_str_data)
                             {
-                                fprintf(m_fp_decode_out, "0x%X ", p_data_array[i]);
-                                add_new_line = true;
+                                payload << std::hex << "0x" << p_data_array[i] << " ";
                             }
                             else
                             {
                                 if (pkt_type == "[MKR][TEXT]")
                                 {
-                                    if (m_stm_trace_data[trc_id][master_id][channel_id].stm_data.empty())
+                                    if (!m_stm_trace_data[trc_id][master_id][channel_id].stm_data.empty())
                                     {
-                                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%c", trc_id, master_id, channel_id, pkt_type.c_str(), (char)p_data_array[i]);
-                                        add_new_line = true;
+                                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, "[TEXT]", m_stm_trace_data[trc_id][master_id][channel_id].stm_data.c_str());
+                                        m_stm_trace_data[trc_id][master_id][channel_id].stm_data.clear();
                                     }
-                                    else
-                                    {
-                                        m_stm_trace_data[trc_id][master_id][channel_id].stm_data += p_data_array[i];
-                                    }
+                                    payload << p_data_array[i];
                                 }
                                 else
                                 {
@@ -1325,8 +1324,6 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                                 }
                             }
                         }
-                        if(add_new_line)
-                            fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     case 16:
@@ -1336,9 +1333,8 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                         {
                             // Cast to 16-bit array
                             uint16_t* p_data_array = ((uint16_t*)elem.ptr_extended_data);
-                            fprintf(m_fp_decode_out, "0x%X ", p_data_array[i]);
+                            payload << std::hex << "0x" << p_data_array[i] << " ";
                         }
-                        fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     case 32:
@@ -1348,9 +1344,8 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                         {
                             // Cast to 32-bit array
                             uint32_t* p_data_array = ((uint32_t*)elem.ptr_extended_data);
-                            fprintf(m_fp_decode_out, "0x%X ", p_data_array[i]);
+                            payload << std::hex << "0x" << p_data_array[i] << " ";
                         }
-                        fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     case 64:
@@ -1360,27 +1355,28 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                         {
                             // Cast to 64-bit array
                             uint64_t* p_data_array = ((uint64_t*)elem.ptr_extended_data);
-                            fprintf(m_fp_decode_out, "0x%llX ", p_data_array[i]);
+                            payload << std::hex << "0x" << p_data_array[i] << " ";
                         }
-                        fprintf(m_fp_decode_out, "\n");
                     }
                     break;
                     default:
                     break;
                 }
+
+                if (pkt_type != "[TEXT]")
+                {
+                    fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, pkt_type.c_str(), payload.str().c_str());
+                }
             }
             else
             {
-                if(!is_str_data)
-                    fprintf(m_fp_decode_out, "\n");
-            }
-
-            if (elem.sw_trace_info.swt_marker_packet && elem.sw_trace_info.swt_has_timestamp && is_str_data)
-            {
-                if ((!m_stm_trace_data[trc_id][master_id][channel_id].stm_data.empty()))
+                if (elem.sw_trace_info.swt_marker_packet)
                 {
-                    fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, "[TEXT]", m_stm_trace_data[trc_id][master_id][channel_id].stm_data.c_str());
-                    m_stm_trace_data[trc_id][master_id][channel_id].stm_data.clear();
+                    if ((!m_stm_trace_data[trc_id][master_id][channel_id].stm_data.empty()))
+                    {
+                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, "[TEXT]", m_stm_trace_data[trc_id][master_id][channel_id].stm_data.c_str());
+                        m_stm_trace_data[trc_id][master_id][channel_id].stm_data.clear();
+                    }
                 }
                 fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,\n", trc_id, master_id, channel_id, pkt_type.c_str());
             }
