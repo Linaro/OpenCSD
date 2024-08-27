@@ -1378,7 +1378,8 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                         m_stm_trace_data[trc_id][master_id][channel_id].stm_data.clear();
                     }
                 }
-                fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,\n", trc_id, master_id, channel_id, pkt_type.c_str());
+                if(elem.sw_trace_info.swt_has_timestamp || elem.sw_trace_info.swt_trigger_event || elem.sw_trace_info.swt_frequency)
+                    fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,\n", trc_id, master_id, channel_id, pkt_type.c_str());
             }
         }
 
