@@ -1305,7 +1305,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                             uint8_t* p_data_array = ((uint8_t*)elem.ptr_extended_data);
                             if (!is_str_data)
                             {
-                                payload << std::hex << "0x" << p_data_array[i] << " ";
+                                payload << std::hex << "0x" << (uint32_t)p_data_array[i] << " ";
                             }
                             else
                             {
