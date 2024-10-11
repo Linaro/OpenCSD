@@ -202,13 +202,22 @@ inline const uint32_t TrcMemAccessorBase::bytesInRange(const ocsd_vaddr_t s_addr
     return (uint32_t)bytesInRange;
 }
 
+// Function which helps check if memory region of input accessor overlaps memory region of this accessor.
 inline const bool TrcMemAccessorBase::overLapRange(const TrcMemAccessorBase *p_test_acc) const
 {
-    if( addrInRange(p_test_acc->m_startAddress) || 
-        addrInRange(p_test_acc->m_endAddress)
-        )
-        return true;
-    return false;
+    // We check if the p_test_acc TrcMemAccessorBase object's start and end addresses lie within the start and end addresses of the TrcMemAccessorBase object
+    // calling this function. Added a fix to introduce a third condition which checks if this TrcMemAccessorBase object's start and end addresses are existing
+    // in between start and end address of TrcMemAccessorBase object "p_test_acc". This is also needed to completely ensure memory regions don't overlap.
+    if (addrInRange(p_test_acc->m_startAddress) ||
+        addrInRange(p_test_acc->m_endAddress) ||
+        (p_test_acc->m_startAddress < this->m_startAddress && this->m_endAddress < p_test_acc->m_endAddress))
+    {
+        return true;                                // We return true because there is an overlap in memory regions
+    }
+    else
+    {
+        return false;                               // We return false because there is no overlap in memory regions
+    }
 }
 
 inline const bool TrcMemAccessorBase::validateRange()
