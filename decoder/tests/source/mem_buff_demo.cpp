@@ -46,9 +46,6 @@
 
 #include "opencsd.h"              // the library
 
-// uncomment below to use callback function for program memory image
-// #define EXAMPLE_USE_MEM_CALLBACK
-
 /* Input trace buffer */
 static uint8_t *input_trace_data = 0;  
 static uint32_t input_trace_data_size = 0;
@@ -61,16 +58,83 @@ static ocsd_vaddr_t program_image_address = 0;  // load address on target of pro
 /* a message logger to pass to the error logger / decoder. */
 static ocsdMsgLogger logger;
 
-/* logger callback function - print out error strings */
+static bool use_callback = false;
+static bool use_logfile = false;
+static bool no_print = false;
+
+    /* the file names to create the data buffers */
+#ifdef _WIN32
+static const char *default_base_snapshot_path = "..\\..\\..\\snapshots";
+static const char *juno_snapshot = "\\juno_r1_1\\";
+#else
+static const char *default_base_snapshot_path = "../../../snapshots";
+static const char *juno_snapshot = "/juno_r1_1/";
+#endif
+
+static const char *usr_snapshot_path = 0;
+#define MAX_TRACE_FILE_PATH_LEN 512
+
+/* logger callback class - print out error strings.
+ * Example of custom log printer callback 
+ */
 class logCallback : public ocsdMsgLogStrOutI
 {
 public:
-    logCallback() {};
-    virtual ~logCallback() {};
-    virtual void printOutStr(const std::string &outStr)
+    logCallback()
     {
-        std::cout << outStr.c_str();
+        out_console = true;
+        out_file = false;
     }
+
+    virtual ~logCallback()
+    {
+        closeOutFile();
+    }
+
+    virtual void printOutStr(const std::string& outStr)
+    {
+        if (out_console)
+            std::cout << outStr.c_str();
+        printOutFile(outStr);
+    }
+
+    void setOutConsole(const bool console_output)
+    {
+        out_console = console_output;
+    }
+
+    void setOutFile(const std::string &filename)
+    {
+        openOutFile(filename);
+    }
+
+private:
+    void openOutFile(const std::string &filename)
+    {
+        
+        m_out_file.open(filename.c_str(), std::fstream::out | std::fstream::app);
+        if (m_out_file.is_open())
+            out_file = true;
+    }
+
+    void printOutFile(const std::string& str)
+    {
+        if (out_file)
+        {
+            m_out_file << str;
+        }
+    }
+
+    void closeOutFile()
+    {
+        if (out_file) {
+            // close output file
+            m_out_file.close();
+        }
+    }
+    bool out_file;
+    bool out_console;
+    std::fstream m_out_file;
 };
 static logCallback logCB;
 
@@ -84,10 +148,9 @@ so that errors can be correctly attributed and printed if required
 static ocsdDefaultErrorLogger err_log;  
 
 /* callbacks used by the library */
-#ifdef EXAMPLE_USE_MEM_CALLBACK
+
 // program memory image callback definition
 uint32_t  mem_access_callback_fn(const void *p_context, const ocsd_vaddr_t address, const ocsd_mem_space_acc_t mem_space, const uint32_t reqBytes, uint8_t *byteBuffer);
-#endif
 
 // callback for the decoder output elements
 class DecoderOutputProcessor : public ITrcGenElemIn
@@ -128,22 +191,13 @@ static int initDataBuffers()
     long size;
     size_t bytes_read;
 
-    /* the file names to create the data buffers */
-#ifdef _WIN32
-    static const char *default_base_snapshot_path = "..\\..\\..\\snapshots";
-    static const char *juno_snapshot = "\\juno_r1_1\\";
-#else
-    static const char *default_base_snapshot_path = "../../../snapshots";
-    static const char *juno_snapshot = "/juno_r1_1/";
-#endif
-
     /* trace data and memory file dump names and values - taken from snapshot metadata */
     static const char *trace_data_filename = "cstrace.bin";
     static const char *memory_dump_filename = "kernel_dump.bin";
     static ocsd_vaddr_t mem_dump_address = 0xFFFFFFC000081000;
     
     /* load up the trace data */
-    filename = default_base_snapshot_path;
+    filename = (usr_snapshot_path ? usr_snapshot_path : default_base_snapshot_path);
     filename += (std::string)juno_snapshot;
     filename += (std::string)trace_data_filename;
 
@@ -165,7 +219,7 @@ static int initDataBuffers()
         return OCSD_ERR_FILE_ERROR;
 
     /* load up a memory image */
-    filename = default_base_snapshot_path;
+    filename = (usr_snapshot_path ? usr_snapshot_path : default_base_snapshot_path);
     filename += (std::string)juno_snapshot;
     filename += (std::string)memory_dump_filename;
 
@@ -270,42 +324,45 @@ static ocsd_err_t initialiseDecoder()
     if (ret != OCSD_OK)
         return ret;
 
-#ifdef EXAMPLE_USE_MEM_CALLBACK
-    // in this example we have a single buffer so we demonstrate how to use a callback.
-    // we are passing the buffer pointer as context as we only have one buffer, but this 
-    // could be a structure that is a list of memory image buffers. Context is entirely
-    // client defined.
-    // Always use OCSD_MEM_SPACE_ANY unless there is a reason to restrict the image to a specific
-    // memory space.
-    pDecoder->addCallbackMemAcc(program_image_address, program_image_address + program_image_size-1,
-        OCSD_MEM_SPACE_ANY,mem_access_callback_fn, program_image_buffer);
-#else
-    // or we can use the built in memory buffer interface - split our one buffer into two to 
-    // demonstrate the addition of multiple regions
-    ocsd_vaddr_t block1_st, block2_st;
-    uint32_t block1_sz, block2_sz;
-    uint8_t *p_block1, *p_block2;
+    if (use_callback)
+    {
+        // in this example we have a single buffer so we demonstrate how to use a callback.
+        // we are passing the buffer pointer as context as we only have one buffer, but this 
+        // could be a structure that is a list of memory image buffers. Context is entirely
+        // client defined.
+        // Always use OCSD_MEM_SPACE_ANY unless there is a reason to restrict the image to a specific
+        // memory space.
+        pDecoder->addCallbackMemAcc(program_image_address, program_image_address + program_image_size - 1,
+            OCSD_MEM_SPACE_ANY, mem_access_callback_fn, program_image_buffer);
+    }
+    else
+    {
+        // or we can use the built in memory buffer interface - split our one buffer into two to 
+        // demonstrate the addition of multiple regions
+        ocsd_vaddr_t block1_st, block2_st;
+        uint32_t block1_sz, block2_sz;
+        uint8_t* p_block1, * p_block2;
 
-    // break our single buffer into 2 buffers for demo purposes
-    block1_sz = program_image_size / 2;
-    block1_sz &= ~0x3; // align
-    block2_sz = program_image_size - block1_sz;
-    block1_st = program_image_address;  // loaded program memory start address of program
-    block2_st = program_image_address + block1_sz;
-    p_block1 = program_image_buffer;
-    p_block2 = program_image_buffer + block1_sz;
+        // break our single buffer into 2 buffers for demo purposes
+        block1_sz = program_image_size / 2;
+        block1_sz &= ~0x3; // align
+        block2_sz = program_image_size - block1_sz;
+        block1_st = program_image_address;  // loaded program memory start address of program
+        block2_st = program_image_address + block1_sz;
+        p_block1 = program_image_buffer;
+        p_block2 = program_image_buffer + block1_sz;
 
-    /* how to add 2 "separate" buffers to the decoder */
-    // Always use OCSD_MEM_SPACE_ANY unless there is a reason to restrict the image to a specific
-    // memory space.
-    ret = pDecoder->addBufferMemAcc(block1_st, OCSD_MEM_SPACE_ANY, p_block1, block1_sz);
-    if (ret != OCSD_OK)
-        return ret;
+        /* how to add 2 "separate" buffers to the decoder */
+        // Always use OCSD_MEM_SPACE_ANY unless there is a reason to restrict the image to a specific
+        // memory space.
+        ret = pDecoder->addBufferMemAcc(block1_st, OCSD_MEM_SPACE_ANY, p_block1, block1_sz);
+        if (ret != OCSD_OK)
+            return ret;
 
-    ret = pDecoder->addBufferMemAcc(block2_st, OCSD_MEM_SPACE_ANY, p_block2, block2_sz);
-    if (ret != OCSD_OK)
-        return ret;
-#endif
+        ret = pDecoder->addBufferMemAcc(block2_st, OCSD_MEM_SPACE_ANY, p_block2, block2_sz);
+        if (ret != OCSD_OK)
+            return ret;
+    }
 
     /* finally we need to provide an output callback to recieve the decoded information */
     pDecoder->setGenTraceElemOutI(&output);
@@ -320,7 +377,7 @@ static void destroyDecoder()
     delete [] program_image_buffer;
 }
 
-#ifdef EXAMPLE_USE_MEM_CALLBACK
+
 /* if we set up to use a callback to access memory image then this is what will be called. */
 /* In this case the client must do all the work in determining if the requested address is in the 
    memory area. */
@@ -347,7 +404,6 @@ uint32_t  mem_access_callback_fn(const void *p_context, const ocsd_vaddr_t addre
 
     return read_bytes;
 }
-#endif
 
 /* use the decoder to process the global trace data buffer */
 static ocsd_datapath_resp_t processTraceData(uint32_t *bytes_done)
@@ -386,6 +442,79 @@ static ocsd_datapath_resp_t processTraceData(uint32_t *bytes_done)
     return resp;
 }
 
+void printhelp()
+{
+    printf("mem_buff_demo memory accessor test program\n");
+    printf("==========================================\n\n");
+    printf("options:-\n");
+    printf("    -callback       : test callback mem acc functionality\n");
+    printf("    -logfile        : output test result to logfile\n");
+    printf("    -noprint        : no output to console\n");
+    printf("    -ss_path <path> : set path to snapshot directory\n");
+    printf("\n\n========================================\n\n");
+    
+}
+
+int process_cmd_line_opts(int argc, char* argv[])
+{
+    int options_to_process = argc - 1;
+    int opt_idx = 1;
+    std::string opt;
+
+    while(options_to_process)
+    { 
+        opt = argv[opt_idx];
+
+        if (opt == "-callback")
+            use_callback = true;
+        else if (opt == "-logfile")
+            use_logfile = true;
+        else if (opt == "-noprint")
+            no_print = true;
+        else if (opt == "-ss_path")
+        {
+            opt_idx++;
+            options_to_process--;
+            
+            if ((opt_idx >= argc) || (strlen(argv[opt_idx]) == 0))
+            {
+                printf("-ss_path: Missing path parameter or zero length\n");
+                return -1;
+            }
+            else
+            {
+                if (strlen(argv[opt_idx]) > (MAX_TRACE_FILE_PATH_LEN - 32))
+                {
+                    printf("-ss_path: path too long\n");
+                    return -1;
+                }
+                usr_snapshot_path = argv[opt_idx];
+            }
+        }
+        else
+        {
+            printhelp();
+            return -1;
+        }
+        opt_idx++;
+        options_to_process--;
+    }
+    return 0;
+}
+
+void log_cmd_line_opts(int argc, char* argv[])
+{
+    std::ostringstream oss;
+    oss << "Test Command Line:-\n";
+    oss << argv[0] << "   ";
+    for (int i = 1; i < argc; i++)
+    {
+        oss << argv[i] << "  ";
+    }
+    oss << "\n\n";
+    logCB.printOutStr(oss.str());
+}
+
 /* main routine - init input data, decode, finish ... */
 int main(int argc, char* argv[])
 {
@@ -393,6 +522,18 @@ int main(int argc, char* argv[])
     ocsd_datapath_resp_t retd;
     char msg[256];
     uint32_t bytes_done;
+
+    if (process_cmd_line_opts(argc, argv) != 0)
+        return -1;
+
+    if (use_logfile)
+        logCB.setOutFile(use_callback ? "mem_buff_demo_cb.ppl" : "mem_buff_demo.ppl");
+    if (no_print)
+        logCB.setOutConsole(false);
+
+    logCB.printOutStr("MemBuffDemo\n--------------\n\n");
+    log_cmd_line_opts(argc, argv);
+
 
     /* initialise all the data needed for decode */
     if ((ret = initDataBuffers()) != OCSD_OK)

@@ -129,20 +129,31 @@ echo "Testing a55-test-tpiu..."
 ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/a55-test-tpiu" $@ -dstream_format -o_raw_packed -o_raw_unpacked -logfilename "${OUT_DIR}/a55-test-tpiu.ppl"
 echo "Done : Return $?"
 
-# === test the C-API lib - this test prog is not installed ===
+# === Run uninstalled test programs ===
 if [ "$1" != "use-installed" ]; then
+
+    # === test the C-API lib ===
     echo "Testing C-API library"
     ${BIN_DIR}c_api_pkt_print_test -ss_path ${SNAPSHOT_DIR} -decode > /dev/null
     echo "Done : Return $?"
     echo "moving result file."
     mv ./c_api_test.log ./${OUT_DIR}/c_api_test.ppl
-fi
 
-# === run the Frame decoder test - program not installed ===
-if [ "$1" != "use-installed" ]; then
+    # === run the Frame decoder test ===
     echo "Running Frame demux test"
     ${BIN_DIR}frame-demux-test > /dev/null
     echo "Done : Return $?"
     echo "moving result file."
     mv ./frame_demux_test.ppl ./${OUT_DIR}/.
+
+    echo "Running memacc tests"
+    echo "Using memory buffer"
+    ${BIN_DIR}mem-buffer-eg   -logfile  -ss_path  ./snapshots  -noprint
+    echo "Done : Return $?"
+    echo "Using callback function"
+    ${BIN_DIR}mem-buffer-eg   -logfile  -ss_path  ./snapshots  -noprint -callback
+    echo "Done : Return $?"
+    echo "moving result files."
+    mv ./mem_buff_demo*.ppl ./${OUT_DIR}/.
+    
 fi
