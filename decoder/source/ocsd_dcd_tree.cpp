@@ -113,6 +113,7 @@ DecodeTree::DecodeTree() :
 
 DecodeTree::~DecodeTree()
 {
+    destroyMemAccessors();
     destroyMemAccMapper();
     for(uint8_t i = 0; i < 0x80; i++)
     {
@@ -229,6 +230,25 @@ void DecodeTree::destroyMemAccMapper()
     }
 }
 
+void DecodeTree::addMemAccessorToList(TrcMemAccessorBase* p_accessor)
+{
+    m_mem_accessors.push_back(p_accessor);
+}
+
+// destroy mem accessors in use by this object
+void DecodeTree::destroyMemAccessors()
+{
+    std::list<TrcMemAccessorBase*>::iterator it;
+
+    it = m_mem_accessors.begin();
+    while (it != m_mem_accessors.end())
+    {
+        TrcMemAccFactory::DestroyAccessor(*it);
+        it++;
+    }
+    m_mem_accessors.clear();
+}
+
 void DecodeTree::logMappedRanges()
 {
     if(m_default_mapper)
@@ -277,8 +297,10 @@ ocsd_err_t DecodeTree::addBufferMemAcc(const ocsd_vaddr_t address, const ocsd_me
         else
             err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
 
-        if(err != OCSD_OK)
+        if (err != OCSD_OK)
             TrcMemAccFactory::DestroyAccessor(p_accessor);
+        else
+            addMemAccessorToList(p_accessor);
     }
     return err;
 }
@@ -305,8 +327,10 @@ ocsd_err_t DecodeTree::addBinFileMemAcc(const ocsd_vaddr_t address, const ocsd_m
         else
             err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
 
-        if(err != OCSD_OK)
+        if (err != OCSD_OK)
             TrcMemAccFactory::DestroyAccessor(p_accessor);
+        else
+            addMemAccessorToList(p_accessor);
     }
     return err;
 
@@ -347,8 +371,10 @@ ocsd_err_t DecodeTree::addBinFileRegionMemAcc(const ocsd_file_mem_region_t *regi
         else
             err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
 
-        if(err != OCSD_OK)
+        if (err != OCSD_OK)
             TrcMemAccFactory::DestroyAccessor(p_accessor);
+        else
+            addMemAccessorToList(p_accessor);
     }
     return err;
 }
@@ -407,8 +433,10 @@ ocsd_err_t DecodeTree::initCallbackMemAcc(const ocsd_vaddr_t st_address, const o
         else
             err = OCSD_ERR_MEM;    // wrong type of object - treat as mem error
 
-        if(err != OCSD_OK)
+        if (err != OCSD_OK)
             TrcMemAccFactory::DestroyAccessor(p_accessor);
+        else
+            addMemAccessorToList(p_accessor);
     }
     return err;
 }

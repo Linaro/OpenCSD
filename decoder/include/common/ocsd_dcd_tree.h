@@ -421,6 +421,12 @@ private:
         const ocsd_mem_space_acc_t mem_space, void *p_cb_func, bool IDfn, const void *p_context);
     TrcPktProcI *getPktProcI(const uint8_t CSID);
 
+    // keep internal list of memory accessors created by this object.
+    void addMemAccessorToList(TrcMemAccessorBase* p_accessor);
+
+    // destroy mem accessors in use by this object
+    void destroyMemAccessors();
+
     ocsd_dcd_tree_src_t m_dcd_tree_type;
 
     IInstrDecode *m_i_instr_decode;
@@ -452,6 +458,9 @@ private:
 
     /**! demux stats block */
     ocsd_demux_stats_t m_demux_stats;
+
+    /**! List of accessors created by the decode tree */
+    std::list<TrcMemAccessorBase*> m_mem_accessors;
 };
 
 /** @}*/
