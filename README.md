@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.5.4_
+_Current Version 1.5.5_
 
 ### Current support:
 
@@ -339,7 +339,11 @@ Version and Modification Information
                     - `OCSD_OPFLG_N_UNCOND_DIR_BR_CHK` - check for N atom on unconditional direct branches.
                     - `OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK` - check for N atom on all unconditional branches.
                     - `OCSD_OPFLG_CHK_RANGE_CONTINUE` - Inconsistent range continuity on not taken branches.
-    - __Update__: Add operational flag `ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK` to enable aa64 opcode checks. 
+    - __Update__: Add operational flag `ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK` to enable aa64 opcode checks.
+
+- _Version 1.5.5_:
+    - __Bugfix__: memacc: Fix for memacc objects created in decode tree not being released correctly.
+    - __Update__: build: Add support for MacOS build / clang.
 
 Licence Information
 ===================
