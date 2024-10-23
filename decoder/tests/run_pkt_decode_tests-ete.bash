@@ -119,20 +119,20 @@ fi
 for test_dir in "${test_dirs_decode[@]}"
 do
     echo "Testing $test_dir..."
-    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" $@ -decode -logfilename "${OUT_DIR}/$test_dir.ppl"
+    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir" $@ -decode -no_time_print -logfilename "${OUT_DIR}/$test_dir.ppl"
     echo "Done : Return $?"
 done
 
 for test_dir_n in "${test_dirs_decode_src_addr_opt[@]}"
 do
     echo "Testing with -src_addr_n  $test_dir_n..."
-    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_n" $@ -decode -src_addr_n -logfilename "${OUT_DIR}/${test_dir_n}_src_addr_N.ppl"
+    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_n" $@ -decode  -no_time_print -src_addr_n -logfilename "${OUT_DIR}/${test_dir_n}_src_addr_N.ppl"
     echo "Done : Return $?"
 done
 
 for test_dir_ms in "${test_dirs_decode_multi_sess[@]}"
 do
     echo "Testing with -multi_session  $test_dir_ms..."
-    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_ms" $@ -decode -multi_session -logfilename "${OUT_DIR}/${test_dir_ms}_multi_sess.ppl"
+    ${BIN_DIR}trc_pkt_lister -ss_dir "${SNAPSHOT_DIR}/$test_dir_ms" $@ -decode -no_time_print -multi_session -logfilename "${OUT_DIR}/${test_dir_ms}_multi_sess.ppl"
     echo "Done : Return $?"
 done

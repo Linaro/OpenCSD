@@ -78,6 +78,7 @@ static bool has_hsync = false;
 static bool stats = false;
 static bool profile = false;
 static bool multi_session = false;  // decode all buffers in snapshot as same config.
+static bool no_time_print = false; // dont print test eleapsed time (easier for regression comparisons)
 
 static uint32_t add_create_flags = 0;
 
@@ -207,6 +208,7 @@ void print_help()
     oss << "-o_raw_unpacked     Output raw unpacked trace data per ID\n";
     oss << "-src_addr_n         ETE protocol: Split source address ranges on N atoms\n";
     oss << "-stats              Output packet processing statistics (if available).\n";
+    oss << "-no_time_print      Do not output the elapsed time for tests.\n";
     oss << "\nConsistency checks\n\n";
     oss << "-aa64_opcode_chk    Check for correct AA64 opcodes (MSW != 0x0000)\n";
     oss << "-direct_br_cond     Check for incorrect N atom on direct unconditional branches\n";
@@ -435,6 +437,10 @@ bool process_cmd_line_opts(int argc, char* argv[])
             {
                 print_help();
                 bOptsOK = false;
+            }
+            else if (strcmp(argv[optIdx],"-no_time_print") == 0)
+            {
+                no_time_print = true;
             }
             else if((opt == "-logstdout") || (opt == "-logstderr") || 
                 (opt == "-logfile") || (opt == "-logfilename"))
@@ -781,7 +787,11 @@ bool ProcessInputFile(DecodeTree *dcd_tree, std::string &in_filename,
         end = std::chrono::steady_clock::now();
         std::chrono::duration<double> sec_elapsed{end -start};
 
-        oss << "Trace Packet Lister : Trace buffer done, processed " << trace_index << " bytes in " << std::setprecision(8) << sec_elapsed.count() << " seconds.\n";
+        oss << "Trace Packet Lister : Trace buffer done, processed " << trace_index << " bytes";
+        if (no_time_print)
+            oss << ".\n";
+        else
+            oss << " in " << std::setprecision(8) << sec_elapsed.count() << " seconds.\n";
         logger.LogMsg(oss.str());
         if (stats)
             PrintDecodeStats(dcd_tree);
