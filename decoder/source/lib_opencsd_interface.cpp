@@ -1251,21 +1251,25 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             pkt_type += ((elem.sw_trace_info.swt_has_timestamp) ? ("[TS=" + std::to_string(elem.timestamp) + "]") : "");
             pkt_type += ((elem.sw_trace_info.swt_trigger_event) ? "[TRIG]" : "");
             pkt_type += ((elem.sw_trace_info.swt_frequency) ? "[FREQ]" : "");
-
-            // If the channel is part of the text channel vector, then the data part of a string
-            if (count(m_text_channels.begin(), m_text_channels.end(), channel_id) > 0)
-            {
-                is_str_data = true;
-                pkt_type += "[TEXT]";
-            }
-            else
-            {
-                pkt_type += "[DATA]"; 
-            }
+            // For fixing RiscFree UI issue 2264, we fix packet type to "Data" even for "text" channel IDs.
+            // RiscFree UI will be be provided Hexadecimal values instead of their ASCII equivalents in the 
+            // trace decoded txt file in RiscFree workspace/trace folder.
+            pkt_type += "[DATA]";
 
             std::stringstream payload;
             payload.clear();
 
+            // this static variable helps check if we are to print transmitted data packets together in one line
+            static bool single_line_print_mode = false;
+            // If we have previously been printing everything in a single line and now have encountered a marker packet, we must print in new line
+            if (single_line_print_mode && elem.sw_trace_info.swt_marker_packet)
+            {
+                // \n character helps move cursor to next line in the output file
+                fprintf(m_fp_decode_out, "\n");
+                // We cancel single line print mode
+                single_line_print_mode = false;
+            }
+            // We check if we have payload data transmitted. In this case bitsize will be greater than zero.
             if (elem.sw_trace_info.swt_payload_pkt_bitsize > 0)
             {
                 switch (elem.sw_trace_info.swt_payload_pkt_bitsize)
@@ -1285,12 +1289,17 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                             if (i % 2 == 0)
                             {
                                 uint8_t upper_nibble = ((p_data_array[i / 2] & 0xF0) >> 4);
-                                payload << std::hex << "0x" << upper_nibble << " ";
+                                payload << std::hex << "0x" << upper_nibble;
                             }
                             else
                             {
                                 uint8_t lower_nibble = (p_data_array[i / 2] & 0x0F);
-                                payload << std::hex << "0x" << lower_nibble << " ";
+                                payload << std::hex << "0x" << lower_nibble;
+                            }
+                            // We add a space to the stringstream if we are not on the last packet in the payload
+                            if (i < elem.sw_trace_info.swt_payload_num_packets - 1)
+                            {
+                                payload << " ";
                             }
                         }
                     }
@@ -1303,25 +1312,12 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                         {
                             // Cast to 8-bit array
                             uint8_t* p_data_array = ((uint8_t*)elem.ptr_extended_data);
-                            if (!is_str_data)
+                            // We add data in packet 'i' to the stringstream object
+                            payload << std::hex << "0x" << (uint32_t)p_data_array[i];
+                            // We add a space to the stringstream if we are not on the last packet in the payload
+                            if (i < elem.sw_trace_info.swt_payload_num_packets-1)
                             {
-                                payload << std::hex << "0x" << (uint32_t)p_data_array[i] << " ";
-                            }
-                            else
-                            {
-                                if (pkt_type == "[MKR][TEXT]")
-                                {
-                                    if (!m_stm_trace_data[trc_id][master_id][channel_id].stm_data.empty())
-                                    {
-                                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, "[TEXT]", m_stm_trace_data[trc_id][master_id][channel_id].stm_data.c_str());
-                                        m_stm_trace_data[trc_id][master_id][channel_id].stm_data.clear();
-                                    }
-                                    payload << p_data_array[i];
-                                }
-                                else
-                                {
-                                    m_stm_trace_data[trc_id][master_id][channel_id].stm_data += p_data_array[i];
-                                }
+                                payload << " ";
                             }
                         }
                     }
@@ -1333,7 +1329,12 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                         {
                             // Cast to 16-bit array
                             uint16_t* p_data_array = ((uint16_t*)elem.ptr_extended_data);
-                            payload << std::hex << "0x" << p_data_array[i] << " ";
+                            payload << std::hex << "0x" << p_data_array[i];
+                            // We add a space to the stringstream if we are not on the last packet in the payload
+                            if (i < elem.sw_trace_info.swt_payload_num_packets - 1)
+                            {
+                                payload << " ";
+                            }
                         }
                     }
                     break;
@@ -1344,7 +1345,12 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                         {
                             // Cast to 32-bit array
                             uint32_t* p_data_array = ((uint32_t*)elem.ptr_extended_data);
-                            payload << std::hex << "0x" << p_data_array[i] << " ";
+                            payload << std::hex << "0x" << p_data_array[i];
+                            // We add a space to the stringstream if we are not on the last packet in the payload
+                            if (i < elem.sw_trace_info.swt_payload_num_packets - 1)
+                            {
+                                payload << " ";
+                            }
                         }
                     }
                     break;
@@ -1355,31 +1361,48 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                         {
                             // Cast to 64-bit array
                             uint64_t* p_data_array = ((uint64_t*)elem.ptr_extended_data);
-                            payload << std::hex << "0x" << p_data_array[i] << " ";
+                            payload << std::hex << "0x" << p_data_array[i];
+                            // We add a space to the stringstream if we are not on the last packet in the payload
+                            if (i < elem.sw_trace_info.swt_payload_num_packets - 1)
+                            {
+                                payload << " ";
+                            }
                         }
                     }
                     break;
                     default:
                     break;
                 }
-
-                if (pkt_type != "[TEXT]")
+                // This case occurs when we have a marker packet with data payload or the first data payload without marker packet
+                if (single_line_print_mode == false)
                 {
-                    fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, pkt_type.c_str(), payload.str().c_str());
+                    // We check if we have a STM marker or frequency packet as this indicates a new set of data payload to print to the file
+                    if (elem.sw_trace_info.swt_marker_packet || elem.sw_trace_info.swt_frequency)
+                    {
+                        // We print the decoded STM trace information to the file. We only use "Data" channel to fix RiscFree UI issue 2264
+                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, pkt_type.c_str(), payload.str().c_str());
+                    }
+                    else
+                    {
+                        // We print the decoded STM trace information to the file. We only use "Data" channel to fix RiscFree UI issue 2264
+                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s", trc_id, master_id, channel_id, pkt_type.c_str(), payload.str().c_str());
+                        // We indicate that we should print payload data without marker packets in the same line in subsequent calls of this function
+                        single_line_print_mode = true;
+                    }
+                }
+                else
+                {
+                    // We print the decoded STM data payload on the same line of the output file as the last time this function was called.
+                    fprintf(m_fp_decode_out, " %s", payload.str().c_str());
                 }
             }
             else
             {
-                if (elem.sw_trace_info.swt_marker_packet)
+                // In case we have no payload, we should still output the marker, timestamp, trigger event or frequency details
+                if (elem.sw_trace_info.swt_marker_packet || elem.sw_trace_info.swt_has_timestamp || elem.sw_trace_info.swt_trigger_event || elem.sw_trace_info.swt_frequency)
                 {
-                    if ((!m_stm_trace_data[trc_id][master_id][channel_id].stm_data.empty()))
-                    {
-                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, "[TEXT]", m_stm_trace_data[trc_id][master_id][channel_id].stm_data.c_str());
-                        m_stm_trace_data[trc_id][master_id][channel_id].stm_data.clear();
-                    }
-                }
-                if(elem.sw_trace_info.swt_has_timestamp || elem.sw_trace_info.swt_trigger_event || elem.sw_trace_info.swt_frequency)
                     fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,\n", trc_id, master_id, channel_id, pkt_type.c_str());
+                }
             }
         }
 
