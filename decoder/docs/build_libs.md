@@ -10,6 +10,7 @@ The current makefiles and build projects support building the library on:
  - Linux and Windows, x86 or x64 hosts.
  - ARM linux - AArch32 and AArch64
  - ARM aarch32 and aarch64 libs, x-compiled on x86/64 hosts.
+ - MacOS - x64 and AArch64 (Apple Silicon)
 
 In addition to building the library from the project, the library may be installed into the standard
 `/usr/lib/` area in Linux, and will soon be available as a package from Linux Distros.
@@ -18,12 +19,14 @@ Building the Library
 --------------------
 
 The library and test programs are built from the library `./build/<platform>` directory, where
-<platform> is either 'linux' or 'win-vs2022'
+<platform> is either 'linux', 'macos', or 'win-vs2022'
 
 See [`./docs/test_progs.md`](@ref test_progs) for further information on use of the test 
 programs.
 
 ### Linux x86/x64/ARM ###
+
+GCC is assumed to be the default compiler.
 
 Libraries are built into a <tgt_dir>. This is used as the final output directory for the
 libraries in `decoder/lib/<tgt_dir>`, and also as a sub-directory of the build process for
@@ -107,6 +110,34 @@ Sufficient header files to build using the C-API library will be installed to `/
 The installation can be removed using `make clean_install`. No additional options are necessary. 
 
 
+### MacOS x64/AArch64 ###
+
+Clang is assumed to be the default compiler.
+
+Go to the `./decoder/build/macos/` directory and run `make`.
+
+Output libraries will be placed in the same folders as for the Linux build (`decoder/lib/builddir/`
+and `decoder/tests/lib/builddir/`).
+
+`DYLD_LIBRARY_PATH` will need to be specified to run an executable that depends on the libraries. For example,
+to run `trc_pkt_lister` from the base directory:
+
+         DYLD_LIBRARY_PATH=./decoder/lib/builddir ./decoder/tests/bin/builddir/trc_pkt_lister -h
+
+For development, alternatively use `make -f makefile.dev`
+
+Similar to the Linux makefile.dev, this will build libraries into the `decoder/lib/darwin<bit-variant>/<dbg|rel>`
+directories, allowing multiple variants of the library to be present during development.
+
+Options to pass to both makefiles are:-
+- `DEBUG=1`   : build the debug version of the library.
+
+Options to pass to makefile.dev are:-
+- ARCH=<arch> : Set this if needing to build for x86_64 from an arm64 host, or to build for arm64 from an x86_64 host.
+                Otherwise ARCH is auto-detected.
+                <arch> can be x86_64, arm64
+
+
 ### Windows (x86/x64)  ###
 
 Use the `.\build\win\ref_trace_decode_lib\ref_trace_decode_lib.sln` file to load a solution
@@ -162,6 +193,10 @@ introduce a dependency on the main C++ decoder .so. Ensure that the library path
 application makefile.
 
 To use the static versions use appropriate linker options.
+
+### MacOS build ###
+
+The same applies as for the Linux build w.r.t the .dylib versions of the library.
 
 ### Windows build ###
 
