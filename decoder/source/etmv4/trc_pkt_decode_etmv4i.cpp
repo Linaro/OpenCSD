@@ -34,6 +34,8 @@
 
 #include "opencsd/etmv4/trc_pkt_decode_etmv4i.h"
 
+#include <cstdlib>
+
 #include "common/trc_gen_elem.h"
 
 
