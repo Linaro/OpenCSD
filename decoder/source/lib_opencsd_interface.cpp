@@ -1263,16 +1263,53 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             static bool single_line_print_mode = false;
             // In case we are printing data in a single line, we use this flag to indicate that first data value has not yet been written to that line
             static bool first_packet_in_single_line_mode = false;
+            // In the rare case a frequency or trigger event comes in between stmsendstring() output, we want to resume singleline mode after it is handled
+            static bool restart_single_line_mode_upon_next_data_packet = false;
+            // We create a static variable that will be initialized with current channel id only first time
+            static uint16_t old_channel_id = channel_id;
             // If we have previously been printing everything in a single line and now have encountered a marker packet, we must print in new line
-            if (single_line_print_mode && (elem.sw_trace_info.swt_marker_packet 
+            if (single_line_print_mode && ((old_channel_id != channel_id)
+                                           || elem.sw_trace_info.swt_marker_packet 
                                            || elem.sw_trace_info.swt_has_timestamp 
                                            || elem.sw_trace_info.swt_trigger_event
                                            || elem.sw_trace_info.swt_frequency))
             {
-                // \n character helps move cursor to next line in the output file
-                fprintf(m_fp_decode_out, "\n");
+                // We should only skip to the next line if we have already printed a data packet in single line mode
+                if (first_packet_in_single_line_mode == false)
+                {
+                    // \n character helps move cursor to next line in the output file
+                    fprintf(m_fp_decode_out, "\n");
+                }
                 // We cancel single line print mode
                 single_line_print_mode = false;
+                // If we get a trigger or frequency packet, we must restart single line mode after handling that
+                if ((elem.sw_trace_info.swt_trigger_event || elem.sw_trace_info.swt_frequency) 
+                     && !elem.sw_trace_info.swt_marker_packet
+                     && !elem.sw_trace_info.swt_has_timestamp)
+                {
+                    // We need to conitnue prinitng data packets in a single line after this trigger/frequency packet. This is provided no marker or timestamp packets come first
+                    restart_single_line_mode_upon_next_data_packet = true;
+                }
+            }
+            // We check if we got a data packet alone
+            if (restart_single_line_mode_upon_next_data_packet 
+                     && !elem.sw_trace_info.swt_marker_packet
+                     && !elem.sw_trace_info.swt_frequency
+                     && !elem.sw_trace_info.swt_has_timestamp
+                     && !elem.sw_trace_info.swt_trigger_event)
+            {
+                // We restart single line print mode
+                single_line_print_mode = true;
+                // We inidcate that the data packet is first to be printed in current line in output file
+                first_packet_in_single_line_mode = true;
+                // We have to cancel restart single line mode now
+                restart_single_line_mode_upon_next_data_packet = false;
+            }
+            // In case, we are handling a frequency or trigger packet, which may have a different channel id, we don't update old channel id
+            if (!elem.sw_trace_info.swt_frequency && !elem.sw_trace_info.swt_trigger_event && !elem.sw_trace_info.swt_has_timestamp)
+            {
+                // We make old channel id as current channel id after the previous check which requires it
+                old_channel_id = channel_id;
             }
             // We check if we have payload data transmitted. In this case bitsize will be greater than zero.
             if (elem.sw_trace_info.swt_payload_pkt_bitsize > 0)
@@ -1381,7 +1418,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                     default:
                     break;
                 }
-                // This case occurs when we have a marker packet with data payload or the first data payload without marker packet
+                // Case when we are not printing binary data in a single line
                 if (single_line_print_mode == false)
                 {
                     // We check for a condition in which we only have marker packet and data packet. This indicates a string has been transmitted
@@ -1394,6 +1431,14 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                         single_line_print_mode = true;
                         // We inidcate that a data (only data and nothing else) packet coming next is the first one to be added in single line mode
                         first_packet_in_single_line_mode = true;
+                        // We no longer have a need to restart single line mode
+                        restart_single_line_mode_upon_next_data_packet = false;
+                    }
+                    // We check for a condition in which we have timestamp and marker
+                    else if (elem.sw_trace_info.swt_marker_packet && elem.sw_trace_info.swt_has_timestamp)
+                    {
+                        // We no longer have a need to restart single line mode
+                        restart_single_line_mode_upon_next_data_packet = false;
                     }
                     // We print the decoded STM trace information to the file. We only use "Data" channel to fix RiscFree UI issue 2264
                     fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, pkt_type.c_str(), payload.str().c_str());
