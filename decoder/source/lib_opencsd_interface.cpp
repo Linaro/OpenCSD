@@ -10,6 +10,16 @@
 #include <sstream>
 #include "lib_opencsd_interface.h"
 #include "opencsd/c_api/ocsd_c_api_types.h"
+//#include "PacketFormat.h"
+#ifndef __linux__
+#include <WinSock2.h>
+#else
+#include <arpa/inet.h>
+#endif
+#include "PacketFormat.h"
+
+#define TRANSFER_DATA_OVER_SOCKET 1
+#define PROFILE_THREAD_BUFFER_SIZE (1024 * 128 * 2)  // 2 MB
 
 // Class for attaching packet monitor callback
 template<class TrcPkt>
@@ -103,7 +113,7 @@ OpenCSDInterface::OpenCSDInterface()
   Date         Initials    Description
 30-Aug-2022    AS          Initial
 ****************************************************************************/
-TyTraceDecodeError OpenCSDInterface::InitLogger(const char *log_file_path, const bool split_files, const uint32_t max_rows_in_file)
+TyTraceDecodeError OpenCSDInterface::InitLogger(const char *log_file_path, bool generate_histogram, bool generate_profiling_data, const uint32_t port_no, const bool split_files, const uint32_t max_rows_in_file)
 {
     if (mp_logger)
     {
@@ -111,13 +121,15 @@ TyTraceDecodeError OpenCSDInterface::InitLogger(const char *log_file_path, const
         delete mp_logger;
         mp_logger = NULL;
     }
-    mp_logger = new TraceLogger(log_file_path, split_files, max_rows_in_file);
+    mp_logger = new TraceLogger(log_file_path, generate_histogram, generate_profiling_data, port_no, split_files, max_rows_in_file);
     if (!mp_logger)
     {
         return TRACE_DECODER_INIT_ERR;
     }
     mp_tree->setGenTraceElemOutI(mp_logger);
-    mp_logger->OpenLogFile();
+    if(generate_histogram == false)
+        mp_logger->OpenLogFile();
+
     return TRACE_DECODER_OK;
 }
 
@@ -753,6 +765,20 @@ bool OpenCSDInterface::FirstValidIndexFound()
     return mp_logger->FirstValidIndexFound();
 }
 
+// Sets the histogram callback function
+void OpenCSDInterface::SetHistogramCallback(std::function<void(std::unordered_map<uint64_t, uint64_t>& hist_map, uint64_t total_bytes_processed, uint64_t total_ins, int32_t ret)> fp_callback)
+{
+    mp_logger->SetHistogramCallback(fp_callback);
+}
+
+TyTraceDecodeError OpenCSDInterface::InitProfilingSocketConn()
+{
+    return mp_logger->InitProfilingSocketConn();
+}
+TyTraceDecodeError OpenCSDInterface::FlushDataOverSocket()
+{
+    return mp_logger->FlushDataOverSocket();
+}
 /****************************************************************************
      Function: SetTraceStartIdx
      Engineer: Arjun Suresh
@@ -847,13 +873,16 @@ OpenCSDInterface::~OpenCSDInterface()
   Date         Initials    Description
 30-Aug-2022    AS          Initial
 ****************************************************************************/
-TraceLogger::TraceLogger(const std::string log_file_path, const bool split_files, const uint32_t max_rows_in_file)
+TraceLogger::TraceLogger(const std::string log_file_path, bool generate_histogram, bool generate_profiling_data, const uint32_t port_no, const bool split_files, const uint32_t max_rows_in_file)
     : m_fp_decode_out(NULL),
     m_file_cnt(0),
     m_rows_in_file(0),
     m_split_files(split_files),
     m_max_rows_in_file(max_rows_in_file),
     m_log_file_path(log_file_path),
+    m_generate_histogram(generate_histogram),
+    m_generate_profiling_data(generate_profiling_data),
+    m_port_no(port_no),
     m_curr_logfile_name(log_file_path),
     m_out_ex_level(true),
     m_cycle_cnt(0),
@@ -867,9 +896,10 @@ TraceLogger::TraceLogger(const std::string log_file_path, const bool split_files
     m_trace_start_idx(0),
     m_trace_stop_at_idx_flag(false),
     m_trace_start_from_idx_flag(false),
-    m_last_pe_context_idx(0)
+    m_last_pe_context_idx(0),
+    mp_buffer(NULL),
+    m_client(NULL)
 {
-
 }
 
 
@@ -901,6 +931,114 @@ bool TraceLogger::FirstValidIndexFound()
 void TraceLogger::SetSTMChannelInfo(std::vector<uint32_t>& text_channels)
 {
     m_text_channels = text_channels;
+}
+
+void TraceLogger::SetHistogramCallback(std::function<void(std::unordered_map<uint64_t, uint64_t>& hist_map, uint64_t total_bytes_processed, uint64_t total_ins, int32_t ret)> fp_callback)
+{
+    m_fp_hist_callback = fp_callback;
+}
+
+TyTraceDecodeError TraceLogger::InitProfilingSocketConn()
+{
+#if TRANSFER_DATA_OVER_SOCKET == 1
+    mp_buffer = new uint64_t[PROFILE_THREAD_BUFFER_SIZE*2];
+    if (mp_buffer == NULL)
+    {
+        return TRACE_DECODER_ERR;
+    }
+
+    m_client = new SocketIntf(m_port_no);
+    if (m_client == NULL)
+    {
+        return TRACE_DECODER_ERR;
+    }
+
+    if (m_client->open() != 0)
+    {
+        return TRACE_DECODER_ERR;
+    }
+
+    // Send the Thread ID to UI
+    PICP msg(32, PICP_TYPE_INTERNAL, PICP_CMD_BULK_WRITE);
+    uint32_t thread_idx_nw_byte_order = htonl(0);
+    msg.AttachData(reinterpret_cast<uint8_t*>(&thread_idx_nw_byte_order), sizeof(thread_idx_nw_byte_order));
+    uint32_t max_size = 0;
+    uint8_t* msg_packet = msg.GetPacketToSend(&max_size);
+    m_client->write(msg_packet, max_size);
+
+    if (!WaitforACK())
+    {
+        return TRACE_DECODER_ERR;
+    }
+#endif
+    return TRACE_DECODER_OK;
+}
+
+bool TraceLogger::WaitforACK()
+{
+#if TRANSFER_DATA_OVER_SOCKET == 1
+    uint32_t maxSize = 64;
+    uint8_t buff[64] = { 0 };
+
+    int32_t recvSize = m_client->read(buff, &maxSize);
+    if (recvSize < static_cast<int>(PICP::GetMinimumSize()))
+    {
+        return false;
+    }
+    else
+    {
+        PICP retPacket(buff, maxSize);
+        if (retPacket.Validate())
+        {
+            if (PICP_TYPE_RESPONSE == retPacket.GetType())
+            {
+                if (retPacket.GetResponse() != 0xDEADBEEF)
+                {
+                    return false;
+                }
+            }
+        }
+    }
+#endif
+    return true;
+}
+
+TyTraceDecodeError TraceLogger::FlushDataOverSocket()
+{
+#if TRANSFER_DATA_OVER_SOCKET == 1
+    // Create the Size Packet
+    const uint32_t size_to_send = (m_curr_buff_idx * sizeof(mp_buffer[0]));
+    PICP msg(32, PICP_TYPE_INTERNAL, PICP_CMD_BULK_WRITE);
+    uint32_t size_to_send_nw_byte_order = htonl(size_to_send);
+    msg.AttachData(reinterpret_cast<uint8_t*>(&size_to_send_nw_byte_order), sizeof(size_to_send_nw_byte_order));
+    uint32_t max_size = 0;
+    uint8_t* msg_packet = msg.GetPacketToSend(&max_size);
+
+    int32_t send_bytes = m_client->write(msg_packet, max_size);
+    if (send_bytes <= 0)
+    {
+        return TRACE_DECODER_ERR;
+    }
+
+    if (!WaitforACK())
+    {
+        return TRACE_DECODER_ERR;
+    }
+
+    send_bytes = m_client->write((uint8_t*)mp_buffer, size_to_send);
+    if (send_bytes <= 0)
+    {
+        return TRACE_DECODER_ERR;
+    }
+
+    if (!WaitforACK())
+    {
+        return TRACE_DECODER_ERR;
+    }
+
+    m_curr_buff_idx = 0;
+#endif
+    return TRACE_DECODER_OK;
 }
 
 /****************************************************************************
@@ -1061,6 +1199,83 @@ void TraceLogger::CloseLogFile()
 TraceLogger::~TraceLogger()
 {
     CloseLogFile();
+#if TRANSFER_DATA_OVER_SOCKET == 1
+    if (m_client)
+    {
+        m_client->close();
+        delete m_client;
+        m_client = nullptr;
+    }
+    if (mp_buffer)
+    {
+        delete[] mp_buffer;
+        mp_buffer = NULL;
+    }
+#endif
+}
+
+ocsd_datapath_resp_t TraceLogger::GenerateHistogram(const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const OcsdTraceElement& elem)
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+    if (elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
+        m_last_valid_trace_idx = index_sop;
+    if (elem.elem_type == OCSD_GEN_TRC_ELEM_PE_CONTEXT)
+    {
+        m_last_pe_context_idx = index_sop;
+    }
+    if (m_first_valid_idx_found == false && elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
+    {
+        m_first_valid_trace_idx = index_sop;
+        m_first_valid_idx_found = true;
+    }
+    if (index_sop < m_trace_start_idx)
+    {
+        return OCSD_RESP_CONT;
+    }
+    if (index_sop > m_trace_stop_idx)
+    {
+        return OCSD_RESP_REACHED_STOP_IDX;
+    }
+
+    switch (elem.elem_type)
+    {
+    case OCSD_GEN_TRC_ELEM_INSTR_RANGE:
+    {
+        // Check if we have stored the entire instruction sequence in elem.traced_ins.ptr_addresses array
+        // If so, step through the array, else step through each address from start address in steps of last
+        // instruction size
+        ocsd_vaddr_t start_idx = elem.traced_ins.ptr_addresses ? 0 : elem.st_addr;
+        ocsd_vaddr_t end_idx = elem.traced_ins.ptr_addresses ? elem.num_instr_range : elem.en_addr;
+        ocsd_vaddr_t step = elem.traced_ins.ptr_addresses ? 1 : elem.last_instr_sz;
+        for (ocsd_vaddr_t i = start_idx; i < end_idx; i += step)
+        {
+            uint64_t addr = elem.traced_ins.ptr_addresses ? elem.traced_ins.ptr_addresses[i] : i;
+            m_hist_map[addr] += 1;
+            if(m_generate_profiling_data)
+                mp_buffer[m_curr_buff_idx++] = htonll(addr);
+        }
+        if (m_fp_hist_callback)
+            m_fp_hist_callback(m_hist_map, 0, 0, 0);
+        if (m_generate_profiling_data)
+        {
+            if (m_curr_buff_idx >= PROFILE_THREAD_BUFFER_SIZE)
+            {
+#if TRANSFER_DATA_OVER_SOCKET == 1
+                if (TRACE_DECODER_OK != FlushDataOverSocket())
+                {
+                    break;
+                }
+#endif
+            }
+        }
+
+    }
+    break;
+    default:
+    break;
+    }
+
+    return resp;
 }
 
 /****************************************************************************
@@ -1081,6 +1296,11 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     const uint8_t trc_chan_id,
     const OcsdTraceElement &elem)
 {
+    if (m_generate_histogram)
+    {
+        return GenerateHistogram(index_sop, trc_chan_id, elem);
+    }
+
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     if(elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
         m_last_valid_trace_idx = index_sop;
