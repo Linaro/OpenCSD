@@ -138,6 +138,7 @@ public:
     TyTraceDecodeError InitProfilingSocketConn();
     bool WaitforACK();
     TyTraceDecodeError FlushDataOverSocket();
+    void ClearHistogram();
 };
 
 // Class that provides the trace decoding functionality
@@ -211,6 +212,7 @@ public:
     virtual void SetHistogramCallback(std::function<void(std::unordered_map<uint64_t, uint64_t>& hist_map, uint64_t total_bytes_processed, uint64_t total_ins, int32_t ret)> fp_callback);
     virtual TyTraceDecodeError InitProfilingSocketConn();
     virtual TyTraceDecodeError FlushDataOverSocket();
+    virtual void ClearHistogram();
     // Function to destroy the decoder tree
     virtual void DestroyDecodeTree();
     // Destructor

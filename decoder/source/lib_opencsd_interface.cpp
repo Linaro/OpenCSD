@@ -117,6 +117,8 @@ TyTraceDecodeError OpenCSDInterface::InitLogger(const char *log_file_path, bool 
 {
     if (mp_logger)
     {
+        if (generate_histogram == true && generate_profiling_data == false)
+            return TRACE_DECODER_OK;
         mp_logger->CloseLogFile();
         delete mp_logger;
         mp_logger = NULL;
@@ -779,6 +781,10 @@ TyTraceDecodeError OpenCSDInterface::FlushDataOverSocket()
 {
     return mp_logger->FlushDataOverSocket();
 }
+void OpenCSDInterface::ClearHistogram()
+{
+    mp_logger->ClearHistogram();
+}
 /****************************************************************************
      Function: SetTraceStartIdx
      Engineer: Arjun Suresh
@@ -1002,7 +1008,10 @@ bool TraceLogger::WaitforACK()
 #endif
     return true;
 }
-
+void TraceLogger::ClearHistogram()
+{
+    m_hist_map.clear();
+}
 TyTraceDecodeError TraceLogger::FlushDataOverSocket()
 {
 #if TRANSFER_DATA_OVER_SOCKET == 1
@@ -1707,3 +1716,4 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     }
     return resp;
 }
+
