@@ -56,7 +56,7 @@ components:
       recent data
     * ETR: A larger (several megabytes) buffer that uses system RAM to
       store data
-    * TPIU: Sends data to an off-chip capture device (e.g. Arm DSTREAM) 
+    * TPIU: Sends data to an off-chip capture device (e.g. Arm DSTREAM)
 
 Each Arm SoC design may have a different layout (topology) of components.
 This topology is described to the OS drivers by the platform's devicetree
@@ -75,16 +75,97 @@ execution, so we can avoid this problem by using the ETM's features to
 only record small slices of execution - e.g. collect ~5000 cycles of data
 every 50M cycles.  This reduces the data rate to a manageable level - a few
 megabytes per minute.  This technique is known as 'strobing'.
- 
+
 
 ## Enabling trace
 
 ### Driver support
 
-To collect ETM trace, the CoreSight drivers must be included in the
-kernel.  Some of the driver support is not yet included in the mainline
-kernel and many targets are using older kernels.  To enable CoreSight trace
-on these targets, Arm have provided backports of the latest CoreSight
+CoreSight drivers must be built into the kernel to collect the trace.
+
+Typically the CoreSight trace drivers are be enabled in the kernel
+configuration.  This can be done using the configuration menu (`make
+menuconfig`), selecting `Kernel hacking` / `arm64 Debugging`  /`CoreSight Tracing Support` and
+enabling all options, or by setting the following in the configuration
+file:
+
+```
+CONFIG_CORESIGHT=y
+CONFIG_CORESIGHT_LINK_AND_SINK_TMC=y
+CONFIG_CORESIGHT_LINKS_AND_SINKS=y
+CONFIG_CORESIGHT_SINK_TPIU=y
+CONFIG_CORESIGHT_SOURCE_ETM4X=y
+CONFIG_CORESIGHT_DYNAMIC_REPLICATOR=y
+CONFIG_CORESIGHT_STM=y
+CONFIG_CORESIGHT_CATU=y
+```
+
+Coresight support can also be built as modules.
+
+Compile the kernel for your target in the usual way, e.g.
+
+```
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
+```
+
+Each target may have a different layout of CoreSight components.  To
+collect trace into a sink, the kernel drivers need to know which other
+devices need to be configured to route data from the source to the sink.
+This is described in the devicetree (and in future, the ACPI tables).  The
+device tree will define which CoreSight devices are present in the system,
+where they are located and how they are connected together.  The devicetree
+for some platforms includes a description of the platform's CoreSight
+components, but in other cases you may have to ask the platform/SoC vendor
+to supply it or create it yourself (see Appendix: Describing CoreSight in
+Devicetree).
+
+Once the target has been booted with the devicetree describing the
+CoreSight devices, you should find the devices in sysfs:
+
+```
+# ls /sys/bus/coresight/devices/
+etm0  etm2  etm4  etm6  funnel0  funnel2  funnel4      stm0      tmc_etr0
+etm1  etm3  etm5  etm7  funnel1  funnel3  replicator0  tmc_etf0
+```
+
+If `/sys/bus/coresight/devices/` is empty, you may want to check out your Kernel configuration to make sure your .config file is including CoreSight dependencies, such as the clock.
+
+The naming convention for etm devices can be different according to the kernel version you're using.
+For more information about the naming scheme, please check out the [Linux Kernel Documentation](https://www.kernel.org/doc/html/latest/trace/coresight/coresight.html#device-naming-scheme)
+
+### Configuration support - enabling strobing.
+
+From kernel version 5.16 onwards, the CoreSight System Configuration
+Management infrastructure is added that allows more complex CoreSight
+programming to be loaded on demand in the form of configurations and
+features, managed by configfs.
+
+A named configuration is a set of features and default parameters and
+presets.
+
+A feature is a set of register programming for a particular CoreSight
+component, which may contain some variable parameters that can be set
+from configfs, or set be specifying a particular preset from the
+configuration.
+
+There is a built-in name configuration called `autofdo`.
+This will load a feature called `strobing` onto each ETMv4 used in a
+trace session. The strobing feature defines two parameters called
+`window` and `period`. These are set prior to trace capture to control
+the strobing feature.
+
+When a trace session uses a configuration, the feature programming is
+carried out on all devices used during that session, and only those devices that are used.
+This avoids the need to program up all devices individually before starting a session.
+
+For additional information on using CoreSight configurations see the [CoreSight System Configuration Manager](https://www.kernel.org/doc/html/latest/trace/coresight/coresight-config.html) in the Linux Kernel Documentation.
+
+### Older Kernels (before 5.16) {#older_kernels}
+
+For targets using kernels prior to 5.16, CoreSight trace with strobing
+is enabled differently.
+
+For these targets, Arm have provided backports of the deprecated CoreSight
 drivers and ETM strobing patch at:
 
   <https://gitlab.arm.com/linux-arm/linux-coresight-backports>
@@ -99,7 +180,7 @@ You can include these backports in your kernel by either merging the
 appropriate branch using git or generating patches (using `git
 format-patch`).
 
-For 5.x based kernel onwards, the only patch which needs to be applied is the one enabling strobing - etm4x: `Enable strobing of ETM`.
+For 5.0 to 5.15 based kernels, the only patch which needs to be applied is the one enabling strobing - etm4x: `Enable strobing of ETM`.
 
 For 4.9 based kernels, use the `coresight-4.9-etr-etm_strobe` branch:
 
@@ -129,54 +210,14 @@ cd my_kernel
 git am /output/dir/*.patch # or patch -p1 /output/dir/*.patch if not using git
 ```
 
-The CoreSight trace drivers must also be enabled in the kernel
-configuration.  This can be done using the configuration menu (`make
-menuconfig`), selecting `Kernel hacking` / `arm64 Debugging`  /`CoreSight Tracing Support` and
-enabling all options, or by setting the following in the configuration
-file:
+For these kernels, configuration management is not available, so strobing is built directly into the sysfs of the individual components.
+The scripts set_strobing.sh and show_strobing.sh must be used to program up each individual ETM prior to starting a trace session.
 
 ```
-CONFIG_CORESIGHT=y
-CONFIG_CORESIGHT_LINK_AND_SINK_TMC=y
-CONFIG_CORESIGHT_SINK_TPIU=y
-CONFIG_CORESIGHT_SOURCE_ETM4X=y
-CONFIG_CORESIGHT_DYNAMIC_REPLICATOR=y
-CONFIG_CORESIGHT_STM=y
-CONFIG_CORESIGHT_CATU=y
+sudo ./set_strobing.sh 5000 10000
 ```
 
-Compile the kernel for your target in the usual way, e.g.
-
-```
-make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- 
-```
-
-Each target may have a different layout of CoreSight components.  To
-collect trace into a sink, the kernel drivers need to know which other
-devices need to be configured to route data from the source to the sink.
-This is described in the devicetree (and in future, the ACPI tables).  The
-device tree will define which CoreSight devices are present in the system,
-where they are located and how they are connected together.  The devicetree
-for some platforms includes a description of the platform's CoreSight
-components, but in other cases you may have to ask the platform/SoC vendor
-to supply it or create it yourself (see Appendix: Describing CoreSight in
-Devicetree).
-  
-Once the target has been booted with the devicetree describing the
-CoreSight devices, you should find the devices in sysfs:
-
-```
-# ls /sys/bus/coresight/devices/
-etm0  etm2  etm4  etm6  funnel0  funnel2  funnel4      stm0      tmc_etr0
-etm1  etm3  etm5  etm7  funnel1  funnel3  replicator0  tmc_etf0
-```
-
-The naming convention for etm devices can be different according to the kernel version you're using.
-For more information about the naming scheme, please check out the [Linux Kernel Documentation](https://www.kernel.org/doc/html/latest/trace/coresight/coresight.html#device-naming-scheme)
-
-If `/sys/bus/coresight/devices/` is empty, you may want to check out your Kernel configuration to make sure your .config file is including CoreSight dependencies, such as the clock.
-
-### Perf tools
+## Perf tools
 
 The perf tool is used to capture execution trace, configuring the trace
 sources to generate trace, routing the data to the sink and collecting the
@@ -207,7 +248,15 @@ perf record -e cs_etm/@tmc_etr0/u --per-thread -- /bin/ls
 
 Will record the userspace execution of '/bin/ls' using tmc_etr0 as sink.
 
-## Capturing modes
+Alternatively, the sink can be omitted an the system will choose the most appropriate
+sink:
+
+```
+perf record -e cs_etm//u --per-thread -- /bin/ls
+```
+
+
+### Capturing modes
 
 You can trace a single-threaded program in two different ways:
 
@@ -228,14 +277,14 @@ Linux v4.17 or later, as the trace processing code isn't included in the
 driver backports.  Trace decode is provided by the OpenCSD library
 (<https://github.com/Linaro/OpenCSD>), v0.9.1 or later.  This is packaged
 for debian testing (install the libopencsd0, libopencsd-dev packages) or
-can be compiled from source and installed. 
+can be compiled from source and installed.
 
 The autoFDO tool <https://github.com/google/autofdo> is used to convert the
 instruction profiles to source profiles for the GCC and clang/llvm
 compilers.
 
 
-## Recording and profiling
+### Recording trace for the profile
 
 Once trace collection using perf is working, we can now use it to profile
 an application.
@@ -254,22 +303,27 @@ tool.  There are two parameters:
 
   * window size: A number of CPU cycles (W)
   * period: Trace is enabled for W cycle every _period_ * W cycles.
-  
-For example, a typical configuration is to use a window size of 5000 cycles
-and a period of 10000 - this will collect 5000 cycles of trace every 50M
-cycles.  With these proof-of-concept patches, the strobe parameters are
-configured via sysfs - each ETM will have `strobe_window` and
-`strobe_period` parameters in `/sys/bus/coresight/devices/<sink>` and
-these values will have to be written to each (In a future version, this
-will be integrated into the drivers and perf tool).
-The `set_strobing.sh` script in this directory [`<opencsd>/decoder/tests/auto-fdo`] automates this process.
 
-To collect trace from an application using ETM strobing, run:
+To collect trace from an application using ETM strobing with default parameters run:
 
 ```
-sudo ./set_strobing.sh 5000 10000
-perf record -e cs_etm/@tmc_etr0/u --per-thread -- <your app>"
+perf record -e cs_etm/autofdo/u --per-thread -- <your app>
 ```
+
+To use specific strobing parameters, run:
+
+```
+echo 5000 > /configfs/cs-syscfg/features/strobing/window/value
+echo 10000 > /configfs/cs-syscfg/features/strobing/period/value
+perf record -e cs_etm/autofdo/u --per-thread -- <your app>
+```
+
+or alternatively, use on of the built-in parameter presets:
+
+```
+perf record -e cs_etm/autofdo,preset=1/u --per-thread -- <your app>
+```
+
 
 The raw trace can be examined using the `perf report` command:
 
@@ -303,13 +357,13 @@ For example:
 . ... CoreSight ETM Trace data: size 2098112 bytes
         Idx:0; ID:12;   I_ASYNC : Alignment Synchronisation.
         Idx:12; ID:12;  I_TRACE_INFO : Trace Info.; INFO=0x0
-        Idx:17; ID:12;  I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0xFFFF000008A4991C; 
+        Idx:17; ID:12;  I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0xFFFF000008A4991C;
         Idx:48; ID:14;  I_ASYNC : Alignment Synchronisation.
         Idx:60; ID:14;  I_TRACE_INFO : Trace Info.; INFO=0x0
-        Idx:65; ID:14;  I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0xFFFF000008A4991C; 
+        Idx:65; ID:14;  I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0xFFFF000008A4991C;
         Idx:96; ID:14;  I_ASYNC : Alignment Synchronisation.
         Idx:108; ID:14; I_TRACE_INFO : Trace Info.; INFO=0x0
-        Idx:113; ID:14; I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0xFFFF000008A4991C; 
+        Idx:113; ID:14; I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0xFFFF000008A4991C;
         Idx:122; ID:14; I_TRACE_ON : Trace On.
         Idx:123; ID:14; I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000407B00; Ctxt: AArch64,EL0, NS; 
         Idx:134; ID:14; I_ATOM_F3 : Atom format 3.; ENN
@@ -321,6 +375,8 @@ For example:
         Idx:140; ID:14; I_ATOM_F1 : Atom format 1.; E
 .....
 ```
+
+### Generating the profile from the trace
 
 The execution trace is then converted to an instruction profile using
 the perf build with trace decode support.  This may be done on a different
@@ -385,8 +441,11 @@ autofdo tool to generate source level profiles for the compiler.  For
 clang/LLVM:
 
 ```
-create_llvm_prof -binary=/path/to/binary -profile=inj.data -out=program.llvmprof
+create_llvm_prof -binary=/path/to/binary -format extbinary -profile=inj.data -out=program.llvmprof
 ```
+
+The optional `-format extbinary` creates an output suitable for FSAFDO sometimes used in the kernel, and give improved performance gains. See AFDO
+docs for more details.
 
 And for GCC:
 
@@ -406,7 +465,7 @@ Or, for GCC:
 dump_gcov -gcov_version=1 program.gcov
 ```
 
-## Using profile in the compiler
+### Using profile in the compiler
 
 The profile produced by the above steps can then be passed to the compiler
 to optimize the next build of the program.
@@ -424,15 +483,14 @@ clang -O2 -fprofile-sample-use=program.llvmprof -o program program.c
 ```
 
 
-## Summary
+### Summary
 
 The basic commands to run an application and create a compiler profile are:
 
 ```
-sudo ./set_strobing.sh 5000 10000
-perf record -e cs_etm/@tmc_etr0/u --per-thread -- <your app>"
+perf record -e cs_etm/autofdo/u --per-thread -- <your app>
 perf inject -i perf.data -o inj.data --itrace=i100000il
-create_llvm_prof -binary=/path/to/binary -profile=inj.data -out=program.llvmprof
+create_llvm_prof -binary=/path/to/binary -format extbinary -profile=inj.data -out=program.llvmprof
 clang -O2 -fprofile-sample-use=program.llvmprof -o program program.c
 ```
 
@@ -440,25 +498,33 @@ Use `create_gcov` for gcc.
 
 ## High Level Summary for recoding on Arm board and decoding on different host
 
-1. (on Arm board)
-
-        sudo ./set_strobing.sh 5000 10000
-        perf record -e cs_etm/@tmc_etr0/u --per-thread -- <your app>.
-	If you specify `-N, --no-buildid-cache`, perf will just take care of recording the target binary and nothing will be copied.<br>  If you don't specify it, any recorded dynamic library will be copied to ~/.debug in the board.
+1. (on Arm board) `perf record -e cs_etm/autofdo/u --per-thread -- <your app>.` <br>
+	If you specify `-N, --no-buildid-cache`, perf will just take care of recording the target binary and nothing will be copied.<br>  If you don't specify it, any recorded dynamic library will be copied to ~/.debug in the board.<br><br>
 
 2. (on Arm board) `perf archive` which saves all the found libraries in a tar (internally, it looks into perf.data file and performs a lookup using perf-buildid-list --with-hits)
-3. (on host) `scp` to copy perf.data and the .tar file generated from `perf archive`.
-4. (on host) Run `tar xvf perf_data.tar.bz2 -C ~/.debug` to populate the buildid-cache
+
+3. (on host) `scp` to copy perf.data and the .tar file generated from `perf archive`.<br><br>
+
+4. (on host) Run `tar xvf perf_data.tar.bz2 -C ~/.debug` to populate the buildid-cache<br><br>
+
 5. (on host) Double check the setup is correct:
 
-       a. `perf buildid-list -i perf.data` gives you the list of dynamic libraries buildids whose trace has been recorded and saved in perf.data.
-       b. `perf buildid-cache --list` lists the dynamic libraries in the buildid cache that will be used by `perf inject`.
-	Make sure the output of (a) and (b) overlaps as in buildid value for those binaries you are interested into optimizing with afdo.
+    (a) `perf buildid-list -i perf.data`
+       - gives you the list of dynamic libraries buildids whose trace has been recorded and saved in perf.data.<br><br>
 
-6. (on host) `perf inject -i perf.data -o inj.data --itrace=i100000il` will check for the dynamic libraries using the buildid inside the buildid-cache and post-process the trace.<br>  buildids have to be the same, otherwise it won't be possible to post-process the trace.
+    (b) `perf buildid-cache --list` <br>
+       - lists the dynamic libraries in the buildid cache that will be used by `perf inject`.<br>
+	Make sure the output of (a) and (b) overlaps as in buildid value for those binaries you are interested into optimizing with afdo.<br><br>
 
-7. (on host) `create_llvm_prof -binary=/path/to/binary -profile=inj.data -out=program.llvmprof` takes the output from perf-inject and tranforms it into a format that the compiler can read.
-8. (on host) `clang -O2 -fprofile-sample-use=program.llvmprof -o program program.c` to make clang use the produced profile.<br>
+6. (on host) `perf inject -i perf.data -o inj.data --itrace=i100000il` <br>
+    - will check for the dynamic libraries using the buildid inside the buildid-cache and post-process the trace.<br>
+    buildids have to be the same, otherwise it won't be possible to post-process the trace. <br><br>
+
+7. (on host) `create_llvm_prof -binary=/path/to/binary -format extbinary -profile=inj.data -out=program.llvmprof` <br>
+    - takes the output from perf-inject and tranforms it into a format that the compiler can read. <br><br>
+
+8. (on host) `clang -O2 -fprofile-sample-use=program.llvmprof -o program program.c` <br>
+    - to make clang use the produced profile.<br>
 	If you are confident enough that your profile is accurate, you can add the `-fprofile-sample-accurate` flag, which will penalize all the callsites without corresponding profile, marking them as cold.
 
 If you are using the same host for both building the binary to be traced and re-building it with afdo:
@@ -483,7 +549,7 @@ You can check the buildid of a given binary/dynamic library:
 * AutoFDO tool: <https://github.com/google/autofdo>
 * GCC's wiki on autofdo: <https://gcc.gnu.org/wiki/AutoFDO>, <https://gcc.gnu.org/wiki/AutoFDO/Tutorial>
 * Google paper: <https://ai.google/research/pubs/pub45290>
-* CoreSight kernel docs: Documentation/trace/coresight.txt
+* CoreSight kernel docs: <https://www.kernel.org/doc/html/latest/trace/coresight/index.html>
 
 
 ## Appendix: Describing CoreSight in Devicetree
@@ -504,7 +570,7 @@ To create the device tree, some information about the platform is required:
   the CPU's address space where the CPU can access each CoreSight
   component.
 * The connections between the components.
-  
+
 This information can be found in the SoC's reference manual or you may need
 to ask the platform/SoC vendor to supply it.
 
@@ -590,9 +656,9 @@ components with similar blocks until we reach the sink (an ETR):
 ```
 
 Full descriptions of the properties of each component can be found in the
-Linux source at Documentation/devicetree/bindings/arm/coresight.txt.
-The Arm Juno platform's devicetree (arch/arm64/boot/dts/arm) provides an example
-description of CoreSight description.
+Linux source at Documentation/devicetree/bindings/arm/ - files which start `arm,coresight-` are the component bindings.
+
+The Arm Juno platform's devicetree (arch/arm64/boot/dts/arm) provides an example description of CoreSight description.
 
 Many systems include a TPIU for off-chip trace.  While this isn't required
 for self-hosted trace, it should still be included in the devicetree.  This
