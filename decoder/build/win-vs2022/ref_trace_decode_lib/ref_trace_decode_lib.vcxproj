@@ -229,6 +229,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
       <LargeAddressAware>true</LargeAddressAware>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -308,6 +309,7 @@
       <AdditionalOptions>/HIGHENTROPYVA %(AdditionalOptions)</AdditionalOptions>
       <LargeAddressAware>true</LargeAddressAware>
       <AllowIsolation>true</AllowIsolation>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -447,12 +449,24 @@
     <ClCompile Include="..\..\..\source\ocsd_lib_dcd_register.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_msg_logger.cpp" />
     <ClCompile Include="..\..\..\source\ocsd_version.cpp" />
+    <ClCompile Include="..\..\..\source\PacketFormat.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-dll|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-dll|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\source\pkt_printers\raw_frame_printer.cpp" />
     <ClCompile Include="..\..\..\source\pkt_printers\trc_print_fact.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_cmp_cfg_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_decode_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_elem_ptm.cpp" />
     <ClCompile Include="..\..\..\source\ptm\trc_pkt_proc_ptm.cpp" />
+    <ClCompile Include="..\..\..\source\SocketIntf.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-dll|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-dll|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\source\stm\trc_pkt_decode_stm.cpp" />
     <ClCompile Include="..\..\..\source\stm\trc_pkt_elem_stm.cpp" />
     <ClCompile Include="..\..\..\source\stm\trc_pkt_proc_stm.cpp" />

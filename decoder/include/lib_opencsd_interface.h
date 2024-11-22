@@ -7,10 +7,19 @@
   30-Aug-2022    AS          Initial
 ******************************************************************************/
 #include "opencsd.h"
+#ifndef __linux__
+#ifndef _HOST_BUILD
+#include <WinSock2.h>
+#endif
+#else
+#include <arpa/inet.h>
+#endif
+#include "SocketIntf.h"
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
 // The following ifdef block is the standard way of creating macros which make exporting
 // from a DLL simpler. All files within this DLL are compiled with the OPENCSDINTERFACE_EXPORTS
@@ -63,6 +72,8 @@ protected:
 private:
     FILE* m_fp_decode_out;
     const std::string m_log_file_path;
+    bool m_generate_profiling_data;
+    uint32_t m_port_no;
     std::string m_curr_logfile_name;
     uint32_t m_file_cnt;
     uint32_t m_rows_in_file;
@@ -86,14 +97,19 @@ private:
     using STM_TRACE_DATA_MAP = std::unordered_map<uint8_t, MASTER_MAP>;
     STM_TRACE_DATA_MAP m_stm_trace_data;
     std::vector<uint32_t> m_text_channels;
+    SocketIntf* m_client;
+    uint64_t m_curr_buff_idx = 0;
+    uint64_t* mp_buffer = NULL;
 public:
     // Constructor
-    TraceLogger(const std::string log_file_path, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
+    TraceLogger(const std::string log_file_path, bool generate_profiling_data = false, const uint32_t port_no = 6000, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
     // Destructor
     ~TraceLogger();
     // Overriden function to implement custom formatting
     // This callback is called by the OpenCSD library after decoding a chunk of data
     ocsd_datapath_resp_t TraceElemIn(const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const OcsdTraceElement& elem);
+    // Function to generate profiling data
+    ocsd_datapath_resp_t GenerateProfilingData(const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const OcsdTraceElement& elem);
     // Open log file for logging decoded trace output
     void OpenLogFile();
     // Close trace decoded ouput log file
@@ -116,6 +132,12 @@ public:
     bool FirstValidIndexFound();
     // Sets the STM channels used for text data
     void SetSTMChannelInfo(std::vector<uint32_t>& text_channels);
+    // Initializes the socket connection to transfer data to the UI
+    TyTraceDecodeError InitProfilingSocketConn();
+    // Function to wait for ACK from UI
+    bool WaitforACK();
+    // Function to flush data over socket
+    TyTraceDecodeError FlushDataOverSocket();
 };
 
 // Class that provides the trace decoding functionality
@@ -134,7 +156,7 @@ public:
     virtual TyTraceDecodeError InitDecodeTree(const ocsd_dcd_tree_src_t src_type = OCSD_TRC_SRC_FRAME_FORMATTED,
         const uint32_t formatter_cfg_flags = OCSD_DFRMTR_FRAME_MEM_ALIGN);
     // Function to initialize the trace output logger
-    virtual TyTraceDecodeError InitLogger(const char* log_file_path, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
+    virtual TyTraceDecodeError InitLogger(const char* log_file_path, bool generate_profiling_data = false, const uint32_t port_no = 6000, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
     // Function to create ETMv4 Decoder
     virtual TyTraceDecodeError CreateETMv4Decoder(const ocsd_etmv4_cfg config, int32_t create_flags = OCSD_CREATE_FLG_FULL_DECODER);
     // Function to create ETMv3 Decoder
@@ -185,6 +207,10 @@ public:
     virtual void ResetFirstValidIdx();
     // Check if a valid index is found
     virtual bool FirstValidIndexFound();
+    // Function to initialize socket connection with UI
+    virtual TyTraceDecodeError InitProfilingSocketConn();
+    // Function to flush data over socket
+    virtual TyTraceDecodeError FlushDataOverSocket();
     // Function to destroy the decoder tree
     virtual void DestroyDecodeTree();
     // Destructor
