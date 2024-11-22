@@ -19,6 +19,7 @@
 #include "PacketFormat.h"
 
 #define TRANSFER_DATA_OVER_SOCKET 1
+#define WRITE_SEND_DATA_TO_FILE 0
 #define PROFILE_THREAD_BUFFER_SIZE (1024 * 128 * 2)  // 2 MB
 
 // Class for attaching packet monitor callback
@@ -946,13 +947,12 @@ void TraceLogger::SetHistogramCallback(std::function<void(std::unordered_map<uin
 
 TyTraceDecodeError TraceLogger::InitProfilingSocketConn()
 {
-#if TRANSFER_DATA_OVER_SOCKET == 1
-    mp_buffer = new uint64_t[PROFILE_THREAD_BUFFER_SIZE*2];
+    mp_buffer = new uint64_t[PROFILE_THREAD_BUFFER_SIZE * 2];
     if (mp_buffer == NULL)
     {
         return TRACE_DECODER_ERR;
     }
-
+#if TRANSFER_DATA_OVER_SOCKET == 1
     m_client = new SocketIntf(m_port_no);
     if (m_client == NULL)
     {
@@ -1215,12 +1215,12 @@ TraceLogger::~TraceLogger()
         delete m_client;
         m_client = nullptr;
     }
+#endif
     if (mp_buffer)
     {
         delete[] mp_buffer;
         mp_buffer = NULL;
     }
-#endif
 }
 
 ocsd_datapath_resp_t TraceLogger::GenerateHistogram(const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const OcsdTraceElement& elem)
@@ -1260,8 +1260,15 @@ ocsd_datapath_resp_t TraceLogger::GenerateHistogram(const ocsd_trc_index_t index
         {
             uint64_t addr = elem.traced_ins.ptr_addresses ? elem.traced_ins.ptr_addresses[i] : i;
             m_hist_map[addr] += 1;
-            if(m_generate_profiling_data)
+            if (m_generate_profiling_data)
+            {
+#if WRITE_SEND_DATA_TO_FILE
+                FILE* fp = fopen("send_data.txt", "a");
+                fprintf(fp, "%llx\n", addr);
+                fclose(fp);
+#endif
                 mp_buffer[m_curr_buff_idx++] = htonll(addr);
+            }
         }
         if (m_fp_hist_callback)
             m_fp_hist_callback(m_hist_map, 0, 0, 0);
