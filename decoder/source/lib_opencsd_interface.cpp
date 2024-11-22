@@ -114,23 +114,22 @@ OpenCSDInterface::OpenCSDInterface()
   Date         Initials    Description
 30-Aug-2022    AS          Initial
 ****************************************************************************/
-TyTraceDecodeError OpenCSDInterface::InitLogger(const char *log_file_path, bool generate_histogram, bool generate_profiling_data, const uint32_t port_no, const bool split_files, const uint32_t max_rows_in_file)
+TyTraceDecodeError OpenCSDInterface::InitLogger(const char *log_file_path, bool generate_profiling_data, const uint32_t port_no, const bool split_files, const uint32_t max_rows_in_file)
 {
     if (mp_logger)
     {
-        if (generate_histogram == true && generate_profiling_data == false)
-            return TRACE_DECODER_OK;
         mp_logger->CloseLogFile();
         delete mp_logger;
         mp_logger = NULL;
     }
-    mp_logger = new TraceLogger(log_file_path, generate_histogram, generate_profiling_data, port_no, split_files, max_rows_in_file);
+    mp_logger = new TraceLogger(log_file_path, generate_profiling_data, port_no, split_files, max_rows_in_file);
     if (!mp_logger)
     {
         return TRACE_DECODER_INIT_ERR;
     }
     mp_tree->setGenTraceElemOutI(mp_logger);
-    if(generate_histogram == false)
+
+    if(generate_profiling_data == false)
         mp_logger->OpenLogFile();
 
     return TRACE_DECODER_OK;
@@ -768,24 +767,36 @@ bool OpenCSDInterface::FirstValidIndexFound()
     return mp_logger->FirstValidIndexFound();
 }
 
-// Sets the histogram callback function
-void OpenCSDInterface::SetHistogramCallback(std::function<void(std::unordered_map<uint64_t, uint64_t>& hist_map, uint64_t total_bytes_processed, uint64_t total_ins, int32_t ret)> fp_callback)
-{
-    mp_logger->SetHistogramCallback(fp_callback);
-}
-
+/****************************************************************************
+     Function: InitProfilingSocketConn
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: TyTraceDecodeError
+  Description: Initializes the socket connection with the UI
+  Date         Initials    Description
+22-Nov-2022    AS          Initial
+****************************************************************************/
 TyTraceDecodeError OpenCSDInterface::InitProfilingSocketConn()
 {
     return mp_logger->InitProfilingSocketConn();
 }
+
+/****************************************************************************
+     Function: FlushDataOverSocket
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: TyTraceDecodeError
+  Description: Flushes the data over socket
+  Date         Initials    Description
+22-Nov-2022    AS          Initial
+****************************************************************************/
 TyTraceDecodeError OpenCSDInterface::FlushDataOverSocket()
 {
     return mp_logger->FlushDataOverSocket();
 }
-void OpenCSDInterface::ClearHistogram()
-{
-    mp_logger->ClearHistogram();
-}
+
 /****************************************************************************
      Function: SetTraceStartIdx
      Engineer: Arjun Suresh
@@ -880,14 +891,13 @@ OpenCSDInterface::~OpenCSDInterface()
   Date         Initials    Description
 30-Aug-2022    AS          Initial
 ****************************************************************************/
-TraceLogger::TraceLogger(const std::string log_file_path, bool generate_histogram, bool generate_profiling_data, const uint32_t port_no, const bool split_files, const uint32_t max_rows_in_file)
+TraceLogger::TraceLogger(const std::string log_file_path, bool generate_profiling_data, const uint32_t port_no, const bool split_files, const uint32_t max_rows_in_file)
     : m_fp_decode_out(NULL),
     m_file_cnt(0),
     m_rows_in_file(0),
     m_split_files(split_files),
     m_max_rows_in_file(max_rows_in_file),
     m_log_file_path(log_file_path),
-    m_generate_histogram(generate_histogram),
     m_generate_profiling_data(generate_profiling_data),
     m_port_no(port_no),
     m_curr_logfile_name(log_file_path),
@@ -940,11 +950,16 @@ void TraceLogger::SetSTMChannelInfo(std::vector<uint32_t>& text_channels)
     m_text_channels = text_channels;
 }
 
-void TraceLogger::SetHistogramCallback(std::function<void(std::unordered_map<uint64_t, uint64_t>& hist_map, uint64_t total_bytes_processed, uint64_t total_ins, int32_t ret)> fp_callback)
-{
-    m_fp_hist_callback = fp_callback;
-}
-
+/****************************************************************************
+     Function: InitProfilingSocketConn
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: TyTraceDecodeError
+  Description: Initializes the socket connection with the UI
+  Date         Initials    Description
+22-Nov-2022    AS          Initial
+****************************************************************************/
 TyTraceDecodeError TraceLogger::InitProfilingSocketConn()
 {
     mp_buffer = new uint64_t[PROFILE_THREAD_BUFFER_SIZE * 2];
@@ -980,6 +995,16 @@ TyTraceDecodeError TraceLogger::InitProfilingSocketConn()
     return TRACE_DECODER_OK;
 }
 
+/****************************************************************************
+     Function: WaitforACK
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: bool
+  Description: Wait for ACK packet from UI
+  Date         Initials    Description
+22-Nov-2022    AS          Initial
+****************************************************************************/
 bool TraceLogger::WaitforACK()
 {
 #if TRANSFER_DATA_OVER_SOCKET == 1
@@ -1008,10 +1033,17 @@ bool TraceLogger::WaitforACK()
 #endif
     return true;
 }
-void TraceLogger::ClearHistogram()
-{
-    m_hist_map.clear();
-}
+
+/****************************************************************************
+     Function: FlushDataOverSocket
+     Engineer: Arjun Suresh
+        Input: None
+       Output: None
+       return: bool
+  Description: Flushes the profiled data over socket
+  Date         Initials    Description
+22-Nov-2022    AS          Initial
+****************************************************************************/
 TyTraceDecodeError TraceLogger::FlushDataOverSocket()
 {
 #if TRANSFER_DATA_OVER_SOCKET == 1
@@ -1223,7 +1255,19 @@ TraceLogger::~TraceLogger()
     }
 }
 
-ocsd_datapath_resp_t TraceLogger::GenerateHistogram(const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const OcsdTraceElement& elem)
+/****************************************************************************
+     Function: GenerateProfilingData
+     Engineer: Arjun Suresh
+        Input: index_sop - byte index in the decoded trace
+               trc_chan_id - TID of the current trace row
+               elem - contains the decoded trace info
+       Output: None
+       return: ocsd_datapath_resp_t - Used to halt/continue the decoder processing
+  Description: Function that generates the profiled data and sends data over socket
+  Date         Initials    Description
+23-Nov-2024    AS          Initial
+****************************************************************************/
+ocsd_datapath_resp_t TraceLogger::GenerateProfilingData(const ocsd_trc_index_t index_sop, const uint8_t trc_chan_id, const OcsdTraceElement& elem)
 {
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
     if (elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
@@ -1259,7 +1303,6 @@ ocsd_datapath_resp_t TraceLogger::GenerateHistogram(const ocsd_trc_index_t index
         for (ocsd_vaddr_t i = start_idx; i < end_idx; i += step)
         {
             uint64_t addr = elem.traced_ins.ptr_addresses ? elem.traced_ins.ptr_addresses[i] : i;
-            m_hist_map[addr] += 1;
             if (m_generate_profiling_data)
             {
 #if WRITE_SEND_DATA_TO_FILE
@@ -1270,8 +1313,7 @@ ocsd_datapath_resp_t TraceLogger::GenerateHistogram(const ocsd_trc_index_t index
                 mp_buffer[m_curr_buff_idx++] = htonll(addr);
             }
         }
-        if (m_fp_hist_callback)
-            m_fp_hist_callback(m_hist_map, 0, 0, 0);
+
         if (m_generate_profiling_data)
         {
             if (m_curr_buff_idx >= PROFILE_THREAD_BUFFER_SIZE)
@@ -1312,9 +1354,9 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     const uint8_t trc_chan_id,
     const OcsdTraceElement &elem)
 {
-    if (m_generate_histogram)
+    if (m_generate_profiling_data)
     {
-        return GenerateHistogram(index_sop, trc_chan_id, elem);
+        return GenerateProfilingData(index_sop, trc_chan_id, elem);
     }
 
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
