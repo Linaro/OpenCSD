@@ -16,9 +16,16 @@
 
 #define BUFF_SIZE 2*1024
 
-#ifdef __LINUX
+#ifdef __linux__
 typedef int32_t SOCKET;
 #define INVALID_SOCKET  (SOCKET)(~0)
+#endif
+
+#ifdef __linux__
+#define _open open
+#define _read read
+#define _write write
+#define _close close
 #endif
 
 class SocketIntf : public ProbeIntf
