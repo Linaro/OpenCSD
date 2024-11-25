@@ -22,6 +22,48 @@
 #define WRITE_SEND_DATA_TO_FILE 0
 #define PROFILE_THREAD_BUFFER_SIZE (1024 * 128 * 2)  // 2 MB
 
+#ifdef __linux__
+
+#define TYP_INIT 0 
+#define TYP_SMLE 1 
+#define TYP_BIGE 2 
+
+uint64_t htonll(uint64_t src);
+
+/****************************************************************************
+     Function: htonll
+     Engineer: Arjun Suresh
+        Input: src - Host byte order value
+       Output: None
+       return: uint64_t - Value in host byte order
+  Description: Converts host to network byte order for 64bit variables
+  Date         Initials    Description
+  26-Apr-2024  AS          Initial
+****************************************************************************/
+uint64_t htonll(uint64_t src)
+{
+    static int typ = TYP_INIT;
+    unsigned char c;
+    union {
+        unsigned long long ull;
+        unsigned char c[8];
+    } x;
+    if (typ == TYP_INIT)
+    {
+        x.ull = 0x01;
+        typ = (x.c[7] == 0x01ULL) ? TYP_BIGE : TYP_SMLE;
+    }
+    if (typ == TYP_BIGE)
+        return src;
+    x.ull = src;
+    c = x.c[0]; x.c[0] = x.c[7]; x.c[7] = c;
+    c = x.c[1]; x.c[1] = x.c[6]; x.c[6] = c;
+    c = x.c[2]; x.c[2] = x.c[5]; x.c[5] = c;
+    c = x.c[3]; x.c[3] = x.c[4]; x.c[4] = c;
+    return x.ull;
+}
+#endif
+
 // Class for attaching packet monitor callback
 template<class TrcPkt>
 class PktMonCBObj : public IPktRawDataMon<TrcPkt>

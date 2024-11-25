@@ -9,7 +9,7 @@
 #include <errno.h>
 #include "SocketIntf.h"
 #include "PacketFormat.h"
-#ifdef __LINUX
+#ifdef __linux__
 #include "linuxutils.h"
 #endif
 
@@ -27,7 +27,7 @@ SocketIntf::SocketIntf(uint16_t usPort)
     : m_socket(INVALID_SOCKET)
     , m_usPort(usPort)
 {
-#ifndef __LINUX
+#ifndef __linux__
     static WSADATA wsaData;
     int err;
 
@@ -56,7 +56,7 @@ SocketIntf::~SocketIntf()
     {
         closesocket(m_socket);
     }
-#ifndef __LINUX
+#ifndef __linux__
     WSACleanup();
 #endif
 }
@@ -95,7 +95,7 @@ int32_t SocketIntf::open()
     if ((err = connect(m_socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr))) < 0)
     {
         printf("\nConnection Failed \n");
-#ifndef __LINUX
+#ifndef __linux__
         if (h_errno == WSAHOST_NOT_FOUND)
         {
             err = ERROR_PROBE_INTF_SERVER_UNREACHABLE;
