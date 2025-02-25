@@ -41,4 +41,11 @@ export PLATFORM_LDFLAGS := -Wl,-z,defs
 export SONAME_FLAG := -soname
 export SHARED_LIB_SUFFIX := so
 
-include ../unix_common/makefile.common
+# set OCSD_ROOT relative to the main linux makefile
+ifeq ($(OCSD_ROOT),)
+OCSD_ROOT := $(shell echo $(dir $(abspath $(lastword $(MAKEFILE_LIST)))) | sed 's,/build/linux.*,,')
+export OCSD_ROOT
+endif
+
+# include the common unix makefile
+include $(OCSD_ROOT)/build/unix_common/makefile.common

@@ -39,4 +39,12 @@ export PLATFORM_LDFLAGS := -Wl,-undefined,error
 export SONAME_FLAG := -install_name
 export SHARED_LIB_SUFFIX := dylib
 
-include ../unix_common/makefile.common
+# set OCSD_ROOT relative to the main macos makefile
+ifeq ($(OCSD_ROOT),)
+OCSD_ROOT := $(shell echo $(dir $(abspath $(lastword $(MAKEFILE_LIST)))) | sed 's,/build/macos.*,,')
+export OCSD_ROOT
+endif
+
+# include the common unix makefile
+include $(OCSD_ROOT)/build/unix_common/makefile.common
+
