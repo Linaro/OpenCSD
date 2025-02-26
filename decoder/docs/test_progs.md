@@ -192,6 +192,7 @@ __Command Line Options__
 - `-o_raw_packed`    : Output raw packed trace frames.
 - `-o_raw_unpacked`  : Output raw unpacked trace data per ID.
 - `-stats`           : Output packet processing statistics (if available).
+- `-no_time_print`   : Do not output elapsed time at end of decode.
 
 *Consistency Checks*
 
