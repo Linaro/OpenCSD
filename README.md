@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.5.5_
+_Current Version 1.5.6_
 
 ### Current support:
 
@@ -344,6 +344,11 @@ Version and Modification Information
 - _Version 1.5.5_:
     - __Bugfix__: memacc: Fix for memacc objects created in decode tree not being released correctly.
     - __Update__: build: Add support for MacOS build / clang.
+
+- _Version 1.5.6_:
+    - __Bugfix__: build: Fix issue with 'make -f <path to makefile>' no longer working for linux/macos build since 1.5.5.
+    - __Update__: build: later versions of clang require additional includes to compile correctly.
+    - __Update__: docs: Update autofdo docs to reflect latest requirements. Other minor docs updates.
 
 Licence Information
 ===================
