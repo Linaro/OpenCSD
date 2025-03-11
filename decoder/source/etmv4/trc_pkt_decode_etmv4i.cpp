@@ -844,10 +844,6 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 break;
 
             case P0_EXCEP:
-                // check if prev atom left us an indirect address target on the return stack
-                if ((err = returnStackPop()) != OCSD_OK)
-                    break;
-
                 nextRangeCheckClear();
                 err = processException();  // output trace + exception elements.
                 m_elem_res.P0_commit--;
