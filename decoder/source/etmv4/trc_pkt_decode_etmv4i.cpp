@@ -103,7 +103,6 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
             {
                 doTraceInfoPacket();
                 m_curr_state = DECODE_PKTS;
-                m_return_stack.flush();
             }
             /* ETE spec allows early event packets. */
             else if ((m_config->MajVersion() >= 0x5) && 
@@ -326,11 +325,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
     {
     case ETM4_PKT_I_ASYNC: // nothing to do with this packet.
     case ETM4_PKT_I_IGNORE: // or this one.
-        break;
-
     case ETM4_PKT_I_TRACE_INFO:
-        // skip subsequent TInfo packets.
-        m_return_stack.flush();
         break;
 
     case ETM4_PKT_I_TRACE_ON:
