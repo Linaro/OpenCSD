@@ -477,6 +477,12 @@ void TrcPktProcEtmV4I::iPktTraceInfo(const uint8_t lastByte)
         if((presSect & TINFO_SPEC_SECT) && (idx < m_currPacketData.size()))
         {
             idx += extractContField(m_currPacketData,idx,fieldVal);
+
+            // Ignore the uncommitted P0 element count in the initial trace info
+            // packet to ensure P0 element stack accuracy.
+            if (!m_first_trace_info)
+              fieldVal = 0;
+
             m_curr_packet.setTraceInfoSpec(fieldVal);
         }
         if((presSect & TINFO_CYCT_SECT) && (idx < m_currPacketData.size()))
