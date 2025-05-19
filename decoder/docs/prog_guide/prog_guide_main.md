@@ -259,7 +259,7 @@ All decoders a registered with the library using a name - the standard ARM proto
 decoders and are registered automatically. The library contains defined names for these decoders - `OCSD_BUILTIN_DCD_ETMV4I`
  being the name used for ETMv4 protocol.
 
-The C-API uses the call create_generic_decoder() with the same configuration structure:-
+The C-API uses the call ocsd_dt_create_decoder() with the same configuration structure:-
 
 ~~~{.c}
 	ocsd_etmv4_cfg config;
@@ -271,7 +271,7 @@ The C-API uses the call create_generic_decoder() with the same configuration str
 	const char * decoderName = OCSD_BUILTIN_DCD_ETMV4I);  // use built in ETMv4 instruction decoder.
 	int decoderCreateFlags = OCSD_CREATE_FLG_FULL_DECODER; // decoder type to create - OCSD_CREATE_FLG_PACKET_PROC for packet processor only
 	void *p_context =  // <some_client_context>
-	ocsd_err_t err = create_generic_decoder(dcdtree_handle,decoderName,(void *)&config,p_context);	
+	ocsd_err_t err = ocsd_dt_create_decoder(dcdtree_handle,decoderName,decoderCreateFlags,(void *)&config,p_context);
 ~~~
 
 The configuration must be completed for each trace source in the decode tree which requires decoding.
