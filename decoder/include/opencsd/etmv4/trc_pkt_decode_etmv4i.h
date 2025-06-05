@@ -78,7 +78,7 @@ protected:
     ocsd_err_t mispredictAtom();    // mispredict an atom
     ocsd_err_t discardElements();   // discard elements and flush
 
-    void doTraceInfoPacket();
+    bool doTraceInfoPacket();
     void updateContext(TrcStackElemCtxt *pCtxtElem, OcsdTraceElement &elem);
     
     // process atom will create instruction trace, or no memory access trace output elements. 
@@ -184,8 +184,7 @@ private:
 
     // speculative trace 
     int m_curr_spec_depth;                
-    int m_max_spec_depth;   // nax depth - from ID reg, beyond which auto-commit occurs 
-    int m_unseen_spec_elem; // speculative elements at decode start
+    int m_max_spec_depth;   // max depth - from ID reg, beyond which auto-commit occurs 
 
 /** Remove elements that are associated with data trace */
 #ifdef DATA_TRACE_SUPPORTED

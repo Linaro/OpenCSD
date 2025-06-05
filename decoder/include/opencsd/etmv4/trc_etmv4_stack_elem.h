@@ -67,6 +67,7 @@ typedef enum _p0_elem_t
     P0_TRANS_COMMIT,
     P0_TRANS_FAIL,
     P0_ITE,
+    P0_UNSEEN_UNCOMMITTED, /* uncommitted elements before the TraceInfo Sync point */
 } p0_elem_t;
 
 
@@ -398,6 +399,9 @@ public:
     TrcStackElemMarker *createMarkerElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const trace_marker_payload_t &marker);
     TrcStackElemAddr *createSrcAddrElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const etmv4_addr_val_t &addr_val);
     TrcStackElemITE *createITEElem(const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index, const trace_sw_ite_t &ite);
+
+    /* create unseen & uncommited P0 elements before sync TInfo - allow subsequent commit / cancel to be applied */
+    int createUnseenUncommitedP0Elem(const int n_unseen, const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index);
 
 private:
     std::deque<TrcStackElem *> m_P0_stack;  //!< P0 decode element stack

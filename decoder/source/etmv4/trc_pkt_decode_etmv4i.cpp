@@ -101,7 +101,9 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
             m_need_addr = true;
             if(m_curr_packet_in->getType() == ETM4_PKT_I_TRACE_INFO)
             {
-                doTraceInfoPacket();
+                if (!doTraceInfoPacket())
+                    resp = OCSD_RESP_FATAL_SYS_ERR;
+
                 m_curr_state = DECODE_PKTS;
                 m_return_stack.flush();
             }
@@ -653,11 +655,17 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
     return err;
 }
 
-void TrcPktDecodeEtmV4I::doTraceInfoPacket()
+// On first trace info we see - set up the trace parameters it contains. 
+bool TrcPktDecodeEtmV4I::doTraceInfoPacket()
 {
     m_trace_info = m_curr_packet_in->getTraceInfo();
     m_cc_threshold = m_curr_packet_in->getCCThreshold();
     m_curr_spec_depth = m_curr_packet_in->getCurrSpecDepth();
+
+    // create m_curr_spec_depth unseen elements at the start of the P0 stack
+    if (m_P0_stack.createUnseenUncommitedP0Elem(m_curr_spec_depth, m_curr_packet_in->getType(), m_index_curr_pkt) != m_curr_spec_depth)
+        return false;
+    
     /* put a trans marker in stack if started in trans state */
     if (m_trace_info.bits.in_trans_state)
         m_P0_stack.createParamElemNoParam(P0_TRANS_TRACE_INIT, false, m_curr_packet_in->getType(), m_index_curr_pkt);
@@ -666,6 +674,7 @@ void TrcPktDecodeEtmV4I::doTraceInfoPacket()
 #ifdef DATA_TRACE_SUPPORTED
     m_p0_key = m_curr_packet_in->getP0Key();
 #endif
+    return true;
 }
 
 /* Element resolution
@@ -748,6 +757,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
         {
             pElem = m_P0_stack.back();  // get oldest element
             err_idx = pElem->getRootIndex(); // save index in case of error.
+            bPopElem = true;
 
             switch (pElem->getP0Type())
             {
@@ -895,6 +905,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
             case P0_ITE:
                 err = processITEElem(pElem);
                 break;
+
+            // speculative element traced before the sync TraceInfo packet we started at.
+            case P0_UNSEEN_UNCOMMITTED:
+                m_elem_res.P0_commit--;
+                break;
             }
 
             if(bPopElem)
@@ -950,18 +965,19 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElemOnEOT()
         // uncommited P0 element.
         pElem = m_P0_stack.back();
             
-            switch(pElem->getP0Type())
-            {
-                // clear stack and stop
-            case P0_UNKNOWN:
-            case P0_ATOM:
-            case P0_TRC_ON:
-            case P0_EXCEP:
-            case P0_EXCEP_RET:
-            case P0_OVERFLOW:
-            case P0_Q:
-                m_P0_stack.delete_all();
-                break;
+        switch(pElem->getP0Type())
+        {
+            // clear stack and stop
+        case P0_UNKNOWN:
+        case P0_ATOM:
+        case P0_TRC_ON:
+        case P0_EXCEP:
+        case P0_EXCEP_RET:
+        case P0_OVERFLOW:
+        case P0_Q:
+        case P0_UNSEEN_UNCOMMITTED:
+            m_P0_stack.delete_all();
+            break;
 
             //skip
         case P0_ADDR:
@@ -1072,13 +1088,6 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
                     P0StackDone = true;
             }
         }
-        // may have some unseen elements
-        else if (m_unseen_spec_elem)
-        {
-            m_unseen_spec_elem--;
-            m_elem_res.P0_cancel--;
-        }
-        // otherwise we have some sort of overrun
         else
         {
             // too few elements for commit operation - decode error.
@@ -1119,7 +1128,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::mispredictAtom()
         {
             if (pElem->getP0Type() == P0_ATOM)
             {
-                TrcStackElemAtom *pAtomElem = dynamic_cast<TrcStackElemAtom *>(pElem);
+                TrcStackElemAtom* pAtomElem = dynamic_cast<TrcStackElemAtom*>(pElem);
                 if (pAtomElem)
                 {
                     pAtomElem->mispredictNewest();
@@ -1131,14 +1140,19 @@ ocsd_err_t TrcPktDecodeEtmV4I::mispredictAtom()
             {
                 // need to disregard any addresses that appear between mispredict and the atom in question
                 m_P0_stack.erase_curr_from_front();
+            }            
+            else if (pElem->getP0Type() == P0_UNSEEN_UNCOMMITTED)
+            {
+                bDone = true;  // mispredict in one of the uncommitted elements before sync - disregard.
+                bFoundAtom = true;
             }
         }
         else
             bDone = true;
     }
    
-    // if missed atom then either overrun error or mispredict on unseen element
-    if (!bFoundAtom && !m_unseen_spec_elem)
+    // if no atom or unseed element the overrun
+    if (!bFoundAtom)
     {
         err = OCSD_ERR_COMMIT_PKT_OVERRUN;
         err = handlePacketSeqErr(err, m_index_curr_pkt, "Not found mispredict atom");            

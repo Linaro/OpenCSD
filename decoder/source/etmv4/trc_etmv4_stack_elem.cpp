@@ -161,6 +161,25 @@ TrcStackElemITE *EtmV4P0Stack::createITEElem(const ocsd_etmv4_i_pkt_type root_pk
     return pElem;
 }
 
+/* preload the stack with the unseen and uncommitted elements before a Trace Info packet - as described by the 
+   current spec depth value.
+
+   These will then be removed by commit / cancel elements after the trace info packet.
+ */
+int EtmV4P0Stack::createUnseenUncommitedP0Elem(const int n_unseen, const ocsd_etmv4_i_pkt_type root_pkt, const ocsd_trc_index_t root_index)
+{
+    int i = 0;
+    TrcStackElem* pElem;
+
+    while(i < n_unseen)
+    {
+        pElem = createParamElemNoParam(P0_UNSEEN_UNCOMMITTED, true, root_pkt, root_index);
+        if (!pElem)
+            break;
+        i++;
+    }
+    return i;
+}
 
 // iteration functions
 void EtmV4P0Stack::from_front_init()
