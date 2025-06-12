@@ -100,6 +100,7 @@ private:
     SocketIntf* m_client;
     uint64_t m_curr_buff_idx = 0;
     uint64_t* mp_buffer = NULL;
+    uint32_t m_loggerFormatOption = 0;
 public:
     // Constructor
     TraceLogger(const std::string log_file_path, bool generate_profiling_data = false, const uint32_t port_no = 6000, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
@@ -138,6 +139,8 @@ public:
     bool WaitforACK();
     // Function to flush data over socket
     TyTraceDecodeError FlushDataOverSocket();
+    // Updates the logger format option
+    virtual void SetLoggerFormatOption(uint32_t loggerFormatOption = 0);
 };
 
 // Class that provides the trace decoding functionality
@@ -154,7 +157,7 @@ public:
     //static OpenCSDInterface& GetInstance();
     // Function to initialize the deocder tree
     virtual TyTraceDecodeError InitDecodeTree(const ocsd_dcd_tree_src_t src_type = OCSD_TRC_SRC_FRAME_FORMATTED,
-        const uint32_t formatter_cfg_flags = OCSD_DFRMTR_FRAME_MEM_ALIGN);
+                                              const uint32_t formatter_cfg_flags = OCSD_DFRMTR_FRAME_MEM_ALIGN);
     // Function to initialize the trace output logger
     virtual TyTraceDecodeError InitLogger(const char* log_file_path, bool generate_profiling_data = false, const uint32_t port_no = 6000, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
     // Function to create ETMv4 Decoder
