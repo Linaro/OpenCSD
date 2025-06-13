@@ -1821,7 +1821,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         // creates an output string stream in which we append text
         std::ostringstream oss;
         // Appends the index and ID information to the bin file
-        oss << "ID:" << (uint32_t)trc_chan_id << "; Idx: 0x" << std::hex << index_sop << "; ";
+        oss << "ID:" << (uint32_t)trc_chan_id << "; Idx:0x" << std::hex << index_sop << "; ";
         // Store the trace frame information in a string
         elem.toString(szTemp);
         // Appends the trace frame information to the output file stream
