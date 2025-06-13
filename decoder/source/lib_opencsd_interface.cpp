@@ -1821,7 +1821,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         // creates an output string stream in which we append text
         std::ostringstream oss;
         // Appends the index and ID information to the bin file
-        oss << "ID:" << (uint32_t)trc_chan_id << "; Idx:" << std::hex << index_sop << "; ";
+        oss << "ID:" << (uint32_t)trc_chan_id << "; Idx: 0x" << std::hex << index_sop << "; ";
         // Store the trace frame information in a string
         elem.toString(szTemp);
         // Appends the trace frame information to the output file stream
@@ -1830,6 +1830,21 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         szTemp = oss.str();
         // Prints the line to the bin file
         fprintf(m_fp_decode_out, szTemp.c_str());
+        // Increase the count of number of lines added to the file
+        m_rows_in_file++;
+        // Check if the count exceeds the maximum number of rows allowed in a files
+        // when we are to split the output into multiple files
+        if (m_rows_in_file >= m_max_rows_in_file && m_split_files)
+        {
+            // Close the current output txt file
+            CloseLogFile();
+            // Reset the row count in the txt file
+            m_rows_in_file = 0;
+            // Increase the file count
+            m_file_cnt++;
+            // Reopen a new file which will have the file count number appended to its name
+            OpenLogFile();
+        }
     }
 
     return resp;
