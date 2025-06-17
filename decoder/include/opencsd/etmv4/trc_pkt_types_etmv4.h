@@ -293,6 +293,7 @@ typedef struct _ocsd_etmv4_i_pkt
             uint32_t cc_thresh_valid:1;
             uint32_t cc_valid:1;
             uint32_t commit_elem_valid:1;
+            uint32_t cancel_elem_valid:1;
         } bits;
     } pkt_valid;
 

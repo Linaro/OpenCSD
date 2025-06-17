@@ -477,6 +477,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
             params[0] = m_curr_packet_in->getCC();
             if (m_P0_stack.createParamElem(P0_CC, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
                 bAllocErr = true;
+            m_elem_res.P0_commit = m_curr_packet_in->getCommitElem();
 
         }
         break;

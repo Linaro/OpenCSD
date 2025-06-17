@@ -61,6 +61,10 @@ void EtmV4ITrcPacket::initStartState()
     ts.bits_changed = 0;
     ts.timestamp = 0;    
 
+    // spec resolution
+    commit_elements = 0;
+    cancel_elements = 0;
+    
     // per packet init
     initNextPacket();
 }
@@ -70,11 +74,14 @@ void EtmV4ITrcPacket::initNextPacket()
     // clear valid bits for elements that are only valid over a single packet.
     pkt_valid.bits.cc_valid = 0;
     pkt_valid.bits.commit_elem_valid = 0;
+    pkt_valid.bits.cancel_elem_valid = 0;
+
     atom.num = 0;
     context.updated = 0;
     context.updated_v = 0;
     context.updated_c = 0;
     err_type = ETM4_PKT_I_NO_ERR_TYPE;
+
 }
 
 // printing
@@ -185,6 +192,8 @@ void EtmV4ITrcPacket::toString(std::string &str) const
         {
             std::ostringstream oss;
             oss << "; Count=" << std::hex << "0x" << cycle_count;
+            if (pkt_valid.bits.commit_elem_valid)
+                oss << "; Commit(" << std::dec << commit_elements << ")";
             str += oss.str();
         }
         break;

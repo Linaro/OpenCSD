@@ -144,6 +144,7 @@ private:
     bool m_has_count;
     bool m_count_done;
     bool m_commit_done;
+    bool m_ccf2_maxspec_commit;
 
     // cond result
     bool m_F1P1_done;  // F1 payload 1 done

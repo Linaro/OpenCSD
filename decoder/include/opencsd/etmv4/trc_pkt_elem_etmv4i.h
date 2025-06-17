@@ -198,8 +198,8 @@ public:
     const uint32_t getCC() const { return pkt_valid.bits.cc_valid ? cycle_count : 0; };
 
     // speculation
-    const int getCommitElem() const { return commit_elements; };
-    const int getCancelElem() const { return cancel_elements; };
+    const int getCommitElem() const { return pkt_valid.bits.commit_elem_valid ? commit_elements : 0; };
+    const int getCancelElem() const { return pkt_valid.bits.cancel_elem_valid ? cancel_elements : 0; };
 
     // ITE
     const uint8_t getITE_EL() const { return ite_pkt.el; };
@@ -323,6 +323,7 @@ inline const uint32_t EtmV4ITrcPacket::getCurrSpecDepth() const
 inline void EtmV4ITrcPacket::setCancelElements(const uint32_t cancel_elem)
 {
     cancel_elements = cancel_elem;
+    pkt_valid.bits.cancel_elem_valid = 1;
 }
 
 inline void EtmV4ITrcPacket::setAtomPacket(const ocsd_pkt_atm_type type, const uint32_t En_bits, const uint8_t num)
