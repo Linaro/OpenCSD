@@ -1406,24 +1406,25 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     // By default the response is to continue processing
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
 
+    if (elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
+        m_last_valid_trace_idx = index_sop;
+    if (elem.elem_type == OCSD_GEN_TRC_ELEM_PE_CONTEXT)
+    {
+        m_last_pe_context_idx = index_sop;
+    }
+    if (m_first_valid_idx_found == false && elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
+    {
+        m_first_valid_trace_idx = index_sop;
+        m_first_valid_idx_found = true;
+    }
+    if (index_sop < m_trace_start_idx)
+    {
+        return OCSD_RESP_CONT;
+    }
+
     // Using the default formatting needed for RiscFree IDE
     if(m_loggerFormatOption == 0)
     {
-        if (elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
-            m_last_valid_trace_idx = index_sop;
-        if (elem.elem_type == OCSD_GEN_TRC_ELEM_PE_CONTEXT)
-        {
-            m_last_pe_context_idx = index_sop;
-        }
-        if (m_first_valid_idx_found == false && elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
-        {
-            m_first_valid_trace_idx = index_sop;
-            m_first_valid_idx_found = true;
-        }
-        if (index_sop < m_trace_start_idx)
-        {
-            return OCSD_RESP_CONT;
-        }
         if (index_sop > m_trace_stop_idx)
         {
             if (m_update_timestamp == true)
@@ -1438,7 +1439,6 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
             m_update_timestamp = false;
             fprintf(m_fp_decode_out, "%s%llu\n", "TS:", m_last_timestamp);
         }
-
         switch (elem.elem_type)
         {
         case OCSD_GEN_TRC_ELEM_PE_CONTEXT:
@@ -1816,6 +1816,11 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     // Using the formatter used in trc_pkt_lister example
     else
     {
+        // Check if current index exceeded stop index
+        if (index_sop > m_trace_stop_idx)
+        {
+            return OCSD_RESP_REACHED_STOP_IDX;
+        }
         // Temporary string to do conversions
         std::string szTemp;
         // creates an output string stream in which we append text
