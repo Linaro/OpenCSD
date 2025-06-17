@@ -82,6 +82,9 @@ void EtmV4ITrcPacket::initNextPacket()
     context.updated_c = 0;
     err_type = ETM4_PKT_I_NO_ERR_TYPE;
 
+    // handling for TINFO fields
+    trace_info.bits.initial_t_info = 0;
+    trace_info.bits.spec_field_present = 0;
 }
 
 // printing
@@ -175,13 +178,17 @@ void EtmV4ITrcPacket::toString(std::string &str) const
     case ETM4_PKT_I_TRACE_INFO:
         {
             std::ostringstream oss;
-            oss << "; INFO=" << std::hex << "0x" << trace_info.val;
+            oss << "; INFO=" << std::hex << "0x" << (trace_info.val & 0xFF); // mask the 16 info val bits
             oss << " { CC." << std::dec << trace_info.bits.cc_enabled;
             if (isETE())
                 oss << ", TSTATE." << std::dec << trace_info.bits.in_trans_state;
             oss << " }";
             if (trace_info.bits.cc_enabled)
                 oss << "; CC_THRESHOLD=" << std::hex << "0x" << cc_threshold;
+            if (trace_info.bits.initial_t_info && pkt_valid.bits.spec_depth_valid && trace_info.bits.spec_field_present)
+                oss << "; INIT SPEC DEPTH=" << std::dec << curr_spec_depth;
+            if (trace_info.bits.initial_t_info)
+                oss << "; Decoder Sync point TINFO";
             str += oss.str();
         }
         break;

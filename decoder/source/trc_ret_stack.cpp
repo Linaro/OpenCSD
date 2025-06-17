@@ -56,7 +56,8 @@ TrcAddrReturnStack::TrcAddrReturnStack() :
     m_active(false),
     m_pop_pending(false),
     head_idx(0),
-    num_entries(0)
+    num_entries(0),
+    m_t_info_wait_addr(false)
 {
 #ifdef TRC_RET_STACK_DEBUG
     m_p_debug_logger = 0;
@@ -65,7 +66,7 @@ TrcAddrReturnStack::TrcAddrReturnStack() :
 
 void TrcAddrReturnStack::push(const ocsd_vaddr_t addr, const ocsd_isa isa)
 {
-    if (is_active())
+    if (is_active() && !is_t_info_wait_addr())
     {
         head_idx++;
         head_idx &= 0xF;

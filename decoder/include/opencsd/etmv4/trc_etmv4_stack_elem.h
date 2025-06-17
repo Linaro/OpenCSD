@@ -68,6 +68,7 @@ typedef enum _p0_elem_t
     P0_TRANS_FAIL,
     P0_ITE,
     P0_UNSEEN_UNCOMMITTED, /* uncommitted elements before the TraceInfo Sync point */
+    P0_TINFO,   /* need to note trace info to prevent RS push before next address */
 } p0_elem_t;
 
 

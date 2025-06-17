@@ -244,6 +244,7 @@ private:
     bool m_need_ctxt;   //!< need context to continue
     bool m_need_addr;   //!< need an address to continue
     bool m_elem_pending_addr;    //!< next address packet is needed for prev element.
+    
 
     ocsd_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
 

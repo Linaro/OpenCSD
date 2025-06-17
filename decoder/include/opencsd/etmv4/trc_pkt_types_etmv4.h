@@ -168,11 +168,17 @@ typedef enum _ocsd_etmv4_i_pkt_type
 typedef union _etmv4_trace_info_t {
     uint32_t val;   //!< trace info full value.
     struct {
+        /* Actual value of INFO section in trace info [0:15], [0:6] currently in use by protocol */
         uint32_t cc_enabled:1;      //!< 1 if cycle count enabled
         uint32_t cond_enabled:3;    //!< conditional trace enabled type.
         uint32_t p0_load:1;         //!< 1 if tracing with P0 load elements (for data trace)
         uint32_t p0_store:1;        //!< 1 if tracing with P0 store elements (for data trace)
         uint32_t in_trans_state:1;  //!< 1 if starting trace when in a transactional state (ETE trace).
+        uint32_t pad:9;             //!< pad to 16 bits
+
+        /* internal decoder info for processing TINFO packets */
+        uint32_t initial_t_info:1;      //!< 1 if this tinfo is the initial one used to start decode
+        uint32_t spec_field_present:1;  //!< 1 if this tinfo had a spec depth field
     } bits;         //!< bitfields for trace info value.
 } etmv4_trace_info_t;
 

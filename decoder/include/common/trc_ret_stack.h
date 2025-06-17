@@ -89,11 +89,27 @@ public:
     bool pop_pending() const
     {
         return m_pop_pending;
-    }; 
+    };
+
+    void set_tinfo_wait_addr()
+    {
+        m_t_info_wait_addr = true;
+    }
+
+    void clear_t_info_wait_addr()
+    {
+        m_t_info_wait_addr = false;
+    }
+
+    const bool is_t_info_wait_addr() const
+    {
+        return  m_t_info_wait_addr;
+    }
 
 private:
     bool m_active;
     bool m_pop_pending; // flag for decoder to indicate a pop might be needed depending on the next packet (ETMv4)
+    bool m_t_info_wait_addr; // push not permitted if waiting for tinfo address 
 
     int head_idx;
     int num_entries;

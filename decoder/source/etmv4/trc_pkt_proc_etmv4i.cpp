@@ -478,6 +478,7 @@ void TrcPktProcEtmV4I::iPktTraceInfo(const uint8_t lastByte)
         {
             idx += extractContField(m_currPacketData,idx,fieldVal);
             m_curr_packet.setTraceInfoSpec(fieldVal);
+            m_curr_packet.trace_info.bits.spec_field_present = 1;
         }
         if((presSect & TINFO_CYCT_SECT) && (idx < m_currPacketData.size()))
         {
@@ -490,7 +491,14 @@ void TrcPktProcEtmV4I::iPktTraceInfo(const uint8_t lastByte)
             /* Trace commit window unsupported in current ETE versions */
         }
         m_process_state = SEND_PKT;
-        m_first_trace_info = true;
+
+        // check if this is the first trace info we have found..
+        if (!m_first_trace_info) {
+            m_curr_packet.trace_info.bits.initial_t_info = 1;
+
+            // indicate we have found the first TINFO To start decode.
+            m_first_trace_info = true; 
+        }
     }
 
 }

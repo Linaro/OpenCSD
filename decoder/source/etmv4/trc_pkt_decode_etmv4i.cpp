@@ -331,8 +331,12 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
         break;
 
     case ETM4_PKT_I_TRACE_INFO:
-        // skip subsequent TInfo packets.
-        m_return_stack.flush();
+        {
+            // put a TINFO element on the stack - ensure we control RS push / pop during 
+            // wait for TINFO addr 
+            if (m_P0_stack.createParamElemNoParam(P0_TINFO, false, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
+                bAllocErr = true;
+        }
         break;
 
     case ETM4_PKT_I_TRACE_ON:
@@ -667,6 +671,10 @@ bool TrcPktDecodeEtmV4I::doTraceInfoPacket()
     if (m_P0_stack.createUnseenUncommitedP0Elem(m_curr_spec_depth, m_curr_packet_in->getType(), m_index_curr_pkt) != m_curr_spec_depth)
         return false;
     
+    // mark mark the TINFO position.
+    if (m_P0_stack.createParamElemNoParam(P0_TINFO, false, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
+        return false;    
+
     /* put a trans marker in stack if started in trans state */
     if (m_trace_info.bits.in_trans_state)
         m_P0_stack.createParamElemNoParam(P0_TRANS_TRACE_INIT, false, m_curr_packet_in->getType(), m_index_curr_pkt);
@@ -778,10 +786,12 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 {
                 TrcStackElemAddr *pAddrElem = dynamic_cast<TrcStackElemAddr *>(pElem);
                 m_return_stack.clear_pop_pending(); // address removes the need to pop the indirect address target from the stack
+                if (m_return_stack.is_t_info_wait_addr())
+                    m_return_stack.clear_t_info_wait_addr(); // also may clear wait for address after TINFO
                 if (pAddrElem)
                 {
                     SetInstrInfoInAddrISA(pAddrElem->getAddr().val, pAddrElem->getAddr().isa);
-                    m_need_addr = false;
+                    m_need_addr = false;                    
                 }
                 }
                 break;
@@ -911,6 +921,12 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
             case P0_UNSEEN_UNCOMMITTED:
                 m_elem_res.P0_commit--;
                 break;
+
+            case P0_TINFO:
+                // don't push RS until we see address element
+                m_return_stack.set_tinfo_wait_addr();
+                m_return_stack.flush();
+                break;
             }
 
             if(bPopElem)
@@ -1002,6 +1018,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElemOnEOT()
 
             // others - skip non P0
         case P0_TRANS_TRACE_INIT:
+        case P0_TINFO:
             break;
 
             // output
