@@ -120,6 +120,185 @@ static const char *s_marker_t[] = {
   "Timestamp marker",  //  ELEM_MARKER_TS  
 };
 
+/****************************************************************************
+     Function: toNocString
+     Engineer: Ashwin Vinoo
+        Input: str : String in which element information is printed
+       return: void
+  Description: Custom element printer for NOC sent through STM packetization
+  Date         Initials    Description
+19-Jun-2025    AV          Initial
+****************************************************************************/
+void OcsdTraceElement::toNocString(std::string& str) const
+{
+    // check if the element type is STM trace. As NOC is going to be encoded as STM format, ignore all other protocols
+    if (elem_type == OCSD_GEN_TRC_ELEM_SWTRACE)
+    {
+        // Create a string stream to build the formatted output string
+        std::ostringstream oss;
+        // Flag to check if first packet component was listed
+        bool firstComp = false;
+        // Determine how many element description strings exist in the lookup table
+        int num_str = sizeof(s_elem_descs) / sizeof(s_elem_descs[0]);
+        // Get the enum index of this element's type (used to access description text)
+        int typeIdx = (int)this->elem_type;
+
+        // Ensure the type index is within the bounds of the s_elem_descs table
+        if (typeIdx < num_str)
+        {
+            // Check for no global STM error
+            if (!sw_trace_info.swt_global_err)
+            {
+                // prints to output string stream
+                oss << "{STM: Global Error}";
+                // converts the string stream to a string
+                str = oss.str();
+                // Exits the function
+                return;
+            }
+
+            // Check if there is a data payload
+            if (sw_trace_info.swt_payload_pkt_bitsize > 0)
+            {
+                // Switch for payload bitsize
+                switch (sw_trace_info.swt_payload_pkt_bitsize)
+                {
+                case 4:
+                case 8:
+                case 16:
+                case 32:
+                case 64:
+                    // Print data payload sizes like D64 for 64 bit payload
+                    oss << "Data" << sw_trace_info.swt_payload_pkt_bitsize;
+                    break;
+                default:
+                    // In case of unsupported payload sizes
+                    oss << "Data(unsupported bit width)";
+                    break;
+                }
+                // Mark that the first component header was printed
+                firstComp = true;
+            }
+            // Check if there is a marker
+            if (sw_trace_info.swt_marker_packet)
+            {
+                // Check if the first component was already printed
+                if (firstComp)
+                {
+                    // Adds a plus between components
+                    oss << "+";
+                }
+                else 
+                {
+                    // Mark that the first component header was printed
+                    firstComp = true;
+                }
+                oss << "Marker";
+            }
+            if (sw_trace_info.swt_trigger_event)
+            {
+                // Check if the first component was already printed
+                if (firstComp)
+                {
+                    // Adds a plus between components
+                    oss << "+";
+                }
+                else
+                {
+                    // Mark that the first component header was printed
+                    firstComp = true;
+                }
+                oss << "Trigger";
+            }
+            if (sw_trace_info.swt_has_timestamp)
+            {
+                // Check if the first component was already printed
+                if (firstComp)
+                {
+                    // Adds a plus between components
+                    oss << "+";
+                }
+                else
+                {
+                    // Mark that the first component header was printed
+                    firstComp = true;
+                }
+                oss << "Timestamp";
+            }
+            if (sw_trace_info.swt_frequency)
+            {
+                // Check if the first component was already printed
+                if (firstComp)
+                {
+                    // Adds a plus between components
+                    oss << "+";
+                }
+                else
+                {
+                    // Mark that the first component header was printed
+                    firstComp = true;
+                }
+                oss << "Frequency";
+            }
+            // Append a semicolon and space to separate this value from others
+            oss << "; ";
+
+            // Only process if there's a valid data payload bit size > 0
+            if (sw_trace_info.swt_payload_pkt_bitsize > 0)
+            {
+                // Set output stream to hexadecimal format and pad with '0'
+                oss << "Data=0x" << std::setfill('0') << std::hex;
+                // Handle standard payload sizes: 4, 8, 16, 32, 64 bits
+                switch (sw_trace_info.swt_payload_pkt_bitsize)
+                {
+                case 4:
+                    // 4 bit value - cast to uint16_t so it's printed as a number and not char
+                    oss << std::setw(1) << (uint16_t)(((uint8_t*)ptr_extended_data)[0] & 0xF);
+                    break;
+                case 8:
+                    // 8-bit value — cast to uint16_t so ostringstream doesn't print it as a char
+                    oss << std::setw(2) << (uint16_t)((uint8_t*)ptr_extended_data)[0];
+                    break;
+                case 16:
+                    // 16-bit value — printed as 4 hex digits
+                    oss << std::setw(4) << ((uint16_t*)ptr_extended_data)[0];
+                    break;
+                case 32:
+                    // 32-bit value — printed as 8 hex digits
+                    oss << std::setw(8) << ((uint32_t*)ptr_extended_data)[0];
+                    break;
+                case 64:
+                    // 64-bit value — printed as 16 hex digits
+                    oss << std::setw(16) << ((uint64_t*)ptr_extended_data)[0];
+                    break;
+                default:
+                    // Unsupported or unexpected payload bit size — print an error placeholder
+                    oss << "Data=(Unsupported bit width)";
+                    break;
+                }
+                // Append a semicolon and space to separate this value from others
+                oss << "; ";
+            }
+
+            // Check if we have timestamp
+            if (sw_trace_info.swt_has_timestamp)
+            {
+                // 6 bytes reserved for timestamp print
+                oss << "Timestamp=0x" << std::setfill('0') << std::setw(12) << std::hex << timestamp;
+                // Append a semicolon and space to separate this value from others
+                oss << "; ";
+            }
+            // Prints the master error
+            if (sw_trace_info.swt_master_err)
+            {
+                oss << "{STM: Master Error}";
+            }
+            // converts the string stream to a string
+            str = oss.str();
+        }
+    }
+}
+
 void OcsdTraceElement::toString(std::string &str) const
 {
     std::ostringstream oss;
