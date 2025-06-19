@@ -146,8 +146,8 @@ void OcsdTraceElement::toNocString(std::string& str) const
         // Ensure the type index is within the bounds of the s_elem_descs table
         if (typeIdx < num_str)
         {
-            // Check for no global STM error
-            if (!sw_trace_info.swt_global_err)
+            // Check for a global STM error
+            if (sw_trace_info.swt_global_err)
             {
                 // prints to output string stream
                 oss << "{STM: Global Error}";
