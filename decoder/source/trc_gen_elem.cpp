@@ -169,11 +169,58 @@ void OcsdTraceElement::toNocString(std::string& str) const
                 case 32:
                 case 64:
                     // Print data payload sizes like D64 for 64 bit payload
-                    oss << "Data" << sw_trace_info.swt_payload_pkt_bitsize;
+                    oss << "D" << sw_trace_info.swt_payload_pkt_bitsize;
                     break;
                 default:
                     // In case of unsupported payload sizes
-                    oss << "Data(unsupported bit width)";
+                    oss << "D(unsupported bit width)";
+                    break;
+                }
+            }
+            // Check if there is a marker
+            if (sw_trace_info.swt_marker_packet)
+            {
+                // M for marker
+                oss << "M";
+            }
+            // Check if there is a timestamp
+            if (sw_trace_info.swt_has_timestamp)
+            {
+                // M for marker
+                oss << "TS";
+            }
+            // Check if there is frequncy information
+            if (sw_trace_info.swt_frequency)
+            {
+                // M for marker
+                oss << "FR";
+            }
+            // Check if there is a trigger
+            if (sw_trace_info.swt_trigger_event)
+            {
+                // M for marker
+                oss << "TR";
+            }
+            // Prints a colon between after packet content symbols
+            oss << ":";
+
+            // Check if there is a data payload
+            if (sw_trace_info.swt_payload_pkt_bitsize > 0)
+            {
+                // Switch for payload bitsize
+                switch (sw_trace_info.swt_payload_pkt_bitsize)
+                {
+                case 4:
+                case 8:
+                case 16:
+                case 32:
+                case 64:
+                    // Print data payload sizes like D64 for 64 bit payload
+                    oss << sw_trace_info.swt_payload_pkt_bitsize << " bit data";
+                    break;
+                default:
+                    // In case of unsupported payload sizes
+                    oss << "(unsupported bit width) data";
                     break;
                 }
                 // Mark that the first component header was printed
@@ -186,29 +233,14 @@ void OcsdTraceElement::toNocString(std::string& str) const
                 if (firstComp)
                 {
                     // Adds a plus between components
-                    oss << "+";
+                    oss << " + ";
                 }
                 else 
                 {
                     // Mark that the first component header was printed
                     firstComp = true;
                 }
-                oss << "Marker";
-            }
-            if (sw_trace_info.swt_trigger_event)
-            {
-                // Check if the first component was already printed
-                if (firstComp)
-                {
-                    // Adds a plus between components
-                    oss << "+";
-                }
-                else
-                {
-                    // Mark that the first component header was printed
-                    firstComp = true;
-                }
-                oss << "Trigger";
+                oss << "marker";
             }
             if (sw_trace_info.swt_has_timestamp)
             {
@@ -216,14 +248,14 @@ void OcsdTraceElement::toNocString(std::string& str) const
                 if (firstComp)
                 {
                     // Adds a plus between components
-                    oss << "+";
+                    oss << " + ";
                 }
                 else
                 {
                     // Mark that the first component header was printed
                     firstComp = true;
                 }
-                oss << "Timestamp";
+                oss << "timestamp";
             }
             if (sw_trace_info.swt_frequency)
             {
@@ -231,14 +263,29 @@ void OcsdTraceElement::toNocString(std::string& str) const
                 if (firstComp)
                 {
                     // Adds a plus between components
-                    oss << "+";
+                    oss << " + ";
                 }
                 else
                 {
                     // Mark that the first component header was printed
                     firstComp = true;
                 }
-                oss << "Frequency";
+                oss << "frequency";
+            }
+            if (sw_trace_info.swt_trigger_event)
+            {
+                // Check if the first component was already printed
+                if (firstComp)
+                {
+                    // Adds a plus between components
+                    oss << " + ";
+                }
+                else
+                {
+                    // Mark that the first component header was printed
+                    firstComp = true;
+                }
+                oss << "trigger";
             }
             // Append a semicolon and space to separate this value from others
             oss << "; ";
@@ -284,7 +331,7 @@ void OcsdTraceElement::toNocString(std::string& str) const
             if (sw_trace_info.swt_has_timestamp)
             {
                 // 6 bytes reserved for timestamp print
-                oss << "Timestamp=0x" << std::setfill('0') << std::setw(12) << std::hex << timestamp;
+                oss << "Timestamp=0x" << std::setfill('0') << std::setw(16) << std::hex << timestamp;
                 // Append a semicolon and space to separate this value from others
                 oss << "; ";
             }
