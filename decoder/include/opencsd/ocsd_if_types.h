@@ -388,6 +388,7 @@ typedef struct _ocsd_instr_info {
     uint32_t opcode;                /**< Input: Opcode at address. 16 bit opcodes will use MS 16bits of parameter. */
     uint8_t dsb_dmb_waypoints;      /**< Input: DMB and DSB are waypoints */
     uint8_t wfi_wfe_branch;         /**< Input: WFI, WFE classed as direct branches */
+    uint8_t track_it_block;         /**< Input: When IT block detected, set conditional output according to IT count */
 
     /* instruction decode info */
     ocsd_instr_type type;          /**< Decoder: Current instruction type. */
@@ -533,13 +534,15 @@ typedef struct _ocsd_file_mem_region {
 #define OCSD_OPFLG_N_UNCOND_DIR_BR_CHK      0x00000400  /**< Throw error on N atom unconditional direct branches if target address is not next instruction */
 #define OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK   0x00000800  /**< Throw error on all N atom unconditional branches */
 #define OCSD_OPFLG_CHK_RANGE_CONTINUE       0x00001000  /**< Check consecutive range consistency - detect possible bad program image inputs from client */
+#define OCSD_OPFLG_N_UNCOND_CHK_NO_THUMB    0x00002000  /**< Skip N atom cond check thumb - exception ret to IT blocks can fail */
 
 /** mask to combine all common packet processor operational control flags */
 #define OCSD_OPFLG_PKTDEC_COMMON (OCSD_OPFLG_PKTDEC_ERROR_BAD_PKTS | \
                                  OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS   | \
                                  OCSD_OPFLG_N_UNCOND_DIR_BR_CHK    | \
                                  OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK | \
-                                 OCSD_OPFLG_CHK_RANGE_CONTINUE )
+                                 OCSD_OPFLG_CHK_RANGE_CONTINUE     | \
+                                 OCSD_OPFLG_N_UNCOND_CHK_NO_THUMB)
 
 /** @}*/
 

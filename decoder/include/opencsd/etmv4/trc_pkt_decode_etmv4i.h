@@ -277,10 +277,22 @@ private:
         return true;
     };
 
+    bool skipThumbNCondCheck() {
+        if ((m_instr_info.isa == ocsd_isa_thumb2) && m_br_check_no_thumb)
+            return true; // skip on Thumb2 + no thumb check
+        return false;
+    }
+
+    // clear thumb IT block conditions - faster just to do it irrespective of if we are in Thumb mode.
+    void clearThumbITBlockConditions() {
+        m_instr_info.thumb_it_conditions = 0;
+    }
+
     // consistency check flags
     bool m_direct_br_chk;
     bool m_strict_br_chk;
     bool m_range_cont_chk;
+    bool m_br_check_no_thumb;
 
 //** output element handling
     OcsdGenElemStack m_out_elem;  //!< output element stack.

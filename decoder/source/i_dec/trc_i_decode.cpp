@@ -96,6 +96,7 @@ ocsd_err_t TrcIDecode::DecodeA32(ocsd_instr_info *instr_info, struct decode_info
     instr_info->type =  OCSD_INSTR_OTHER;  // default type
     instr_info->next_isa = instr_info->isa; // assume same ISA 
     instr_info->is_link = 0;
+    instr_info->thumb_it_conditions = 0;    // not thumb
 
     if(inst_ARM_is_indirect_branch(instr_info->opcode, info))
     {
@@ -150,6 +151,7 @@ ocsd_err_t TrcIDecode::DecodeA64(ocsd_instr_info *instr_info, struct decode_info
     instr_info->type =  OCSD_INSTR_OTHER;  // default type
     instr_info->next_isa = instr_info->isa; // assume same ISA 
     instr_info->is_link = 0;
+    instr_info->thumb_it_conditions = 0;
     
     // check for invalid opcode - top 16 bits cannot be 0x0000.
     if (aa64_err_bad_opcode && !(instr_info->opcode & 0xFFFF0000))
@@ -249,8 +251,23 @@ ocsd_err_t TrcIDecode::DecodeT32(ocsd_instr_info *instr_info, struct decode_info
             instr_info->type = OCSD_INSTR_WFI_WFE;
         }
     }
+
     instr_info->is_conditional = inst_Thumb_is_conditional(instr_info->opcode);
-    instr_info->thumb_it_conditions = inst_Thumb_is_IT(instr_info->opcode);
+
+    if (instr_info->track_it_block)
+    {
+        if (instr_info->thumb_it_conditions == 0)
+        {
+            // if the type is not something else we are interested in, check for IT instruction
+            if (instr_info->type == OCSD_INSTR_OTHER)
+                instr_info->thumb_it_conditions = inst_Thumb_is_IT(instr_info->opcode);
+        }
+        else
+        {
+            instr_info->is_conditional = 1;
+            instr_info->thumb_it_conditions--;
+        }
+    }
 
     return OCSD_OK;
 }

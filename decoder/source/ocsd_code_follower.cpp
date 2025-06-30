@@ -44,6 +44,8 @@ OcsdCodeFollower::OcsdCodeFollower()
     m_instr_info.wfi_wfe_branch = 0;
     m_instr_info.instr_addr = 0;
     m_instr_info.opcode = 0;
+    m_instr_info.thumb_it_conditions = 0;
+    m_instr_info.track_it_block = 0;    // not using it conditions to set conditional.
     m_pMemAccess = 0;
     m_pIDecode = 0;
     m_mem_space_csid = 0;

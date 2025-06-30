@@ -62,7 +62,7 @@ private:
     ocsd_err_t DecodeA64(ocsd_instr_info *instr_info, struct decode_info *info);
     ocsd_err_t DecodeT32(ocsd_instr_info *instr_info, struct decode_info *info);
 
-    bool aa64_err_bad_opcode;   //< error if aa64 opcode is in invalid range (top 2 bytes = 0x0000).
+    bool aa64_err_bad_opcode;   //!< error if aa64 opcode is in invalid range (top 2 bytes = 0x0000).
 
     static ITraceErrorLog* p_i_errlog;
 };

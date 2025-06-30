@@ -208,6 +208,9 @@ ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
     m_instr_info.wfi_wfe_branch = m_config->wfiwfeBranch() ? 1 : 0;
     m_instr_info.pe_type.arch = m_config->archVersion();
     m_instr_info.pe_type.profile = m_config->coreProfile();
+    m_instr_info.track_it_block = 1;    // use IT condition number to set is cond flags.
+
+    clearThumbITBlockConditions();
 
     m_IASize64 = (m_config->iaSizeMax() == 64);
 
@@ -242,7 +245,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
     m_direct_br_chk = (bool)(getComponentOpMode() & OCSD_OPFLG_N_UNCOND_DIR_BR_CHK);
     m_strict_br_chk = (bool)(getComponentOpMode() & OCSD_OPFLG_STRICT_N_UNCOND_BR_CHK);
     m_range_cont_chk = (bool)(getComponentOpMode() & OCSD_OPFLG_CHK_RANGE_CONTINUE);
-    
+    m_br_check_no_thumb = (bool)(getComponentOpMode() & OCSD_OPFLG_N_UNCOND_CHK_NO_THUMB);
+
     return err;
 }
 
@@ -1398,12 +1402,13 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
                 m_instr_info.instr_addr = m_instr_info.branch_addr;
                 if (m_instr_info.is_link)
                     m_return_stack.push(nextAddr, m_instr_info.isa);
+                clearThumbITBlockConditions(); // took branch, clear IT block
 
             }
-            else if (m_direct_br_chk || m_strict_br_chk)  // consistency checks on N atoms?
+            else if (m_direct_br_chk || m_strict_br_chk) // consistency checks on N atoms?
             {
                 // N atom - but direct branch instruction not conditional - bad input image?
-                if (!m_instr_info.is_conditional)
+                if (!m_instr_info.is_conditional && !skipThumbNCondCheck())
                 {
                     // Some ETM IP incorrectly trace a taken branch to next instruction as N
                     // look for branch where it is not next instruction if direct branch checks only
@@ -1423,6 +1428,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
                 if (m_instr_info.is_link)
                     m_return_stack.push(nextAddr,m_instr_info.isa);
 
+                clearThumbITBlockConditions(); // took branch, clear IT block
+
                 // mark last atom as BR indirect - if no address next need addr from return stack.
                 m_return_stack.set_pop_pending();  
 
@@ -1434,7 +1441,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
             else if (m_strict_br_chk) // consistency checks on N atoms?
             {
                 // N atom - check if conditional - only in strict check mode.
-                if (!m_instr_info.is_conditional)
+                if (!m_instr_info.is_conditional && !skipThumbNCondCheck())
                 {
                     err = handleBadImageError(pElem->getRootIndex(), "Bad program image - N Atom on unconditional indirect BR.\n");
                     return err;
@@ -1664,6 +1671,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
     }
     outElem().excep_ret_addr_br_tgt = branch_target;
     outElem().exception_number = pExceptElem->getExcepNum();
+
+    clearThumbITBlockConditions(); // took exception, clear IT block
 
     m_P0_stack.delete_popped();     // clear the used elements from the stack
     return err;
