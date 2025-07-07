@@ -55,9 +55,9 @@
 TrcAddrReturnStack::TrcAddrReturnStack() :
     m_active(false),
     m_pop_pending(false),
+    m_t_info_wait_addr(false),
     head_idx(0),
-    num_entries(0),
-    m_t_info_wait_addr(false)
+    num_entries(0)
 {
 #ifdef TRC_RET_STACK_DEBUG
     m_p_debug_logger = 0;
