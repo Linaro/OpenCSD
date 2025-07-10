@@ -1354,7 +1354,7 @@ void TrcPktDecodeEtmV4I::setElemTraceRangeInstr(OcsdTraceElement &elemIn, const 
     elemIn.setLastInstrCond(instr.is_conditional);
     elemIn.setAddrRange(addr_range.st_addr, addr_range.en_addr, addr_range.num_instr);
     if (executed)
-        instr.isa = instr.next_isa;
+        m_last_IS = instr.isa = instr.next_isa;
 }
 
 ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
@@ -1960,7 +1960,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
         m_return_stack.set_pop_pending();  // need to know next packet before we know what is to happen
         break;
     }
-    m_instr_info.isa = m_instr_info.next_isa;
+    m_last_IS = m_instr_info.isa = m_instr_info.next_isa;
 
     // set the trace range element.
     m_out_elem.addElem(pElem->getRootIndex());
