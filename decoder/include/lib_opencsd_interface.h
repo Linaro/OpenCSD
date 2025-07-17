@@ -101,6 +101,7 @@ private:
     uint64_t m_curr_buff_idx = 0;
     uint64_t* mp_buffer = NULL;
     uint32_t m_loggerFormatOption = 0;
+    uint64_t m_loggerStartByteOffset = 0;
 public:
     // Constructor
     TraceLogger(const std::string log_file_path, bool generate_profiling_data = false, const uint32_t port_no = 6000, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);
@@ -141,6 +142,8 @@ public:
     TyTraceDecodeError FlushDataOverSocket();
     // Updates the logger format option
     virtual void SetLoggerFormatOption(uint32_t loggerFormatOption = 0);
+    // Updates the logger start byte offset
+    virtual void SetStartByteOffset(uint64_t startByteOffset = 0);
 };
 
 // Class that provides the trace decoding functionality

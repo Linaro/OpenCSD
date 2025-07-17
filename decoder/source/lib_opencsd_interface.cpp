@@ -1825,8 +1825,8 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         std::string szTemp;
         // creates an output string stream in which we append text
         std::ostringstream oss;
-        // Appends the index and ID information to the bin file
-        oss << "ID:" << (uint32_t)trc_chan_id << "; Idx:0x" << std::hex << index_sop << "; ";
+        // Appends the index and ID information to the bin file. We add start byte offset with the index to make it increase linearly across decoded output files
+        oss << "ID:" << (uint32_t)trc_chan_id << "; Idx:0x" << std::hex << (index_sop + this->m_loggerStartByteOffset) << "; ";
         // Store the trace frame information in a string
         elem.toNocString(szTemp);
         // Appends the trace frame information to the output file stream
@@ -1853,4 +1853,19 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
 void TraceLogger::SetLoggerFormatOption(uint32_t loggerFormatOption)
 {
     this->m_loggerFormatOption = loggerFormatOption;
+}
+
+/****************************************************************************
+     Function: SetStartByteOffset
+     Engineer: Ashwin Vinoo
+        Input: None
+       Output: None
+       return: void
+  Description: Sets the start byte offset for Idx prints. Default value is 0.
+  Date         Initials    Description
+17-Jul-2025    AV          Initial
+****************************************************************************/
+void TraceLogger::SetStartByteOffset(uint64_t startByteOffset)
+{
+    this->m_loggerStartByteOffset = startByteOffset;
 }
