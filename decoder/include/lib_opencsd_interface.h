@@ -43,6 +43,8 @@
 
 // Max no of row per decoded output file
 #define DEAFAULT_MAX_TRACE_FILE_ROW_CNT 10000
+#define CS_UI_DECOODED_FORMAT 0                                                     // Tells TraceElemIn() to print the decoded trace in the default format used by the RiscFree UI
+#define CS_NOC_DECOODED_FORMAT 1                                                    // Tells TraceElemIn() to print the decoded trace in the custom NoC format
 
 // Trace Decoder Error Types
 typedef enum
@@ -100,8 +102,8 @@ private:
     SocketIntf* m_client;
     uint64_t m_curr_buff_idx = 0;
     uint64_t* mp_buffer = NULL;
-    uint32_t m_loggerFormatOption = 0;
-    uint64_t m_loggerStartByteOffset = 0;
+    uint32_t m_loggerFormatOption = 0;                                      // By default, use the RiscFree UI's format when logging trace data in TraceElemIn() element printer
+    uint64_t m_loggerStartByteOffset = 0;                                   // By default, no correction is applied to index_sop field in TraceElemIn() element printer
 public:
     // Constructor
     TraceLogger(const std::string log_file_path, bool generate_profiling_data = false, const uint32_t port_no = 6000, const bool split_files = false, const uint32_t max_rows_in_file = DEAFAULT_MAX_TRACE_FILE_ROW_CNT);

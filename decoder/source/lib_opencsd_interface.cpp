@@ -1423,7 +1423,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     }
 
     // Using the default formatting needed for RiscFree IDE
-    if(m_loggerFormatOption == 0)
+    if(m_loggerFormatOption == CS_UI_DECOODED_FORMAT)
     {
         if (index_sop > m_trace_stop_idx)
         {
@@ -1814,7 +1814,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
         }
     }
     // Using the formatter used in trc_pkt_lister example
-    else
+    else if(m_loggerFormatOption == CS_NOC_DECOODED_FORMAT)
     {
         // Check if current index exceeded stop index
         if (index_sop > m_trace_stop_idx)
