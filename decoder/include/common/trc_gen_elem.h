@@ -88,6 +88,7 @@ public:
 // stringize the element
 
     virtual void toString(std::string &str) const;
+    virtual void toNocString(std::string& str) const;
 
 // get elements API
 

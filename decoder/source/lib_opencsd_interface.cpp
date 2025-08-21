@@ -1379,7 +1379,7 @@ ocsd_datapath_resp_t TraceLogger::GenerateProfilingData(const ocsd_trc_index_t i
 }
 
 /****************************************************************************
-     Function: ~TraceLogger
+     Function: TraceElemIn
      Engineer: Arjun Suresh
         Input: index_sop - byte index in the decoded trace
                trc_chan_id - TID of the current trace row
@@ -1387,22 +1387,26 @@ ocsd_datapath_resp_t TraceLogger::GenerateProfilingData(const ocsd_trc_index_t i
        Output: None
        return: ocsd_datapath_resp_t - Used to halt/continue the decoder processing
   Description: Overriden function to implement custom data formatting
-               This function is called by the opencsd library after decoding a chunk
-               of data
+               This function is called by the opencsd library after decoding
+               a chunk of data
   Date         Initials    Description
 30-Aug-2022    AS          Initial
+12-Jun-2025    AV          Adding formatting options based on trc_pkt_lister
 ****************************************************************************/
 ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
-    const uint8_t trc_chan_id,
-    const OcsdTraceElement &elem)
+                                              const uint8_t trc_chan_id,
+                                              const OcsdTraceElement &elem)
 {
+    // Check if profiling data is to be generated
     if (m_generate_profiling_data)
     {
         return GenerateProfilingData(index_sop, trc_chan_id, elem);
     }
 
+    // By default the response is to continue processing
     ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
-    if(elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
+
+    if (elem.elem_type != OCSD_GEN_TRC_ELEM_NO_SYNC)
         m_last_valid_trace_idx = index_sop;
     if (elem.elem_type == OCSD_GEN_TRC_ELEM_PE_CONTEXT)
     {
@@ -1417,225 +1421,228 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
     {
         return OCSD_RESP_CONT;
     }
-    if (index_sop > m_trace_stop_idx)
+
+    // Using the default formatting needed for RiscFree IDE
+    if(m_loggerFormatOption == CS_UI_DECOODED_FORMAT)
     {
-        if (m_update_timestamp == true)
+        if (index_sop > m_trace_stop_idx)
+        {
+            if (m_update_timestamp == true)
+            {
+                m_update_timestamp = false;
+                fprintf(m_fp_decode_out, "%s%llu\n", "TS:", m_last_timestamp);
+            }
+            return OCSD_RESP_REACHED_STOP_IDX;
+        }
+        if (elem.elem_type != OCSD_GEN_TRC_ELEM_TIMESTAMP && m_update_timestamp == true)
         {
             m_update_timestamp = false;
             fprintf(m_fp_decode_out, "%s%llu\n", "TS:", m_last_timestamp);
         }
-        return OCSD_RESP_REACHED_STOP_IDX;
-    }
-    if (elem.elem_type != OCSD_GEN_TRC_ELEM_TIMESTAMP && m_update_timestamp == true)
-    {
-        m_update_timestamp = false;
-        fprintf(m_fp_decode_out, "%s%llu\n", "TS:", m_last_timestamp);
-    }
-
-    switch (elem.elem_type)
-    {
-    case OCSD_GEN_TRC_ELEM_PE_CONTEXT:
-    {
-        if (elem.context.ctxt_id_valid)
+        switch (elem.elem_type)
         {
-            fprintf(m_fp_decode_out, "%s%u\n", "PECC:CID=", elem.context.context_id);
-            m_rows_in_file++;
-        }
-    }
-    break;
-    case OCSD_GEN_TRC_ELEM_ADDR_NACC:
-    {
-        fprintf(m_fp_decode_out, "%u,%u,%u,", 0, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
-        if (m_update_cycle_cnt)
+        case OCSD_GEN_TRC_ELEM_PE_CONTEXT:
         {
-            fprintf(m_fp_decode_out, "%u,", m_cycle_cnt);
-            m_update_cycle_cnt = false;
+            if (elem.context.ctxt_id_valid)
+            {
+                fprintf(m_fp_decode_out, "%s%u\n", "PECC:CID=", elem.context.context_id);
+                m_rows_in_file++;
+            }
         }
-        else
-        {
-            fprintf(m_fp_decode_out, "%u,", 0);
-        }
-        fprintf(m_fp_decode_out, "%llu,%llx,%u,%u,0,%llx:MNA\n", m_last_timestamp, elem.st_addr, elem.num_instr_range, elem.last_instr_sz, elem.st_addr);
-        m_rows_in_file++;
-        m_cycle_cnt = 0;
-    }
-    break;
-    case OCSD_GEN_TRC_ELEM_INSTR_RANGE:
-    {
-        // Check if we have stored the entire instruction sequence in elem.traced_ins.ptr_addresses array
-        // If so, step through the array, else step through each address from start address in steps of last
-        // instruction size
-        ocsd_vaddr_t start_idx = elem.traced_ins.ptr_addresses ? 0 : elem.st_addr;
-        ocsd_vaddr_t end_idx = elem.traced_ins.ptr_addresses ? elem.num_instr_range : elem.en_addr;
-        ocsd_vaddr_t step = elem.traced_ins.ptr_addresses ? 1 : elem.last_instr_sz;
-        for (ocsd_vaddr_t i = start_idx; i < end_idx; i+=step)
+        break;
+        case OCSD_GEN_TRC_ELEM_ADDR_NACC:
         {
             fprintf(m_fp_decode_out, "%u,%u,%u,", 0, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
             if (m_update_cycle_cnt)
             {
-                fprintf(m_fp_decode_out, "%u,", 0);
+                fprintf(m_fp_decode_out, "%u,", m_cycle_cnt);
                 m_update_cycle_cnt = false;
             }
-            else if (elem.has_cc && i == start_idx)
-            {
-                fprintf(m_fp_decode_out, "%u,", elem.cycle_count);
-            }
             else
             {
                 fprintf(m_fp_decode_out, "%u,", 0);
             }
-            fprintf(m_fp_decode_out, "%llu,%llx,%llx,%u,%u,", 0, elem.st_addr, elem.en_addr, elem.num_instr_range, elem.last_instr_sz);
-            if ((elem.context.exception_level > ocsd_EL_unknown) && (elem.context.el_valid) && m_out_ex_level)
+            fprintf(m_fp_decode_out, "%llu,%llx,%u,%u,0,%llx:MNA\n", m_last_timestamp, elem.st_addr, elem.num_instr_range, elem.last_instr_sz, elem.st_addr);
+            m_rows_in_file++;
+            m_cycle_cnt = 0;
+        }
+        break;
+        case OCSD_GEN_TRC_ELEM_INSTR_RANGE:
+        {
+            // Check if we have stored the entire instruction sequence in elem.traced_ins.ptr_addresses array
+            // If so, step through the array, else step through each address from start address in steps of last
+            // instruction size
+            ocsd_vaddr_t start_idx = elem.traced_ins.ptr_addresses ? 0 : elem.st_addr;
+            ocsd_vaddr_t end_idx = elem.traced_ins.ptr_addresses ? elem.num_instr_range : elem.en_addr;
+            ocsd_vaddr_t step = elem.traced_ins.ptr_addresses ? 1 : elem.last_instr_sz;
+            for (ocsd_vaddr_t i = start_idx; i < end_idx; i += step)
             {
-                fprintf(m_fp_decode_out, "%s%d", "EL", (int) (elem.context.exception_level));
-                switch (elem.context.security_level)
+                fprintf(m_fp_decode_out, "%u,%u,%u,", 0, ((trc_chan_id & 0x0F) >> 1), (elem.context.ctxt_id_valid ? elem.context.context_id : 0));
+                if (m_update_cycle_cnt)
                 {
-                case ocsd_sec_secure: fprintf(m_fp_decode_out, "S,"); break;
-                case ocsd_sec_nonsecure: fprintf(m_fp_decode_out, "N,"); break;
-                case ocsd_sec_root: fprintf(m_fp_decode_out, "Root,"); break;
-                case ocsd_sec_realm: fprintf(m_fp_decode_out, "Realm,"); break;
+                    fprintf(m_fp_decode_out, "%u,", 0);
+                    m_update_cycle_cnt = false;
                 }
+                else if (elem.has_cc && i == start_idx)
+                {
+                    fprintf(m_fp_decode_out, "%u,", elem.cycle_count);
+                }
+                else
+                {
+                    fprintf(m_fp_decode_out, "%u,", 0);
+                }
+                fprintf(m_fp_decode_out, "%llu,%llx,%llx,%u,%u,", 0, elem.st_addr, elem.en_addr, elem.num_instr_range, elem.last_instr_sz);
+                if ((elem.context.exception_level > ocsd_EL_unknown) && (elem.context.el_valid) && m_out_ex_level)
+                {
+                    fprintf(m_fp_decode_out, "%s%d", "EL", (int)(elem.context.exception_level));
+                    switch (elem.context.security_level)
+                    {
+                    case ocsd_sec_secure: fprintf(m_fp_decode_out, "S,"); break;
+                    case ocsd_sec_nonsecure: fprintf(m_fp_decode_out, "N,"); break;
+                    case ocsd_sec_root: fprintf(m_fp_decode_out, "Root,"); break;
+                    case ocsd_sec_realm: fprintf(m_fp_decode_out, "Realm,"); break;
+                    }
+                }
+                else
+                {
+                    fprintf(m_fp_decode_out, "%d,", 0);
+                }
+                fprintf(m_fp_decode_out, "%llx\n", elem.traced_ins.ptr_addresses ? elem.traced_ins.ptr_addresses[i] : i);
+                m_rows_in_file++;
+            }
+            m_cycle_cnt = 0;
+        }
+        break;
+        case OCSD_GEN_TRC_ELEM_EXCEPTION:
+        {
+            fprintf(m_fp_decode_out, "%s%u\n", "EX:", elem.exception_number);
+            m_rows_in_file++;
+        }
+        break;
+        case OCSD_GEN_TRC_ELEM_CYCLE_COUNT:
+        {
+            if (elem.has_cc)
+            {
+                fprintf(m_fp_decode_out, "CC = %u\n", elem.cycle_count);
+                m_cycle_cnt = elem.cycle_count;
+                m_update_cycle_cnt = true;
+            }
+        }
+        break;
+        case OCSD_GEN_TRC_ELEM_TIMESTAMP:
+        {
+            m_last_timestamp = elem.timestamp;
+            m_update_timestamp = true;
+            m_rows_in_file++;
+        }
+        break;
+        case OCSD_GEN_TRC_ELEM_EVENT:
+        {
+            if (elem.trace_event.ev_type == EVENT_TRIGGER)
+                fprintf(m_fp_decode_out, "%u,Trigger Event\n", ((trc_chan_id & 0x0F) >> 1));
+            else if (elem.trace_event.ev_type == EVENT_NUMBERED)
+                fprintf(m_fp_decode_out, "%u,Event No=%u\n", ((trc_chan_id & 0x0F) >> 1), elem.trace_event.ev_number);
+        }
+        break;
+        case OCSD_GEN_TRC_ELEM_INSTRUMENTATION:
+        {
+            fprintf(m_fp_decode_out, "%u,SWITE,%u,%llu\n", ((trc_chan_id & 0x0F) >> 1), elem.sw_ite.el, elem.sw_ite.value);
+        }
+        break;
+        case OCSD_GEN_TRC_ELEM_SWTRACE:
+        {
+            uint8_t trc_id = trc_chan_id;
+            uint16_t master_id = 0;
+            uint16_t channel_id = 0;
+            bool is_str_data = false;
+            bool flag_packet_printed = false;
+
+            if (elem.sw_trace_info.swt_global_err)
+            {
+                fprintf(m_fp_decode_out, "%u,SWT,%u,%u,GLOBALERR,0\n", trc_id, elem.sw_trace_info.swt_master_id, elem.sw_trace_info.swt_channel_id);
+            }
+            else if (elem.sw_trace_info.swt_master_err)
+            {
+                fprintf(m_fp_decode_out, "%u,SWT,%u,%u,MASTERERR,0\n", trc_id, elem.sw_trace_info.swt_master_id, elem.sw_trace_info.swt_channel_id);
             }
             else
             {
-                fprintf(m_fp_decode_out, "%d,", 0);
-            }
-            fprintf(m_fp_decode_out, "%llx\n", elem.traced_ins.ptr_addresses ? elem.traced_ins.ptr_addresses[i] : i);
-            m_rows_in_file++;
-        }
-        m_cycle_cnt = 0;
-    }
-    break;
-    case OCSD_GEN_TRC_ELEM_EXCEPTION:
-    {
-        fprintf(m_fp_decode_out, "%s%u\n", "EX:", elem.exception_number);
-        m_rows_in_file++;
-    }
-    break;
-    case OCSD_GEN_TRC_ELEM_CYCLE_COUNT:
-    {
-        if (elem.has_cc)
-        {
-            fprintf(m_fp_decode_out, "CC = %u\n", elem.cycle_count);
-            m_cycle_cnt = elem.cycle_count;
-            m_update_cycle_cnt = true;
-        }
-    }
-    break;
-    case OCSD_GEN_TRC_ELEM_TIMESTAMP:
-    {
-        m_last_timestamp = elem.timestamp;
-        m_update_timestamp = true;
-        m_rows_in_file++;
-    }
-    break;
-    case OCSD_GEN_TRC_ELEM_EVENT:
-    {
-        if (elem.trace_event.ev_type == EVENT_TRIGGER)
-            fprintf(m_fp_decode_out, "%u,Trigger Event\n", ((trc_chan_id & 0x0F) >> 1));
-        else if (elem.trace_event.ev_type == EVENT_NUMBERED)
-            fprintf(m_fp_decode_out, "%u,Event No=%u\n", ((trc_chan_id & 0x0F) >> 1), elem.trace_event.ev_number);
-    }
-    break;
-    case OCSD_GEN_TRC_ELEM_INSTRUMENTATION:
-    {
-        fprintf(m_fp_decode_out, "%u,SWITE,%u,%llu\n", ((trc_chan_id & 0x0F) >> 1), elem.sw_ite.el, elem.sw_ite.value);
-    }
-    break;
-    case OCSD_GEN_TRC_ELEM_SWTRACE:
-    {
-        uint8_t trc_id = trc_chan_id;
-        uint16_t master_id = 0;
-        uint16_t channel_id = 0;
-        bool is_str_data = false;
-        bool flag_packet_printed = false;
-
-        if (elem.sw_trace_info.swt_global_err)
-        {
-            fprintf(m_fp_decode_out, "%u,SWT,%u,%u,GLOBALERR,0\n", trc_id, elem.sw_trace_info.swt_master_id, elem.sw_trace_info.swt_channel_id);
-        }
-        else if (elem.sw_trace_info.swt_master_err)
-        {
-            fprintf(m_fp_decode_out, "%u,SWT,%u,%u,MASTERERR,0\n", trc_id, elem.sw_trace_info.swt_master_id, elem.sw_trace_info.swt_channel_id);
-        }
-        else
-        {
-            if (elem.sw_trace_info.swt_id_valid)
-            {
-                master_id = elem.sw_trace_info.swt_master_id;
-                channel_id = elem.sw_trace_info.swt_channel_id;
-            }
-
-            std::string pkt_type;
-            pkt_type += ((elem.sw_trace_info.swt_marker_packet) ? "[MKR]" : "");
-            pkt_type += ((elem.sw_trace_info.swt_has_timestamp) ? ("[TS=" + std::to_string(elem.timestamp) + "]") : "");
-            pkt_type += ((elem.sw_trace_info.swt_trigger_event) ? "[TRIG]" : "");
-            pkt_type += ((elem.sw_trace_info.swt_frequency) ? "[FREQ]" : "");
-            // For fixing RiscFree UI issue 2264, we fix packet type to "Data" even for "text" channel IDs.
-            // RiscFree UI will be be provided Hexadecimal values instead of their ASCII equivalents in the 
-            // trace decoded txt file in RiscFree workspace/trace folder.
-            pkt_type += "[DATA]";
-
-            std::stringstream payload;
-            payload.clear();
-
-            // this static variable helps check if we are to print transmitted data packets together in one line
-            static bool single_line_print_mode = false;
-            // In case we are printing data in a single line, we use this flag to indicate that first data value has not yet been written to that line
-            static bool first_packet_in_single_line_mode = false;
-            // In the rare case a frequency or trigger event comes in between stmsendstring() output, we want to resume singleline mode after it is handled
-            static bool restart_single_line_mode_upon_next_data_packet = false;
-            // We create a static variable that will be initialized with current channel id only first time
-            static uint16_t old_channel_id = channel_id;
-            // If we have previously been printing everything in a single line and now have encountered a marker packet, we must print in new line
-            if (single_line_print_mode && ((old_channel_id != channel_id)
-                                           || elem.sw_trace_info.swt_marker_packet 
-                                           || elem.sw_trace_info.swt_has_timestamp 
-                                           || elem.sw_trace_info.swt_trigger_event
-                                           || elem.sw_trace_info.swt_frequency))
-            {
-                // We should only skip to the next line if we have already printed a data packet in single line mode
-                if (first_packet_in_single_line_mode == false)
+                if (elem.sw_trace_info.swt_id_valid)
                 {
-                    // \n character helps move cursor to next line in the output file
-                    fprintf(m_fp_decode_out, "\n");
+                    master_id = elem.sw_trace_info.swt_master_id;
+                    channel_id = elem.sw_trace_info.swt_channel_id;
                 }
-                // We cancel single line print mode
-                single_line_print_mode = false;
-                // If we get a trigger or frequency packet, we must restart single line mode after handling that
-                if ((elem.sw_trace_info.swt_trigger_event || elem.sw_trace_info.swt_frequency) 
-                     && !elem.sw_trace_info.swt_marker_packet
-                     && !elem.sw_trace_info.swt_has_timestamp)
+
+                std::string pkt_type;
+                pkt_type += ((elem.sw_trace_info.swt_marker_packet) ? "[MKR]" : "");
+                pkt_type += ((elem.sw_trace_info.swt_has_timestamp) ? ("[TS=" + std::to_string(elem.timestamp) + "]") : "");
+                pkt_type += ((elem.sw_trace_info.swt_trigger_event) ? "[TRIG]" : "");
+                pkt_type += ((elem.sw_trace_info.swt_frequency) ? "[FREQ]" : "");
+                // For fixing RiscFree UI issue 2264, we fix packet type to "Data" even for "text" channel IDs.
+                // RiscFree UI will be be provided Hexadecimal values instead of their ASCII equivalents in the 
+                // trace decoded txt file in RiscFree workspace/trace folder.
+                pkt_type += "[DATA]";
+
+                std::stringstream payload;
+                payload.clear();
+
+                // this static variable helps check if we are to print transmitted data packets together in one line
+                static bool single_line_print_mode = false;
+                // In case we are printing data in a single line, we use this flag to indicate that first data value has not yet been written to that line
+                static bool first_packet_in_single_line_mode = false;
+                // In the rare case a frequency or trigger event comes in between stmsendstring() output, we want to resume singleline mode after it is handled
+                static bool restart_single_line_mode_upon_next_data_packet = false;
+                // We create a static variable that will be initialized with current channel id only first time
+                static uint16_t old_channel_id = channel_id;
+                // If we have previously been printing everything in a single line and now have encountered a marker packet, we must print in new line
+                if (single_line_print_mode && ((old_channel_id != channel_id)
+                    || elem.sw_trace_info.swt_marker_packet
+                    || elem.sw_trace_info.swt_has_timestamp
+                    || elem.sw_trace_info.swt_trigger_event
+                    || elem.sw_trace_info.swt_frequency))
                 {
-                    // We need to conitnue prinitng data packets in a single line after this trigger/frequency packet. This is provided no marker or timestamp packets come first
-                    restart_single_line_mode_upon_next_data_packet = true;
+                    // We should only skip to the next line if we have already printed a data packet in single line mode
+                    if (first_packet_in_single_line_mode == false)
+                    {
+                        // \n character helps move cursor to next line in the output file
+                        fprintf(m_fp_decode_out, "\n");
+                    }
+                    // We cancel single line print mode
+                    single_line_print_mode = false;
+                    // If we get a trigger or frequency packet, we must restart single line mode after handling that
+                    if ((elem.sw_trace_info.swt_trigger_event || elem.sw_trace_info.swt_frequency)
+                        && !elem.sw_trace_info.swt_marker_packet
+                        && !elem.sw_trace_info.swt_has_timestamp)
+                    {
+                        // We need to conitnue prinitng data packets in a single line after this trigger/frequency packet. This is provided no marker or timestamp packets come first
+                        restart_single_line_mode_upon_next_data_packet = true;
+                    }
                 }
-            }
-            // We check if we got a data packet alone
-            if (restart_single_line_mode_upon_next_data_packet 
-                     && !elem.sw_trace_info.swt_marker_packet
-                     && !elem.sw_trace_info.swt_frequency
-                     && !elem.sw_trace_info.swt_has_timestamp
-                     && !elem.sw_trace_info.swt_trigger_event)
-            {
-                // We restart single line print mode
-                single_line_print_mode = true;
-                // We inidcate that the data packet is first to be printed in current line in output file
-                first_packet_in_single_line_mode = true;
-                // We have to cancel restart single line mode now
-                restart_single_line_mode_upon_next_data_packet = false;
-            }
-            // In case, we are handling a frequency or trigger packet, which may have a different channel id, we don't update old channel id
-            if (!elem.sw_trace_info.swt_frequency && !elem.sw_trace_info.swt_trigger_event && !elem.sw_trace_info.swt_has_timestamp)
-            {
-                // We make old channel id as current channel id after the previous check which requires it
-                old_channel_id = channel_id;
-            }
-            // We check if we have payload data transmitted. In this case bitsize will be greater than zero.
-            if (elem.sw_trace_info.swt_payload_pkt_bitsize > 0)
-            {
-                switch (elem.sw_trace_info.swt_payload_pkt_bitsize)
+                // We check if we got a data packet alone
+                if (restart_single_line_mode_upon_next_data_packet
+                    && !elem.sw_trace_info.swt_marker_packet
+                    && !elem.sw_trace_info.swt_frequency
+                    && !elem.sw_trace_info.swt_has_timestamp
+                    && !elem.sw_trace_info.swt_trigger_event)
                 {
+                    // We restart single line print mode
+                    single_line_print_mode = true;
+                    // We inidcate that the data packet is first to be printed in current line in output file
+                    first_packet_in_single_line_mode = true;
+                    // We have to cancel restart single line mode now
+                    restart_single_line_mode_upon_next_data_packet = false;
+                }
+                // In case, we are handling a frequency or trigger packet, which may have a different channel id, we don't update old channel id
+                if (!elem.sw_trace_info.swt_frequency && !elem.sw_trace_info.swt_trigger_event && !elem.sw_trace_info.swt_has_timestamp)
+                {
+                    // We make old channel id as current channel id after the previous check which requires it
+                    old_channel_id = channel_id;
+                }
+                // We check if we have payload data transmitted. In this case bitsize will be greater than zero.
+                if (elem.sw_trace_info.swt_payload_pkt_bitsize > 0)
+                {
+                    switch (elem.sw_trace_info.swt_payload_pkt_bitsize)
+                    {
                     case 4:
                     {
                         // Iterate through the no of packets in the payload
@@ -1677,7 +1684,7 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                             // We add data in packet 'i' to the stringstream object
                             payload << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<uint16_t>(p_data_array[i]);
                             // We add a space to the stringstream if we are not on the last packet in the payload
-                            if (i < elem.sw_trace_info.swt_payload_num_packets-1)
+                            if (i < elem.sw_trace_info.swt_payload_num_packets - 1)
                             {
                                 payload << " ";
                             }
@@ -1736,75 +1743,129 @@ ocsd_datapath_resp_t TraceLogger::TraceElemIn(const ocsd_trc_index_t index_sop,
                     }
                     break;
                     default:
-                    break;
-                }
-                // Case when we are not printing binary data in a single line
-                if (single_line_print_mode == false)
-                {
-                    // We check for a condition in which we only have marker packet and data packet. This indicates a string has been transmitted
-                    if (elem.sw_trace_info.swt_marker_packet 
-                        && !elem.sw_trace_info.swt_frequency 
-                        && !elem.sw_trace_info.swt_has_timestamp 
-                        && !elem.sw_trace_info.swt_trigger_event)
-                    {
-                        // We indicate that we should print payload data without marker packets in the same line in subsequent calls of this function
-                        single_line_print_mode = true;
-                        // We inidcate that a data (only data and nothing else) packet coming next is the first one to be added in single line mode
-                        first_packet_in_single_line_mode = true;
-                        // We no longer have a need to restart single line mode
-                        restart_single_line_mode_upon_next_data_packet = false;
+                        break;
                     }
-                    // We check for a condition in which we have timestamp and marker
-                    else if (elem.sw_trace_info.swt_marker_packet && elem.sw_trace_info.swt_has_timestamp)
+                    // Case when we are not printing binary data in a single line
+                    if (single_line_print_mode == false)
                     {
-                        // We no longer have a need to restart single line mode
-                        restart_single_line_mode_upon_next_data_packet = false;
-                    }
-                    // We print the decoded STM trace information to the file. We only use "Data" channel to fix RiscFree UI issue 2264
-                    fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, pkt_type.c_str(), payload.str().c_str());
-                }
-                else
-                {
-                    /// We check if this is the first data packet for single line mode
-                    if (first_packet_in_single_line_mode)
-                    {
-                        // We print the decoded STM trace information to the file. We don't add "/n" as upcoming data packets may have to be added to same line.
-                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s", trc_id, master_id, channel_id, pkt_type.c_str(), payload.str().c_str());
-                        // We specify that the first data packet has already been written to the line of the output text file.
-                        first_packet_in_single_line_mode = false;
+                        // We check for a condition in which we only have marker packet and data packet. This indicates a string has been transmitted
+                        if (elem.sw_trace_info.swt_marker_packet
+                            && !elem.sw_trace_info.swt_frequency
+                            && !elem.sw_trace_info.swt_has_timestamp
+                            && !elem.sw_trace_info.swt_trigger_event)
+                        {
+                            // We indicate that we should print payload data without marker packets in the same line in subsequent calls of this function
+                            single_line_print_mode = true;
+                            // We inidcate that a data (only data and nothing else) packet coming next is the first one to be added in single line mode
+                            first_packet_in_single_line_mode = true;
+                            // We no longer have a need to restart single line mode
+                            restart_single_line_mode_upon_next_data_packet = false;
+                        }
+                        // We check for a condition in which we have timestamp and marker
+                        else if (elem.sw_trace_info.swt_marker_packet && elem.sw_trace_info.swt_has_timestamp)
+                        {
+                            // We no longer have a need to restart single line mode
+                            restart_single_line_mode_upon_next_data_packet = false;
+                        }
+                        // We print the decoded STM trace information to the file. We only use "Data" channel to fix RiscFree UI issue 2264
+                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s\n", trc_id, master_id, channel_id, pkt_type.c_str(), payload.str().c_str());
                     }
                     else
                     {
-                        // We print the decoded STM data payload on the same line of the output file as the last time this function was called.
-                        fprintf(m_fp_decode_out, " %s", payload.str().c_str());
+                        /// We check if this is the first data packet for single line mode
+                        if (first_packet_in_single_line_mode)
+                        {
+                            // We print the decoded STM trace information to the file. We don't add "/n" as upcoming data packets may have to be added to same line.
+                            fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,%s", trc_id, master_id, channel_id, pkt_type.c_str(), payload.str().c_str());
+                            // We specify that the first data packet has already been written to the line of the output text file.
+                            first_packet_in_single_line_mode = false;
+                        }
+                        else
+                        {
+                            // We print the decoded STM data payload on the same line of the output file as the last time this function was called.
+                            fprintf(m_fp_decode_out, " %s", payload.str().c_str());
+                        }
+                    }
+                }
+                else
+                {
+                    // In case we have no payload, we should still output the marker, timestamp, trigger event or frequency details
+                    if (elem.sw_trace_info.swt_marker_packet
+                        || elem.sw_trace_info.swt_has_timestamp
+                        || elem.sw_trace_info.swt_trigger_event
+                        || elem.sw_trace_info.swt_frequency)
+                    {
+                        fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,\n", trc_id, master_id, channel_id, pkt_type.c_str());
                     }
                 }
             }
-            else
-            {
-                // In case we have no payload, we should still output the marker, timestamp, trigger event or frequency details
-                if (elem.sw_trace_info.swt_marker_packet 
-                    || elem.sw_trace_info.swt_has_timestamp 
-                    || elem.sw_trace_info.swt_trigger_event 
-                    || elem.sw_trace_info.swt_frequency)
-                {
-                    fprintf(m_fp_decode_out, "%u,SWT,%u,%u,%s,\n", trc_id, master_id, channel_id, pkt_type.c_str());
-                }
-            }
+
+            m_rows_in_file++;
+        }
+        break;
         }
 
-        m_rows_in_file++;
+        if (m_rows_in_file >= m_max_rows_in_file && m_split_files)
+        {
+            CloseLogFile();
+            m_rows_in_file = 0;
+            m_file_cnt++;
+            OpenLogFile();
+        }
     }
-    break;
+    // Using the formatter used in trc_pkt_lister example
+    else if(m_loggerFormatOption == CS_NOC_DECOODED_FORMAT)
+    {
+        // Check if current index exceeded stop index
+        if (index_sop > m_trace_stop_idx)
+        {
+            return OCSD_RESP_REACHED_STOP_IDX;
+        }
+        // Temporary string to do conversions
+        std::string szTemp;
+        // creates an output string stream in which we append text
+        std::ostringstream oss;
+        // Appends the index and ID information to the bin file. We add start byte offset with the index to make it increase linearly across decoded output files
+        oss << "ID:" << (uint32_t)trc_chan_id << "; Idx:0x" << std::hex << (index_sop + this->m_loggerStartByteOffset) << "; ";
+        // Store the trace frame information in a string
+        elem.toNocString(szTemp);
+        // Appends the trace frame information to the output file stream
+        oss << szTemp << std::endl;
+        // Now convert the output string stream to a string
+        szTemp = oss.str();
+        // Prints the line to the bin file
+        fprintf(m_fp_decode_out, szTemp.c_str());
     }
 
-    if (m_rows_in_file >= m_max_rows_in_file && m_split_files)
-    {
-        CloseLogFile();
-        m_rows_in_file = 0;
-        m_file_cnt++;
-        OpenLogFile();
-    }
     return resp;
 }
 
+/****************************************************************************
+     Function: SetLoggerFormatOption
+     Engineer: Ashwin Vinoo
+        Input: None
+       Output: None
+       return: void
+  Description: Sets the logger format option. Default value is 0.
+  Date         Initials    Description
+11-Jun-2025    AV          Initial
+****************************************************************************/
+void TraceLogger::SetLoggerFormatOption(uint32_t loggerFormatOption)
+{
+    this->m_loggerFormatOption = loggerFormatOption;
+}
+
+/****************************************************************************
+     Function: SetStartByteOffset
+     Engineer: Ashwin Vinoo
+        Input: None
+       Output: None
+       return: void
+  Description: Sets the start byte offset for Idx prints. Default value is 0.
+  Date         Initials    Description
+17-Jul-2025    AV          Initial
+****************************************************************************/
+void TraceLogger::SetStartByteOffset(uint64_t startByteOffset)
+{
+    this->m_loggerStartByteOffset = startByteOffset;
+}
