@@ -615,6 +615,17 @@ bool TraceFmtDcdImpl::extractFrame()
             buf_left -= 2;
             dataPtr += 2;
         }
+        if (hasHSyncs && (buf_left > 2))
+        {
+            // We may have HSYNC at the end of the frame.
+            // It will appear as a HSYNC at the beginning of the next frame.
+            // We set the flag, so this should be taken care of.
+            data_pair_val = *((uint16_t*)(dataPtr));
+            if (*(uint16_t*)(dataPtr) == HSYNC_PATTERN)
+            {
+                m_b_fsync_start_eob = true;
+            }
+        }
     }
 
     // total bytes processed this pass 
