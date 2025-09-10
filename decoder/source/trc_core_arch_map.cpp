@@ -41,6 +41,7 @@ typedef struct _ap_map_elements {
 
 static ap_map_elem_t ap_map_array[] = 
 {
+    { "Cortex-A78", { ARCH_V8, profile_CortexA } },
     { "Cortex-A77", { ARCH_V8r3, profile_CortexA } },
     { "Cortex-A76", { ARCH_V8r3, profile_CortexA } },
     { "Cortex-A75", { ARCH_V8r3, profile_CortexA } },

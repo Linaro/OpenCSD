@@ -47,7 +47,7 @@
  *  a profile / arch version pair suitable for use with the decode library.
  * 
  *  Valid core names are:-
- *   - Cortex-Axx : where xx = 5,7,12,15,17,32,35,53,55,57,65,72,73,75,76,77;
+ *   - Cortex-Axx : where xx = 5,7,12,15,17,32,35,53,55,57,65,72,73,75,76,77,78;
  *   - Cortex-Rxx : where xx = 5,7,8,52;
  *   - Cortex-Mxx : where xx = 0,0+,3,4,23,33;
  *
