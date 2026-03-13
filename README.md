@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.7.1_
+_Current Version 1.8.1-rc1_
 
 ### Current support:
 
@@ -37,14 +37,16 @@ _Current Version 1.7.1_
 - ETMv3 (v3.5) instruction trace - packet processing and packet decode.
 - ETMv3 (v3.5) data trace - packet processing.
 - STM   (v1.1) software trace - packet processing and packet decode.
-
+- ITM   (v1.0) software trace - packet processing and decode.
 - External Decoders - support for addition of external / custom decoders into the library.
 
 ### Support to be added:
 
-- ITM software trace - packet processing and decode.
+- ETMv4 - V8.1M - M class specific instruction support - Branch forwards
 - ETMv3 data trace - packet decode.
 - ETMv4 data trace - packet processing and decode.
+- ELA - packet processing. (decode is implementation specific - packet process and send payload to client)
+- CMN - packet processing and decode.
 
 Note: for ITM and STM, packet decode is combining Master+Channel+Marker+Payload packets into a single generic
 output packet.
@@ -374,6 +376,14 @@ Version and Modification Information
     - __Bugfix__: Fix double run of ITM test.
     - __Bugfix__: Fix build warnings in windows builds.
 
+- _Version 1.8.1-rc1_:
+    - __Bugfix__: Fix issue with raw trace printer NULL pointer if deformatter not present.
+    - __Bugfix__: Fix issue with deformatter not correctly handling FSYNC detection correctly      
+                  on short 2 byte aligned buffers or split across buffer boundary.
+    - __Bugfix__: etmv4: Packet description string typo fixed. (github #84)
+    - __Bugfix__: stm: Issue with waitASync routine (github #85), fix freq packet handling
+
+     
 Licence Information
 ===================
 
