@@ -71,7 +71,7 @@ sysFS:
 
 CoreSight blocks are listed in the device tree for a specific system and
 discovered at boot time.  Since tracers can be linked to more than one sink,
-the sink that will recieve trace data needs to be identified and given as an
+the sink that will receive trace data needs to be identified and given as an
 option on the perf command line.  Once a sink has been identify trace collection
 can start.  An easy and yet interesting example is the `uname` command:
 
