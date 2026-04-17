@@ -35,6 +35,8 @@
 #ifndef ARM_TRC_TGT_MEM_ACCESS_I_H_INCLUDED
 #define ARM_TRC_TGT_MEM_ACCESS_I_H_INCLUDED
 
+#include "opencsd/ocsd_if_types.h"
+
 /*!
  * @class ITargetMemAccess   
  * 
