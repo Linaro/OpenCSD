@@ -383,6 +383,14 @@ Version and Modification Information
     - __Bugfix__: etmv4: Packet description string typo fixed. (github #84)
     - __Bugfix__: stm: Issue with waitASync routine (github #85), fix freq packet handling
 
+- _Version 1.8.2-rc1_:
+    - __Update__: tests: add python test script for cross platform use - replace linux only bash scripts.
+    - __Update__: opencsd: memory access - added debug to trace memory accesses by library under control of env var.
+    - __Update__: build: Experimental cmake build files. (github #89)
+    - __Bugfix__: tests: windows test program names differ from linux ones - fix to make same
+    - __Bugfix__: etmv4: ete: Fix corner case for exception packet processing - issue with exception address
+                  representing the previous branch target and the exception return address. (github #88)
+
      
 Licence Information
 ===================
