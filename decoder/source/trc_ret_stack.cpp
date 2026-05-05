@@ -54,7 +54,6 @@
 
 TrcAddrReturnStack::TrcAddrReturnStack() :
     m_active(false),
-    m_pop_pending(false),
     m_t_info_wait_addr(false),
     head_idx(0),
     num_entries(0)
@@ -76,7 +75,6 @@ void TrcAddrReturnStack::push(const ocsd_vaddr_t addr, const ocsd_isa isa)
         if (num_entries > 16)
             num_entries = 16;
         LOG_PUSH(addr,0,isa);
-        m_pop_pending = false; 
     }
 }
 
@@ -94,7 +92,6 @@ ocsd_vaddr_t TrcAddrReturnStack::pop(ocsd_isa &isa)
         }
         num_entries--;
         LOG_POP(addr,1,isa);
-        m_pop_pending = false;
     }
     return addr;
 }
@@ -103,7 +100,6 @@ ocsd_vaddr_t TrcAddrReturnStack::pop(ocsd_isa &isa)
 void  TrcAddrReturnStack::flush()
 {
     num_entries = 0;
-    m_pop_pending = false;
     LOG_FLUSH();
 }
 
@@ -136,7 +132,7 @@ void TrcAddrReturnStack::LogOp(const char * pszOpString, ocsd_vaddr_t addr, int 
             oss << "Return stack " << pszOpString << "[" << std::dec << (head_idx+head_off) << "](0x" << std::hex << addr << "), " << isa_names[name_idx] << ";";
             oss << "current entries = " << std::dec << num_entries << ";";
             oss << "new head idx = " << head_idx << ";";
-            oss << "pop pend (pre op) = " << (m_pop_pending ? "true\n" : "false\n");
+            oss << "\n";
         }
 #ifdef FORCE_STD_COUT        
         std::cout << oss.str();

@@ -193,18 +193,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>..\..\..\lib\win$(PlatformArchitecture)\dbg\</OutDir>
     <TargetName>lib$(LIB_BASE_NAME)</TargetName>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-dll|x64'">
     <OutDir>..\..\..\lib\win$(PlatformArchitecture)\dbg\</OutDir>
     <TargetName>lib$(LIB_BASE_NAME)</TargetName>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>..\..\..\lib\win$(PlatformArchitecture)\rel\</OutDir>
     <TargetName>lib$(LIB_BASE_NAME)</TargetName>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-dll|x64'">
     <OutDir>..\..\..\lib\win$(PlatformArchitecture)\rel\</OutDir>
     <TargetName>lib$(LIB_BASE_NAME)</TargetName>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>..\..\..\lib\win$(PlatformArchitecture)\rel\</OutDir>

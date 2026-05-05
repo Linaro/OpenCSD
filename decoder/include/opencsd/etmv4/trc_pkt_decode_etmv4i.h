@@ -79,13 +79,13 @@ protected:
     ocsd_err_t discardElements();   // discard elements and flush
 
     bool doTraceInfoPacket();
-    void updateContext(TrcStackElemCtxt *pCtxtElem, OcsdTraceElement &elem);
-    
+    void updateContext(TrcStackElemCtxt* pCtxtElem, OcsdTraceElement& elem);
+
     // process atom will create instruction trace, or no memory access trace output elements. 
     ocsd_err_t processAtom(const ocsd_atm_val atom);
 
     // process an exception element - output instruction trace + exception generic type.
-    ocsd_err_t processException(); 
+    ocsd_err_t processException();
 
     // process Q element
     ocsd_err_t processQElement();
@@ -94,35 +94,35 @@ protected:
     ocsd_err_t processSourceAddress();
 
     // process an element that cannot be cancelled / discarded
-    ocsd_err_t processTS_CC_EventElem(TrcStackElem *pElem); 
+    ocsd_err_t processTS_CC_EventElem(TrcStackElem* pElem);
 
     // process marker elements
-    ocsd_err_t processMarkerElem(TrcStackElem *pElem);
+    ocsd_err_t processMarkerElem(TrcStackElem* pElem);
 
     // process a transaction element
-    ocsd_err_t processTransElem(TrcStackElem *pElem);
+    ocsd_err_t processTransElem(TrcStackElem* pElem);
 
     // process an Instrumentation element
-    ocsd_err_t processITEElem(TrcStackElem *pElem);
+    ocsd_err_t processITEElem(TrcStackElem* pElem);
 
     // process a bad packet
-    ocsd_err_t handleBadPacket(const char *reason, ocsd_trc_index_t index = OCSD_BAD_TRC_INDEX);
+    ocsd_err_t handleBadPacket(const char* reason, ocsd_trc_index_t index = OCSD_BAD_TRC_INDEX);
 
     // sequencing error on packet processing - optionally continue
-    ocsd_err_t handlePacketSeqErr(ocsd_err_t err, ocsd_trc_index_t index, const char *reason);
+    ocsd_err_t handlePacketSeqErr(ocsd_err_t err, ocsd_trc_index_t index, const char* reason);
 
     // inconsistent image for decode - optionally reset and continue
     ocsd_err_t handleBadImageError(ocsd_trc_index_t index, const char* reason);
 
     // common packet error routine
-    ocsd_err_t handlePacketErr(ocsd_err_t err, ocsd_err_severity_t sev, ocsd_trc_index_t index, const char *reason, const unsync_info_t unsync_reason);
+    ocsd_err_t handlePacketErr(ocsd_err_t err, ocsd_err_severity_t sev, ocsd_trc_index_t index, const char* reason, const unsync_info_t unsync_reason);
 
-    ocsd_err_t addElemCC(TrcStackElemParam *pParamElem);
-    ocsd_err_t addElemTS(TrcStackElemParam *pParamElem, bool withCC);
-    ocsd_err_t addElemEvent(TrcStackElemParam *pParamElem);
-     
+    ocsd_err_t addElemCC(TrcStackElemParam* pParamElem);
+    ocsd_err_t addElemTS(TrcStackElemParam* pParamElem, bool withCC);
+    ocsd_err_t addElemEvent(TrcStackElemParam* pParamElem);
+
 private:
-    void SetInstrInfoInAddrISA(const ocsd_vaddr_t addr_val, const uint8_t isa); 
+    void SetInstrInfoInAddrISA(const ocsd_vaddr_t addr_val, const uint8_t isa);
     const ocsd_isa calcISA(const bool SF, const uint8_t IS) const
     {
         if (SF)
@@ -144,8 +144,8 @@ private:
         WP_NACC
     } WP_res_t;
 
-    /* Optional run limit for decoded instruction range. 
-     * Throw error if limit exceeded. Set by env var - use for debugging decode runs 
+    /* Optional run limit for decoded instruction range.
+     * Throw error if limit exceeded. Set by env var - use for debugging decode runs
      * which may be running away due to bad data
      */
     int m_num_instr_range_limit;
@@ -157,16 +157,16 @@ private:
     } instr_range_t;
 
     //!< follow instructions from the current address to a WP. true if good, false if memory cannot be accessed.
-    ocsd_err_t traceInstrToWP(instr_range_t &instr_range, WP_res_t &WPRes, const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);
+    ocsd_err_t traceInstrToWP(instr_range_t& instr_range, WP_res_t& WPRes, const bool traceToAddrNext = false, const ocsd_vaddr_t nextAddrMatch = 0);
 
     inline const bool WPFound(WP_res_t res) const { return (res == WP_FOUND); };
     inline const bool WPNacc(WP_res_t res) const { return (res == WP_NACC); };
-        
+
     ocsd_err_t returnStackPop();  // pop return stack and update instruction address.
 
-    void setElemTraceRange(OcsdTraceElement &elemIn, const instr_range_t &addr_range, const bool executed, ocsd_trc_index_t index);
-    void setElemTraceRangeInstr(OcsdTraceElement &elemIn, const instr_range_t &addr_range, 
-                                const bool executed, ocsd_trc_index_t index, ocsd_instr_info &instr);
+    void setElemTraceRange(OcsdTraceElement& elemIn, const instr_range_t& addr_range, const bool executed, ocsd_trc_index_t index);
+    void setElemTraceRangeInstr(OcsdTraceElement& elemIn, const instr_range_t& addr_range,
+        const bool executed, ocsd_trc_index_t index, ocsd_instr_info& instr);
 
     // true if we are ETE configured.
     inline bool isETEConfig() {
@@ -175,11 +175,11 @@ private:
 
     ocsd_mem_space_acc_t getCurrMemSpace();
 
-//** intra packet state (see ETMv4 spec 6.2.1);
+    //** intra packet state (see ETMv4 spec 6.2.1);
 
-    // timestamping
+        // timestamping
     uint64_t m_timestamp;   // last broadcast global Timestamp.
-    bool m_ete_first_ts_marker; 
+    bool m_ete_first_ts_marker;
 
     // state and context 
     uint32_t m_context_id;              // most recent context ID
@@ -191,10 +191,10 @@ private:
     int m_cc_threshold;
 
     // speculative trace 
-    int m_curr_spec_depth;                
+    int m_curr_spec_depth;
     int m_max_spec_depth;   // max depth - from ID reg, beyond which auto-commit occurs 
 
-/** Remove elements that are associated with data trace */
+    /** Remove elements that are associated with data trace */
 #ifdef DATA_TRACE_SUPPORTED
     // data trace associative elements (unsupported at present in the decoder).
     int m_p0_key;
@@ -210,9 +210,9 @@ private:
 
     bool m_IASize64;    //!< True if 64 bit instruction addresses supported.
 
-//** Other processor state;
+    //** Other processor state;
 
-    // trace decode FSM
+        // trace decode FSM
     typedef enum {
         NO_SYNC,        //!< pre start trace - init state or after reset or overflow, loss of sync.
         WAIT_SYNC,      //!< waiting for sync packet.
@@ -224,7 +224,7 @@ private:
     processor_state_t m_curr_state;
     unsync_info_t m_unsync_eot_info;   //!< addition info when / why unsync / eot
 
-//** P0 element stack
+    //** P0 element stack
     EtmV4P0Stack m_P0_stack;    //!< P0 decode element stack
 
     // element resolution
@@ -237,7 +237,7 @@ private:
 
     //! true if any of the element resolution fields are non-zero
     const bool isElemForRes() const {
-        return (m_elem_res.P0_commit || m_elem_res.P0_cancel || 
+        return (m_elem_res.P0_commit || m_elem_res.P0_cancel ||
             m_elem_res.mispredict || m_elem_res.discard);
     }
 
@@ -250,9 +250,31 @@ private:
 
     // packet decode state
     bool m_need_ctxt;   //!< need context to continue
-    bool m_need_addr;   //!< need an address to continue
+    bool m_need_P0_addr;   //!< need a P0 address to continue from address element or return stack
+    bool m_need_P0_addr_elem; //!< need a P0 address elem due to discontinuity of some sort
     bool m_elem_pending_addr;    //!< next address packet is needed for prev element.
+
+    void setNeedP0Addr() {
+        m_need_P0_addr = true;
+    }
+
+    void setNeedP0AddrElem() {
+        m_need_P0_addr_elem = true;
+        setNeedP0Addr();
+    }
     
+    void clearNeedP0Addr() {
+        m_need_P0_addr = false;
+        m_need_P0_addr_elem = false;
+    }
+
+    bool needP0Addr() const {
+        return m_need_P0_addr;
+    }
+    
+    bool needP0AddrElem() const {
+        return m_need_P0_addr_elem;
+    }
 
     ocsd_instr_info m_instr_info;  //!< instruction info for code follower - in address is the next to be decoded.
 

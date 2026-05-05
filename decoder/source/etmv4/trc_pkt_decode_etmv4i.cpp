@@ -91,16 +91,19 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
             break;
 
         case WAIT_SYNC:
-            if(m_curr_packet_in->getType() == ETM4_PKT_I_ASYNC)
+            if (m_curr_packet_in->getType() == ETM4_PKT_I_ASYNC)
+            {
                 m_curr_state = WAIT_TINFO;
+                m_need_ctxt = true;
+                setNeedP0AddrElem();
+            }
             bPktDone = true;
             break;
 
         case WAIT_TINFO:
-            m_need_ctxt = true;
-            m_need_addr = true;
             if(m_curr_packet_in->getType() == ETM4_PKT_I_TRACE_INFO)
             {
+                // do the first trace info packet after sync.
                 if (!doTraceInfoPacket())
                     resp = OCSD_RESP_FATAL_SYS_ERR;
 
@@ -297,7 +300,7 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_cc_threshold = 0;
     m_curr_spec_depth = 0;
     m_need_ctxt = true;
-    m_need_addr = true;
+    setNeedP0AddrElem();
     m_elem_pending_addr = false;
     m_prev_overflow = false;
     m_P0_stack.delete_all();
@@ -330,17 +333,29 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
 
     switch(m_curr_packet_in->getType())
     {
+    case ETM4_PKT_I_NOTSYNC:
+        err = handlePacketSeqErr(OCSD_ERR_BAD_PACKET_SEQ, m_index_curr_pkt, "Trace packet synchronisation lost.");
+        break;
+
+    case ETM4_PKT_I_INCOMPLETE_EOT:
+        // nothing to do with a partial packet flushed at end of trace.
+        break;
+
+    case ETM4_PKT_I_NO_ERR_TYPE:
+        err = handleBadPacket("Unexpected unset packet type.", m_index_curr_pkt);
+        break;
+
+    case ETM4_PKT_I_EXTENSION:
+        err = handleBadPacket("Unexpected extension header packet.", m_index_curr_pkt);
+        break;
+
     case ETM4_PKT_I_ASYNC: // nothing to do with this packet.
     case ETM4_PKT_I_IGNORE: // or this one.
         break;
 
     case ETM4_PKT_I_TRACE_INFO:
-        {
-            // put a TINFO element on the stack - ensure we control RS push / pop during 
-            // wait for TINFO addr 
-            if (m_P0_stack.createParamElemNoParam(P0_TINFO, false, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
-                bAllocErr = true;
-        }
+        // only interested in the first TINFO element. 
+        // subsequent TINFO elements can appear between valid atom elements with return stack addresses.
         break;
 
     case ETM4_PKT_I_TRACE_ON:
@@ -436,13 +451,18 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
 
     // Exceptions
     case ETM4_PKT_I_EXCEPT:
+    case ETE_PKT_I_PE_RESET:
          {
             if (m_P0_stack.createExceptElem(m_curr_packet_in->getType(), m_index_curr_pkt, 
                                             (m_curr_packet_in->exception_info.addr_interp == 0x2), 
                                             m_curr_packet_in->exception_info.exceptionType) == 0)
                 bAllocErr = true;
             else
-                m_elem_pending_addr = true;  // wait for following packets before marking for commit.
+            {
+                // If the packet is not an ETE reset need a following address packet.
+                if (m_curr_packet_in->getType() != ETE_PKT_I_PE_RESET)
+                    m_elem_pending_addr = true;  // wait for following packets before marking for commit.
+            }
         }
         break;
 
@@ -531,6 +551,10 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
 
     case ETM4_PKT_I_RESERVED:
         err = handleBadPacket("Reserved packet header", m_index_curr_pkt);
+        break;
+
+    case ETM4_PKT_I_RESERVED_CFG:
+        err = handleBadPacket("Packet header reserved for current configuration.", m_index_curr_pkt);
         break;
 
     // speculation 
@@ -638,10 +662,6 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
         err = handlePacketSeqErr(OCSD_ERR_UNSUPP_DECODE_PKT, m_index_curr_pkt, "Data trace related, unsupported packet type.");
         break;
 
-    default:
-        // any other packet - bad packet error
-        err = handleBadPacket("Unknown packet type.", m_index_curr_pkt);
-        break;
     }
 
     // we need to wait for following address after certain packets
@@ -787,20 +807,18 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 {
                     m_out_elem.getCurrElem().trace_on_reason = m_prev_overflow ? TRACE_ON_OVERFLOW : TRACE_ON_NORMAL;
                     m_prev_overflow = false;
-                    m_return_stack.flush();
                 }
                 break;
 
             case P0_ADDR:
                 {
                 TrcStackElemAddr *pAddrElem = dynamic_cast<TrcStackElemAddr *>(pElem);
-                m_return_stack.clear_pop_pending(); // address removes the need to pop the indirect address target from the stack
                 if (m_return_stack.is_t_info_wait_addr())
                     m_return_stack.clear_t_info_wait_addr(); // also may clear wait for address after TINFO
                 if (pAddrElem)
                 {
                     SetInstrInfoInAddrISA(pAddrElem->getAddr().val, pAddrElem->getAddr().isa);
-                    m_need_addr = false;                    
+                    clearNeedP0Addr();                    
                 }
                 }
                 break;
@@ -858,8 +876,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
 
                         // if address and context do instruction trace follower.
                         // otherwise skip atom and reduce committed elements
-                        // allow for insufficient program image.
-                        if (!m_need_ctxt && !m_need_addr)
+                        // allow for insufficient program image and waiting for address at sync point.
+                        if (!m_need_ctxt && !needP0Addr())
                         {
                             if ((err = processAtom(atom)) != OCSD_OK)
                                 break;
@@ -873,11 +891,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 }
                 break;
 
-            case P0_EXCEP:
-                // check if prev atom left us an indirect address target on the return stack
-                if ((err = returnStackPop()) != OCSD_OK)
-                    break;
-
+            case P0_EXCEP:               
                 nextRangeCheckClear();
                 err = processException();  // output trace + exception elements.
                 m_elem_res.P0_commit--;
@@ -953,12 +967,18 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
     return err;
 }
 
+// called if a P0 address element might be needed - look on return stack
+// error return if RS inactive or overflow
 ocsd_err_t TrcPktDecodeEtmV4I::returnStackPop()
 {
     ocsd_err_t err = OCSD_OK;
     ocsd_isa nextISA;
-       
-    if (m_return_stack.pop_pending())
+
+    if (!needP0Addr() || needP0AddrElem())
+        return OCSD_OK;
+
+    // need active return stack and not waiting for first address after TINFO
+    if (m_return_stack.is_active() && !m_return_stack.is_t_info_wait_addr())
     {
         ocsd_vaddr_t popAddr = m_return_stack.pop(nextISA);
         if (m_return_stack.overflow())
@@ -970,7 +990,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::returnStackPop()
         {
             m_instr_info.instr_addr = popAddr;
             m_instr_info.isa = nextISA;
-            m_need_addr = false;
+            clearNeedP0Addr();
         }
     }
     return err;
@@ -1218,7 +1238,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::discardElements()
 
     // unsync so need context & address.
     m_need_ctxt = true;
-    m_need_addr = true;
+    setNeedP0AddrElem();
     m_elem_pending_addr = false;
     return err;
 }
@@ -1379,7 +1399,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
     {
         if(err == OCSD_ERR_UNSUPPORTED_ISA)
         {
-             m_need_addr = true;
+             setNeedP0AddrElem();
              m_need_ctxt = true;
              LogError(ocsdError(OCSD_ERR_SEV_WARN,err,pElem->getRootIndex(),m_CSID,"Warning: unsupported instruction set processing atom packet."));  
              // wait for next context
@@ -1429,14 +1449,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
         case OCSD_INSTR_BR_INDIRECT:
             if (atom == ATOM_E)
             {
-                m_need_addr = true; // indirect branch taken - need new address.
+                setNeedP0Addr(); // indirect branch taken - need new address - element or return stack.
                 if (m_instr_info.is_link)
                     m_return_stack.push(nextAddr,m_instr_info.isa);
 
                 clearThumbITBlockConditions(); // took branch, clear IT block
-
-                // mark last atom as BR indirect - if no address next need addr from return stack.
-                m_return_stack.set_pop_pending();  
 
                 /* ETE does not have ERET trace packets - however to maintain the illusion if we see an ERET
                    output a gen elem ERET packet */
@@ -1483,7 +1500,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
     else
     {
         // no waypoint - likely inaccessible memory range.
-        m_need_addr = true; // need an address update 
+        setNeedP0AddrElem(); // need an address update 
         nextRangeCheckClear();
 
         if(addr_range.st_addr != addr_range.en_addr)
@@ -1572,7 +1589,15 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
                 m_instr_info.instr_addr = excep_ret_addr;
                 m_instr_info.isa = (pAddressElem->getAddr().isa == 0) ?
                     (b64bit ? ocsd_isa_aarch64 : ocsd_isa_arm) : ocsd_isa_thumb2;
-                m_need_addr = false;
+                clearNeedP0Addr();
+            }
+            else
+            {
+                // could have been an indirect branch earlier
+                // test if we need an address and try to get it from the return stack.
+                err = returnStackPop();
+                if (err)
+                    return err;
             }
         }
     }
@@ -1610,7 +1635,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
             {
                 if (err == OCSD_ERR_UNSUPPORTED_ISA)
                 {
-                    m_need_addr = true;
+                    setNeedP0AddrElem();
                     m_need_ctxt = true;
                     LogError(ocsdError(OCSD_ERR_SEV_WARN, err, excep_pkt_index, m_CSID, "Warning: unsupported instruction set processing exception packet."));
                 }
@@ -1630,7 +1655,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
             else
             {
                 // no waypoint - likely inaccessible memory range.
-                m_need_addr = true; // need an address update 
+                setNeedP0AddrElem(); // need an address update 
 
                 if (addr_range.st_addr != addr_range.en_addr)
                 {
@@ -1803,7 +1828,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processQElement()
 
         // after the Q element, tracing resumes at the address supplied
         SetInstrInfoInAddrISA(QAddr.val, QAddr.isa);
-        m_need_addr = false;
+        clearNeedP0Addr();
     }
     else
     {
@@ -1856,11 +1881,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
     out_range.num_instr = 1;
 
     // calculate range traced...
-    if (m_need_addr || (currAddr > srcAddr.val))
+    if (needP0Addr() || (currAddr > srcAddr.val))
     {
         // we were waiting for a target address, or missing trace 
         // that indicates how we got to the source address.
-        m_need_addr = false;
+        clearNeedP0Addr();
         out_range.st_addr = srcAddr.val;
     }
     else
@@ -1959,10 +1984,9 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
         break;
 
     case OCSD_INSTR_BR_INDIRECT:
-        m_need_addr = true; // indirect branch taken - need new address.
+        setNeedP0Addr(); // indirect branch taken - need new address.
         if (m_instr_info.is_link)
             m_return_stack.push(m_instr_info.instr_addr, m_instr_info.isa);
-        m_return_stack.set_pop_pending();  // need to know next packet before we know what is to happen
         break;
     }
     m_instr_info.isa = m_instr_info.next_isa;
