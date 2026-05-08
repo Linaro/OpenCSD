@@ -238,6 +238,27 @@ Default values are set at 16 pages of 2048 bytes.
 Library Debug Options
 ---------------------
 
+### Memory accessor request trace ###
+
+The memory accessor mapper can emit debug trace messages for memory accessor
+registration, accessor lookup, and read request / result handling.
+
+Option is controlled by environment variable `OPENCSD_MEMACC_REQ_TRACE`.
+If this variable is set, memory accessor request tracing is enabled.
+
+This option is presence-based: the value is not interpreted, so setting it to
+`1` is recommended for clarity.
+
+The trace is intended for debug of memory image setup, accessor range matching,
+and cache behaviour. Messages are emitted through the library message / error
+logging path.
+
+Examples:
+
+- Linux / macOS: `export OPENCSD_MEMACC_REQ_TRACE=1`
+- Windows `cmd.exe`: `set OPENCSD_MEMACC_REQ_TRACE=1`
+- Windows PowerShell: `$env:OPENCSD_MEMACC_REQ_TRACE="1"`
+
 ### ETMv4 / ETE instruction run limit ###
 
 The ETMv4 / ETE decoder has an optional run length limit for the amount of instructions in a range permitted before an error code will be returned.

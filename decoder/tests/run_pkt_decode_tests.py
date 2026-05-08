@@ -469,8 +469,11 @@ def resolve_selected_suite(test_name: str, requested_suite: str) -> str:
     return requested_suite
 
 
-def base_env(bin_dir: Path | None) -> dict[str, str]:
+def base_env(bin_dir: Path | None, memacc_req_trace: bool = False) -> dict[str, str]:
     env = os.environ.copy()
+    if memacc_req_trace:
+        env["OPENCSD_MEMACC_REQ_TRACE"] = "1"
+
     if not bin_dir:
         return env
 
@@ -527,6 +530,7 @@ def run_standard_suite(
     results_suffix: str | None,
     selected_test: str | None,
     lister_args: Sequence[str],
+    memacc_req_trace: bool,
     failures: list[str],
 ) -> None:
     suite = SUITES["standard"]
@@ -534,7 +538,7 @@ def run_standard_suite(
     snapshot_dir = tests_dir / suite.snapshot_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    env = base_env(bin_dir)
+    env = base_env(bin_dir, memacc_req_trace)
     trc_pkt_lister = program_path("trc_pkt_lister", bin_dir)
 
     tests_to_run = (selected_test,) if selected_test else STANDARD_DECODE_TESTS
@@ -703,6 +707,7 @@ def run_ete_suite(
     results_suffix: str | None,
     selected_test: str | None,
     lister_args: Sequence[str],
+    memacc_req_trace: bool,
     failures: list[str],
 ) -> None:
     suite = SUITES["ete"]
@@ -710,7 +715,7 @@ def run_ete_suite(
     snapshot_dir = tests_dir / suite.snapshot_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    env = base_env(bin_dir)
+    env = base_env(bin_dir, memacc_req_trace)
     trc_pkt_lister = program_path("trc_pkt_lister", bin_dir)
 
     tests_to_run = (selected_test,) if selected_test else ETE_DECODE_TESTS
@@ -831,6 +836,11 @@ def parse_args(argv: Sequence[str]) -> tuple[argparse.Namespace, list[str]]:
     parser.add_argument(
         "--test",
         help="Run a single named test from the standard or ETE decode test lists.",
+    )
+    parser.add_argument(
+        "--memacc-req-trace",
+        action="store_true",
+        help="Set OPENCSD_MEMACC_REQ_TRACE=1 for every test process started by this runner.",
     )
 
     namespace, passthrough = parser.parse_known_args(argv)

@@ -43,6 +43,9 @@
 #include "mem_acc/trc_mem_acc_base.h"
 #include "mem_acc/trc_mem_acc_cache.h"
 
+ /* enable trace of requests for debugging */
+#define OCSD_ENV_MEMACC_REQ_TRACE "OPENCSD_MEMACC_REQ_TRACE"
+
 typedef enum _memacc_mapper_t {
     MEMACC_MAP_GLOBAL,
 } memacc_mapper_t;
@@ -101,11 +104,15 @@ protected:
     void LogMessage(const std::string &msg);
     void LogWarn(const ocsd_err_t err, const std::string &msg);
 
+    // add in mem accessor request trace for debug
+    void initMemAccReqTrace();
+
     TrcMemAccessorBase *m_acc_curr;     // most recently used - try this first.
     uint8_t m_trace_id_curr;            // trace ID for the current accessor
     const bool m_using_trace_id;        // true if we are using separate memory spaces by TraceID.
     ITraceErrorLog *m_err_log;          // error log to print out mappings on request.
     TrcMemAccCache m_cache;             // memory accessor caching.
+    bool m_req_trace;                   // debug trace for memory access requests
 };
 
 
