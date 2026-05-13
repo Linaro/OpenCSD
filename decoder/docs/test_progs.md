@@ -120,7 +120,7 @@ paths do not create false differences.
 
 If filtered differences are found, the script writes unified diff files beside
 the current run output using the form `<test_name>.ppl.diff`. The result
-comparison report lists each test name with its filtered diff count, and
+comparison report lists each `suite:test` name with its filtered diff count, and
 returns a non-zero status if differences or comparison setup issues are found.
 Use `--diff-verbose` to also print the unified diffs to stdout.
 

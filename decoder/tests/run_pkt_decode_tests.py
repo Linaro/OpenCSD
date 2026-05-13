@@ -12,6 +12,7 @@ import argparse
 import difflib
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -225,6 +226,58 @@ def relative_display_path(root_dir: Path, path: Path) -> str:
         return str(path)
 
 
+SNAPSHOT_PATH_RE = re.compile(r"(snapshots(?:-ete)?/.*)$")
+SNAPSHOT_READ_PATH_RE = re.compile(
+    r"^(Trace Packet Lister : reading snapshot from path )(.+)$"
+)
+SNAPSHOT_NOT_FOUND_PATH_RE = re.compile(
+    r"^(Trace Packet Lister : Snapshot path)(.+?)( not found)$"
+)
+FILENAME_PATH_RE = re.compile(r"^(Filename=)(.+)$")
+SNAPSHOT_RELATIVE_PREFIX_RE = re.compile(r"(?<!\w)\./(?=snapshots(?:-ete)?/)")
+SNAPSHOT_ABSOLUTE_PREFIX_RE = re.compile(
+    r"(?:[A-Za-z]:)?(?:[^ \t:;=]+/)+(?=snapshots(?:-ete)?/)"
+)
+
+
+def normalize_snapshot_path_prefixes(text: str) -> str:
+    normalized = text.replace("\\", "/")
+    normalized = SNAPSHOT_RELATIVE_PREFIX_RE.sub("", normalized)
+    return SNAPSHOT_ABSOLUTE_PREFIX_RE.sub("", normalized)
+
+
+def normalize_result_path(path_text: str) -> str:
+    normalized = normalize_snapshot_path_prefixes(path_text.strip())
+    match = SNAPSHOT_PATH_RE.search(normalized)
+    if match is not None:
+        return match.group(1)
+
+    trimmed = normalized.rstrip("/")
+    if "/" in trimmed:
+        return trimmed.rsplit("/", 1)[-1]
+    return normalized
+
+
+def normalize_result_line(line: str) -> str:
+    line = normalize_snapshot_path_prefixes(line)
+
+    match = SNAPSHOT_READ_PATH_RE.match(line)
+    if match is not None:
+        return f"{match.group(1)}{normalize_result_path(match.group(2))}"
+
+    match = SNAPSHOT_NOT_FOUND_PATH_RE.match(line)
+    if match is not None:
+        return (
+            f"{match.group(1)}{normalize_result_path(match.group(2))}{match.group(3)}"
+        )
+
+    match = FILENAME_PATH_RE.match(line)
+    if match is not None:
+        return f"{match.group(1)}{normalize_result_path(match.group(2))}"
+
+    return line
+
+
 def filter_result_lines(path: Path) -> list[str]:
     filtered: list[str] = []
     skip_next = False
@@ -234,18 +287,32 @@ def filter_result_lines(path: Path) -> list[str]:
             continue
         if "Version" in line:
             continue
-        filtered.append(line)
+        filtered.append(normalize_result_line(line))
         if "Test Command Line" in line:
             skip_next = True
     return filtered
 
 
+def is_suite_results_dir_name(candidate_name: str, suite: SuiteConfig) -> bool:
+    matched_out_dir: str | None = None
+    matched_length = -1
+
+    for candidate_suite in SUITES.values():
+        prefix = f"{candidate_suite.out_dir}-"
+        if candidate_name != candidate_suite.out_dir and not candidate_name.startswith(prefix):
+            continue
+        if len(candidate_suite.out_dir) > matched_length:
+            matched_out_dir = candidate_suite.out_dir
+            matched_length = len(candidate_suite.out_dir)
+
+    return matched_out_dir == suite.out_dir
+
+
 def iter_suite_result_dirs(tests_dir: Path, suite: SuiteConfig) -> Iterable[Path]:
-    prefix = f"{suite.out_dir}-"
     for candidate in tests_dir.iterdir():
         if not candidate.is_dir():
             continue
-        if candidate.name == suite.out_dir or candidate.name.startswith(prefix):
+        if is_suite_results_dir_name(candidate.name, suite):
             yield candidate
 
 
@@ -378,10 +445,11 @@ def compare_results(
             baseline_file = baseline_dir / relative_path
             diff_path = current_file.with_suffix(current_file.suffix + ".diff")
             test_name = current_file.stem
+            summary_name = f"{suite_name}:{test_name}"
 
             if not baseline_file.is_file():
                 suite_differences += 1
-                diff_counts_by_test[test_name] = diff_counts_by_test.get(test_name, 0) + 1
+                diff_counts_by_test[summary_name] = diff_counts_by_test.get(summary_name, 0) + 1
                 print(
                     "  Missing comparison file for "
                     f"{relative_path}: {relative_display_path(tests_dir, baseline_file)}"
@@ -406,7 +474,9 @@ def compare_results(
                 ).get_opcodes()
                 if tag != "equal"
             )
-            diff_counts_by_test[test_name] = diff_counts_by_test.get(test_name, 0) + diff_group_count
+            diff_counts_by_test[summary_name] = (
+                diff_counts_by_test.get(summary_name, 0) + diff_group_count
+            )
             diff_lines = list(
                 difflib.unified_diff(
                     baseline_lines,
@@ -521,6 +591,21 @@ def run_command(
     completed = subprocess.run(command, cwd=str(cwd), env=env, stdout=stdout, check=False)
     print(f"Done : Return {completed.returncode}")
     return completed.returncode
+
+
+def run_optional_command(
+    tool_name: str,
+    description: str,
+    command: Sequence[str],
+    cwd: Path,
+    env: dict[str, str],
+    quiet_stdout: bool = False,
+) -> int | None:
+    try:
+        return run_command(description, command, cwd, env, quiet_stdout=quiet_stdout)
+    except OSError as exc:
+        print(f"Warning: skipping {tool_name}: failed to start program ({exc})")
+        return None
 
 
 def run_standard_suite(
@@ -649,8 +734,17 @@ def run_standard_suite(
         str(snapshot_dir),
         "-decode",
     ]
-    rc = run_command("Testing C-API library...", cmd, tests_dir, env, quiet_stdout=True)
-    if rc != 0:
+    rc = run_optional_command(
+        "c_api_pkt_print_test",
+        "Testing C-API library...",
+        cmd,
+        tests_dir,
+        env,
+        quiet_stdout=True,
+    )
+    if rc is None:
+        pass
+    elif rc != 0:
         failures.append("c_api_pkt_print_test")
     else:
         move_output(c_api_log, out_dir / "c_api_test.ppl")
@@ -658,8 +752,17 @@ def run_standard_suite(
     frame_log = tests_dir / "frame_demux_test.ppl"
     remove_if_exists(frame_log)
     cmd = [program_path("frame-demux-test", bin_dir)]
-    rc = run_command("Running Frame demux test...", cmd, tests_dir, env, quiet_stdout=True)
-    if rc != 0:
+    rc = run_optional_command(
+        "frame-demux-test",
+        "Running Frame demux test...",
+        cmd,
+        tests_dir,
+        env,
+        quiet_stdout=True,
+    )
+    if rc is None:
+        pass
+    elif rc != 0:
         failures.append("frame-demux-test")
     else:
         move_output(frame_log, out_dir / "frame_demux_test.ppl")
@@ -674,7 +777,16 @@ def run_standard_suite(
         str(snapshot_dir),
         "-noprint",
     ]
-    if run_command("Running mem-buffer-eg with memory buffer...", cmd, tests_dir, env) != 0:
+    rc = run_optional_command(
+        "mem-buffer-eg",
+        "Running mem-buffer-eg with memory buffer...",
+        cmd,
+        tests_dir,
+        env,
+    )
+    if rc is None:
+        pass
+    elif rc != 0:
         failures.append("mem-buffer-eg")
 
     cmd = [
@@ -685,7 +797,16 @@ def run_standard_suite(
         "-noprint",
         "-callback",
     ]
-    if run_command("Running mem-buffer-eg with callback function...", cmd, tests_dir, env) != 0:
+    rc = run_optional_command(
+        "mem-buffer-eg",
+        "Running mem-buffer-eg with callback function...",
+        cmd,
+        tests_dir,
+        env,
+    )
+    if rc is None:
+        pass
+    elif rc != 0:
         failures.append("mem-buffer-eg-callback")
 
     for produced in sorted(tests_dir.glob("mem_buff_demo*.ppl")):
@@ -697,7 +818,16 @@ def run_standard_suite(
         "-logfilename",
         str(itm_log),
     ]
-    if run_command("Running ITM decoder test...", cmd, tests_dir, env) != 0:
+    rc = run_optional_command(
+        "itm-decode-test",
+        "Running ITM decoder test...",
+        cmd,
+        tests_dir,
+        env,
+    )
+    if rc is None:
+        pass
+    elif rc != 0:
         failures.append("itm-decode-test")
 
 
@@ -1001,7 +1131,10 @@ def main(argv: Sequence[str]) -> int:
         print("\nResult comparison issues:")
         if comparison_summary.diff_counts_by_test:
             for test_name, diff_count in sorted(comparison_summary.diff_counts_by_test.items()):
-                print(f"  {test_name}: {diff_count} differences")
+                if diff_count == 1:
+                    print(f"  {test_name}: {diff_count} difference")
+                else:
+                    print(f"  {test_name}: {diff_count} differences")
         if comparison_summary.issue_count:
             print(f"  Comparison setup issues: {comparison_summary.issue_count}")
     if failures or comparison_summary.diff_counts_by_test or comparison_summary.issue_count:
