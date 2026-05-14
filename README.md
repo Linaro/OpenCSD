@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.8.2_
+_Current Version 1.8.3-rc1_
 
 ### Current support:
 
@@ -383,7 +383,7 @@ Version and Modification Information
     - __Bugfix__: etmv4: Packet description string typo fixed. (github #84)
     - __Bugfix__: stm: Issue with waitASync routine (github #85), fix freq packet handling
 
-- _Version 1.8.2:
+- _Version 1.8.2_:
     - __Update__: tests: add python test script for cross platform use - replace linux only bash scripts.
     - __Update__: opencsd: memory access - added debug to trace memory accesses by library under control of env var.
     - __Bugfix__: tests: windows test program names differ from linux ones - fix to make same
@@ -392,7 +392,16 @@ Version and Modification Information
                   issues. (github #88)
     - __Bugfix__: Fix mac-os build for test programs.
 
-     
+- _Version 1.8.3-rc1_:
+    - __Update__: build: Experimental cmake build files. (github #89)
+    - __Update__: build: Unix build - option to create non-versioned, statically linked c-api .so for 
+                  distribution as part of a larger product. Will not install (github #91)
+    - __Bugfix__: opencsd: etm4: Fix issue with M profile exception return packets - handle as 
+                  P0 element for all M archs. (github #90)
+    - __Bugfix__: opencsd: ete: etm4: TS marker packets valid in both protocols. Ensure invalid if not
+                  in use as defined by ID register.
+    - __Bugfix__: opencsd: etm4: Fix handling of exception return address in middle of 
+                  part executed instruction. (github #92)  
 Licence Information
 ===================
 
