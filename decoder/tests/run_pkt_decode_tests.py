@@ -908,6 +908,7 @@ def run_ete_suite(
 def parse_args(argv: Sequence[str]) -> tuple[argparse.Namespace, list[str]]:
     parser = argparse.ArgumentParser(
         description="Run OpenCSD packet decode regression tests on Linux, macOS, or Windows.",
+        epilog="Pass additional trc_pkt_lister arguments only after '--'.",
     )
     parser.add_argument(
         "--suite",
@@ -977,9 +978,14 @@ def parse_args(argv: Sequence[str]) -> tuple[argparse.Namespace, list[str]]:
         help="Set OPENCSD_MEMACC_REQ_TRACE=1 for every test process started by this runner.",
     )
 
-    namespace, passthrough = parser.parse_known_args(argv)
-    if passthrough and passthrough[0] == "--":
-        passthrough = passthrough[1:]
+    passthrough: list[str] = []
+    parseable_argv = list(argv)
+    if "--" in parseable_argv:
+        separator_index = parseable_argv.index("--")
+        passthrough = parseable_argv[separator_index + 1 :]
+        parseable_argv = parseable_argv[:separator_index]
+
+    namespace = parser.parse_args(parseable_argv)
 
     diff_results_suffixes = namespace.diff_results_suffix or []
     if namespace.diff_previous and diff_results_suffixes:

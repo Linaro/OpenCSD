@@ -94,13 +94,17 @@ __Runner options__
 - `--memacc-req-trace` : set `OPENCSD_MEMACC_REQ_TRACE=1` for all test processes started by the script.
 - `--diff-only` : run only the result comparison step without running any tests.
 
-Any additional arguments after the script options are passed through to
-`trc_pkt_lister`. Use `--` to separate runner options from the packet lister
-arguments when needed.
+Any additional arguments for `trc_pkt_lister` must appear after `--`. The
+Python runner validates all options before `--`, and any unknown option there
+is treated as an error instead of being passed through.
 
 Example:
 
 `python .\decoder\tests\run_pkt_decode_tests.py --suite ete -- --stats`
+
+This will fail because `--stats` is before `--`:
+
+`python .\decoder\tests\run_pkt_decode_tests.py --suite ete --stats`
 
 __Result comparison__
 
