@@ -77,9 +77,13 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
             -Wlogical-op
             -fexceptions
         )
-        set(OPENCSD_LINK_FLAGS
-            -Wl,-z,defs
-        )
+        if(APPLE)
+            set(OPENCSD_LINK_FLAGS)
+        else()
+            set(OPENCSD_LINK_FLAGS
+                -Wl,-z,defs
+            )
+        endif()
     endif()
 else()
     set(OPENCSD_C_FLAGS)
@@ -129,29 +133,9 @@ function(opencsd_stage_shared_libs target)
         return()
     endif()
 
-    foreach(shared_tgt IN ITEMS opencsd opencsd_c_api)
-        if(WIN32)
-            add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    $<TARGET_FILE:${shared_tgt}>
-                    $<TARGET_FILE_DIR:${target}>/$<TARGET_FILE_NAME:${shared_tgt}>
-                VERBATIM
-            )
-        else()
-            add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    $<TARGET_FILE:${shared_tgt}>
-                    $<TARGET_FILE_DIR:${target}>/$<TARGET_FILE_NAME:${shared_tgt}>
-                COMMAND ${CMAKE_COMMAND} -E create_symlink
-                    $<TARGET_FILE_NAME:${shared_tgt}>
-                    $<TARGET_FILE_DIR:${target}>/$<TARGET_SONAME_FILE_NAME:${shared_tgt}>
-                COMMAND ${CMAKE_COMMAND} -E create_symlink
-                    $<TARGET_SONAME_FILE_NAME:${shared_tgt}>
-                    $<TARGET_FILE_DIR:${target}>/$<TARGET_LINKER_FILE_NAME:${shared_tgt}>
-                VERBATIM
-            )
-        endif()
-    endforeach()
+    if(TARGET stage_shared_libs)
+        add_dependencies(${target} stage_shared_libs)
+    endif()
 endfunction()
 
 function(opencsd_add_test_executable target)
@@ -229,28 +213,7 @@ set(SNAPSHOT_PARSER_SRCS
     decoder/tests/snapshot_parser_lib/source/ss_to_dcdtree.cpp
 )
 
-if(OPENCSD_BUILD_MIN_LIB_STATIC)
-    add_library(opencsd STATIC ${OPENCSD_SRCS})
-    add_library(OpenCSD::opencsd ALIAS opencsd)
-    target_link_libraries(opencsd PUBLIC opencsd_options)
-    target_include_directories(opencsd PRIVATE decoder/source)
-    set_target_properties(opencsd PROPERTIES
-        VERSION ${PROJECT_VERSION}
-        SOVERSION ${PROJECT_VERSION_MAJOR}
-    )
-
-    add_library(opencsd_c_api STATIC ${OPENCSD_C_API_SRCS})
-    add_library(OpenCSD::opencsd_c_api ALIAS opencsd_c_api)
-    target_link_libraries(opencsd_c_api PUBLIC opencsd PRIVATE opencsd_options)
-    target_include_directories(opencsd_c_api PRIVATE decoder/source)
-    if(WIN32)
-        target_compile_definitions(opencsd_c_api PUBLIC OCSD_USE_STATIC_C_API)
-    endif()
-    set_target_properties(opencsd_c_api PROPERTIES
-        VERSION ${PROJECT_VERSION}
-        SOVERSION ${PROJECT_VERSION_MAJOR}
-    )
-else()
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_library(opencsd_obj OBJECT ${OPENCSD_SRCS})
     target_link_libraries(opencsd_obj PRIVATE opencsd_options)
     target_include_directories(opencsd_obj PRIVATE decoder/source)
@@ -262,20 +225,20 @@ else()
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
     )
-    if(WIN32)
-        set_target_properties(opencsd PROPERTIES
-            RUNTIME_OUTPUT_NAME opencsd
-            ARCHIVE_OUTPUT_NAME opencsd_dll
-        )
-    endif()
     opencsd_set_output_dirs(opencsd "lib")
 
     add_library(opencsd_static STATIC $<TARGET_OBJECTS:opencsd_obj>)
     add_library(OpenCSD::opencsd_static ALIAS opencsd_static)
     target_link_libraries(opencsd_static PUBLIC opencsd_options)
-    set_target_properties(opencsd_static PROPERTIES
-        OUTPUT_NAME opencsd
-    )
+    if(WIN32)
+        set_target_properties(opencsd_static PROPERTIES
+            OUTPUT_NAME opencsd
+        )
+    else()
+        set_target_properties(opencsd_static PROPERTIES
+            OUTPUT_NAME opencsd_static
+        )
+    endif()
     opencsd_set_output_dirs(opencsd_static "lib")
 
     add_library(opencsd_c_api_obj_shared OBJECT ${OPENCSD_C_API_SRCS})
@@ -296,12 +259,6 @@ else()
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
     )
-    if(WIN32)
-        set_target_properties(opencsd_c_api PROPERTIES
-            RUNTIME_OUTPUT_NAME opencsd_c_api
-            ARCHIVE_OUTPUT_NAME opencsd_c_api_dll
-        )
-    endif()
     opencsd_set_output_dirs(opencsd_c_api "lib")
 
     add_library(opencsd_c_api_obj_static OBJECT ${OPENCSD_C_API_SRCS})
@@ -317,16 +274,80 @@ else()
     if(WIN32)
         target_compile_definitions(opencsd_c_api_static INTERFACE OCSD_USE_STATIC_C_API)
     endif()
-    set_target_properties(opencsd_c_api_static PROPERTIES
-        OUTPUT_NAME opencsd_c_api
-    )
+    if(WIN32)
+        set_target_properties(opencsd_c_api_static PROPERTIES
+            OUTPUT_NAME opencsd_c_api
+        )
+    else()
+        set_target_properties(opencsd_c_api_static PROPERTIES
+            OUTPUT_NAME opencsd_c_api_static
+        )
+    endif()
     opencsd_set_output_dirs(opencsd_c_api_static "lib")
+
+    if(OPENCSD_FULL_PROJECT_LAYOUT)
+        if(WIN32)
+            add_custom_target(stage_shared_libs
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${OPENCSD_BIN_OUT}"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    $<TARGET_FILE:opencsd>
+                    "${OPENCSD_BIN_OUT}/$<TARGET_FILE_NAME:opencsd>"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    $<TARGET_FILE:opencsd_c_api>
+                    "${OPENCSD_BIN_OUT}/$<TARGET_FILE_NAME:opencsd_c_api>"
+            )
+        else()
+            add_custom_target(stage_shared_libs
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${OPENCSD_BIN_OUT}"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    $<TARGET_FILE:opencsd>
+                    "${OPENCSD_BIN_OUT}/$<TARGET_FILE_NAME:opencsd>"
+                COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    $<TARGET_FILE_NAME:opencsd>
+                    "${OPENCSD_BIN_OUT}/$<TARGET_SONAME_FILE_NAME:opencsd>"
+                COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    $<TARGET_SONAME_FILE_NAME:opencsd>
+                    "${OPENCSD_BIN_OUT}/$<TARGET_LINKER_FILE_NAME:opencsd>"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    $<TARGET_FILE:opencsd_c_api>
+                    "${OPENCSD_BIN_OUT}/$<TARGET_FILE_NAME:opencsd_c_api>"
+                COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    $<TARGET_FILE_NAME:opencsd_c_api>
+                    "${OPENCSD_BIN_OUT}/$<TARGET_SONAME_FILE_NAME:opencsd_c_api>"
+                COMMAND ${CMAKE_COMMAND} -E create_symlink
+                    $<TARGET_SONAME_FILE_NAME:opencsd_c_api>
+                    "${OPENCSD_BIN_OUT}/$<TARGET_LINKER_FILE_NAME:opencsd_c_api>"
+            )
+        endif()
+        add_dependencies(stage_shared_libs opencsd opencsd_c_api)
+    endif()
 
     add_custom_target(libs DEPENDS
         opencsd
         opencsd_static
         opencsd_c_api
         opencsd_c_api_static
+    )
+else()
+    add_library(opencsd STATIC ${OPENCSD_SRCS})
+    add_library(OpenCSD::opencsd ALIAS opencsd)
+    target_link_libraries(opencsd PUBLIC opencsd_options)
+    target_include_directories(opencsd PRIVATE decoder/source)
+    set_target_properties(opencsd PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+    )
+
+    add_library(opencsd_c_api STATIC ${OPENCSD_C_API_SRCS})
+    add_library(OpenCSD::opencsd_c_api ALIAS opencsd_c_api)
+    target_link_libraries(opencsd_c_api PUBLIC opencsd PRIVATE opencsd_options)
+    target_include_directories(opencsd_c_api PRIVATE decoder/source)
+    if(WIN32)
+        target_compile_definitions(opencsd_c_api PUBLIC OCSD_USE_STATIC_C_API)
+    endif()
+    set_target_properties(opencsd_c_api PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR}
     )
 endif()
 
@@ -483,7 +504,7 @@ set(OPENCSD_INSTALL_TARGETS
     opencsd_options
 )
 
-if(NOT OPENCSD_BUILD_MIN_LIB_STATIC)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     list(APPEND OPENCSD_INSTALL_TARGETS
         opencsd_static
         opencsd_c_api_static
@@ -506,7 +527,39 @@ if(BUILD_TESTING AND NOT OPENCSD_BUILD_MIN_LIB_STATIC)
     install(FILES decoder/docs/man/trc_pkt_lister.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 endif()
 
-install(DIRECTORY decoder/include/opencsd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd)
+install(FILES
+    decoder/include/opencsd/trc_gen_elem_types.h
+    decoder/include/opencsd/ocsd_if_types.h
+    decoder/include/opencsd/ocsd_if_version.h
+    decoder/include/opencsd/trc_pkt_types.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd
+)
+install(FILES
+    decoder/include/opencsd/ptm/trc_pkt_types_ptm.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd/ptm
+)
+install(FILES
+    decoder/include/opencsd/stm/trc_pkt_types_stm.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd/stm
+)
+install(FILES
+    decoder/include/opencsd/etmv3/trc_pkt_types_etmv3.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd/etmv3
+)
+install(FILES
+    decoder/include/opencsd/etmv4/trc_pkt_types_etmv4.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd/etmv4
+)
+install(FILES
+    decoder/include/opencsd/ete/trc_pkt_types_ete.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd/ete
+)
+install(FILES
+    decoder/include/opencsd/c_api/ocsd_c_api_types.h
+    decoder/include/opencsd/c_api/opencsd_c_api.h
+    decoder/include/opencsd/c_api/ocsd_c_api_custom.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd/c_api
+)
 
 install(EXPORT OpenCSDTargets
     FILE OpenCSDTargets.cmake
