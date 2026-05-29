@@ -33,6 +33,8 @@ STANDARD_DECODE_TESTS = (
     "juno-ret-stck",
     "juno-uname-001",
     "juno-uname-002",
+    "v7m_svc_vector",
+    "v8m_svc_vector",
     "Snowball",
     "stm-issue-27",
     "stm_only",

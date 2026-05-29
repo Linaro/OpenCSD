@@ -1,0 +1,43 @@
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.2
+
+Trace Packet Lister : reading snapshot from path snapshots/v8m_svc_vector
+Using CSTMC_TRACE_FIFO as trace source
+Trace Packet Lister : Protocol printer ETMV4I on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0x10000140:10000157; Mem Space::Any
+Filename=snapshots/v8m_svc_vector/code_0x10000140.bin
+Gen_Info : ========================
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:6; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x83 0x20 0x01 0x00 0x10 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000010000140; Ctxt: AArch32, EL0, S; 
+Idx:21; ID:0; [0x06 0x17 ];	I_EXCEPT : Exception.;  SVC; Ret Addr Follows;
+Idx:23; ID:0; [0x96 0x25 ];	I_ADDR_S_IS1 : Address, Short, IS1.; Addr=0x000000001000014A ~[0x4A]
+Idx:25; ID:0; [0x02 0x60 ];	I_TIMESTAMP : Timestamp.; Updated val = 0x60
+Idx:27; ID:0; [0x83 0x2a 0x01 0x00 0x10 0x03 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000010000154; Ctxt: AArch32, EL3, S; 
+Idx:33; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:34; ID:0; [0x07 ];	I_EXCEPT_RTN : Exception Return.
+Idx:35; ID:0; [0x91 ];	I_ADDR_MATCH : Exact Address Match., [1]; Addr=0x000000001000014A; 
+Idx:36; ID:0; [0x81 0x00 ];	I_CTXT : Context Packet.; Ctxt: AArch32, EL0, S; 
+Idx:38; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:39; ID:0; [0x2d 0x04 ];	I_COMMIT : Commit; Commit(4)
+Idx:14; ID:6; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:6; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:21; ID:6; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x10000140:[0x1000014a] num_i(3) last_sz(2) (ISA=T32) E --- )
+Idx:21; ID:6; OCSD_GEN_TRC_ELEM_EXCEPTION(pref ret addr:0x1000014a; excep num (0x0b) )
+Idx:25; ID:6; OCSD_GEN_TRC_ELEM_TIMESTAMP( [ TS=0x000000000060]; )
+Idx:27; ID:6; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL3S; 32-bit; )
+Idx:33; ID:6; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x10000154:[0x10000156] num_i(1) last_sz(2) (ISA=T32) E iBR V7:impl ret)
+Idx:34; ID:6; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:36; ID:6; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:38; ID:6; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000014a:[0x10000154] num_i(3) last_sz(2) (ISA=T32) E BR  )
+Idx:41; ID:0; [0x00 0x03 ];	I_DISCARD : Discard.
+Idx:41; ID:6; OCSD_GEN_TRC_ELEM_NO_SYNC( [discard])
+Idx:41; ID:6; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 43 bytes.

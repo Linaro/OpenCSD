@@ -57,6 +57,8 @@ declare -a test_dirs_decode=(
                               "bugfix-exact-match"
                               "itm_only_csformat"
                               "itm_only_raw"
+                              "v7m_svc_vector"
+                              "v8m_svc_vector"
                               "juno_r1_1"
                               "juno-ret-stck"
                               "juno-uname-001"

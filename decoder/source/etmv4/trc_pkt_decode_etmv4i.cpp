@@ -468,11 +468,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
 
     case ETM4_PKT_I_EXCEPT_RTN:
         {
-            // P0 element if V7M profile.
-            bool bV7MProfile = (m_config->archVersion() == ARCH_V7) && (m_config->coreProfile() == profile_CortexM);
-            if (m_P0_stack.createParamElemNoParam(P0_EXCEP_RET, bV7MProfile, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
+            // P0 element for M-profile: Armv6-M, Armv7-M, Armv8-M.
+            bool bMProfile = (m_config->coreProfile() == profile_CortexM);
+            if (m_P0_stack.createParamElemNoParam(P0_EXCEP_RET, bMProfile, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
                 bAllocErr = true;
-            else if (bV7MProfile)
+            else if (bMProfile)
                 m_curr_spec_depth++;
         }
         break;
