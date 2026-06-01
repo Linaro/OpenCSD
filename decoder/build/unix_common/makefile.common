@@ -42,6 +42,10 @@ export LIB_BASE_NAME
 LIB_CAPI_NAME=$(LIB_BASE_NAME)_c_api
 export LIB_CAPI_NAME
 
+# Optional: build a single C-API shared object that statically links libopencsd.a.
+OCSD_CAPI_SINGLE_SO ?= 0
+export OCSD_CAPI_SINGLE_SO
+
 # source root directories
 export OCSD_LIB_ROOT=$(OCSD_ROOT)/lib
 

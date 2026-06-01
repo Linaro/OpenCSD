@@ -172,6 +172,27 @@ This is the `snapshot_parser_lib.lib` library, delivered to the `./tests/lib/win
 
 ### Additional Build Options ###
 
+__Single Linux C-API Shared Library__
+
+By default, Linux builds create versioned `libopencsd_c_api.so` libraries and symbolic links.
+The C API library also requires `libopencsd.so` at runtime.
+
+To build a single shared library instead, use:
+
+`make OCSD_CAPI_SINGLE_SO=1`
+
+This creates a single, unversioned `libopencsd_c_api.so` by statically linking `libopencsd.a`.
+As a result, no versioned libraries or symbolic links are created, and there is no runtime dependency on `libopencsd.so`.
+ 
+This option is intended for cases where `libopencsd_c_api.so` is copied directly from the build output into another package.
+
+The standard `make install` target continues to install the versioned shared libraries and symlink chain.
+
+This configuration mirrors the Windows delivery model and removes the runtime dependency on `libopencsd.so`.
+
+This option is available only for Unix Makefile builds.
+
+
 __Library Virtual Address Size__
 
 The ocsd_if_types.h file includes a #define that controls the size of the virtual addresses 
