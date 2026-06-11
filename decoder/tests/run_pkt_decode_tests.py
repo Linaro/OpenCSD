@@ -33,6 +33,7 @@ STANDARD_DECODE_TESTS = (
     "juno-ret-stck",
     "juno-uname-001",
     "juno-uname-002",
+    "nmi_partial_exec_snapshot",
     "Snowball",
     "stm-issue-27",
     "stm_only",

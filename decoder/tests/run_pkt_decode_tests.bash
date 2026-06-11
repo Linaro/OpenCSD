@@ -57,6 +57,7 @@ declare -a test_dirs_decode=(
                               "bugfix-exact-match"
                               "itm_only_csformat"
                               "itm_only_raw"
+                              "nmi_partial_exec_snapshot"
                               "juno_r1_1"
                               "juno-ret-stck"
                               "juno-uname-001"

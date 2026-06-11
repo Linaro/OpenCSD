@@ -1,0 +1,43 @@
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.2
+
+Test Command Line:-
+bin/linux64/rel/trc_pkt_lister -ss_dir snapshots/nmi_partial_exec_snapshot -decode -no_time_print -logfilename results/nmi_partial_exec_snapshot.ppl
+
+Trace Packet Lister : reading snapshot from path snapshots/nmi_partial_exec_snapshot
+Using CSTMC_TRACE_FIFO as trace source
+Trace Packet Lister : Protocol printer ETMV4I on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0x10000140:10000157; Mem Space::Any
+Filename=snapshots/nmi_partial_exec_snapshot/code_0x10000140.bin
+Gen_Info : ========================
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:6; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x83 0x20 0x01 0x00 0x10 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000010000140; Ctxt: AArch32, EL0, S; 
+Idx:21; ID:0; [0x06 0x05 ];	I_EXCEPT : Exception.;  NMI; Ret Addr Follows;
+Idx:23; ID:0; [0x96 0x21 ];	I_ADDR_S_IS1 : Address, Short, IS1.; Addr=0x0000000010000142 ~[0x42]
+Idx:25; ID:0; [0x83 0x2a 0x01 0x00 0x10 0x03 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000010000154; Ctxt: AArch32, EL3, S; 
+Idx:31; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:32; ID:0; [0x07 ];	I_EXCEPT_RTN : Exception Return.
+Idx:33; ID:0; [0x83 0x20 0x01 0x00 0x10 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000010000140; Ctxt: AArch32, EL0, S; 
+Idx:39; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:40; ID:0; [0x2d 0x04 ];	I_COMMIT : Commit; Commit(4)
+Idx:14; ID:6; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:6; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:21; ID:6; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x10000140:[0x10000142] num_i(1) last_sz(4) (ISA=T32) E --- )
+Idx:21; ID:6; OCSD_GEN_TRC_ELEM_EXCEPTION(pref ret addr:0x10000142; excep num (0x02) )
+Idx:25; ID:6; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL3S; 32-bit; )
+Idx:31; ID:6; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x10000154:[0x10000156] num_i(1) last_sz(2) (ISA=T32) E iBR V7:impl ret)
+Idx:32; ID:6; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:33; ID:6; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:39; ID:6; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x10000140:[0x10000146] num_i(2) last_sz(2) (ISA=T32) E BR  )
+Idx:42; ID:0; [0x00 0x03 ];	I_DISCARD : Discard.
+Idx:42; ID:6; OCSD_GEN_TRC_ELEM_NO_SYNC( [discard])
+Idx:42; ID:6; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 44 bytes.

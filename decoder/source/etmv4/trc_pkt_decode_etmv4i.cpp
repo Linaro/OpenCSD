@@ -2017,6 +2017,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(instr_range_t &range, WP_res_t &WP
 
     while(WPRes == WP_NOT_FOUND)
     {
+        const ocsd_vaddr_t curr_instr_addr = m_instr_info.instr_addr;
+
         // start off by reading next opcode;
         bytesReq = 4;
         err = accessMemory(m_instr_info.instr_addr, getCurrMemSpace(),&bytesReq,(uint8_t *)&opcode);
@@ -2037,6 +2039,13 @@ ocsd_err_t TrcPktDecodeEtmV4I::traceInstrToWP(instr_range_t &range, WP_res_t &WP
             {
                 if (m_instr_info.instr_addr == nextAddrMatch) 
                     WPRes = WP_FOUND;
+                else if ((m_config->coreProfile() == profile_CortexM) && (m_instr_info.isa == ocsd_isa_thumb2) && (nextAddrMatch > curr_instr_addr) && (nextAddrMatch < m_instr_info.instr_addr))
+                {
+                    // For M-profile, a preferred exception return address can lie inside
+                    // a restartable / interrupt-continuable 32-bit T32 instruction.
+                    m_instr_info.instr_addr = nextAddrMatch;
+                    WPRes = WP_FOUND;
+                }
             }
             else if (m_instr_info.type != OCSD_INSTR_OTHER)
                 WPRes = WP_FOUND;
