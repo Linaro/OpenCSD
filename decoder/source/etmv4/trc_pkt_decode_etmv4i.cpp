@@ -104,11 +104,20 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
             if(m_curr_packet_in->getType() == ETM4_PKT_I_TRACE_INFO)
             {
                 // do the first trace info packet after sync.
-                if (!doTraceInfoPacket())
+                ocsd_err_t tierr = doTraceInfoPacket();
+                if (tierr == OCSD_ERR_BAD_DECODE_PKT)
+                {
+                    // corrupt TRACE_INFO (speculation depth above TRCIDR8.MAXSPEC):
+                    // drop it and wait for the next sync rather than fail the decode.
+                    m_curr_state = WAIT_SYNC;
+                }
+                else if (tierr != OCSD_OK)
                     resp = OCSD_RESP_FATAL_SYS_ERR;
-
-                m_curr_state = DECODE_PKTS;
-                m_return_stack.flush();
+                else
+                {
+                    m_curr_state = DECODE_PKTS;
+                    m_return_stack.flush();
+                }
             }
             /* ETE spec allows early event packets. */
             else if ((m_config->MajVersion() >= 0x5) && 
@@ -693,19 +702,32 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
 }
 
 // On first trace info we see - set up the trace parameters it contains. 
-bool TrcPktDecodeEtmV4I::doTraceInfoPacket()
+ocsd_err_t TrcPktDecodeEtmV4I::doTraceInfoPacket()
 {
     m_trace_info = m_curr_packet_in->getTraceInfo();
     m_cc_threshold = m_curr_packet_in->getCCThreshold();
     m_curr_spec_depth = m_curr_packet_in->getCurrSpecDepth();
 
+    // A TRACE_INFO cannot report more outstanding speculative P0 elements than the
+    // implementation supports (TRCIDR8.MAXSPEC, 0 on cores without speculation).
+    // A larger value is a corrupt or mis-synchronised packet: honouring it below
+    // allocates one placeholder element per unit of depth with no upper bound (a
+    // garbage depth of 44M cost 1.3 GB of heap), so reject the packet instead.
+    if (m_curr_spec_depth > m_max_spec_depth)
+    {
+        LogError(ocsdError(OCSD_ERR_SEV_ERROR, OCSD_ERR_BAD_DECODE_PKT, m_index_curr_pkt, m_CSID,
+                           "TRACE_INFO speculation depth exceeds TRCIDR8.MAXSPEC - packet rejected, waiting for sync."));
+        m_curr_spec_depth = 0;
+        return OCSD_ERR_BAD_DECODE_PKT;
+    }
+
     // create m_curr_spec_depth unseen elements at the start of the P0 stack
     if (m_P0_stack.createUnseenUncommitedP0Elem(m_curr_spec_depth, m_curr_packet_in->getType(), m_index_curr_pkt) != m_curr_spec_depth)
-        return false;
-    
+        return OCSD_ERR_MEM;
+
     // mark mark the TINFO position.
     if (m_P0_stack.createParamElemNoParam(P0_TINFO, false, m_curr_packet_in->getType(), m_index_curr_pkt) == 0)
-        return false;    
+        return OCSD_ERR_MEM;
 
     /* put a trans marker in stack if started in trans state */
     if (m_trace_info.bits.in_trans_state)
@@ -715,7 +737,7 @@ bool TrcPktDecodeEtmV4I::doTraceInfoPacket()
 #ifdef DATA_TRACE_SUPPORTED
     m_p0_key = m_curr_packet_in->getP0Key();
 #endif
-    return true;
+    return OCSD_OK;
 }
 
 /* Element resolution
