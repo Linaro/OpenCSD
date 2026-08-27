@@ -78,7 +78,7 @@ protected:
     ocsd_err_t mispredictAtom();    // mispredict an atom
     ocsd_err_t discardElements();   // discard elements and flush
 
-    bool doTraceInfoPacket();
+    ocsd_err_t doTraceInfoPacket();   // OCSD_ERR_BAD_DECODE_PKT: corrupt packet, caller re-syncs
     void updateContext(TrcStackElemCtxt* pCtxtElem, OcsdTraceElement& elem);
 
     // process atom will create instruction trace, or no memory access trace output elements. 
