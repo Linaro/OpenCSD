@@ -47,6 +47,7 @@
 #include "opencsd/ptm/trc_pkt_types_ptm.h"
 #include "opencsd/stm/trc_pkt_types_stm.h"
 #include "opencsd/ete/trc_pkt_types_ete.h"
+#include "opencsd/itm/trc_pkt_types_itm.h"
 
 /** @ingroup lib_c_api
 @{*/

@@ -633,6 +633,10 @@ set(OPENCSD_INSTALL_HEADERS_ETE
     decoder/include/opencsd/ete/trc_pkt_types_ete.h
 )
 
+set(OPENCSD_INSTALL_HEADERS_ITM
+    decoder/include/opencsd/itm/trc_pkt_types_itm.h
+)
+
 set(OPENCSD_INSTALL_HEADERS_C_API
     decoder/include/opencsd/c_api/ocsd_c_api_types.h
     decoder/include/opencsd/c_api/opencsd_c_api.h
@@ -661,6 +665,10 @@ install(FILES ${OPENCSD_INSTALL_HEADERS_ETMV4}
 
 install(FILES ${OPENCSD_INSTALL_HEADERS_ETE}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd/ete
+)
+
+install(FILES ${OPENCSD_INSTALL_HEADERS_ITM}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/opencsd/itm
 )
 
 install(FILES ${OPENCSD_INSTALL_HEADERS_C_API}
