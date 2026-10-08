@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.8.3_
+_Current Version 1.8.4-rc1_
 
 ### Current support:
 
@@ -402,6 +402,11 @@ Version and Modification Information
                   in use as defined by ID register.
     - __Bugfix__: opencsd: etm4: Fix handling of exception return address in middle of 
                   part executed instruction. (github #92)  
+    
+- _Version 1.8.4-rc1_:
+    - __Update__: build: Add itm headers to installation. (github #94)
+    - __Bugfix__: opencsd: etm4: Fix handling of invalid TRACE_INFO packet. (github #93)
+
 
 Licence Information
 ===================
