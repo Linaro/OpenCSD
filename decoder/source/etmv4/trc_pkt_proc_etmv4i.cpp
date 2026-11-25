@@ -1345,7 +1345,6 @@ void TrcPktProcEtmV4I::BuildIPacketTable()
         m_i_table[0x07].pptkFn = &TrcPktProcEtmV4I::iPktNoPayload;
 
     // b00001010, b00001011 ETE TRANS packets
-    // b00001001 - ETE sw instrumentation packet
     if (m_config.MajVersion() >= 0x5)
     {
         m_i_table[0x0A].pkt_type = ETE_PKT_I_TRANS_ST;
@@ -1354,12 +1353,13 @@ void TrcPktProcEtmV4I::BuildIPacketTable()
         m_i_table[0x0B].pkt_type = ETE_PKT_I_TRANS_COMMIT;
         m_i_table[0x0B].pptkFn = &TrcPktProcEtmV4I::iPktNoPayload;
 
-        // FEAT_ITE - sw instrumentation packet
-        if (m_config.MinVersion() >= 0x3)
-        {
-            m_i_table[0x09].pkt_type = ETE_PKT_I_ITE;
-            m_i_table[0x09].pptkFn = &TrcPktProcEtmV4I::iPktITE;
-        }
+    }
+
+    // b00001001 - FEAT_ITE sw instrumentation packet (TRCIDR0.ITE).
+    if (m_config.hasITE())
+    {
+        m_i_table[0x09].pkt_type = ETE_PKT_I_ITE;
+        m_i_table[0x09].pptkFn = &TrcPktProcEtmV4I::iPktITE;
     }
 
     // b0000 110x - cycle count f2

@@ -82,6 +82,7 @@ public:
     const bool hasRetStack() const;
     const uint8_t numEvents() const;
     const bool hasTSMarker() const;
+    const bool hasITE() const;
     
     typedef enum _condType {
         COND_PASS_FAIL,
@@ -254,6 +255,11 @@ inline const bool EtmV4Config::hasQFilter()
 inline const bool EtmV4Config::hasTrcExcpData() const
 {
     return (bool)((m_cfg.reg_idr0 & 0x20000) == 0x20000);
+}
+
+inline const bool EtmV4Config::hasITE() const
+{
+    return (m_cfg.reg_idr0 & 0x400000) != 0;
 }
 
 inline const bool EtmV4Config::hasTSMarker() const
