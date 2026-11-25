@@ -90,6 +90,9 @@ public:
     // control memory access caching at runtime
     ocsd_err_t enableCaching(bool bEnable);
 
+    // invalidate all cached memory, preserving configuration and enabled state
+    void invalidateCaching() { if (m_cache.enabled()) m_cache.invalidateAll(); }
+
     // set cache page size and number of pages (max 16k size, 256 pages) - 
     // optionally error if outside limits - otherwise set to max / min automatically
     ocsd_err_t setCacheSizes(uint16_t page_size, int num_pages, const bool err_on_limit = false);

@@ -259,14 +259,22 @@ void DecodeTree::logMappedRanges()
         m_default_mapper->logMappedRanges();
 }
 
-ocsd_err_t DecodeTree::setMemAccCacheing(const bool enable, const uint16_t page_size, const int nr_pages)
+ocsd_err_t DecodeTree::setMemAccCacheing(const int operation, const uint16_t page_size, const int nr_pages)
 {
     ocsd_err_t err = OCSD_OK;
 
     if (!m_default_mapper)
         return OCSD_ERR_NOT_INIT;
 
-    if (enable)
+    if (operation == OCSD_MEM_ACC_CACHE_INVALIDATE)
+    {
+        m_default_mapper->invalidateCaching();
+        return OCSD_OK;
+    }
+    if (operation != OCSD_MEM_ACC_CACHE_DISABLE && operation != OCSD_MEM_ACC_CACHE_ENABLE)
+        return OCSD_ERR_INVALID_PARAM_VAL;
+
+    if (operation == OCSD_MEM_ACC_CACHE_ENABLE)
     {
         // set cache sizes - error if params out of limits
         err = m_default_mapper->setCacheSizes(page_size, nr_pages, true);

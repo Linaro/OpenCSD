@@ -353,13 +353,15 @@ OCSD_C_API void ocsd_tl_log_mapped_mem_ranges(const dcd_tree_handle_t handle);
  * System defaults to caching enabled.
  * 
  * @param handle    : Handle to decode tree.
- * @param enable    : 0 to disable caching.
- * @param page_size : Page size in bytes.
- * @param nr_pages  : Number of pages to use.
+ * @param operation : OCSD_MEM_ACC_CACHE_DISABLE, OCSD_MEM_ACC_CACHE_ENABLE, or
+ *                    OCSD_MEM_ACC_CACHE_INVALIDATE to invalidate all cached memory.
+ *                    Invalidation preserves cache configuration and enabled state.
+ * @param page_size : Page size in bytes (used only for OCSD_MEM_ACC_CACHE_ENABLE).
+ * @param nr_pages  : Number of pages to use (used only for OCSD_MEM_ACC_CACHE_ENABLE).
  * 
  * @return ocsd_err_t  : Library error code -  OCSD_OK if successful.
  */
-OCSD_C_API ocsd_err_t ocsd_dt_set_mem_acc_cacheing(const dcd_tree_handle_t handle, const int enable, const uint16_t page_size, const int nr_pages);
+OCSD_C_API ocsd_err_t ocsd_dt_set_mem_acc_cacheing(const dcd_tree_handle_t handle, const int operation, const uint16_t page_size, const int nr_pages);
 
 /** @}*/  
 

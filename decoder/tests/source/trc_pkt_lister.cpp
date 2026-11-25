@@ -855,7 +855,7 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
             if (macc_cache_disable || macc_cache_page_size || macc_cache_page_num)
             {
                 if (macc_cache_disable)
-                    dcd_tree->setMemAccCacheing(false, 0, 0);
+                    dcd_tree->setMemAccCacheing(OCSD_MEM_ACC_CACHE_DISABLE, 0, 0);
                 else 
                 {
                     // one value set - set the other to default
@@ -863,7 +863,7 @@ void ListTracePackets(ocsdDefaultErrorLogger &err_logger, SnapShotReader &reader
                         macc_cache_page_size = MEM_ACC_CACHE_DEFAULT_PAGE_SIZE;
                     if (!macc_cache_page_num)
                         macc_cache_page_num = MEM_ACC_CACHE_DEFAULT_MRU_SIZE;
-                    dcd_tree->setMemAccCacheing(true, macc_cache_page_size, macc_cache_page_num);
+                    dcd_tree->setMemAccCacheing(OCSD_MEM_ACC_CACHE_ENABLE, macc_cache_page_size, macc_cache_page_num);
                 }
             }
         }

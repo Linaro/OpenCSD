@@ -425,6 +425,11 @@ typedef struct _ocsd_pe_context {
     Types used when accessing memory storage for traced opcodes..
 @{*/
 
+/** Memory accessor caching operations. */
+#define OCSD_MEM_ACC_CACHE_DISABLE       0 /**< Disable memory caching. */
+#define OCSD_MEM_ACC_CACHE_ENABLE        1 /**< Enable memory caching. */
+#define OCSD_MEM_ACC_CACHE_INVALIDATE    2 /**< Invalidate all cached memory. */
+
 /** memory space bitfield enum for available security states and exception levels used 
    when accessing memory. */
 typedef enum _ocsd_mem_space_acc_t {

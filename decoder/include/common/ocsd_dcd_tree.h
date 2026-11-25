@@ -293,10 +293,13 @@ public:
     /*! Memory accessor cacheing
      * 
      *  Memory accessor uses caching to reduce the number of calls / callbacks for memory images
-     *  This allows controlling / disabling of cacheing mechanisms.
+     *  Operation: OCSD_MEM_ACC_CACHE_DISABLE, OCSD_MEM_ACC_CACHE_ENABLE, or
+     *  OCSD_MEM_ACC_CACHE_INVALIDATE to invalidate all cached memory.
+     *  Page size and page count are used only when enabling caching.
+     *  Invalidation preserves cache configuration and enabled state.
      *  Error returned if cache limits exceeded (4096 byte page, 256 pages)
      */
-    ocsd_err_t setMemAccCacheing(const bool enable, const uint16_t page_size, const int nr_pages);
+    ocsd_err_t setMemAccCacheing(const int operation, const uint16_t page_size, const int nr_pages);
 
 /** @}*/
 
