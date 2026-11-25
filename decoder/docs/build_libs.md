@@ -256,6 +256,20 @@ Default values are set at 16 pages of 2048 bytes.
 - `OPENCSD_MEMACC_CACHE_OFF`       : disable memacc caching.
 
 
+Context Timestamp Lookahead
+---------------------------
+
+`OPENCSD_CONTEXT_TS_BUFFER_SIZE` controls the packet lookahead limit used by the ETMv4 / ETE
+decoder when `ETM4_OPFLG_PKTDEC_CONTEXT_TS` is included in the decoder creation flags.
+Set the variable before creating the decoder. Decimal values from 10 to 5000 are accepted;
+the default is 100 packets, and invalid values use this default.
+
+The limit counts packets following the context, including the timestamp packet. A pending context
+and a synthetic timestamp copy require additional storage. The variable does not enable context
+timestamp lookahead by itself: the creation flag must be set and timestamps must be enabled in the
+trace configuration (`TRCCONFIGR.TS`). See the programming guide's decoder creation options for
+the buffering and timestamp output behaviour.
+
 Library Debug Options
 ---------------------
 

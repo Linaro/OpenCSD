@@ -71,6 +71,7 @@ void EtmV4ITrcPacket::initStartState()
 
 void EtmV4ITrcPacket::initNextPacket()
 {
+    pkt_valid.bits.timestamp_copied = 0;
     // clear valid bits for elements that are only valid over a single packet.
     pkt_valid.bits.cc_valid = 0;
     pkt_valid.bits.commit_elem_valid = 0;
@@ -171,6 +172,8 @@ void EtmV4ITrcPacket::toString(std::string &str) const
             oss << "; Updated val = " << std::hex << "0x" << ts.timestamp;
             if (pkt_valid.bits.cc_valid)
                 oss << "; CC=" << std::hex << "0x" << cycle_count;
+            if (pkt_valid.bits.timestamp_copied)
+                oss << "; (out of order copy) ";
             str += oss.str();
         }
         break;

@@ -300,6 +300,7 @@ typedef struct _ocsd_etmv4_i_pkt
             uint32_t cc_valid:1;
             uint32_t commit_elem_valid:1;
             uint32_t cancel_elem_valid:1;
+            uint32_t timestamp_copied:1; /**< Synthetic timestamp copied after a context. */
         } bits;
     } pkt_valid;
 
@@ -397,7 +398,10 @@ typedef struct _ocsd_etmv4_cfg
 #define ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS    0x00010000 /**< Split source address output ranges for N-atoms */
 #define ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK   0x00020000 /**< check for invalid AA64 opcodes. (MSW == 0x0000) */
 
-#define ETE_ETM4_OPFLG_MASK (ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS | ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK)
+#define ETM4_OPFLG_PKTDEC_CONTEXT_TS 0x00040000        /**< Copy next timestamp after context, to 
+                                                            appear directly after context.  (bounded lookahead). */
+
+#define ETE_ETM4_OPFLG_MASK (ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS | ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK | ETM4_OPFLG_PKTDEC_CONTEXT_TS)
 
 /** @}*/
 /** @}*/

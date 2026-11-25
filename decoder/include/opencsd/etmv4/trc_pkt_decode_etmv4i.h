@@ -35,6 +35,7 @@
 #ifndef ARM_TRC_PKT_DECODE_ETMV4I_H_INCLUDED
 #define ARM_TRC_PKT_DECODE_ETMV4I_H_INCLUDED
 
+#include <deque>
 #include "common/trc_pkt_decode_base.h"
 #include "opencsd/etmv4/trc_pkt_elem_etmv4i.h"
 #include "opencsd/etmv4/trc_cmp_cfg_etmv4.h"
@@ -55,6 +56,9 @@ public:
     TrcPktDecodeEtmV4I();
     TrcPktDecodeEtmV4I(int instIDNum);
     virtual ~TrcPktDecodeEtmV4I();
+    virtual ocsd_datapath_resp_t PacketDataIn(const ocsd_datapath_op_t op,
+        const ocsd_trc_index_t index, const EtmV4ITrcPacket *packet);
+
 
 protected:
     /* implementation packet decoding interface */
@@ -122,6 +126,21 @@ protected:
     ocsd_err_t addElemEvent(TrcStackElemParam* pParamElem);
 
 private:
+    struct BufferedPacket {
+        EtmV4ITrcPacket packet;
+        ocsd_trc_index_t index;
+        BufferedPacket(const EtmV4ITrcPacket &p, ocsd_trc_index_t i) :
+            packet(p), index(i) {}
+    };
+    std::deque<BufferedPacket> m_packet_buffer;
+    EtmV4ITrcPacket m_buffer_active_packet;
+    size_t m_packet_buffer_limit;
+    bool m_context_ts_enabled;
+    bool m_context_ts_buffering;
+    bool m_buffer_wait;
+    ocsd_datapath_op_t m_buffer_pending_op;
+    ocsd_trc_index_t m_buffer_pending_index;
+    ocsd_datapath_resp_t drainPacketBuffer();
     void SetInstrInfoInAddrISA(const ocsd_vaddr_t addr_val, const uint8_t isa);
     const ocsd_isa calcISA(const bool SF, const uint8_t IS) const
     {

@@ -155,6 +155,7 @@ typedef struct _ocsd_generic_trace_elem {
             uint32_t last_instr_cond:1;     /**< 1 if the last instruction was conditional */
             uint32_t excep_ret_addr_br_tgt:1; /**< 1 if exception return address (en_addr) is also the target of a taken branch addr from the previous range. */
             uint32_t excep_M_tail_chain:1;    /**< 1 if the exception is an M class exception with no pref ret address - tail chained or similar */
+            uint32_t timestamp_out_of_order:1; /**< Timestamp copied forward to a preceding context. */
         };
         uint32_t flag_bits;
     };

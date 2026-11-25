@@ -78,6 +78,7 @@ ETE_DECODE_TESTS = (
     "trace_file_vmid",
     "ts_bit64_set",
     "ts_marker",
+    "ts_marker_context_ts",
 )
 
 ETE_SRC_ADDR_N_TESTS = (
@@ -859,10 +860,13 @@ def run_ete_suite(
 
     for test_dir in tests_to_run:
         log_name = out_dir / f"{test_dir}.ppl"
+        context_ts = test_dir == "ts_marker_context_ts"
+        snapshot_name = "ts_marker" if context_ts else test_dir
         cmd = [
             trc_pkt_lister,
             "-ss_dir",
-            str(snapshot_dir / test_dir),
+            str(snapshot_dir / snapshot_name),
+            *(["-context_ts"] if context_ts else []),
             *lister_args,
             "-decode",
             "-no_time_print",

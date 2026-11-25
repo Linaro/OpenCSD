@@ -51,6 +51,9 @@ ipch/
 # ignore emacs backup saves
 *~
 
+# ignore temporary directories at any depth
+.tmp*/
+
 # ignore bin test directory
 bin/
 *.log

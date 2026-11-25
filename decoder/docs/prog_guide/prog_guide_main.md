@@ -286,9 +286,12 @@ The different trace source types have different configuration structures, classe
 | __PTM__   | @ref ocsd_ptm_cfg   | PtmConfig   | @ref OCSD_BUILTIN_DCD_PTM    |
 | __STM__   | @ref ocsd_stm_cfg   | STMConfig   | @ref OCSD_BUILTIN_DCD_STM    |
 
+#### Additional Decoder Configuration ####
+
+_**General API Flags**_
+
 There are a number of additional flags that can be set on `decoderCreateFlags` when creating a decoder.
 
-Key ones are:-
 - `OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS`   : Halt decoder on bad packets. Default behaviour is to try to re-sync and recover.
 
 There are consistency checks to attempt to spot mismatches between the supplied program image from the client and the trace data.
@@ -304,11 +307,61 @@ An incorrect program image can result in N atoms (not take branch) associated wi
 
 Each of these options will result in a decoder reset and resync - there will be an output of `OCSD_GEN_TRC_ELEM_NO_SYNC` with a reason of `UNSYNC_BAD_IMAGE`.
 
-Additional flag  `ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK` is for ETMv4 / ETE decode that adds in checks on AA64 opcodes for validity.
+_**Decoder Specific Flags**_
+
+-  `ETM4_OPFLG_PKTDEC_AA64_OPCODE_CHK` :
+	
+This is is for ETMv4 / ETE decode that adds in checks on AA64 opcodes for validity.
 
 The check ensures that the top 16 bits are not 0x0000 - which is not possible in a legal opcode.
 This can catch errors were incorrect program images can potentially cause decode to enter uninitialised data areas.
 
+
+- `ETE_OPFLG_PKTDEC_SRCADDR_N_ATOMS` : 
+
+For ETE source address packets, split output instruction ranges at not-taken conditional branches (N atoms). 
+
+By default, these branches can be included within a single source address range. Enabling this option requires 
+instruction decoding through the range to identify them.
+
+
+- `ETM4_OPFLG_PKTDEC_CONTEXT_TS` : 
+
+For ETMv4 / ETE, creates an additional copy the first timestamp following a context (including an address/context packet) immediately after that context,
+using bounded packet lookahead. 
+
+This option is disabled by default and only buffers packets when timestamps are enabled in the trace configuration (`TRCCONFIGR.TS`). 
+Original packet remains in seqence to be used as normal. 
+
+This option is designed for clients such as 'perf', which require both a timestamp and context to locate the correct traced program images.
+In normal trace timestamps are not guaranteed to appear immediately after the context switch so this allows for an approximation to allow better
+decode. 
+
+The default lookahead is 100 packets following the context, including the timestamp packet.
+Set the **environment variable** `OPENCSD_CONTEXT_TS_BUFFER_SIZE` before creating the decoder to select a decimal limit from
+10 to 5000 packets; invalid values use the default.  Only the context starting a buffered batch
+receives a timestamp copy; later contexts in the batch do not restart lookahead. The batch is released
+when a timestamp arrives or the limit is reached. End of trace releases unmatched packets, flush drains
+pending packets before flushing the decoder, and reset discards pending packets.
+
+Copied timestamp elements have `timestamp_out_of_order = 1`, with no cycle count value and the trace index of the
+preceding context. The original timestamp remains in place with its original index and cycle count and
+`timestamp_out_of_order = 0`. The copied timestamp associates a later observed time with the context;
+it does not measure the exact time of the context.
+
+_**Environment Variables**_
+
+There are a number of environment variables that can tune the library at runtime.
+
+|Environment Variable| Description                    |
+|:-------------------|:-------------------------------|
+| `OPENCSD_MEMACC_CACHE_PAGE_SIZE` | Memory accessor cache page size in bytes (64 to 16384; default 2048). |
+| `OPENCSD_MEMACC_CACHE_PAGE_NUM` | Number of memory accessor cache pages (4 to 256; default 16). |
+| `OPENCSD_MEMACC_CACHE_OFF` | Disable memory accessor caching when set; the value is not interpreted. |
+| `OPENCSD_MEMACC_REQ_TRACE` | Enable memory accessor registration, lookup and read request/result debug logging when set; the value is not interpreted. |
+| `OPENCSD_INSTR_RANGE_LIMIT` | Set the maximum number of instructions permitted in an ETMv4 / ETE output range to help detect runaway decode caused by incorrect program images. |
+| `OPENCSD_ERR_ON_AA64_BAD_OPCODE` | Enable errors for AArch64 opcodes whose top 16 bits are zero when set; the value is not interpreted. |
+| `OPENCSD_CONTEXT_TS_BUFFER_SIZE` | Set the context timestamp lookahead limit (10 to 5000 packets; default 100). Requires `ETM4_OPFLG_PKTDEC_CONTEXT_TS` and timestamps enabled in the trace configuration. |
 
 ### Adding in Memory Images ###
 

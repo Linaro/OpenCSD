@@ -210,6 +210,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
     ocsd_err_t err = OCSD_OK;
 
     // set some static config elements
+    m_context_ts_enabled = (getComponentOpMode() & ETM4_OPFLG_PKTDEC_CONTEXT_TS) &&
+        m_config->enabledTS();
     m_CSID = m_config->getTraceID();
     m_max_spec_depth = m_config->MaxSpecDepth();
 
@@ -274,6 +276,21 @@ ocsd_err_t TrcPktDecodeEtmV4I::onProtocolConfig()
 /************* local decode methods */
 void TrcPktDecodeEtmV4I::initDecoder()
 {
+    m_packet_buffer_limit = 100;
+    m_context_ts_enabled = false;
+    m_context_ts_buffering = false;
+    m_buffer_wait = false;
+    m_buffer_pending_op = OCSD_OP_DATA;
+    m_buffer_pending_index = 0;
+    const char *buffer_size = getenv("OPENCSD_CONTEXT_TS_BUFFER_SIZE");
+    if (buffer_size && *buffer_size >= '0' && *buffer_size <= '9')
+    {
+        char *end = 0;
+        unsigned long value = strtoul(buffer_size, &end, 10);
+        if (*end == 0 && value >= 10 && value <= 5000)
+            m_packet_buffer_limit = value;
+    }
+
     // set the operational modes supported.
     m_supported_op_flags = ETMV4_SUPPORTED_DECODE_OP_FLAGS;
 
@@ -538,12 +555,23 @@ ocsd_err_t TrcPktDecodeEtmV4I::decodePacket()
         {
             bool bTSwithCC = m_config->enabledCCI();
             uint64_t ts = m_curr_packet_in->getTS();
+            p0_elem_t p0_type = P0_TS;
+
+            // if this is a out of order copied timestamp then set type and cancel CC 
+            if (m_curr_packet_in->pkt_valid.bits.timestamp_copied) {
+                p0_type = P0_TS_COPY;
+                bTSwithCC = false;
+            }
+            else if (bTSwithCC)
+                p0_type = P0_TS_CC;
+
             std::vector<uint32_t> params = { 0, 0, 0 };
             params[0] = (uint32_t)(ts & 0xFFFFFFFF);
             params[1] = (uint32_t)((ts >> 32) & 0xFFFFFFFF);
             if (bTSwithCC)
                 params[2] = m_curr_packet_in->getCC();
-            if (m_P0_stack.createParamElem(bTSwithCC ? P0_TS_CC : P0_TS, false, m_curr_packet_in->getType(), m_index_curr_pkt, params) == 0)
+            if (m_P0_stack.createParamElem(p0_type, false, m_curr_packet_in->getType(), 
+                                           m_index_curr_pkt, params) == 0)
                 bAllocErr = true;
 
         }
@@ -880,6 +908,11 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
                 }
                 break;
 
+           
+            case P0_TS_COPY:
+                // need to flush copy timestamps for client context (perf) that uses these to determine correct
+                // code image to get on context 
+                contextFlush = true;
             case P0_EVENT:
             case P0_TS:
             case P0_CC:
@@ -1083,6 +1116,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElemOnEOT()
 
             // output
         case P0_EVENT:
+        case P0_TS_COPY:
         case P0_TS:
         case P0_CC:
         case P0_TS_CC:
@@ -1148,6 +1182,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::cancelElements()
                     {
                     // keep these 
                     case P0_EVENT:
+                    case P0_TS_COPY:
                     case P0_TS:
                     case P0_CC:
                     case P0_TS_CC:
@@ -1287,6 +1322,17 @@ ocsd_err_t TrcPktDecodeEtmV4I::processTS_CC_EventElem(TrcStackElem *pElem)
         }
         break;
 
+        case P0_TS_COPY:
+        {
+            // The source timestamp can follow a TS marker that the copy has
+            // overtaken. Emit the copy without changing the marker gate for
+            // timestamps in their original trace order.
+            TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
+            if (pParamElem)
+                err = addElemTS(pParamElem, false);
+        }
+        break;
+
         case P0_TS:
         {
             TrcStackElemParam *pParamElem = dynamic_cast<TrcStackElemParam *>(pElem);
@@ -1373,6 +1419,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::addElemTS(TrcStackElemParam *pParamElem, bool wit
     err = m_out_elem.addElemType(pParamElem->getRootIndex(), OCSD_GEN_TRC_ELEM_TIMESTAMP);
     if (!err)
     {
+        outElem().timestamp_out_of_order = (pParamElem->getP0Type() == P0_TS_COPY);
         outElem().timestamp = (uint64_t)(pParamElem->getParam(0)) | (((uint64_t)pParamElem->getParam(1)) << 32);
         if (withCC)
             outElem().setCycleCount(pParamElem->getParam(2));
@@ -2224,4 +2271,136 @@ inline ocsd_mem_space_acc_t TrcPktDecodeEtmV4I::getCurrMemSpace()
     
     return mem_space;
 }
+
+// Optional lookahead at the processor / decoder boundary. A WAIT consumes its
+// input packet; resume the decoder before supplying the next queued packet.
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::PacketDataIn(
+    const ocsd_datapath_op_t op, const ocsd_trc_index_t index,
+    const EtmV4ITrcPacket *packet)
+{
+    typedef TrcPktDecodeBase<EtmV4ITrcPacket, EtmV4Config> Base;
+    ocsd_etmv4_i_pkt_type type;
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+
+    // not buffering - simply pass throug
+    if (!m_context_ts_enabled)
+        return Base::PacketDataIn(op, index, packet);
+
+    if (op == OCSD_OP_RESET)
+    {
+        m_packet_buffer.clear();
+        m_context_ts_buffering = false;
+        m_buffer_wait = false;
+        m_buffer_pending_op = OCSD_OP_DATA;
+        return Base::PacketDataIn(op, index, packet);
+    }
+
+    if (op == OCSD_OP_DATA)
+    {
+        if (!packet)
+            return OCSD_RESP_FATAL_INVALID_PARAM;
+        
+        type = packet->getType();
+
+        // check for context packet to begin buffering
+        if (!m_context_ts_buffering && m_packet_buffer.empty())
+        {
+            switch (type)
+            {
+            case ETM4_PKT_I_CTXT:
+            case ETM4_PKT_I_ADDR_CTXT_L_32IS0:
+            case ETM4_PKT_I_ADDR_CTXT_L_32IS1:
+            case ETM4_PKT_I_ADDR_CTXT_L_64IS0:
+            case ETM4_PKT_I_ADDR_CTXT_L_64IS1:
+                m_context_ts_buffering = true;
+                break;
+            default:
+                resp = Base::PacketDataIn(op, index, packet);
+                m_buffer_wait = OCSD_DATA_RESP_IS_WAIT(resp);
+                return resp;
+            }
+        }
+
+        // buffer packet 
+        m_packet_buffer.push_back(BufferedPacket(*packet, index));
+
+        // check for stop buffering condition
+        if (m_context_ts_buffering)
+        {
+            // hit a timestamp packet, copy to just after context packet that began buffer.
+            if (type == ETM4_PKT_I_TIMESTAMP)
+            {
+                BufferedPacket copy(*packet, m_packet_buffer.front().index);
+
+                // Mark as an out of order timestamp, clear associated cycle count. 
+                // Out of order timestamps are forceably flushed to the client alongside
+                // the context elements, so copy even if it appears directly after the
+                // context anyway
+                copy.packet.pkt_valid.bits.timestamp_copied = 1;
+                copy.packet.cycle_count = 0;
+                copy.packet.pkt_valid.bits.cc_valid = 0;
+                m_packet_buffer.insert(m_packet_buffer.begin() + 1, copy);
+                m_context_ts_buffering = false;
+            }
+            // hit the set buffer limit - abandon buffering
+            else if (m_packet_buffer.size() > m_packet_buffer_limit)
+                m_context_ts_buffering = false;
+            // otherwise continue 
+            else
+                return OCSD_RESP_CONT;
+        }
+    }
+    else if (op == OCSD_OP_FLUSH || op == OCSD_OP_EOT)
+    {
+        m_context_ts_buffering = false;
+
+        // Preserve EOT when the caller uses FLUSH to resume a stalled drain.
+        if (m_buffer_pending_op == OCSD_OP_DATA || op == OCSD_OP_EOT)
+        {
+            m_buffer_pending_op = op;
+            m_buffer_pending_index = index;
+        }
+        if (m_buffer_wait)
+        {
+            resp = Base::PacketDataIn(OCSD_OP_FLUSH, index, 0);
+            m_buffer_wait = OCSD_DATA_RESP_IS_WAIT(resp);
+            if (!OCSD_DATA_RESP_IS_CONT(resp))
+                return resp;
+        }
+    }
+    else
+        return Base::PacketDataIn(op, index, packet);
+    
+    // buffering has been stopped - need to drain the buffered packets.
+    resp = drainPacketBuffer();
+
+    // handle case where pended op for stalled buffer drain - normally by WAIT
+    if (OCSD_DATA_RESP_IS_CONT(resp) && m_buffer_pending_op != OCSD_OP_DATA)
+    {
+        const ocsd_datapath_op_t pending_op = m_buffer_pending_op;
+        m_buffer_pending_op = OCSD_OP_DATA;
+        resp = Base::PacketDataIn(pending_op, m_buffer_pending_index, 0);
+        m_buffer_wait = OCSD_DATA_RESP_IS_WAIT(resp);
+    }
+    return resp;
+}
+
+ocsd_datapath_resp_t TrcPktDecodeEtmV4I::drainPacketBuffer()
+{
+    ocsd_datapath_resp_t resp = OCSD_RESP_CONT;
+
+    while (!m_packet_buffer.empty())
+    {
+        m_buffer_active_packet = m_packet_buffer.front().packet;
+        const ocsd_trc_index_t index = m_packet_buffer.front().index;
+        m_packet_buffer.pop_front();
+        resp = TrcPktDecodeBase<EtmV4ITrcPacket, EtmV4Config>::PacketDataIn(
+            OCSD_OP_DATA, index, &m_buffer_active_packet);
+        m_buffer_wait = OCSD_DATA_RESP_IS_WAIT(resp);
+        if (!OCSD_DATA_RESP_IS_CONT(resp))
+            return resp;
+    }
+    return OCSD_RESP_CONT;
+}
+
 /* End of File trc_pkt_decode_etmv4i.cpp */

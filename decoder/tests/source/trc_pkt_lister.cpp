@@ -211,6 +211,8 @@ void print_help()
     oss << "-no_time_print      Do not output the elapsed time for tests.\n";
     oss << "\nConsistency checks\n\n";
     oss << "-aa64_opcode_chk    Check for correct AA64 opcodes (MSW != 0x0000)\n";
+    oss << "-context_ts         Copy next timestamp after ETMv4 context (use with -decode).\n";
+    oss << "                   OPENCSD_CONTEXT_TS_BUFFER_SIZE sets lookahead (default 100).\n";
     oss << "-direct_br_cond     Check for incorrect N atom on direct unconditional branches\n";
     oss << "-strict_br_cond     Strict conditional checks - look for incorrect N atom on all unconditional branches.\n";
     oss << "-range_cont         Range continuity checks - check next range after N atom is continuous.\n";
@@ -486,6 +488,10 @@ bool process_cmd_line_opts(int argc, char* argv[])
             else if (strcmp(argv[optIdx], "-halt_err") == 0)
             {
                 add_create_flags |= OCSD_OPFLG_PKTDEC_HALT_BAD_PKTS;
+            }
+            else if (strcmp(argv[optIdx], "-context_ts") == 0)
+            {
+                add_create_flags |= ETM4_OPFLG_PKTDEC_CONTEXT_TS;
             }
             else if (strcmp(argv[optIdx], "-aa64_opcode_chk") == 0)
             {

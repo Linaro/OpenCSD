@@ -199,6 +199,8 @@ void OcsdTraceElement::toString(std::string &str) const
 
         case OCSD_GEN_TRC_ELEM_TIMESTAMP:
             oss << " [ TS=0x" << std::setfill('0') << std::setw(12) << std::hex << timestamp << "]; "; 
+            if (timestamp_out_of_order)
+                oss << " (out of order copy) ";
             break;
 
         case OCSD_GEN_TRC_ELEM_SWTRACE:

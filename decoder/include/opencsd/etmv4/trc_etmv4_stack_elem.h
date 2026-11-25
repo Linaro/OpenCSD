@@ -69,6 +69,7 @@ typedef enum _p0_elem_t
     P0_ITE,
     P0_UNSEEN_UNCOMMITTED, /* uncommitted elements before the TraceInfo Sync point */
     P0_TINFO,   /* need to note trace info to prevent RS push before next address */
+    P0_TS_COPY, /* timestamp copied after a context, without cycle count */
 } p0_elem_t;
 
 
