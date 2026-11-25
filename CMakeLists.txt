@@ -524,6 +524,11 @@ if(BUILD_TESTING)
                 opencsd
         )
 
+        opencsd_add_test_executable(context-ts-test
+            SOURCE decoder/tests/source/context_ts_test.cpp
+            LIBS opencsd
+        )
+
         opencsd_add_test_executable(itm-decode-test
             SOURCE decoder/tests/source/itm_decode_test.cpp
             SOURCES
