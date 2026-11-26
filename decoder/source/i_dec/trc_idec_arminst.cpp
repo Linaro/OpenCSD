@@ -165,14 +165,18 @@ int inst_Thumb_is_direct_branch_link(uint32_t inst, uint8_t *is_link, uint8_t *i
         *is_cond = 1;
     } else if ((inst & 0xfffff001) == 0xf00fc001) {
         /* LE (encoding T1) */
+        *is_cond = 1;
     } else if ((inst & 0xfffff001) == 0xf02fc001) {
         /* LE (encoding T2) */
     } else if ((inst & 0xfffff001) == 0xf01fc001) {
         /* LETP (encoding T3) */
+        *is_cond = 1;
     } else if ((inst & 0xfff0f001) == 0xf040c001) {
         /* WLS (encoding T1) */
+        *is_cond = 1;
     } else if ((inst & 0xffc0f001) == 0xf000c001) {
         /* WLSTP (encoding T3) */
+        *is_cond = 1;
     } else {
         is_direct_branch = 0;
     }
@@ -619,7 +623,8 @@ int inst_Thumb_is_branch_and_link(uint32_t inst, struct decode_info *info)
     if ((inst & 0xff800000) == 0x47800000) {
         info->instr_sub_type = OCSD_S_INSTR_BR_LINK;
         /* BLX (reg) */
-    } else if ((inst & 0xf800c000) == 0xf000c000) {
+    } else if (((inst & 0xf800d000) == 0xf000d000) ||
+               ((inst & 0xf800d001) == 0xf000c000)) {
         info->instr_sub_type = OCSD_S_INSTR_BR_LINK;
         /* BL, BLX (imm) */
     } else {
@@ -671,6 +676,15 @@ int inst_Thumb_is_conditional(uint32_t inst)
         /* CB(N)Z */
         return 1;
     }
+    /* Uncounted LE overlaps the WLSTP mask below. */
+    if ((inst & 0xfffff001) == 0xf02fc001)
+        return 0;
+    /* Counted loop ends and while loop starts can fall through. */
+    if (((inst & 0xfffff001) == 0xf00fc001) ||
+        ((inst & 0xfffff001) == 0xf01fc001) ||
+        ((inst & 0xfff0f001) == 0xf040c001) ||
+        ((inst & 0xffc0f001) == 0xf000c001))
+        return 1;
     return 0;
 }
 
@@ -711,7 +725,7 @@ int inst_A64_is_conditional(uint32_t inst)
         /* BC.cond */
         return 1;
     }
-    return 0;
+    return inst_A64_is_cmp_br(inst);
 }
 
 arm_barrier_t inst_ARM_barrier(uint32_t inst)
