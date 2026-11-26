@@ -980,6 +980,9 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
 
             case P0_SRC_ADDR:
                 nextRangeCheckClear();
+                // Resolve a preceding compressed return before selecting the source range.
+                if ((err = returnStackPop()) != OCSD_OK)
+                    break;
                 err = processSourceAddress();
                 m_elem_res.P0_commit--;
                 break;

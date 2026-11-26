@@ -69,6 +69,7 @@ ETE_DECODE_TESTS = (
     "rme_test",
     "s_9001",
     "src_addr",
+    "src_addr_cmp_ret_test",
     "ss_ib_el1ns",
     "texit-poe2",
     "tme_simple",
@@ -85,9 +86,11 @@ ETE_SRC_ADDR_N_TESTS = (
     "002-ack_test_scr",
     "ete_ip",
     "src_addr",
+    "src_addr_cmp_ret_test",
 )
 
 ETE_MULTI_SESSION_TESTS = (
+    "src_addr_cmp_ret_test",
     "ss_ib_el1ns",
     "ete-ite-instr",
     "pauth_lr",
