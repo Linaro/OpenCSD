@@ -2071,8 +2071,18 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
     m_instr_info.isa = m_instr_info.next_isa;
 
     // set the trace range element.
-    m_out_elem.addElem(pElem->getRootIndex());
+    err = m_out_elem.addElem(pElem->getRootIndex());
+    if (err)
+        return err;
     setElemTraceRange(outElem(), out_range, true, pElem->getRootIndex());
+
+    // Match the atom path's notification for a taken ETE exception return.
+    if (isETEConfig() &&
+        (m_instr_info.type == OCSD_INSTR_BR_INDIRECT) &&
+        (m_instr_info.sub_type == OCSD_S_INSTR_V8_ERET))
+    {
+        err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_EXCEPTION_RET);
+    }
     return err;
 }
 
