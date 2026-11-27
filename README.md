@@ -27,7 +27,7 @@ Releases will appear on the master branch in the git repository with an appropri
 CoreSight Trace Component Support.
 ----------------------------------
 
-_Current Version 1.8.4_
+_Current Version 1.9.0-rc1_
 
 ### Current support:
 
@@ -406,6 +406,20 @@ Version and Modification Information
 - _Version 1.8.4_:
     - __Update__: build: Add itm headers to installation. (github #94)
     - __Bugfix__: opencsd: etm4: Fix handling of invalid TRACE_INFO packet. (github #93)
+
+- _Version 1.9.0-rc1_:
+    - __Update__: opencsd: etm4: ete: Add "context_ts" optional decoder mode, which will lookahead       
+                  after context packets for the first timestamp, and emit a copy immediately after  
+                  the context packet. For clients (linux `perf`) that require timestamps to correctly
+                  determine the code image to provide on a memory access request. Out of order timestamps
+                  are marked as copies and lookahead buffer depth may be adjusted by environment var.
+    - __Update__: opencsd: memaccess: The decoder caches code image memory lookups to improve efficiency.
+                  These caches are invalidated on context packet. Add in client invalidation for cases 
+                  were memory image might change without context (e.g. instruction poking for JIT code)
+    - __Bugfix__: opencsd: ete: ITE instrumention support now enabled according to TRCIDR0 rather than       
+                  ETE version.
+    - __Bugfix__: Multiple corner cases in instruction detection and trace sequencing fixed.
+
 
 
 Licence Information

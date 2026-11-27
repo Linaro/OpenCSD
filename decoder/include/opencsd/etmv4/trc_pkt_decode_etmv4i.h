@@ -152,7 +152,17 @@ private:
     // adjust instr info isa for current context element - note SF bit and current isa set by address element.
     void ctxtCalcInstrInfoISA()
     {
-        if (m_is_64bit)
+        // An address can precede its context. Preserve its raw IS bit because
+        // the previous A64 context masks IS1 when initially calculating the ISA.
+        // Recombine IS with the new SF bit so an A64-to-T32 return selects T32.
+        // Consume the hint here; later context updates must preserve ISA changes
+        // established by instruction execution or a compressed return.
+        if (m_pending_addr_is_valid)
+        {
+            m_instr_info.isa = calcISA(m_is_64bit, m_pending_addr_is);
+            m_pending_addr_is_valid = false;
+        }
+        else if (m_is_64bit)
             m_instr_info.isa = ocsd_isa_aarch64;
         else if (m_instr_info.isa == ocsd_isa_aarch64)
             m_instr_info.isa = ocsd_isa_arm;
@@ -208,6 +218,10 @@ private:
     uint32_t m_vmid_id;                 // most recent VMID
     bool m_is_secure;                   // true if Secure
     bool m_is_64bit;                    // true if 64 bit
+
+    // Raw address IS retained until a following context or instruction processing.
+    uint8_t m_pending_addr_is;
+    bool m_pending_addr_is_valid;
 
     // cycle counts 
     int m_cc_threshold;
