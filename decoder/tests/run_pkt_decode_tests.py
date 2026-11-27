@@ -26,6 +26,8 @@ from typing import Iterable, Sequence
 STANDARD_DECODE_TESTS = (
     "a57_single_step",
     "armv8_1m_branches",
+    "wls_cond_test",
+    "le_letp_cond_test",
     "bugfix-exact-match",
     "itm_only_csformat",
     "itm_only_raw",
@@ -60,6 +62,7 @@ ETE_DECODE_TESTS = (
     "ete-wfet",
     "event_test",
     "feat_cmpbr",
+    "cmpbr_cond_test",
     "infrastructure",
     "maxspec0_commopt1",
     "maxspec78_commopt0",

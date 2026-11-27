@@ -1,0 +1,118 @@
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.4
+
+Test Command Line:-
+C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\.tmp-context-ts-build\Release\trc_pkt_lister.exe   -ss_dir  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots\le_letp_cond_test  -decode  -no_time_print  -logfilename  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\standalone_regression_scripts\results\le_letp_cond_test.ppl  
+
+Trace Packet Lister : reading snapshot from path C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots\le_letp_cond_test
+Using trace_0 as trace source
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR9
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR10
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR11
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR12
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR13
+Trace Packet Lister : Protocol printer ETMV4I on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0xffc:1009; Mem Space::Any
+Filename=C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots\le_letp_cond_test\code0.bin
+Gen_Info : FileAcc; Range::0x10fc:1109; Mem Space::Any
+Filename=C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots\le_letp_cond_test\code1.bin
+Gen_Info : ========================
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x83 0x00 0x10 0x00 0x00 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000000001000; Ctxt: AArch32, EL0, S; 
+Idx:20; ID:0; [0xf6 ];	I_ATOM_F1 : Atom format 1.; N
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:20; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=T32) N BR   <cond>)
+Idx:21; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:21; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x1006] num_i(1) last_sz(2) (ISA=T32) E BR  )
+Idx:22; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:34; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }
+Idx:36; ID:0; [0x83 0x00 0x10 0x00 0x00 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000000001000; Ctxt: AArch32, EL0, S; 
+Idx:42; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:42; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=T32) E BR   <cond>)
+Idx:43; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:43; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0xffc:[0xffe] num_i(1) last_sz(2) (ISA=T32) E BR  )
+Idx:44; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:56; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }
+Idx:58; ID:0; [0x83 0x00 0x11 0x00 0x00 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000000001100; Ctxt: AArch32, EL0, S; 
+Idx:64; ID:0; [0xf6 ];	I_ATOM_F1 : Atom format 1.; N
+Idx:58; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:64; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1100:[0x1104] num_i(1) last_sz(4) (ISA=T32) N BR   <cond>)
+Idx:65; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:65; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1104:[0x1106] num_i(1) last_sz(2) (ISA=T32) E BR  )
+Idx:66; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:78; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }
+Idx:80; ID:0; [0x83 0x00 0x11 0x00 0x00 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000000001100; Ctxt: AArch32, EL0, S; 
+Idx:86; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:80; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:86; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1100:[0x1104] num_i(1) last_sz(4) (ISA=T32) E BR   <cond>)
+Idx:87; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:87; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x10fc:[0x10fe] num_i(1) last_sz(2) (ISA=T32) E BR  )
+Idx:87; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 88 bytes.
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.4
+
+Test Command Line:-
+C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\.tmp-context-ts-build\Release\trc_pkt_lister.exe   -ss_dir  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots\le_letp_cond_test  -decode  -no_time_print  -direct_br_cond  -logfilename  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\standalone_regression_scripts\results\le_letp_cond_test.ppl  
+
+Trace Packet Lister : reading snapshot from path C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots\le_letp_cond_test
+Using trace_0 as trace source
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR9
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR10
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR11
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR12
+ss2_dcdtree : Warning: Default set for register. Missing TRCIDR13
+Trace Packet Lister : Protocol printer ETMV4I on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0xffc:1009; Mem Space::Any
+Filename=C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots\le_letp_cond_test\code0.bin
+Gen_Info : FileAcc; Range::0x10fc:1109; Mem Space::Any
+Filename=C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots\le_letp_cond_test\code1.bin
+Gen_Info : ========================
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x83 0x00 0x10 0x00 0x00 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000000001000; Ctxt: AArch32, EL0, S; 
+Idx:20; ID:0; [0xf6 ];	I_ATOM_F1 : Atom format 1.; N
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:20; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=T32) N BR   <cond>)
+Idx:21; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:21; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x1006] num_i(1) last_sz(2) (ISA=T32) E BR  )
+Idx:22; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:34; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }
+Idx:36; ID:0; [0x83 0x00 0x10 0x00 0x00 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000000001000; Ctxt: AArch32, EL0, S; 
+Idx:42; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:42; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=T32) E BR   <cond>)
+Idx:43; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:43; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0xffc:[0xffe] num_i(1) last_sz(2) (ISA=T32) E BR  )
+Idx:44; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:56; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }
+Idx:58; ID:0; [0x83 0x00 0x11 0x00 0x00 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000000001100; Ctxt: AArch32, EL0, S; 
+Idx:64; ID:0; [0xf6 ];	I_ATOM_F1 : Atom format 1.; N
+Idx:58; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:64; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1100:[0x1104] num_i(1) last_sz(4) (ISA=T32) N BR   <cond>)
+Idx:65; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:65; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1104:[0x1106] num_i(1) last_sz(2) (ISA=T32) E BR  )
+Idx:66; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:78; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0 }
+Idx:80; ID:0; [0x83 0x00 0x11 0x00 0x00 0x00 ];	I_ADDR_CTXT_L_32IS1 : Address & Context, Long, 32 bit, IS1.; Addr=0x0000000000001100; Ctxt: AArch32, EL0, S; 
+Idx:86; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:80; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=T32) EL0S; 32-bit; )
+Idx:86; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1100:[0x1104] num_i(1) last_sz(4) (ISA=T32) E BR   <cond>)
+Idx:87; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:87; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x10fc:[0x10fe] num_i(1) last_sz(2) (ISA=T32) E BR  )
+Idx:87; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 88 bytes.

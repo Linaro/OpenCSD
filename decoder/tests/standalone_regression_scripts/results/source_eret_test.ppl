@@ -1,0 +1,248 @@
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.4
+
+Test Command Line:-
+C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\.tmp-context-ts-build\Release\trc_pkt_lister.exe   -ss_dir  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots-ete\src_addr_eret_test  -decode  -multi_session  -no_time_print  -logfilename  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\standalone_regression_scripts\results\source_eret_test.ppl  
+
+Trace Packet Lister : reading snapshot from path C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots-ete\src_addr_eret_test
+Using ETB_1 as trace source
+Trace Packet Lister : Protocol printer ETE on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0x1000:101b; Mem Space::Any
+Filename=C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots-ete\src_addr_eret_test\code.bin
+Gen_Info : ========================
+####### Multi Session decode: Buffer 1 of 5; Source name = ETB_1.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xb4 0x01 ];	I_SRC_ADDR_S_IS0 : Source Address, Short, IS0.; Addr=0x0000000000001004 ~[0x4]
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1008] num_i(2) last_sz(4) (ISA=A64) E iBR A64:eret )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:27; ID:0; [0x9d 0x02 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001008; 
+Idx:36; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1008:[0x100c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 37 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 1 : ETB_1 Complete
+
+####### Multi Session decode: Buffer 2 of 5; Source name = ETB_2.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [reset-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xb6 0x01 0x08 0x00 0x00 ];	I_SRC_ADDR_L_32IS0 : Source Address, Long, 32 bit, IS0.; Addr=0x0000000000001004; 
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1008] num_i(2) last_sz(4) (ISA=A64) E iBR A64:eret )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:30; ID:0; [0x9d 0x02 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001008; 
+Idx:39; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:39; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1008:[0x100c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:39; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 40 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 2 : ETB_2 Complete
+
+####### Multi Session decode: Buffer 3 of 5; Source name = ETB_3.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [reset-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xb8 0x01 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_SRC_ADDR_L_64IS0 : Source Address, Long, 64 bit, IS0.; Addr=0x0000000000001004; 
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1008] num_i(2) last_sz(4) (ISA=A64) E iBR A64:eret )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:34; ID:0; [0x9d 0x02 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001008; 
+Idx:43; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:43; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1008:[0x100c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:43; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 44 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 3 : ETB_3 Complete
+
+####### Multi Session decode: Buffer 4 of 5; Source name = ETB_4.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [reset-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xf6 ];	I_ATOM_F1 : Atom format 1.; N
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) N BR   <cond>)
+Idx:26; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:26; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x1008] num_i(1) last_sz(4) (ISA=A64) E iBR A64:eret )
+Idx:26; ID:1; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:27; ID:0; [0x9d 0x02 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001008; 
+Idx:36; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1008:[0x100c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 37 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 4 : ETB_4 Complete
+
+####### Multi Session decode: Buffer 5 of 5; Source name = ETB_5.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [reset-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x04 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001010; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xb4 0x05 ];	I_SRC_ADDR_S_IS0 : Source Address, Short, IS0.; Addr=0x0000000000001014 ~[0x14]
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1010:[0x1018] num_i(2) last_sz(4) (ISA=A64) E iBR A64:ret )
+Idx:27; ID:0; [0x9d 0x06 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001018; 
+Idx:36; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1018:[0x101c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 37 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 5 : ETB_5 Complete
+
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.4
+
+Test Command Line:-
+C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\.tmp-context-ts-build\Release\trc_pkt_lister.exe   -ss_dir  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots-ete\src_addr_eret_test  -decode  -multi_session  -no_time_print  -src_addr_n  -logfilename  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\standalone_regression_scripts\results\source_eret_test.ppl  
+
+Trace Packet Lister : reading snapshot from path C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots-ete\src_addr_eret_test
+Using ETB_1 as trace source
+Trace Packet Lister : Protocol printer ETE on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0x1000:101b; Mem Space::Any
+Filename=C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\snapshots-ete\src_addr_eret_test\code.bin
+Gen_Info : ========================
+####### Multi Session decode: Buffer 1 of 5; Source name = ETB_1.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xb4 0x01 ];	I_SRC_ADDR_S_IS0 : Source Address, Short, IS0.; Addr=0x0000000000001004 ~[0x4]
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) N BR   <cond>)
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x1008] num_i(1) last_sz(4) (ISA=A64) E iBR A64:eret )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:27; ID:0; [0x9d 0x02 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001008; 
+Idx:36; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1008:[0x100c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 37 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 1 : ETB_1 Complete
+
+####### Multi Session decode: Buffer 2 of 5; Source name = ETB_2.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [reset-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xb6 0x01 0x08 0x00 0x00 ];	I_SRC_ADDR_L_32IS0 : Source Address, Long, 32 bit, IS0.; Addr=0x0000000000001004; 
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) N BR   <cond>)
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x1008] num_i(1) last_sz(4) (ISA=A64) E iBR A64:eret )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:30; ID:0; [0x9d 0x02 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001008; 
+Idx:39; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:39; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1008:[0x100c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:39; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 40 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 2 : ETB_2 Complete
+
+####### Multi Session decode: Buffer 3 of 5; Source name = ETB_3.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [reset-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xb8 0x01 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_SRC_ADDR_L_64IS0 : Source Address, Long, 64 bit, IS0.; Addr=0x0000000000001004; 
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) N BR   <cond>)
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x1008] num_i(1) last_sz(4) (ISA=A64) E iBR A64:eret )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:34; ID:0; [0x9d 0x02 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001008; 
+Idx:43; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:43; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1008:[0x100c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:43; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 44 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 3 : ETB_3 Complete
+
+####### Multi Session decode: Buffer 4 of 5; Source name = ETB_4.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [reset-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xf6 ];	I_ATOM_F1 : Atom format 1.; N
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) N BR   <cond>)
+Idx:26; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:26; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x1008] num_i(1) last_sz(4) (ISA=A64) E iBR A64:eret )
+Idx:26; ID:1; OCSD_GEN_TRC_ELEM_EXCEPTION_RET()
+Idx:27; ID:0; [0x9d 0x02 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001008; 
+Idx:36; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1008:[0x100c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 37 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 4 : ETB_4 Complete
+
+####### Multi Session decode: Buffer 5 of 5; Source name = ETB_5.
+
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [reset-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x04 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001010; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xb4 0x05 ];	I_SRC_ADDR_S_IS0 : Source Address, Short, IS0.; Addr=0x0000000000001014 ~[0x14]
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1010:[0x1014] num_i(1) last_sz(4) (ISA=A64) N BR   <cond>)
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1014:[0x1018] num_i(1) last_sz(4) (ISA=A64) E iBR A64:ret )
+Idx:27; ID:0; [0x9d 0x06 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001018; 
+Idx:36; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1018:[0x101c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:36; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 37 bytes.
+ID:0	RESET operation on trace decode path
+####### Buffer 5 : ETB_5 Complete
+

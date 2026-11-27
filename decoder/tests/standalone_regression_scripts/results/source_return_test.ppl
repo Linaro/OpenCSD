@@ -1,0 +1,168 @@
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.4
+
+Test Command Line:-
+C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\.tmp-context-ts-build\Release\trc_pkt_lister.exe   -ss_dir  C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f  -decode  -logfilename  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\standalone_regression_scripts\results\source_return_test.ppl  
+
+Trace Packet Lister : reading snapshot from path C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f
+Using ETB_1 as trace source
+Trace Packet Lister : Protocol printer ETE on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0x1000:101b; Mem Space::Any
+Filename=C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f\code.bin
+Gen_Info : ========================
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xdb ];	I_ATOM_F2 : Atom format 2.; EE
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) E BR  b+link )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1010:[0x1014] num_i(1) last_sz(4) (ISA=A64) E iBR A64:ret )
+Idx:26; ID:0; [0xb4 0x02 ];	I_SRC_ADDR_S_IS0 : Source Address, Short, IS0.; Addr=0x0000000000001008 ~[0x8]
+Idx:26; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x100c] num_i(2) last_sz(4) (ISA=A64) E BR  )
+Idx:28; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:28; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1018:[0x101c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:28; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 29 bytes in 0.0002662 seconds.
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.4
+
+Test Command Line:-
+C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\.tmp-context-ts-build\Release\trc_pkt_lister.exe   -ss_dir  C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f  -decode  -logfilename  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\standalone_regression_scripts\results\source_return_test.ppl  
+
+Trace Packet Lister : reading snapshot from path C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f
+Using ETB_1 as trace source
+Trace Packet Lister : Protocol printer ETE on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0x1000:101b; Mem Space::Any
+Filename=C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f\code.bin
+Gen_Info : ========================
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xdb ];	I_ATOM_F2 : Atom format 2.; EE
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) E BR  b+link )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1010:[0x1014] num_i(1) last_sz(4) (ISA=A64) E iBR A64:ret )
+Idx:26; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:26; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x100c] num_i(2) last_sz(4) (ISA=A64) E BR  )
+Idx:27; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:27; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1018:[0x101c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:27; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 28 bytes in 0.0003144 seconds.
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.4
+
+Test Command Line:-
+C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\.tmp-context-ts-build\Release\trc_pkt_lister.exe   -ss_dir  C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f  -decode  -logfilename  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\standalone_regression_scripts\results\source_return_test.ppl  
+
+Trace Packet Lister : reading snapshot from path C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f
+Using ETB_1 as trace source
+Trace Packet Lister : Protocol printer ETE on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0x1000:101b; Mem Space::Any
+Filename=C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f\code.bin
+Gen_Info : ========================
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xdb ];	I_ATOM_F2 : Atom format 2.; EE
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) E BR  b+link )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1010:[0x1014] num_i(1) last_sz(4) (ISA=A64) E iBR A64:ret )
+Idx:26; ID:0; [0x9d 0x01 0x08 0x00 0x00 0x00 0x00 0x00 0x00 ];	I_ADDR_L_64IS0 : Address, Long, 64 bit, IS0.; Addr=0x0000000000001004; 
+Idx:35; ID:0; [0xb4 0x02 ];	I_SRC_ADDR_S_IS0 : Source Address, Short, IS0.; Addr=0x0000000000001008 ~[0x8]
+Idx:35; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x100c] num_i(2) last_sz(4) (ISA=A64) E BR  )
+Idx:37; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:37; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1018:[0x101c] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:37; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 38 bytes in 0.0002812 seconds.
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.4
+
+Test Command Line:-
+C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\.tmp-context-ts-build\Release\trc_pkt_lister.exe   -ss_dir  C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f  -decode  -logfilename  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\standalone_regression_scripts\results\source_return_test.ppl  
+
+Trace Packet Lister : reading snapshot from path C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f
+Using ETB_1 as trace source
+Trace Packet Lister : Protocol printer ETE on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0x1000:1043; Mem Space::Any
+Filename=C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f\code.bin
+Gen_Info : ========================
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xff ];	I_ATOM_F3 : Atom format 3.; EEE
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) E BR  b+link )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1020:[0x1028] num_i(2) last_sz(4) (ISA=A64) E BR  b+link )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1040:[0x1044] num_i(1) last_sz(4) (ISA=A64) E iBR A64:ret )
+Idx:26; ID:0; [0xb4 0x0c ];	I_SRC_ADDR_S_IS0 : Source Address, Short, IS0.; Addr=0x0000000000001030 ~[0x30]
+Idx:26; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1028:[0x1034] num_i(3) last_sz(4) (ISA=A64) E iBR A64:ret )
+Idx:28; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:28; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x1008] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:28; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 29 bytes in 0.0004135 seconds.
+Trace Packet Lister: CS Decode library testing
+-----------------------------------------------
+
+** Library Version : 1.8.4
+
+Test Command Line:-
+C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\.tmp-context-ts-build\Release\trc_pkt_lister.exe   -ss_dir  C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f  -decode  -logfilename  C:\work\opencsd-arm-gerrit\local-work-pp-local-only\opencsd-local\decoder\tests\standalone_regression_scripts\results\source_return_test.ppl  
+
+Trace Packet Lister : reading snapshot from path C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f
+Using ETB_1 as trace source
+Trace Packet Lister : Protocol printer ETE on Trace ID 0x0
+Trace Packet Lister : Set trace element decode printer
+Gen_Info : Mapped Memory Accessors
+Gen_Info : FileAcc; Range::0x1000:1043; Mem Space::Any
+Filename=C:\Users\mleach\AppData\Local\Temp\opencsd-source-return-8o73u10f\code.bin
+Gen_Info : ========================
+Idx:0; ID:0; [0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x80 ];	I_ASYNC : Alignment Synchronisation.
+Idx:0; ID:1; OCSD_GEN_TRC_ELEM_NO_SYNC( [init-decoder])
+Idx:12; ID:0; [0x01 0x00 ];	I_TRACE_INFO : Trace Info.; INFO=0x0 { CC.0, TSTATE.0 }; Decoder Sync point TINFO
+Idx:14; ID:0; [0x04 ];	I_TRACE_ON : Trace On.
+Idx:15; ID:0; [0x85 0x00 0x08 0x00 0x00 0x00 0x00 0x00 0x00 0x31 ];	I_ADDR_CTXT_L_64IS0 : Address & Context, Long, 64 bit, IS0.; Addr=0x0000000000001000; Ctxt: AArch64,EL1, NS; 
+Idx:25; ID:0; [0xff ];	I_ATOM_F3 : Atom format 3.; EEE
+Idx:14; ID:1; OCSD_GEN_TRC_ELEM_TRACE_ON( [begin or filter])
+Idx:15; ID:1; OCSD_GEN_TRC_ELEM_PE_CONTEXT((ISA=A64) EL1N; 64-bit; )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1000:[0x1004] num_i(1) last_sz(4) (ISA=A64) E BR  b+link )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1020:[0x1028] num_i(2) last_sz(4) (ISA=A64) E BR  b+link )
+Idx:25; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1040:[0x1044] num_i(1) last_sz(4) (ISA=A64) E iBR A64:ret )
+Idx:26; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:26; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1028:[0x1034] num_i(3) last_sz(4) (ISA=A64) E iBR A64:ret )
+Idx:27; ID:0; [0xf7 ];	I_ATOM_F1 : Atom format 1.; E
+Idx:27; ID:1; OCSD_GEN_TRC_ELEM_INSTR_RANGE(exec range=0x1004:[0x1008] num_i(1) last_sz(4) (ISA=A64) E BR  )
+Idx:27; ID:1; OCSD_GEN_TRC_ELEM_EO_TRACE( [end-of-trace])
+ID:0	END OF TRACE DATA
+Trace Packet Lister : Trace buffer done, processed 28 bytes in 0.0007939 seconds.
