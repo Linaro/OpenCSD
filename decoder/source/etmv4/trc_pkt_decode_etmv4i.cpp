@@ -94,6 +94,7 @@ ocsd_datapath_resp_t TrcPktDecodeEtmV4I::processPacket()
             if (m_curr_packet_in->getType() == ETM4_PKT_I_ASYNC)
             {
                 m_curr_state = WAIT_TINFO;
+                m_pending_addr_is_valid = false;
                 m_need_ctxt = true;
                 setNeedP0AddrElem();
             }
@@ -332,6 +333,8 @@ void TrcPktDecodeEtmV4I::resetDecoder()
     m_vmid_id = 0;                 
     m_is_secure = true;
     m_is_64bit = false;
+    m_pending_addr_is = 0;
+    m_pending_addr_is_valid = false;
     m_cc_threshold = 0;
     m_curr_spec_depth = 0;
     m_need_ctxt = true;
@@ -860,6 +863,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::commitElements()
             {
                 // indicates a trace restart - beginning of trace or discontinuiuty
             case P0_TRC_ON:
+                m_pending_addr_is_valid = false;
                 nextRangeCheckClear();
                 err = m_out_elem.addElemType(pElem->getRootIndex(), OCSD_GEN_TRC_ELEM_TRACE_ON);
                 if (!err)
@@ -1055,6 +1059,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::returnStackPop()
         }
         else
         {
+            m_pending_addr_is_valid = false;
             m_instr_info.instr_addr = popAddr;
             m_instr_info.isa = nextISA;
             clearNeedP0Addr();
@@ -1306,6 +1311,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::discardElements()
     m_unsync_eot_info = m_prev_overflow ? UNSYNC_OVERFLOW : UNSYNC_DISCARD;
 
     // unsync so need context & address.
+    m_pending_addr_is_valid = false;
     m_need_ctxt = true;
     setNeedP0AddrElem();
     m_elem_pending_addr = false;
@@ -1463,6 +1469,7 @@ void TrcPktDecodeEtmV4I::setElemTraceRangeInstr(OcsdTraceElement &elemIn, const 
 
 ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
 {
+    m_pending_addr_is_valid = false;
     ocsd_err_t err;
     TrcStackElem *pElem = m_P0_stack.back();  // get the atom element
     WP_res_t WPRes;
@@ -1479,6 +1486,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
         if(err == OCSD_ERR_UNSUPPORTED_ISA)
         {
              setNeedP0AddrElem();
+             m_pending_addr_is_valid = false;
              m_need_ctxt = true;
              LogError(ocsdError(OCSD_ERR_SEV_WARN,err,pElem->getRootIndex(),m_CSID,"Warning: unsupported instruction set processing atom packet."));  
              // wait for next context
@@ -1607,6 +1615,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processAtom(const ocsd_atm_val atom)
 
 ocsd_err_t TrcPktDecodeEtmV4I::processException()
 {
+    m_pending_addr_is_valid = false;
     ocsd_err_t err;
     TrcStackElem *pElem = 0;
     TrcStackElemExcept *pExceptElem = 0;
@@ -1715,6 +1724,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
                 if (err == OCSD_ERR_UNSUPPORTED_ISA)
                 {
                     setNeedP0AddrElem();
+                    m_pending_addr_is_valid = false;
                     m_need_ctxt = true;
                     LogError(ocsdError(OCSD_ERR_SEV_WARN, err, excep_pkt_index, m_CSID, "Warning: unsupported instruction set processing exception packet."));
                 }
@@ -1789,6 +1799,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processException()
 
 ocsd_err_t TrcPktDecodeEtmV4I::processQElement()
 {
+    m_pending_addr_is_valid = false;
     ocsd_err_t err = OCSD_OK;
     TrcStackQElem *pQElem;
     etmv4_addr_val_t QAddr; // address where trace restarts 
@@ -1920,6 +1931,7 @@ ocsd_err_t TrcPktDecodeEtmV4I::processQElement()
 
 ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
 {
+    m_pending_addr_is_valid = false;
     ocsd_err_t err = OCSD_OK;
     TrcStackElemAddr *pElem = dynamic_cast<TrcStackElemAddr *>(m_P0_stack.back());  // get the address element
     etmv4_addr_val_t srcAddr = pElem->getAddr();
@@ -2088,6 +2100,8 @@ ocsd_err_t TrcPktDecodeEtmV4I::processSourceAddress()
 
 void TrcPktDecodeEtmV4I::SetInstrInfoInAddrISA(const ocsd_vaddr_t addr_val, const uint8_t isa)
 {
+    m_pending_addr_is = isa;
+    m_pending_addr_is_valid = true;
     m_instr_info.instr_addr = addr_val;
     m_instr_info.isa = calcISA(m_is_64bit, isa);
 }
